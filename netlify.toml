@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--legacy-peer-deps"
+
+# Next.js adapter (auto-updates per Netlify's recommendation; do not pin)
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Scheduled functions — run on Netlify's cron
+[functions."cron-reminder-emails"]
+  schedule = "0 * * * *"   # hourly
+
+[functions."cron-no-show-sweep"]
+  schedule = "10 * * * *"  # hourly, offset 10min
+
+[functions."cron-paypal-reconcile"]
+  schedule = "0 3 * * *"   # daily 03:00 UTC
