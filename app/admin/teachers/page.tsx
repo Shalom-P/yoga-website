@@ -1,13 +1,15 @@
 import Link from "next/link";
-import { Plus, Star } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { requireAdmin } from "@/lib/auth/guards";
-import { getFeaturedTeachers } from "@/lib/data/landing";
+import { AddTeacherButton } from "@/components/admin/AddTeacherButton";
 
 export default async function AdminTeachersPage() {
-  await requireAdmin();
-  const teachers = await getFeaturedTeachers();
+  const { supabase } = await requireAdmin();
+  const { data: teachers } = await supabase
+    .from("teachers")
+    .select("id, display_name, headline, rating_avg, rating_count, is_active, sort_order")
+    .order("sort_order");
 
   return (
     <div className="p-8 max-w-7xl">
@@ -15,14 +17,11 @@ export default async function AdminTeachersPage() {
         <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
           Teachers
         </h1>
-        <Button className="rounded-full">
-          <Plus className="size-4 mr-1" />
-          Add teacher
-        </Button>
+        <AddTeacherButton />
       </div>
 
       <div className="rounded-2xl border border-border bg-card divide-y divide-border">
-        {teachers.map((t) => (
+        {(teachers ?? []).map((t) => (
           <Link
             key={t.id}
             href={`/admin/teachers/${t.id}`}
@@ -45,6 +44,11 @@ export default async function AdminTeachersPage() {
             </Badge>
           </Link>
         ))}
+        {(teachers ?? []).length === 0 && (
+          <div className="px-5 py-12 text-center text-muted-foreground text-sm">
+            No teachers yet. Click &ldquo;Add teacher&rdquo; to create one.
+          </div>
+        )}
       </div>
     </div>
   );

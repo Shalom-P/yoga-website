@@ -1,0 +1,344 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { Plus, Pencil, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { formatAud } from "@/lib/i18n/money";
+import { toast } from "sonner";
+import type { DiscountCode, DiscountType, Plan } from "@/lib/supabase/types";
+
+type Draft = {
+  id?: string;
+  code: string;
+  discount_type: DiscountType;
+  // Value as displayed: percent (0–100) or AUD dollars (decimals)
+  discount_value_display: string;
+  applies_to_all: boolean;
+  applies_to_plan_ids: string[];
+  max_uses: string;
+  valid_from: string;
+  valid_until: string;
+  is_active: boolean;
+};
+
+const EMPTY: Draft = {
+  code: "",
+  discount_type: "percentage",
+  discount_value_display: "10",
+  applies_to_all: true,
+  applies_to_plan_ids: [],
+  max_uses: "",
+  valid_from: new Date().toISOString().slice(0, 10),
+  valid_until: "",
+  is_active: true,
+};
+
+function toDraft(c: DiscountCode): Draft {
+  return {
+    id: c.id,
+    code: c.code,
+    discount_type: c.discount_type,
+    discount_value_display:
+      c.discount_type === "percentage"
+        ? String(c.discount_value)
+        : (c.discount_value / 100).toFixed(2),
+    applies_to_all: c.applies_to_plan_ids === null || c.applies_to_plan_ids.length === 0,
+    applies_to_plan_ids: c.applies_to_plan_ids ?? [],
+    max_uses: c.max_uses === null ? "" : String(c.max_uses),
+    valid_from: c.valid_from.slice(0, 10),
+    valid_until: c.valid_until ? c.valid_until.slice(0, 10) : "",
+    is_active: c.is_active,
+  };
+}
+
+function renderValue(c: DiscountCode) {
+  return c.discount_type === "percentage"
+    ? `${c.discount_value}% off`
+    : `${formatAud(c.discount_value)} off`;
+}
+
+export function DiscountsAdmin({
+  discounts,
+  plans,
+}: {
+  discounts: DiscountCode[];
+  plans: Pick<Plan, "id" | "name">[];
+}) {
+  const router = useRouter();
+  const supabase = createSupabaseBrowserClient();
+  const [open, setOpen] = useState(false);
+  const [draft, setDraft] = useState<Draft>(EMPTY);
+  const [saving, setSaving] = useState(false);
+
+  function openAdd() {
+    setDraft(EMPTY);
+    setOpen(true);
+  }
+  function openEdit(c: DiscountCode) {
+    setDraft(toDraft(c));
+    setOpen(true);
+  }
+
+  async function save() {
+    if (!draft.code) {
+      toast.error("Code is required.");
+      return;
+    }
+    const valueNum = Number(draft.discount_value_display);
+    if (!Number.isFinite(valueNum) || valueNum <= 0) {
+      toast.error("Discount value must be a positive number.");
+      return;
+    }
+    if (draft.discount_type === "percentage" && valueNum > 100) {
+      toast.error("Percentage can't exceed 100.");
+      return;
+    }
+
+    const payload = {
+      code: draft.code.toUpperCase().trim(),
+      discount_type: draft.discount_type,
+      discount_value:
+        draft.discount_type === "percentage" ? Math.round(valueNum) : Math.round(valueNum * 100),
+      applies_to_plan_ids: draft.applies_to_all ? null : draft.applies_to_plan_ids,
+      max_uses: draft.max_uses === "" ? null : Number(draft.max_uses),
+      valid_from: new Date(draft.valid_from).toISOString(),
+      valid_until: draft.valid_until ? new Date(draft.valid_until).toISOString() : null,
+      is_active: draft.is_active,
+    };
+
+    setSaving(true);
+    const { error } = draft.id
+      ? await supabase.from("discount_codes").update(payload).eq("id", draft.id)
+      : await supabase.from("discount_codes").insert(payload);
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success(draft.id ? "Code updated." : "Code created.");
+    setOpen(false);
+    router.refresh();
+  }
+
+  function togglePlan(planId: string) {
+    setDraft((d) => ({
+      ...d,
+      applies_to_plan_ids: d.applies_to_plan_ids.includes(planId)
+        ? d.applies_to_plan_ids.filter((id) => id !== planId)
+        : [...d.applies_to_plan_ids, planId],
+    }));
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
+          Discount codes
+        </h1>
+        <Button className="rounded-full" onClick={openAdd}>
+          <Plus className="size-4 mr-1" />
+          New code
+        </Button>
+      </div>
+
+      {discounts.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-muted-foreground">
+          No discount codes yet. Click <b>New code</b> to create one.
+        </div>
+      ) : (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <table className="w-full text-sm">
+            <thead className="bg-muted/40">
+              <tr>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Code</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Discount</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Uses</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Valid until</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
+                <th className="px-4 py-3"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {discounts.map((c) => (
+                <tr key={c.id} className="border-t border-border">
+                  <td className="px-4 py-3 font-mono">{c.code}</td>
+                  <td className="px-4 py-3">{renderValue(c)}</td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {c.times_used}
+                    {c.max_uses !== null && ` / ${c.max_uses}`}
+                  </td>
+                  <td className="px-4 py-3 text-muted-foreground">
+                    {c.valid_until ? new Date(c.valid_until).toLocaleDateString("en-AU") : "—"}
+                  </td>
+                  <td className="px-4 py-3">
+                    <Badge variant={c.is_active ? "secondary" : "outline"}>
+                      {c.is_active ? "Active" : "Inactive"}
+                    </Badge>
+                  </td>
+                  <td className="px-4 py-3 text-right">
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>
+                      <Pencil className="size-3.5" />
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{draft.id ? "Edit code" : "New discount code"}</DialogTitle>
+            <DialogDescription>
+              Discount applies to the first billing cycle of new subscriptions. 100%-off codes are floored to AUD 1.00/cycle (PayPal rejects $0).
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="code">Code</Label>
+                <Input
+                  id="code"
+                  value={draft.code}
+                  onChange={(e) => setDraft({ ...draft, code: e.target.value })}
+                  placeholder="WELCOME10"
+                  className="mt-1.5 font-mono"
+                />
+              </div>
+              <div>
+                <Label>Type</Label>
+                <Select
+                  value={draft.discount_type}
+                  onValueChange={(v) =>
+                    v && setDraft({ ...draft, discount_type: v as DiscountType })
+                  }
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="percentage">Percentage</SelectItem>
+                    <SelectItem value="fixed_aud_cents">Fixed AUD amount</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="value">
+                  Value {draft.discount_type === "percentage" ? "(0–100 %)" : "(AUD)"}
+                </Label>
+                <Input
+                  id="value"
+                  type="number"
+                  min={0}
+                  step={draft.discount_type === "percentage" ? 1 : 0.01}
+                  value={draft.discount_value_display}
+                  onChange={(e) => setDraft({ ...draft, discount_value_display: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label htmlFor="max">Max uses (blank = unlimited)</Label>
+                <Input
+                  id="max"
+                  type="number"
+                  min={0}
+                  value={draft.max_uses}
+                  onChange={(e) => setDraft({ ...draft, max_uses: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="from">Valid from</Label>
+                <Input
+                  id="from"
+                  type="date"
+                  value={draft.valid_from}
+                  onChange={(e) => setDraft({ ...draft, valid_from: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <Label htmlFor="until">Valid until (optional)</Label>
+                <Input
+                  id="until"
+                  type="date"
+                  value={draft.valid_until}
+                  onChange={(e) => setDraft({ ...draft, valid_until: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Applies to</Label>
+              <label className="flex items-center gap-2 text-sm">
+                <Checkbox
+                  checked={draft.applies_to_all}
+                  onCheckedChange={(v) => setDraft({ ...draft, applies_to_all: v === true })}
+                />
+                All active plans
+              </label>
+              {!draft.applies_to_all && (
+                <div className="mt-2 space-y-1.5 pl-6">
+                  {plans.map((p) => (
+                    <label key={p.id} className="flex items-center gap-2 text-sm">
+                      <Checkbox
+                        checked={draft.applies_to_plan_ids.includes(p.id)}
+                        onCheckedChange={() => togglePlan(p.id)}
+                      />
+                      {p.name}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <label className="flex items-center gap-2 text-sm">
+              <Checkbox
+                checked={draft.is_active}
+                onCheckedChange={(v) => setDraft({ ...draft, is_active: v === true })}
+              />
+              Active
+            </label>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOpen(false)} disabled={saving}>
+              Cancel
+            </Button>
+            <Button onClick={save} disabled={saving}>
+              {saving ? <Loader2 className="size-4 animate-spin" /> : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  );
+}

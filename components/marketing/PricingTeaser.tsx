@@ -2,19 +2,60 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
-import { Check, X } from "lucide-react";
+import { Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatAud } from "@/lib/i18n/money";
 import { track } from "@/lib/analytics/events";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { toast } from "sonner";
 import type { Plan, PlanFeature } from "@/lib/supabase/types";
 
 type PlanWithFeatures = Plan & { features: PlanFeature[] };
 
 export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
+  const router = useRouter();
   const [annual, setAnnual] = useState(false);
+  const [pending, setPending] = useState<string | null>(null);
+
+  async function startSubscribe(planSlug: string) {
+    setPending(planSlug);
+    track("paid_plan_clicked", { plan_slug: planSlug, position: "pricing_teaser" });
+    const supabase = createSupabaseBrowserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const next = `/dashboard/plan?planSlug=${encodeURIComponent(planSlug)}`;
+      router.push(`/login?next=${encodeURIComponent(next)}`);
+      return;
+    }
+    try {
+      const res = await fetch("/api/paypal/create-subscription", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ planSlug }),
+      });
+      const body = (await res.json().catch(() => ({}))) as {
+        approveUrl?: string;
+        error?: string;
+      };
+      if (!res.ok || !body.approveUrl) {
+        toast.error(
+          body.error === "plan not configured"
+            ? "This plan isn't ready for purchase yet — please try again shortly."
+            : "Couldn't start checkout. Please try again."
+        );
+        setPending(null);
+        return;
+      }
+      window.location.assign(body.approveUrl);
+    } catch {
+      toast.error("Network error — please try again.");
+      setPending(null);
+    }
+  }
 
   return (
     <section id="pricing" className="py-24 md:py-32">
@@ -33,7 +74,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
             Honest pricing. No lock-ins. AUD.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Your free 1:1 trial comes first — pick a plan when you're ready.
+            Your free 1:1 trial comes first — pick a plan when you&apos;re ready.
           </p>
 
           <div className="mt-7 inline-flex items-center gap-3 p-1 rounded-full border border-border bg-card">
@@ -121,15 +162,20 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
                 </ul>
 
                 <Button
-                  asChild
                   size="lg"
                   variant={p.is_featured ? "default" : "outline"}
                   className="mt-7 h-11 rounded-full"
-                  onClick={() => track("paid_plan_clicked", { plan_id: p.id, position: "pricing_teaser" })}
+                  disabled={pending !== null}
+                  onClick={() => startSubscribe(p.slug)}
                 >
-                  <Link href={`/login?next=/onboarding%3Fplan%3D${p.slug}`}>
-                    Start with a free 1:1
-                  </Link>
+                  {pending === p.slug ? (
+                    <>
+                      <Loader2 className="size-4 mr-1 animate-spin" />
+                      Starting checkout…
+                    </>
+                  ) : (
+                    "Subscribe to this plan"
+                  )}
                 </Button>
               </motion.div>
             );

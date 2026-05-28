@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
 import { DashboardNav } from "@/components/dashboard/DashboardNav";
+import { SignOutButton } from "@/components/shared/SignOutButton";
 
 export default async function DashboardLayout({
   children,
@@ -20,7 +21,10 @@ export default async function DashboardLayout({
               MYYOGACLASSES
             </span>
           </Link>
-          <DashboardNav />
+          <div className="flex items-center gap-2">
+            <DashboardNav />
+            <SignOutButton />
+          </div>
         </div>
       </header>
       <main className="flex-1 bg-secondary/30">{children}</main>
