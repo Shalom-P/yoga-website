@@ -51,12 +51,6 @@ alter table public.sessions enable row level security;
 create policy "sessions_public_read_scheduled"
   on public.sessions for select
   using (status in ('scheduled', 'live') and start_at > now());
-create policy "sessions_booked_customer_read"
-  on public.sessions for select
-  using (exists (
-    select 1 from public.bookings b
-    where b.session_id = sessions.id and b.customer_id = auth.uid() and b.status != 'cancelled'
-  ));
 create policy "sessions_admin_all" on public.sessions for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
 create table public.bookings (
@@ -81,3 +75,11 @@ create policy "bookings_self_read" on public.bookings for select using (auth.uid
 create policy "bookings_self_insert" on public.bookings for insert with check (auth.uid() = customer_id);
 create policy "bookings_self_update_cancel" on public.bookings for update using (auth.uid() = customer_id) with check (auth.uid() = customer_id);
 create policy "bookings_admin_all" on public.bookings for all using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
+
+-- Added after bookings exists: lets customers read sessions they've booked.
+create policy "sessions_booked_customer_read"
+  on public.sessions for select
+  using (exists (
+    select 1 from public.bookings b
+    where b.session_id = sessions.id and b.customer_id = auth.uid() and b.status != 'cancelled'
+  ));
