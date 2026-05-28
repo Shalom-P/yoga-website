@@ -17,7 +17,7 @@ export default async function DashboardLayout({
               <span className="size-2.5 rounded-full bg-background" />
             </span>
             <span className="font-[family-name:var(--font-heading)] text-lg">
-              Sahaja Yoga
+              MYYOGACLASSES
             </span>
           </Link>
           <DashboardNav />

@@ -2,7 +2,7 @@ import { FinalCTA } from "@/components/marketing/FinalCTA";
 
 export const metadata = {
   title: "About",
-  description: "Why Sahaja Yoga exists, and how we work.",
+  description: "Why MYYOGACLASSES exists, and how we work.",
 };
 
 export default function AboutPage() {
@@ -18,7 +18,7 @@ export default function AboutPage() {
           </h1>
           <div className="mt-10 prose prose-lg max-w-none text-foreground/85 space-y-5">
             <p>
-              We started Sahaja Yoga because too many Australians were paying $30/class for
+              We started MYYOGACLASSES because too many Australians were paying $30/class for
               a 1-hour studio session they ended up skipping half the time. Meanwhile,
               brilliant 200-hr+ certified yoga teachers in India were teaching empty rooms.
             </p>

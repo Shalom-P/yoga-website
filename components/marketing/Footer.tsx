@@ -11,7 +11,7 @@ export function Footer() {
               <span className="size-2.5 rounded-full bg-background" />
             </span>
             <span className="font-[family-name:var(--font-heading)] text-lg">
-              Sahaja Yoga
+              MYYOGACLASSES
             </span>
           </Link>
           <p className="text-sm text-muted-foreground max-w-xs text-pretty">
@@ -42,7 +42,7 @@ export function Footer() {
           <ul className="space-y-2.5 text-sm">
             <li><Link href="/about"     className="hover:text-foreground">About</Link></li>
             <li><Link href="/contact"   className="hover:text-foreground">Contact</Link></li>
-            <li><a href="mailto:hello@sahajayoga.com.au" className="hover:text-foreground">Email us</a></li>
+            <li><a href="mailto:hello@myyogaclasses.com.au" className="hover:text-foreground">Email us</a></li>
           </ul>
         </div>
 
@@ -59,7 +59,7 @@ export function Footer() {
       </div>
       <div className="border-t border-border">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row justify-between text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} Sahaja Yoga. ABN xx xxx xxx xxx.</span>
+          <span>© {new Date().getFullYear()} MYYOGACLASSES. ABN xx xxx xxx xxx.</span>
           <span>Made with care in Australia · Teachers in India</span>
         </div>
       </div>

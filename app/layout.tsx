@@ -32,23 +32,23 @@ export const viewport: Viewport = {
   ],
 };
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://sahajayoga.com.au";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myyogaclasses.com.au";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "Sahaja Yoga — Free 1:1 yoga teacher · Online · No credit card",
-    template: "%s · Sahaja Yoga",
+    default: "MYYOGACLASSES — Free 1:1 yoga teacher · Online · No credit card",
+    template: "%s · MYYOGACLASSES",
   },
   description:
     "Live online yoga with expert teachers from India. Book a free 60-minute private session — no credit card required. Times in your local AEST/AEDT.",
-  applicationName: "Sahaja Yoga",
+  applicationName: "MYYOGACLASSES",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    siteName: "Sahaja Yoga",
+    siteName: "MYYOGACLASSES",
     locale: "en_AU",
-    title: "Sahaja Yoga — Free 1:1 yoga teacher · Online",
+    title: "MYYOGACLASSES — Free 1:1 yoga teacher · Online",
     description:
       "Find your free 1:1 yoga teacher. 60-minute private session. Pick your teacher. Pick your time. Meets on Google Meet.",
   },

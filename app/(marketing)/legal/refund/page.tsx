@@ -14,7 +14,7 @@ export default function RefundPage() {
           </p>
           <p>
             For paid subscriptions: if your first paid class wasn&apos;t right for you,
-            email <a className="underline" href="mailto:hello@sahajayoga.com.au">hello@sahajayoga.com.au</a>{" "}
+            email <a className="underline" href="mailto:hello@myyogaclasses.com.au">hello@myyogaclasses.com.au</a>{" "}
             within 7 days for a full refund. After that, refunds are case-by-case.
           </p>
           <p>

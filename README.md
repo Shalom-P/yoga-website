@@ -1,4 +1,4 @@
-# Sahaja Yoga
+# MYYOGACLASSES
 
 Conversion-first multi-teacher yoga studio web app. **Australian customers, Indian teachers**, live on Google Meet.
 
@@ -123,4 +123,4 @@ middleware.ts             # Session refresh + role guard
 
 ## License
 
-Proprietary. © Sahaja Yoga.
+Proprietary. © MYYOGACLASSES.

@@ -53,7 +53,7 @@ export async function POST(req: Request) {
         ? { plan: { billing_cycles: [{ sequence: 1, pricing_scheme: pricingOverride }] } }
         : {}),
       application_context: {
-        brand_name: "Sahaja Yoga",
+        brand_name: "MYYOGACLASSES",
         locale: "en-AU",
         return_url: `${siteUrl}/dashboard/plan/success`,
         cancel_url: `${siteUrl}/dashboard/plan?canceled=1`,

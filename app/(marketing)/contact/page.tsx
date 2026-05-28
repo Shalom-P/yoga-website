@@ -17,11 +17,11 @@ export default function ContactPage() {
           within 1 business day (Australian time).
         </p>
         <a
-          href="mailto:hello@sahajayoga.com.au"
+          href="mailto:hello@myyogaclasses.com.au"
           className="mt-10 inline-flex items-center gap-2 rounded-full bg-primary text-primary-foreground px-6 h-12 font-medium hover:opacity-90"
         >
           <Mail className="size-4" />
-          hello@sahajayoga.com.au
+          hello@myyogaclasses.com.au
         </a>
       </div>
     </article>

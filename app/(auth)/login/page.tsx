@@ -12,13 +12,13 @@ export default function LoginPage() {
           <span className="size-7 rounded-full bg-primary inline-flex items-center justify-center">
             <span className="size-2.5 rounded-full bg-background" />
           </span>
-          <span className="font-[family-name:var(--font-heading)]">Sahaja Yoga</span>
+          <span className="font-[family-name:var(--font-heading)]">MYYOGACLASSES</span>
         </Link>
       </header>
       <main className="flex-1 grid place-items-center px-6 py-12">
         <div className="w-full max-w-md">
           <h1 className="text-3xl font-[family-name:var(--font-heading)] tracking-tight text-center">
-            Continue with Sahaja Yoga
+            Continue with MYYOGACLASSES
           </h1>
           <p className="mt-2 text-center text-muted-foreground">
             Your free 1:1 session is one click away.

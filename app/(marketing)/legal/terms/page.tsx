@@ -16,7 +16,7 @@ export default function TermsPage() {
             governing law (NSW), and dispute resolution.
           </p>
           <p>
-            By using Sahaja Yoga you agree to act in good faith with our teachers and
+            By using MYYOGACLASSES you agree to act in good faith with our teachers and
             other students.
           </p>
         </div>

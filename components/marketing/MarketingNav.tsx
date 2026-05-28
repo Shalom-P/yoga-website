@@ -43,7 +43,7 @@ export function MarketingNav() {
             <span className="size-2.5 rounded-full bg-background" />
           </span>
           <span className="font-[family-name:var(--font-heading)] text-lg tracking-tight">
-            Sahaja Yoga
+            MYYOGACLASSES
           </span>
         </Link>
 
