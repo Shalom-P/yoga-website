@@ -78,6 +78,7 @@ export type ClassCategory = {
   created_at: string;
   updated_at: string;
 }
+export type MeetStatus = "pending" | "created" | "failed";
 export type Session = {
   id: string;
   teacher_id: string;
@@ -88,6 +89,7 @@ export type Session = {
   status: SessionStatus;
   meet_link: string | null;
   meet_event_id: string | null;
+  meet_status: MeetStatus | null;
   is_free_trial: boolean;
   recording_url: string | null;
   notes: string | null;
@@ -150,6 +152,7 @@ export type Subscription = {
   paypal_subscription_id: string;
   status: SubscriptionStatus;
   discount_code_id: string | null;
+  discount_applied_at: string | null;
   current_period_start: string | null;
   current_period_end: string | null;
   next_billing_at: string | null;
@@ -217,6 +220,12 @@ export type AuditLog = {
   payload: unknown;
   created_at: string;
 }
+export type PaypalWebhookEvent = {
+  event_id: string;
+  event_type: string;
+  received_at: string;
+  payload: unknown;
+}
 
 type Table<R, I = Partial<R>, U = Partial<R>> = {
   Row: R;
@@ -246,6 +255,7 @@ export type Database = {
       admin_settings: Table<AdminSettings, { key: string; value: unknown; updated_by?: string | null }>;
       newsletter_signups: Table<NewsletterSignup, { email: string; source?: string | null }>;
       audit_log: Table<AuditLog, { action: string; entity_type: string; entity_id?: string | null; actor_id?: string | null; payload?: unknown }>;
+      paypal_webhook_events: Table<PaypalWebhookEvent, { event_id: string; event_type: string; payload?: unknown }>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -270,6 +280,8 @@ export type Database = {
       };
       promote_to_admin: { Args: { target_user_id: string }; Returns: null };
       is_admin: { Args: { uid: string }; Returns: boolean };
+      apply_discount_to_subscription: { Args: { p_subscription_id: string }; Returns: null };
+      subscribe_newsletter: { Args: { p_email: string; p_source: string }; Returns: null };
     };
     Enums: {
       user_role: UserRole;
@@ -282,6 +294,7 @@ export type Database = {
       subscription_status: SubscriptionStatus;
       payment_status: PaymentStatus;
       media_kind: MediaKind;
+      meet_status: MeetStatus;
     };
     CompositeTypes: { [_ in never]: never };
   };

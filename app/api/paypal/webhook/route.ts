@@ -3,59 +3,128 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { verifyPayPalWebhook } from "@/lib/paypal/verify-webhook";
 import type { SubscriptionStatus } from "@/lib/supabase/types";
 
+type PayPalEvent = {
+  id?: string;
+  event_type?: string;
+  resource?: Record<string, unknown>;
+};
+
 export async function POST(req: Request) {
   const raw = await req.text();
   const ok = await verifyPayPalWebhook(req.headers, raw).catch(() => false);
   if (!ok) return NextResponse.json({ error: "invalid_signature" }, { status: 400 });
 
-  const event = JSON.parse(raw) as { event_type: string; resource: Record<string, unknown> };
+  let event: PayPalEvent;
+  try {
+    event = JSON.parse(raw) as PayPalEvent;
+  } catch {
+    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+  }
+  if (!event.id || !event.event_type) {
+    return NextResponse.json({ error: "missing_fields" }, { status: 400 });
+  }
+
   const svc = createSupabaseServiceClient();
+
+  // Idempotency: paypal_webhook_events.event_id is the primary key, so a
+  // duplicate delivery returns no rows and we ack-200 without re-running handlers.
+  const dedupe = await svc
+    .from("paypal_webhook_events")
+    .insert({
+      event_id: event.id,
+      event_type: event.event_type,
+      payload: event as unknown,
+    })
+    .select("event_id")
+    .maybeSingle();
+  if (!dedupe.data) {
+    return NextResponse.json({ ok: true, replay: true });
+  }
 
   switch (event.event_type) {
     case "BILLING.SUBSCRIPTION.ACTIVATED": {
-      const r = event.resource as { id: string; billing_info?: { next_billing_time?: string } };
-      await svc.from("subscriptions")
-        .update({
-          status: "active" as SubscriptionStatus,
-          started_at: new Date().toISOString(),
-          next_billing_at: r.billing_info?.next_billing_time ?? null,
-        })
-        .eq("paypal_subscription_id", r.id);
+      const r = event.resource as
+        | { id?: string; billing_info?: { next_billing_time?: string } }
+        | undefined;
+      if (!r?.id) break;
+      const { data: subRow } = await svc
+        .from("subscriptions")
+        .select("id, status")
+        .eq("paypal_subscription_id", r.id)
+        .single();
+      // Guard against out-of-order delivery: never reactivate a cancelled sub.
+      if (subRow && subRow.status !== "cancelled") {
+        await svc
+          .from("subscriptions")
+          .update({
+            status: "active" as SubscriptionStatus,
+            started_at: new Date().toISOString(),
+            next_billing_at: r.billing_info?.next_billing_time ?? null,
+            cancelled_at: null,
+          })
+          .eq("id", subRow.id);
+        await svc.rpc("apply_discount_to_subscription", {
+          p_subscription_id: subRow.id,
+        });
+      }
       break;
     }
     case "BILLING.SUBSCRIPTION.CANCELLED":
     case "BILLING.SUBSCRIPTION.EXPIRED":
     case "BILLING.SUBSCRIPTION.SUSPENDED": {
-      const r = event.resource as { id: string };
-      const status = event.event_type.split(".").pop()!.toLowerCase() as SubscriptionStatus;
-      await svc.from("subscriptions")
-        .update({ status, cancelled_at: new Date().toISOString() })
+      const r = event.resource as { id?: string } | undefined;
+      if (!r?.id) break;
+      const status: SubscriptionStatus =
+        event.event_type === "BILLING.SUBSCRIPTION.CANCELLED"
+          ? "cancelled"
+          : event.event_type === "BILLING.SUBSCRIPTION.EXPIRED"
+          ? "expired"
+          : "suspended";
+      // Only flip cancelled_at on a real cancellation. SUSPENDED is recoverable;
+      // EXPIRED is end-of-term, separate from a user-initiated cancel.
+      const updates: { status: SubscriptionStatus; cancelled_at?: string } = { status };
+      if (status === "cancelled") {
+        updates.cancelled_at = new Date().toISOString();
+      }
+      await svc
+        .from("subscriptions")
+        .update(updates)
         .eq("paypal_subscription_id", r.id);
       break;
     }
     case "PAYMENT.SALE.COMPLETED":
     case "PAYMENT.CAPTURE.COMPLETED": {
-      const r = event.resource as {
-        id: string;
-        billing_agreement_id?: string;
-        amount?: { total?: string; value?: string; currency?: string };
-      };
-      const cents = Math.round(parseFloat(r.amount?.total ?? r.amount?.value ?? "0") * 100);
-      const { data: sub } = await svc
+      const r = event.resource as
+        | {
+            id?: string;
+            billing_agreement_id?: string;
+            amount?: { total?: string; value?: string; currency?: string };
+          }
+        | undefined;
+      if (!r?.id) break;
+      const rawAmount = r.amount?.total ?? r.amount?.value;
+      if (rawAmount == null) break;
+      const parsedAmount = Number(rawAmount);
+      if (!Number.isFinite(parsedAmount) || parsedAmount <= 0) break;
+      const cents = Math.round(parsedAmount * 100);
+      const { data: subRow } = await svc
         .from("subscriptions")
         .select("id, customer_id")
         .eq("paypal_subscription_id", r.billing_agreement_id ?? "")
         .single();
-      if (sub) {
-        await svc.from("payments").upsert({
-          paypal_capture_id: r.id,
-          customer_id: sub.customer_id,
-          subscription_id: sub.id,
-          amount_aud_cents: cents,
-          currency: r.amount?.currency ?? "AUD",
-          status: "completed",
-          paid_at: new Date().toISOString(),
-        }, { onConflict: "paypal_capture_id" });
+      if (subRow) {
+        await svc.from("payments").upsert(
+          {
+            paypal_capture_id: r.id,
+            customer_id: subRow.customer_id,
+            subscription_id: subRow.id,
+            amount_aud_cents: cents,
+            currency: r.amount?.currency ?? "AUD",
+            status: "completed",
+            paid_at: new Date().toISOString(),
+          },
+          { onConflict: "paypal_capture_id" },
+        );
       }
       break;
     }
@@ -65,6 +134,7 @@ export async function POST(req: Request) {
     actor_id: null,
     action: "paypal_webhook",
     entity_type: "subscription",
+    entity_id: event.id,
     payload: event as object,
   });
 

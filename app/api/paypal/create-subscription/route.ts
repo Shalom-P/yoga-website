@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { paypalFetch } from "@/lib/paypal/client";
 
 const schema = z.object({
-  planSlug: z.string(),
-  discountCode: z.string().optional(),
+  planSlug: z.string().min(1).max(64),
+  discountCode: z.string().min(1).max(64).optional(),
 });
+
+// PayPal rejects $0 fixed_price subscriptions. Floor to AUD 1.00 / cycle for
+// 100%-off promotions; admins issue free intros via the trial flow, not via
+// paid plans with 100% discounts.
+const PRICE_FLOOR_AUD_CENTS = 100;
 
 export async function POST(req: Request) {
   const supabase = await createSupabaseServerClient();
@@ -26,21 +32,24 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "plan not configured" }, { status: 400 });
   }
 
-  // Discount handling (percentage applied via plan_overrides.pricing_scheme.fixed_price)
+  // Discount handling — percentage applied via plan_overrides.pricing_scheme.fixed_price.
   let pricingOverride: { fixed_price: { value: string; currency_code: "AUD" } } | undefined;
+  let discountCodeId: string | null = null;
   if (parsed.data.discountCode) {
     const { data: d } = await supabase.rpc("validate_discount_code", {
       p_code: parsed.data.discountCode,
       p_plan_id: plan.id,
     });
     if (d) {
-      const final =
+      const computed =
         d.discount_type === "percentage"
           ? Math.round(plan.price_aud_cents * (1 - d.discount_value / 100))
           : Math.max(0, plan.price_aud_cents - d.discount_value);
+      const final = Math.max(computed, PRICE_FLOOR_AUD_CENTS);
       pricingOverride = {
         fixed_price: { value: (final / 100).toFixed(2), currency_code: "AUD" },
       };
+      discountCodeId = d.id;
     }
   }
 
@@ -65,6 +74,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "paypal_failed", details: await res.text() }, { status: 502 });
   }
   const data = (await res.json()) as { id: string; links: { rel: string; href: string }[] };
+
+  // Pre-claim the subscription against this customer so /confirm-subscription
+  // can reject hijack attempts where Mallory POSTs Alice's subscription ID.
+  const svc = createSupabaseServiceClient();
+  const { error: insertErr } = await svc.from("subscriptions").insert({
+    customer_id: user.id,
+    plan_id: plan.id,
+    paypal_subscription_id: data.id,
+    status: "pending",
+    discount_code_id: discountCodeId,
+  });
+  if (insertErr) {
+    return NextResponse.json({ error: "db_error", details: insertErr.message }, { status: 500 });
+  }
+
   const approveUrl = data.links.find((l) => l.rel === "approve")?.href;
   return NextResponse.json({ subscriptionId: data.id, approveUrl });
 }
