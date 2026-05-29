@@ -24,7 +24,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { formatCustomerTime } from "@/lib/timezone";
 
@@ -74,7 +73,6 @@ export function SessionsAdmin({
   categories: Category[];
 }) {
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [saving, setSaving] = useState(false);
@@ -131,17 +129,27 @@ export function SessionsAdmin({
 
   async function cancelSession(id: string) {
     setCancelling(id);
-    const { error } = await supabase
-      .from("sessions")
-      .update({ status: "cancelled" })
-      .eq("id", id);
-    setCancelling(null);
-    if (error) {
-      toast.error(error.message);
-      return;
+    try {
+      // Goes through DELETE /api/admin/sessions so bookings are cancelled and
+      // the Meet event is removed — a direct sessions.update would leave both
+      // dangling.
+      const res = await fetch("/api/admin/sessions", {
+        method: "DELETE",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sessionId: id }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      if (!res.ok) {
+        toast.error(`Couldn't cancel: ${body.error ?? "unknown"}`);
+        return;
+      }
+      toast.success("Session cancelled. Customers' bookings updated.");
+      router.refresh();
+    } catch {
+      toast.error("Network error.");
+    } finally {
+      setCancelling(null);
     }
-    toast.success("Session cancelled.");
-    router.refresh();
   }
 
   return (

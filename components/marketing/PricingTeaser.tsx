@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "motion/react";
 import { Check, X, Loader2 } from "lucide-react";
@@ -18,7 +18,20 @@ type PlanWithFeatures = Plan & { features: PlanFeature[] };
 
 export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
   const router = useRouter();
+  // Toggle filters which set of admin-created plans we show. Previously we
+  // synthesised a 20% "annual" discount on the displayed price while still
+  // subscribing the user to the monthly plan — that was a billing lie.
+  const monthlyPlans = useMemo(
+    () => plans.filter((p) => p.billing_interval === "monthly"),
+    [plans],
+  );
+  const yearlyPlans = useMemo(
+    () => plans.filter((p) => p.billing_interval === "yearly"),
+    [plans],
+  );
+  const hasYearly = yearlyPlans.length > 0;
   const [annual, setAnnual] = useState(false);
+  const visiblePlans = annual && hasYearly ? yearlyPlans : monthlyPlans;
   const [pending, setPending] = useState<string | null>(null);
 
   async function startSubscribe(planSlug: string) {
@@ -77,26 +90,28 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
             Your free 1:1 trial comes first — pick a plan when you&apos;re ready.
           </p>
 
-          <div className="mt-7 inline-flex items-center gap-3 p-1 rounded-full border border-border bg-card">
-            <button
-              onClick={() => setAnnual(false)}
-              className={cn(
-                "px-4 py-1.5 text-sm rounded-full transition-colors",
-                !annual ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-              )}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setAnnual(true)}
-              className={cn(
-                "px-4 py-1.5 text-sm rounded-full transition-colors inline-flex items-center gap-2",
-                annual ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-              )}
-            >
-              Annual <Badge variant="secondary" className="text-[10px]">−20%</Badge>
-            </button>
-          </div>
+          {hasYearly && (
+            <div className="mt-7 inline-flex items-center gap-3 p-1 rounded-full border border-border bg-card">
+              <button
+                onClick={() => setAnnual(false)}
+                className={cn(
+                  "px-4 py-1.5 text-sm rounded-full transition-colors",
+                  !annual ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                )}
+              >
+                Monthly
+              </button>
+              <button
+                onClick={() => setAnnual(true)}
+                className={cn(
+                  "px-4 py-1.5 text-sm rounded-full transition-colors inline-flex items-center gap-2",
+                  annual ? "bg-primary text-primary-foreground" : "text-muted-foreground"
+                )}
+              >
+                Annual
+              </button>
+            </div>
+          )}
         </motion.div>
 
         <motion.div
@@ -106,9 +121,13 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
           className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
         >
-          {plans.map((p) => {
-            const monthly = p.price_aud_cents;
-            const displayCents = annual ? Math.round(monthly * 0.8) : monthly;
+          {visiblePlans.map((p) => {
+            const cadenceSuffix =
+              p.billing_interval === "yearly"
+                ? "/yr"
+                : p.billing_interval === "quarterly"
+                ? "/quarter"
+                : "/mo";
             return (
               <motion.div
                 key={p.id}
@@ -135,15 +154,10 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
                 <div className="mt-6">
                   <div className="flex items-baseline gap-1">
                     <span className="text-4xl font-[family-name:var(--font-heading)]">
-                      {formatAud(displayCents)}
+                      {formatAud(p.price_aud_cents)}
                     </span>
-                    <span className="text-muted-foreground">/mo</span>
+                    <span className="text-muted-foreground">{cadenceSuffix}</span>
                   </div>
-                  {annual && (
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Billed annually · {formatAud(displayCents * 12)}/yr
-                    </div>
-                  )}
                 </div>
 
                 <ul className="mt-7 space-y-3 flex-1">

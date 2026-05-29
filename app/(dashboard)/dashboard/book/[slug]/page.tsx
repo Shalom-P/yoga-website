@@ -8,7 +8,7 @@ export default async function TeacherBookingPage({
 }: {
   params: Promise<{ slug: string }>;
 }) {
-  await requireUser("/dashboard");
+  const { user } = await requireUser("/dashboard");
   const { slug } = await params;
 
   const supabase = await createSupabaseServerClient();
@@ -17,7 +17,7 @@ export default async function TeacherBookingPage({
     .select("id, slug, display_name, headline, bio, timezone, rating_avg, is_active")
     .eq("slug", slug)
     .eq("is_active", true)
-    .single();
+    .maybeSingle();
   if (!teacher) notFound();
 
   const { data: availability } = await supabase
@@ -25,10 +25,14 @@ export default async function TeacherBookingPage({
     .select("day_of_week, start_time, end_time, slot_duration_minutes")
     .eq("teacher_id", teacher.id);
 
+  // Explicit id filter + maybeSingle — RLS alone would also scope to the user,
+  // but .single() throws PGRST116 on the transient zero-row case (e.g. profile
+  // row hasn't been created by the auth trigger yet).
   const { data: profile } = await supabase
     .from("profiles")
     .select("timezone")
-    .single();
+    .eq("id", user.id)
+    .maybeSingle();
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">

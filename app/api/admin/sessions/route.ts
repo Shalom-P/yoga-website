@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import { createMeetEvent } from "@/lib/google/calendar";
+import { createMeetEvent, deleteMeetEvent } from "@/lib/google/calendar";
 
 const schema = z.object({
   teacherId: z.string().uuid(),
@@ -12,6 +12,10 @@ const schema = z.object({
   capacity: z.number().int().min(1).max(50).default(1),
   isFreeTrial: z.boolean().default(false),
   notes: z.string().max(2000).optional(),
+});
+
+const cancelSchema = z.object({
+  sessionId: z.string().uuid(),
 });
 
 async function isAdmin(userId: string): Promise<boolean> {
@@ -99,4 +103,62 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ sessionId: session.id });
+}
+
+// Admin "cancel session" was previously done from the browser as a single
+// sessions.update — leaving customer bookings as 'confirmed' and the Meet
+// link still joinable. This endpoint cascades the cancel properly.
+export async function DELETE(req: Request) {
+  const supabase = await createSupabaseServerClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  if (!(await isAdmin(user.id))) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+
+  const parsed = cancelSchema.safeParse(await req.json().catch(() => ({})));
+  if (!parsed.success) return NextResponse.json({ error: "bad request" }, { status: 400 });
+
+  const svc = createSupabaseServiceClient();
+  const { data: session } = await svc
+    .from("sessions")
+    .select("id, status, meet_event_id, start_at")
+    .eq("id", parsed.data.sessionId)
+    .single();
+  if (!session) {
+    return NextResponse.json({ error: "session_not_found" }, { status: 404 });
+  }
+  if (session.status === "cancelled") {
+    return NextResponse.json({ ok: true, alreadyCancelled: true });
+  }
+
+  // Cascade cancel: session first (so customers immediately stop seeing it as
+  // bookable), then the underlying bookings.
+  const now = new Date().toISOString();
+  const { error: sessionErr } = await svc
+    .from("sessions")
+    .update({ status: "cancelled" })
+    .eq("id", session.id);
+  if (sessionErr) {
+    return NextResponse.json({ error: "db_error", details: sessionErr.message }, { status: 500 });
+  }
+  await svc
+    .from("bookings")
+    .update({
+      status: "cancelled",
+      cancellation_reason: "session_cancelled_by_admin",
+      cancelled_at: now,
+    })
+    .eq("session_id", session.id)
+    .neq("status", "cancelled");
+
+  // Best-effort Meet cleanup — only if the class hasn't started, so we don't
+  // kill an in-progress live class.
+  if (
+    session.meet_event_id &&
+    session.start_at &&
+    new Date(session.start_at).getTime() > Date.now()
+  ) {
+    deleteMeetEvent(session.meet_event_id).catch(() => {});
+  }
+
+  return NextResponse.json({ ok: true });
 }
