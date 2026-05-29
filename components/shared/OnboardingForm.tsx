@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -62,7 +63,12 @@ export function OnboardingForm() {
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-7">
       <div>
-        <Label className="mb-2 block">What&apos;s your level?</Label>
+        <LabelWithHint
+          className="mb-2"
+          hint="Helps teachers pitch the right level of cues — pick whichever feels honest, you can change it later."
+        >
+          What&apos;s your level?
+        </LabelWithHint>
         <Select value={level} onValueChange={(v) => v && setLevel(v)}>
           <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -74,7 +80,12 @@ export function OnboardingForm() {
       </div>
 
       <div>
-        <Label className="mb-2 block">Your timezone</Label>
+        <LabelWithHint
+          className="mb-2"
+          hint="Your local timezone — used to show class times in hours that make sense to you (not the teacher's IST)."
+        >
+          Your timezone
+        </LabelWithHint>
         <Select value={tz} onValueChange={(v) => v && setTz(v)}>
           <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -88,7 +99,12 @@ export function OnboardingForm() {
       </div>
 
       <div>
-        <Label className="mb-3 block">What are you hoping to get out of this?</Label>
+        <LabelWithHint
+          className="mb-3"
+          hint="Tick anything that feels relevant — we use this to recommend teachers and classes."
+        >
+          What are you hoping to get out of this?
+        </LabelWithHint>
         <div className="flex flex-wrap gap-2">
           {GOALS.map((g) => (
             <button
@@ -108,13 +124,16 @@ export function OnboardingForm() {
         </div>
       </div>
 
-      <label className="flex items-start gap-3 text-sm text-muted-foreground">
+      <Label className="items-start gap-3 text-sm font-normal text-muted-foreground">
         <Checkbox
           checked={marketing}
           onCheckedChange={(v) => setMarketing(v === true)}
         />
         <span>Email me tips, class drops, and the occasional offer.</span>
-      </label>
+        <FieldHint>
+          Optional — class reminders and booking confirmations still go out either way.
+        </FieldHint>
+      </Label>
 
       <Button type="submit" disabled={loading} size="lg" className="w-full h-12 rounded-full">
         {loading ? "Saving…" : "Continue to pick a teacher →"}

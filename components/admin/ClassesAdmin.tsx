@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -162,7 +163,12 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="name">Name</Label>
+                <LabelWithHint
+                  htmlFor="name"
+                  hint="Display name on the /classes grid and on plan inclusion lists."
+                >
+                  Name
+                </LabelWithHint>
                 <Input
                   id="name"
                   value={draft.name}
@@ -171,7 +177,12 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
                 />
               </div>
               <div>
-                <Label htmlFor="slug">Slug</Label>
+                <LabelWithHint
+                  htmlFor="slug"
+                  hint="URL-safe identifier (used in /classes/<slug>) and as the value in plan included_session_types."
+                >
+                  Slug
+                </LabelWithHint>
                 <Input
                   id="slug"
                   value={draft.slug}
@@ -183,7 +194,12 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <LabelWithHint
+                htmlFor="description"
+                hint="One-paragraph blurb shown on the class card and detail page."
+              >
+                Description
+              </LabelWithHint>
               <Textarea
                 id="description"
                 value={draft.description}
@@ -195,7 +211,11 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Intensity</Label>
+                <LabelWithHint
+                  hint="How vigorous the class is — drives the colour-coded badge on the class card."
+                >
+                  Intensity
+                </LabelWithHint>
                 <Select
                   value={draft.intensity}
                   onValueChange={(v) => v && setDraft({ ...draft, intensity: v as IntensityLevel })}
@@ -211,7 +231,12 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="icon">Lucide icon name</Label>
+                <LabelWithHint
+                  htmlFor="icon"
+                  hint="Name of a lucide-react icon shown next to the class title (e.g. leaf, wind, moon)."
+                >
+                  Lucide icon name
+                </LabelWithHint>
                 <Input
                   id="icon"
                   value={draft.icon_name}
@@ -223,7 +248,12 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             </div>
 
             <div>
-              <Label htmlFor="props">Props needed (comma-separated)</Label>
+              <LabelWithHint
+                htmlFor="props"
+                hint="Equipment students should have ready. Shown as 'What you'll need' on the class page."
+              >
+                Props needed (comma-separated)
+              </LabelWithHint>
               <Input
                 id="props"
                 value={draft.props_needed}
@@ -233,13 +263,17 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
               />
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
+            <Label className="flex items-center gap-2 text-sm font-normal">
               <Checkbox
                 checked={draft.is_active}
                 onCheckedChange={(v) => setDraft({ ...draft, is_active: v === true })}
               />
               Visible to customers
-            </label>
+              <FieldHint>
+                Uncheck to hide this class from the marketing site and booking dropdowns without
+                deleting it.
+              </FieldHint>
+            </Label>
           </div>
 
           <DialogFooter>

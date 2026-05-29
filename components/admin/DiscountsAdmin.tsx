@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -217,7 +218,12 @@ export function DiscountsAdmin({
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="code">Code</Label>
+                <LabelWithHint
+                  htmlFor="code"
+                  hint="Case-insensitive code the customer types at checkout (e.g. WELCOME10). Auto-uppercased on save."
+                >
+                  Code
+                </LabelWithHint>
                 <Input
                   id="code"
                   value={draft.code}
@@ -227,7 +233,9 @@ export function DiscountsAdmin({
                 />
               </div>
               <div>
-                <Label>Type</Label>
+                <LabelWithHint hint="Percentage subtracts from the plan price; Fixed subtracts an AUD amount.">
+                  Type
+                </LabelWithHint>
                 <Select
                   value={draft.discount_type}
                   onValueChange={(v) =>
@@ -247,9 +255,16 @@ export function DiscountsAdmin({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="value">
+                <LabelWithHint
+                  htmlFor="value"
+                  hint={
+                    draft.discount_type === "percentage"
+                      ? "Percent off the first billing cycle. 100% is floored to AUD 1.00 because PayPal rejects $0 subscriptions."
+                      : "Dollar amount off the first billing cycle, in AUD. Final price is floored at AUD 1.00."
+                  }
+                >
                   Value {draft.discount_type === "percentage" ? "(0–100 %)" : "(AUD)"}
-                </Label>
+                </LabelWithHint>
                 <Input
                   id="value"
                   type="number"
@@ -261,7 +276,12 @@ export function DiscountsAdmin({
                 />
               </div>
               <div>
-                <Label htmlFor="max">Max uses (blank = unlimited)</Label>
+                <LabelWithHint
+                  htmlFor="max"
+                  hint="Total redemptions allowed across all customers. Counter increments when the PayPal webhook activates the subscription."
+                >
+                  Max uses (blank = unlimited)
+                </LabelWithHint>
                 <Input
                   id="max"
                   type="number"
@@ -275,7 +295,12 @@ export function DiscountsAdmin({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="from">Valid from</Label>
+                <LabelWithHint
+                  htmlFor="from"
+                  hint="Earliest date the code can be redeemed. Defaults to today."
+                >
+                  Valid from
+                </LabelWithHint>
                 <Input
                   id="from"
                   type="date"
@@ -285,7 +310,12 @@ export function DiscountsAdmin({
                 />
               </div>
               <div>
-                <Label htmlFor="until">Valid until (optional)</Label>
+                <LabelWithHint
+                  htmlFor="until"
+                  hint="Code stops working at midnight UTC on this date. Leave blank for no end."
+                >
+                  Valid until (optional)
+                </LabelWithHint>
                 <Input
                   id="until"
                   type="date"
@@ -297,36 +327,44 @@ export function DiscountsAdmin({
             </div>
 
             <div>
-              <Label className="mb-2 block">Applies to</Label>
-              <label className="flex items-center gap-2 text-sm">
+              <LabelWithHint
+                className="mb-2"
+                hint="Restrict which plans accept this code. Tick 'All active plans' to allow any."
+              >
+                Applies to
+              </LabelWithHint>
+              <Label className="flex items-center gap-2 text-sm font-normal">
                 <Checkbox
                   checked={draft.applies_to_all}
                   onCheckedChange={(v) => setDraft({ ...draft, applies_to_all: v === true })}
                 />
                 All active plans
-              </label>
+              </Label>
               {!draft.applies_to_all && (
                 <div className="mt-2 space-y-1.5 pl-6">
                   {plans.map((p) => (
-                    <label key={p.id} className="flex items-center gap-2 text-sm">
+                    <Label key={p.id} className="flex items-center gap-2 text-sm font-normal">
                       <Checkbox
                         checked={draft.applies_to_plan_ids.includes(p.id)}
                         onCheckedChange={() => togglePlan(p.id)}
                       />
                       {p.name}
-                    </label>
+                    </Label>
                   ))}
                 </div>
               )}
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
+            <Label className="flex items-center gap-2 text-sm font-normal">
               <Checkbox
                 checked={draft.is_active}
                 onCheckedChange={(v) => setDraft({ ...draft, is_active: v === true })}
               />
               Active
-            </label>
+              <FieldHint>
+                Inactive codes immediately stop working at checkout but stay around for reporting.
+              </FieldHint>
+            </Label>
           </div>
 
           <DialogFooter>

@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -295,7 +296,12 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="slug">Slug</Label>
+                <LabelWithHint
+                  htmlFor="slug"
+                  hint="Stable identifier passed to /api/paypal/create-subscription. Don't change after launch."
+                >
+                  Slug
+                </LabelWithHint>
                 <Input
                   id="slug"
                   value={draft.slug}
@@ -305,7 +311,12 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
                 />
               </div>
               <div>
-                <Label htmlFor="name">Display name</Label>
+                <LabelWithHint
+                  htmlFor="name"
+                  hint="Customer-facing plan name shown on /pricing and on the dashboard."
+                >
+                  Display name
+                </LabelWithHint>
                 <Input
                   id="name"
                   value={draft.name}
@@ -317,7 +328,12 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
             </div>
 
             <div>
-              <Label htmlFor="description">Description</Label>
+              <LabelWithHint
+                htmlFor="description"
+                hint="One-line pitch under the plan name on pricing cards."
+              >
+                Description
+              </LabelWithHint>
               <Textarea
                 id="description"
                 value={draft.description}
@@ -329,7 +345,12 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="price">Price (AUD)</Label>
+                <LabelWithHint
+                  htmlFor="price"
+                  hint="Recurring price in AUD per billing cycle. Stored as integer cents. PayPal plans are immutable — bumping the price creates a new PayPal plan on Sync."
+                >
+                  Price (AUD)
+                </LabelWithHint>
                 <Input
                   id="price"
                   type="number"
@@ -346,7 +367,9 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
                 />
               </div>
               <div>
-                <Label>Billing interval</Label>
+                <LabelWithHint hint="How often customers are billed. Quarterly = every 3 months. Yearly = once a year.">
+                  Billing interval
+                </LabelWithHint>
                 <Select
                   value={draft.billing_interval}
                   onValueChange={(v) =>
@@ -366,7 +389,12 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
             </div>
 
             <div>
-              <Label htmlFor="sessions">Included sessions / month</Label>
+              <LabelWithHint
+                htmlFor="sessions"
+                hint="Cap on bookings the plan allows per month. Leave blank for unlimited (e.g. group-class plans)."
+              >
+                Included sessions / month
+              </LabelWithHint>
               <Input
                 id="sessions"
                 type="number"
@@ -384,25 +412,35 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
             </div>
 
             <div className="flex gap-6">
-              <label className="flex items-center gap-2 text-sm">
+              <Label className="flex items-center gap-2 text-sm font-normal">
                 <Checkbox
                   checked={draft.is_featured}
                   onCheckedChange={(v) => setDraft({ ...draft, is_featured: v === true })}
                 />
                 Featured plan
-              </label>
-              <label className="flex items-center gap-2 text-sm">
+                <FieldHint>
+                  Pins this plan in the middle of /pricing with a &quot;Most popular&quot; badge and
+                  primary-coloured CTA.
+                </FieldHint>
+              </Label>
+              <Label className="flex items-center gap-2 text-sm font-normal">
                 <Checkbox
                   checked={draft.is_active}
                   onCheckedChange={(v) => setDraft({ ...draft, is_active: v === true })}
                 />
                 Visible to customers
-              </label>
+                <FieldHint>
+                  Hide the plan from /pricing without deleting it. Existing subscribers keep
+                  billing as normal.
+                </FieldHint>
+              </Label>
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-2">
-                <Label>Features</Label>
+                <LabelWithHint hint="Bullet list shown on the pricing card. Uncheck a row to render it struck-through (e.g. excluded features).">
+                  Features
+                </LabelWithHint>
                 <Button type="button" size="sm" variant="outline" onClick={addFeature}>
                   <Plus className="size-3.5 mr-1" />
                   Add row

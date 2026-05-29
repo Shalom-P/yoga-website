@@ -6,6 +6,7 @@ import { Upload, Loader2, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -215,7 +216,12 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
 
           <div className="space-y-4">
             <div>
-              <Label htmlFor="file">File</Label>
+              <LabelWithHint
+                htmlFor="file"
+                hint="Image or video to upload. Lands in the `promotional-media` Storage bucket; the public URL is saved to the DB."
+              >
+                File
+              </LabelWithHint>
               <Input
                 id="file"
                 ref={fileInputRef}
@@ -233,7 +239,9 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label>Kind</Label>
+                <LabelWithHint hint="Where on the site this slot is rendered (hero, banner, testimonial photo, class card thumbnail).">
+                  Kind
+                </LabelWithHint>
                 <Select
                   value={draft.kind}
                   onValueChange={(v) => v && setDraft({ ...draft, kind: v as MediaKind })}
@@ -251,7 +259,12 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
                 </Select>
               </div>
               <div>
-                <Label htmlFor="placement">Placement</Label>
+                <LabelWithHint
+                  htmlFor="placement"
+                  hint="Free-text label that landing components query against (e.g. 'landing.hero', 'reviews.sidebar')."
+                >
+                  Placement
+                </LabelWithHint>
                 <Input
                   id="placement"
                   value={draft.placement}
@@ -263,7 +276,12 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
             </div>
 
             <div>
-              <Label htmlFor="alt">Alt text</Label>
+              <LabelWithHint
+                htmlFor="alt"
+                hint="Screen-reader description of the image. Required for accessibility on any visual media."
+              >
+                Alt text
+              </LabelWithHint>
               <Input
                 id="alt"
                 value={draft.alt_text}
@@ -273,7 +291,12 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
             </div>
 
             <div>
-              <Label htmlFor="caption">Caption (optional)</Label>
+              <LabelWithHint
+                htmlFor="caption"
+                hint="Short caption rendered under the media on the marketing page (e.g. 'Aarti, Pune')."
+              >
+                Caption (optional)
+              </LabelWithHint>
               <Input
                 id="caption"
                 value={draft.caption}
@@ -284,7 +307,12 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="starts">Starts (optional)</Label>
+                <LabelWithHint
+                  htmlFor="starts"
+                  hint="If set, the asset only shows on the site from this date/time. Leave blank to publish immediately."
+                >
+                  Starts (optional)
+                </LabelWithHint>
                 <Input
                   id="starts"
                   type="datetime-local"
@@ -294,7 +322,12 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
                 />
               </div>
               <div>
-                <Label htmlFor="ends">Ends (optional)</Label>
+                <LabelWithHint
+                  htmlFor="ends"
+                  hint="If set, the asset stops showing after this date/time. Useful for time-boxed promo banners."
+                >
+                  Ends (optional)
+                </LabelWithHint>
                 <Input
                   id="ends"
                   type="datetime-local"
@@ -305,13 +338,16 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
               </div>
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
+            <Label className="flex items-center gap-2 text-sm font-normal">
               <Checkbox
                 checked={draft.is_active}
                 onCheckedChange={(v) => setDraft({ ...draft, is_active: v === true })}
               />
               Visible on the site
-            </label>
+              <FieldHint>
+                Master switch. Uncheck to hide without deleting the file.
+              </FieldHint>
+            </Label>
           </div>
 
           <DialogFooter>

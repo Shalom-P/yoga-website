@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -51,20 +52,37 @@ export function ProfileForm({ initial }: { initial: Initial }) {
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-5">
       <div>
-        <Label htmlFor="full_name">Full name</Label>
+        <LabelWithHint
+          htmlFor="full_name"
+          hint="How teachers will greet you in class. Visible only on your own bookings and to admins."
+        >
+          Full name
+        </LabelWithHint>
         <Input id="full_name" value={state.full_name} onChange={(e) => set("full_name", e.target.value)} className="mt-1.5" />
       </div>
       <div>
-        <Label htmlFor="email">Email</Label>
+        <LabelWithHint
+          htmlFor="email"
+          hint="Comes from your login provider (Google or phone). To change, sign in with a different account."
+        >
+          Email
+        </LabelWithHint>
         <Input id="email" type="email" value={state.email} disabled className="mt-1.5" />
         <p className="text-xs text-muted-foreground mt-1">Email is set by your login provider.</p>
       </div>
       <div>
-        <Label htmlFor="phone">Phone (optional)</Label>
+        <LabelWithHint
+          htmlFor="phone"
+          hint="Used for SMS reminders 24h before class. Optional — leave blank to opt out of texts."
+        >
+          Phone (optional)
+        </LabelWithHint>
         <Input id="phone" type="tel" value={state.phone ?? ""} onChange={(e) => set("phone", e.target.value)} className="mt-1.5" placeholder="+61 …" />
       </div>
       <div>
-        <Label>Timezone</Label>
+        <LabelWithHint hint="Your local timezone. Drives the times shown on bookings, reminders, and the slot picker.">
+          Timezone
+        </LabelWithHint>
         <Select value={state.timezone} onValueChange={(v) => v && set("timezone", v)}>
           <SelectTrigger className="mt-1.5 h-11"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -75,7 +93,9 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         </Select>
       </div>
       <div>
-        <Label>Experience level</Label>
+        <LabelWithHint hint="Helps teachers tailor cues. You can change this any time.">
+          Experience level
+        </LabelWithHint>
         <Select value={state.experience_level} onValueChange={(v) => v && set("experience_level", v as Initial["experience_level"])}>
           <SelectTrigger className="mt-1.5 h-11"><SelectValue /></SelectTrigger>
           <SelectContent>
@@ -85,10 +105,13 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           </SelectContent>
         </Select>
       </div>
-      <label className="flex items-center gap-3 text-sm">
+      <Label className="items-center gap-3 text-sm font-normal">
         <Checkbox checked={state.marketing_opt_in} onCheckedChange={(v) => set("marketing_opt_in", v === true)} />
         <span>Email me tips, drops, and the occasional offer.</span>
-      </label>
+        <FieldHint>
+          Optional — class reminders and receipts still go out regardless.
+        </FieldHint>
+      </Label>
       <Button type="submit" disabled={loading} className="rounded-full">
         {loading ? "Saving…" : "Save changes"}
       </Button>

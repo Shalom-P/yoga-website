@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
@@ -144,7 +145,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="display_name">Display name</Label>
+              <LabelWithHint
+                htmlFor="display_name"
+                hint="Public name shown on /teachers, the booking page, and Meet invites."
+              >
+                Display name
+              </LabelWithHint>
               <Input
                 id="display_name"
                 value={draft.display_name}
@@ -153,7 +159,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
               />
             </div>
             <div>
-              <Label htmlFor="slug">Slug</Label>
+              <LabelWithHint
+                htmlFor="slug"
+                hint="URL-safe handle (used in /teachers/<slug>). Leave blank to auto-generate from the name."
+              >
+                Slug
+              </LabelWithHint>
               <Input
                 id="slug"
                 value={draft.slug}
@@ -165,7 +176,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
           </div>
 
           <div>
-            <Label htmlFor="headline">Headline</Label>
+            <LabelWithHint
+              htmlFor="headline"
+              hint="One-line tagline shown under the teacher's name on cards (e.g. 'Hatha & Therapy · 14 years')."
+            >
+              Headline
+            </LabelWithHint>
             <Input
               id="headline"
               value={draft.headline}
@@ -176,7 +192,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
           </div>
 
           <div>
-            <Label htmlFor="bio">Bio</Label>
+            <LabelWithHint
+              htmlFor="bio"
+              hint="2-4 sentences on training and teaching style. Shown on the teacher's profile page."
+            >
+              Bio
+            </LabelWithHint>
             <Textarea
               id="bio"
               value={draft.bio}
@@ -188,7 +209,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="specialties">Specialties (comma-separated)</Label>
+              <LabelWithHint
+                htmlFor="specialties"
+                hint="What this teacher is known for. Comma-separated tags shown as filter chips."
+              >
+                Specialties (comma-separated)
+              </LabelWithHint>
               <Input
                 id="specialties"
                 value={draft.specialties}
@@ -198,7 +224,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
               />
             </div>
             <div>
-              <Label htmlFor="languages">Languages (comma-separated)</Label>
+              <LabelWithHint
+                htmlFor="languages"
+                hint="Languages the teacher can conduct a class in. Helps customers self-match."
+              >
+                Languages (comma-separated)
+              </LabelWithHint>
               <Input
                 id="languages"
                 value={draft.languages}
@@ -211,7 +242,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="years">Years of experience</Label>
+              <LabelWithHint
+                htmlFor="years"
+                hint="Years of teaching experience. Displayed as a trust signal next to the bio."
+              >
+                Years of experience
+              </LabelWithHint>
               <Input
                 id="years"
                 type="number"
@@ -224,7 +260,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
               />
             </div>
             <div>
-              <Label htmlFor="tz">Timezone</Label>
+              <LabelWithHint
+                htmlFor="tz"
+                hint="IANA TZ where the teacher lives. Drives availability conversion (e.g. 'Asia/Kolkata')."
+              >
+                Timezone
+              </LabelWithHint>
               <Input
                 id="tz"
                 value={draft.timezone}
@@ -236,7 +277,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
           </div>
 
           <div>
-            <Label htmlFor="gcal">Google Calendar ID</Label>
+            <LabelWithHint
+              htmlFor="gcal"
+              hint="Optional teacher-owned Google calendar to host their Meet events on. Leave blank to use the system calendar."
+            >
+              Google Calendar ID
+            </LabelWithHint>
             <Input
               id="gcal"
               value={draft.google_calendar_id}
@@ -246,13 +292,17 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
             />
           </div>
 
-          <label className="flex items-center gap-2 text-sm">
+          <Label className="flex items-center gap-2 text-sm font-normal">
             <Checkbox
               checked={draft.is_active}
               onCheckedChange={(v) => setDraft({ ...draft, is_active: v === true })}
             />
             Active and visible on the marketing site
-          </label>
+            <FieldHint>
+              Uncheck to hide this teacher from the public site and the booking flow without
+              deleting the record.
+            </FieldHint>
+          </Label>
         </div>
 
         <DialogFooter>

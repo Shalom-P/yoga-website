@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -258,7 +259,9 @@ export function SessionsAdmin({
 
           <div className="space-y-4">
             <div>
-              <Label>Teacher</Label>
+              <LabelWithHint hint="Teacher who'll run the class. Overlap-checked against their existing sessions on save.">
+                Teacher
+              </LabelWithHint>
               <Select
                 value={draft.teacherId}
                 onValueChange={(v) => v && setDraft({ ...draft, teacherId: v })}
@@ -277,7 +280,9 @@ export function SessionsAdmin({
             </div>
 
             <div>
-              <Label>Class category (optional)</Label>
+              <LabelWithHint hint="Pick a class category for group sessions, or leave as '1:1 private' for one-on-one bookings.">
+                Class category (optional)
+              </LabelWithHint>
               <Select
                 value={draft.classCategoryId || "__none__"}
                 onValueChange={(v) =>
@@ -299,7 +304,12 @@ export function SessionsAdmin({
             </div>
 
             <div>
-              <Label htmlFor="start">Start (your local time)</Label>
+              <LabelWithHint
+                htmlFor="start"
+                hint="Entered in your browser's timezone, stored as UTC, displayed to each customer in their own timezone."
+              >
+                Start (your local time)
+              </LabelWithHint>
               <Input
                 id="start"
                 type="datetime-local"
@@ -311,7 +321,12 @@ export function SessionsAdmin({
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="dur">Duration (minutes)</Label>
+                <LabelWithHint
+                  htmlFor="dur"
+                  hint="Class length in minutes. Used for the Meet event end time and the teacher-overlap check."
+                >
+                  Duration (minutes)
+                </LabelWithHint>
                 <Input
                   id="dur"
                   type="number"
@@ -326,7 +341,12 @@ export function SessionsAdmin({
                 />
               </div>
               <div>
-                <Label htmlFor="cap">Capacity</Label>
+                <LabelWithHint
+                  htmlFor="cap"
+                  hint="Max attendees. 1 = private 1:1. Anything above 1 turns it into a group class."
+                >
+                  Capacity
+                </LabelWithHint>
                 <Input
                   id="cap"
                   type="number"
@@ -340,7 +360,12 @@ export function SessionsAdmin({
             </div>
 
             <div>
-              <Label htmlFor="notes">Notes (optional)</Label>
+              <LabelWithHint
+                htmlFor="notes"
+                hint="Internal note attached to the session. Not shown to customers."
+              >
+                Notes (optional)
+              </LabelWithHint>
               <Textarea
                 id="notes"
                 value={draft.notes}
@@ -351,13 +376,17 @@ export function SessionsAdmin({
               />
             </div>
 
-            <label className="flex items-center gap-2 text-sm">
+            <Label className="flex items-center gap-2 text-sm font-normal">
               <Checkbox
                 checked={draft.isFreeTrial}
                 onCheckedChange={(v) => setDraft({ ...draft, isFreeTrial: v === true })}
               />
               Mark as free-trial slot
-            </label>
+              <FieldHint>
+                Free-trial bookings are subject to the &quot;one free 1:1 per customer&quot; rule —
+                a customer can only claim one across their lifetime.
+              </FieldHint>
+            </Label>
           </div>
 
           <DialogFooter>
