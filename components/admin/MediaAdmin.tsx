@@ -119,11 +119,34 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
     router.refresh();
   }
 
+  // Public URLs look like:
+  //   https://<project>.supabase.co/storage/v1/object/public/<bucket>/<path>
+  // We need <path> to call storage.remove(). Returns null if the URL doesn't
+  // belong to our bucket (e.g. someone hand-edited the row to point at a CDN).
+  function bucketPathFromPublicUrl(url: string): string | null {
+    const marker = `/storage/v1/object/public/${BUCKET}/`;
+    const idx = url.indexOf(marker);
+    if (idx === -1) return null;
+    return decodeURIComponent(url.slice(idx + marker.length));
+  }
+
   async function remove(item: PromotionalMedia) {
     setDeleting(item.id);
     const { error } = await supabase.from("promotional_media").delete().eq("id", item.id);
+    if (error) {
+      setDeleting(null);
+      return toast.error(error.message);
+    }
+    // Delete the file too — without this, every removal leaks Storage quota.
+    // Storage delete is best-effort; the DB row is already gone so we just log.
+    const path = bucketPathFromPublicUrl(item.url);
+    if (path) {
+      await supabase.storage
+        .from(BUCKET)
+        .remove([path])
+        .catch(() => {});
+    }
     setDeleting(null);
-    if (error) return toast.error(error.message);
     toast.success("Removed.");
     router.refresh();
   }

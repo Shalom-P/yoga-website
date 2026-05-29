@@ -26,8 +26,10 @@ export async function POST(req: Request) {
 
   const svc = createSupabaseServiceClient();
 
-  // Idempotency: paypal_webhook_events.event_id is the primary key, so a
-  // duplicate delivery returns no rows and we ack-200 without re-running handlers.
+  // Idempotency: paypal_webhook_events.event_id is the primary key. A unique-
+  // violation (23505) is a genuine replay and we ack 200. Any other DB error
+  // must surface as 5xx so PayPal retries — silently dropping a transient
+  // failure here used to leave subscription state un-synced forever.
   const dedupe = await svc
     .from("paypal_webhook_events")
     .insert({
@@ -37,8 +39,14 @@ export async function POST(req: Request) {
     })
     .select("event_id")
     .maybeSingle();
+  if (dedupe.error) {
+    if ((dedupe.error as { code?: string }).code === "23505") {
+      return NextResponse.json({ ok: true, replay: true });
+    }
+    return NextResponse.json({ error: "db_error" }, { status: 500 });
+  }
   if (!dedupe.data) {
-    return NextResponse.json({ ok: true, replay: true });
+    return NextResponse.json({ error: "db_error" }, { status: 500 });
   }
 
   switch (event.event_type) {

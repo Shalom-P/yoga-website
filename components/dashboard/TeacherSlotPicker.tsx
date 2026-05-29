@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { addDays, addMinutes, startOfDay } from "date-fns";
+import { addDays, addMinutes } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { Button } from "@/components/ui/button";
 
@@ -20,37 +20,41 @@ type Props = {
   availability: Availability[];
 };
 
-function parseHms(hms: string): { h: number; m: number } {
-  const [h = "0", m = "0"] = hms.split(":");
-  return { h: Number(h), m: Number(m) };
+function padHms(hms: string): string {
+  // Postgres `time` columns can serialize as "06:00", "06:00:00", or "06:00:00.000".
+  // Normalize to "HH:mm:ss" so the date string we hand to fromZonedTime parses cleanly.
+  const parts = hms.split(":");
+  const hh = (parts[0] ?? "00").padStart(2, "0");
+  const mm = (parts[1] ?? "00").padStart(2, "0");
+  const ss = (parts[2] ?? "00").slice(0, 2).padStart(2, "0");
+  return `${hh}:${mm}:${ss}`;
 }
 
 // For the next 7 days in the teacher's local TZ, expand each weekly window
-// into discrete slots. Convert each slot's local start back to UTC.
+// into discrete slots. Anchor on noon in teacher TZ so day-arithmetic stays
+// stable across DST jumps and never spills into a neighbouring date.
 function generateSlots(
   availability: Availability[],
   teacherTz: string,
   now: Date,
 ): Date[] {
   const out: Date[] = [];
-  const todayInTeacherTz = formatInTimeZone(now, teacherTz, "yyyy-MM-dd");
-  const teacherDayBase = startOfDay(new Date(`${todayInTeacherTz}T00:00:00`));
+  const todayStr = formatInTimeZone(now, teacherTz, "yyyy-MM-dd");
+  const noonAnchorUtc = fromZonedTime(`${todayStr}T12:00:00`, teacherTz);
   for (let i = 0; i < 7; i++) {
-    const day = addDays(teacherDayBase, i);
-    const dow = day.getDay();
+    const dayAnchorUtc = addDays(noonAnchorUtc, i);
+    const dateStr = formatInTimeZone(dayAnchorUtc, teacherTz, "yyyy-MM-dd");
+    // date-fns-tz formats "i" as 1=Mon..7=Sun; Postgres day_of_week is 0=Sun..6=Sat.
+    const isoDow = Number(formatInTimeZone(dayAnchorUtc, teacherTz, "i"));
+    const dow = isoDow === 7 ? 0 : isoDow;
     for (const window of availability.filter((a) => a.day_of_week === dow)) {
-      const { h: sh, m: sm } = parseHms(window.start_time);
-      const { h: eh, m: em } = parseHms(window.end_time);
       const dur = window.slot_duration_minutes || 60;
-      let cur = new Date(day);
-      cur.setHours(sh, sm, 0, 0);
-      const windowEnd = new Date(day);
-      windowEnd.setHours(eh, em, 0, 0);
-      while (addMinutes(cur, dur).getTime() <= windowEnd.getTime()) {
-        const dateStr = formatInTimeZone(cur, "UTC", "yyyy-MM-dd'T'HH:mm:ss");
-        const utcSlot = fromZonedTime(dateStr, teacherTz);
-        if (utcSlot.getTime() > now.getTime() + 15 * 60_000) {
-          out.push(utcSlot);
+      const windowStartUtc = fromZonedTime(`${dateStr}T${padHms(window.start_time)}`, teacherTz);
+      const windowEndUtc = fromZonedTime(`${dateStr}T${padHms(window.end_time)}`, teacherTz);
+      let cur = windowStartUtc;
+      while (addMinutes(cur, dur).getTime() <= windowEndUtc.getTime()) {
+        if (cur.getTime() > now.getTime() + 15 * 60_000) {
+          out.push(cur);
         }
         cur = addMinutes(cur, dur);
       }

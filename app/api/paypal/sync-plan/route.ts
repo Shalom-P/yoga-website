@@ -45,8 +45,9 @@ export async function POST(req: Request) {
 
   const productId = productIdFor(plan.id);
 
-  // 1. Ensure the Catalog Product exists. POST is idempotent-ish — a 422 on
-  //    duplicate ID means the product is already there, which is fine.
+  // 1. Ensure the Catalog Product exists. POST returns 422 both for a duplicate
+  //    ID (which is fine — product is already there) and for a real validation
+  //    error (which is NOT fine). We must inspect the body to tell them apart.
   const productRes = await paypalFetch("/v1/catalogs/products", {
     method: "POST",
     body: JSON.stringify({
@@ -57,11 +58,17 @@ export async function POST(req: Request) {
       category: "EXERCISE_AND_FITNESS",
     }),
   });
-  if (!productRes.ok && productRes.status !== 422) {
-    return NextResponse.json(
-      { error: "paypal_product_failed", details: await productRes.text() },
-      { status: 502 }
-    );
+  if (!productRes.ok) {
+    const productErrText = await productRes.text();
+    const isDuplicate =
+      productRes.status === 422 &&
+      /DUPLICATE_RESOURCE_IDENTIFIER|RESOURCE_ALREADY_EXISTS/i.test(productErrText);
+    if (!isDuplicate) {
+      return NextResponse.json(
+        { error: "paypal_product_failed", details: productErrText },
+        { status: 502 }
+      );
+    }
   }
 
   // 2. Create the Billing Plan against that product.

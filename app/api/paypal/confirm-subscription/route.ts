@@ -72,7 +72,8 @@ export async function POST(req: Request) {
     status: mapped,
     next_billing_at: sub.billing_info?.next_billing_time ?? null,
   };
-  if (mapped === "active" && !pending.status.startsWith("active")) {
+  // Only stamp started_at on the first activation — webhook may have set it already.
+  if (mapped === "active" && pending.status !== "active") {
     update.started_at = new Date().toISOString();
   }
   const { error } = await svc.from("subscriptions").update(update).eq("id", pending.id);

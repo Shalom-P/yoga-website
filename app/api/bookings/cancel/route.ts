@@ -51,14 +51,23 @@ export async function POST(req: Request) {
     .select("meet_event_id, start_at")
     .eq("id", booking.session_id)
     .single();
-  // Only delete the Meet event if the session hasn't started yet — avoids
-  // killing an in-progress class for unrelated attendees.
+  // Only delete the Meet event if (a) the session hasn't started yet — avoids
+  // killing an in-progress class — AND (b) no other non-cancelled bookings
+  // remain on this session, so group classes don't lose their link the moment
+  // the first attendee cancels.
   if (
     session?.meet_event_id &&
     session.start_at &&
     new Date(session.start_at).getTime() > Date.now()
   ) {
-    deleteMeetEvent(session.meet_event_id).catch(() => {});
+    const { count: remaining } = await svc
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", booking.session_id)
+      .neq("status", "cancelled");
+    if ((remaining ?? 0) === 0) {
+      deleteMeetEvent(session.meet_event_id).catch(() => {});
+    }
   }
 
   return NextResponse.json({ ok: true });
