@@ -12,7 +12,7 @@ export function NewsletterForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) {
+    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
       toast.error("Please enter a valid email.");
       return;
     }

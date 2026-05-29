@@ -123,8 +123,13 @@ export function DiscountsAdmin({
         draft.discount_type === "percentage" ? Math.round(valueNum) : Math.round(valueNum * 100),
       applies_to_plan_ids: draft.applies_to_all ? null : draft.applies_to_plan_ids,
       max_uses: draft.max_uses === "" ? null : Number(draft.max_uses),
-      valid_from: new Date(draft.valid_from).toISOString(),
-      valid_until: draft.valid_until ? new Date(draft.valid_until).toISOString() : null,
+      // Append T00:00:00 so the date-only input is parsed as LOCAL midnight, not
+      // UTC midnight — otherwise an AU admin's "valid from 1 June" lands ~10h
+      // early (31 May 14:00Z) and the code activates a day sooner than intended.
+      valid_from: new Date(`${draft.valid_from}T00:00:00`).toISOString(),
+      valid_until: draft.valid_until
+        ? new Date(`${draft.valid_until}T23:59:59`).toISOString()
+        : null,
       is_active: draft.is_active,
     };
 

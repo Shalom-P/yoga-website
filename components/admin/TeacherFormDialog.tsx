@@ -19,7 +19,10 @@ import {
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { MediaUploadField } from "./MediaUploadField";
 import type { Teacher } from "@/lib/supabase/types";
+
+const TEACHER_MEDIA_BUCKET = "teacher-media";
 
 type Draft = {
   id?: string;
@@ -32,6 +35,9 @@ type Draft = {
   years_experience: number;
   timezone: string;
   google_calendar_id: string;
+  avatar_url: string | null;
+  cover_image_url: string | null;
+  intro_video_url: string | null;
   is_active: boolean;
 };
 
@@ -47,6 +53,9 @@ function toDraft(t: Teacher | null): Draft {
     years_experience: t?.years_experience ?? 0,
     timezone: t?.timezone ?? "Asia/Kolkata",
     google_calendar_id: t?.google_calendar_id ?? "",
+    avatar_url: t?.avatar_url ?? null,
+    cover_image_url: t?.cover_image_url ?? null,
+    intro_video_url: t?.intro_video_url ?? null,
     is_active: t?.is_active ?? true,
   };
 }
@@ -107,6 +116,9 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
       years_experience: draft.years_experience,
       timezone: draft.timezone || "Asia/Kolkata",
       google_calendar_id: draft.google_calendar_id || null,
+      avatar_url: draft.avatar_url,
+      cover_image_url: draft.cover_image_url,
+      intro_video_url: draft.intro_video_url,
       is_active: draft.is_active,
     };
 
@@ -274,6 +286,49 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
                 className="mt-1.5"
               />
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <LabelWithHint hint="Square headshot shown on teacher cards and the booking page. JPG/PNG, ideally 600×600.">
+                Avatar photo
+              </LabelWithHint>
+              <MediaUploadField
+                bucket={TEACHER_MEDIA_BUCKET}
+                folder={`avatars/${draft.slug || "new"}`}
+                accept="image"
+                value={draft.avatar_url}
+                onChange={(url) => setDraft({ ...draft, avatar_url: url })}
+                disabled={saving}
+              />
+            </div>
+            <div>
+              <LabelWithHint hint="Wide hero image at the top of the teacher's profile page. JPG/PNG, ideally 1600×900.">
+                Cover image
+              </LabelWithHint>
+              <MediaUploadField
+                bucket={TEACHER_MEDIA_BUCKET}
+                folder={`covers/${draft.slug || "new"}`}
+                accept="image"
+                value={draft.cover_image_url}
+                onChange={(url) => setDraft({ ...draft, cover_image_url: url })}
+                disabled={saving}
+              />
+            </div>
+          </div>
+
+          <div>
+            <LabelWithHint hint="Short (30–60s) intro video where the teacher introduces themselves. MP4, served from Supabase Storage.">
+              Intro video
+            </LabelWithHint>
+            <MediaUploadField
+              bucket={TEACHER_MEDIA_BUCKET}
+              folder={`intros/${draft.slug || "new"}`}
+              accept="video"
+              value={draft.intro_video_url}
+              onChange={(url) => setDraft({ ...draft, intro_video_url: url })}
+              disabled={saving}
+            />
           </div>
 
           <div>

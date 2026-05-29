@@ -90,8 +90,16 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
     });
     if (uploadErr) {
       setSaving(false);
+      // The most common cause of an upload failure on a fresh install is the
+      // storage bucket + RLS policies not being applied yet (migration 0008).
+      // Surface that hint instead of just dumping the raw error.
+      const msg = uploadErr.message ?? "";
+      const isRlsOrMissing =
+        /row-level security|bucket not found|Bucket not found/i.test(msg);
       toast.error(
-        `Upload failed: ${uploadErr.message}. Make sure the "${BUCKET}" Storage bucket exists.`
+        isRlsOrMissing
+          ? `Upload blocked: the "${BUCKET}" Storage bucket isn't set up yet. Apply supabase/migrations/0008_storage_buckets.sql in the Supabase SQL editor, then try again.`
+          : `Upload failed: ${msg}`
       );
       return;
     }
@@ -154,7 +162,7 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-3">
         <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
           Promotional media
         </h1>
@@ -164,9 +172,31 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
         </Button>
       </div>
 
+      <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
+        Upload images and videos that the marketing pages pull in by{" "}
+        <strong>placement</strong>. Hero videos, page banners, testimonial photos and
+        class thumbnails all live here so you can swap them out without a code change.
+        Files are stored in the <code className="rounded bg-muted px-1 py-0.5 text-xs">{BUCKET}</code>{" "}
+        Supabase Storage bucket; the public URL is saved to the{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">promotional_media</code> table
+        with metadata. Pick a{" "}
+        <strong>Kind</strong> (hero_video, banner, testimonial_photo, etc.), set a{" "}
+        <strong>Placement</strong> the page is querying (e.g.{" "}
+        <code className="rounded bg-muted px-1 py-0.5 text-xs">landing.hero</code>), and tick{" "}
+        <strong>Visible</strong>. Optional <strong>Starts</strong> and <strong>Ends</strong>{" "}
+        windows let you schedule time-boxed banners.
+      </p>
+
       {media.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-muted-foreground">
-          No media yet. Uploads go to Supabase Storage bucket <code>{BUCKET}</code>.
+          No media yet. Click <b>Upload</b> to add your first asset.
+          <div className="mt-3 text-xs">
+            First upload failing with an RLS error? Apply{" "}
+            <code className="rounded bg-muted px-1 py-0.5">
+              supabase/migrations/0008_storage_buckets.sql
+            </code>{" "}
+            in the Supabase SQL editor to create the bucket.
+          </div>
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">

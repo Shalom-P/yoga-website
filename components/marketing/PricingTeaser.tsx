@@ -199,8 +199,8 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
         <p className="mt-10 text-center text-sm text-muted-foreground">
           All prices in AUD inc. GST. Cancel anytime from your dashboard.
           {" "}
-          <Link href="/pricing" className="text-primary hover:underline">
-            Full pricing & FAQs →
+          <Link href="/faq" className="text-primary hover:underline">
+            Read the FAQ →
           </Link>
         </p>
       </div>

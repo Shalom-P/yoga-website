@@ -11,10 +11,11 @@ const NAV_LINKS = [
   { href: "/teachers", label: "Teachers" },
   { href: "/classes", label: "Classes" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
 ] as const;
 
-export function MarketingNav() {
+export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
 
@@ -60,12 +61,25 @@ export function MarketingNav() {
         </nav>
 
         <div className="hidden md:flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/login">Log in</Link>
-          </Button>
-          <Button asChild size="sm" className="rounded-full px-4">
-            <Link href="/login?next=/onboarding">Book free session</Link>
-          </Button>
+          {isAuthenticated ? (
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/dashboard">Dashboard</Link>
+              </Button>
+              <Button asChild size="sm" className="rounded-full px-4">
+                <Link href="/dashboard/book">Book a class</Link>
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button asChild size="sm" className="rounded-full px-4">
+                <Link href="/login?next=/onboarding">Book free session</Link>
+              </Button>
+            </>
+          )}
         </div>
 
         <button
@@ -95,12 +109,25 @@ export function MarketingNav() {
               </Link>
             ))}
             <div className="flex gap-2 pt-2">
-              <Button asChild variant="outline" className="flex-1">
-                <Link href="/login">Log in</Link>
-              </Button>
-              <Button asChild className="flex-1">
-                <Link href="/login?next=/onboarding">Book free</Link>
-              </Button>
+              {isAuthenticated ? (
+                <>
+                  <Button asChild variant="outline" className="flex-1">
+                    <Link href="/dashboard">Dashboard</Link>
+                  </Button>
+                  <Button asChild className="flex-1">
+                    <Link href="/dashboard/book">Book</Link>
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button asChild variant="outline" className="flex-1">
+                    <Link href="/login">Log in</Link>
+                  </Button>
+                  <Button asChild className="flex-1">
+                    <Link href="/login?next=/onboarding">Book free</Link>
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         </motion.div>
