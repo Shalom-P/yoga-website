@@ -1,68 +1,62 @@
 "use client";
 
 import { motion } from "motion/react";
-import { Star } from "lucide-react";
 import type { Review } from "@/lib/supabase/types";
 
 type ReviewWithTeacher = Review & { teacher_name?: string };
 
 export function TestimonialWall({ reviews }: { reviews: ReviewWithTeacher[] }) {
-  const cols = [
-    reviews.filter((_, i) => i % 3 === 0),
-    reviews.filter((_, i) => i % 3 === 1),
-    reviews.filter((_, i) => i % 3 === 2),
-  ];
+  if (!reviews || reviews.length === 0) return null;
 
   return (
-    <section className="py-24 md:py-32 bg-secondary/40">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section className="myc-sec-peach py-[68px] md:py-[104px]">
+      <div className="mx-auto max-w-[1240px] px-7">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.5 }}
-          className="text-center mb-14"
+          className="mx-auto mb-14 max-w-[740px] text-center"
         >
-          <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-3">
-            Stories from your mat-mates
+          <div className="myc-eyebrow mb-4 justify-center">
+            <span className="myc-dot" aria-hidden="true" />
+            What our students say
           </div>
-          <h2 className="text-3xl md:text-5xl tracking-tight text-balance max-w-2xl mx-auto">
-            What practising with us actually feels like.
+          <h2 className="text-[clamp(2.25rem,5vw,4rem)] tracking-tight text-balance">
+            Real practice, <span className="myc-accent">one mat at a time.</span>
           </h2>
         </motion.div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {cols.map((col, ci) => (
-            <div key={ci} className="flex flex-col gap-5">
-              {col.map((r, i) => (
-                <motion.figure
-                  key={r.id}
-                  initial={{ opacity: 0, y: 16 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true, amount: 0.4 }}
-                  transition={{ duration: 0.5, delay: i * 0.05 }}
-                  className="rounded-3xl border border-border bg-card p-6"
-                >
-                  <div className="flex gap-0.5 mb-3">
-                    {Array.from({ length: r.rating }).map((_, k) => (
-                      <Star key={k} className="size-3.5 fill-amber-400 text-amber-400" />
-                    ))}
+        <div className="grid gap-5 md:grid-cols-3">
+          {reviews.slice(0, 6).map((r, i) => (
+            <motion.figure
+              key={r.id}
+              initial={{ opacity: 0, y: 16 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.05 }}
+              className="flex flex-col gap-5 rounded-[var(--radius)] border border-border bg-card p-8 shadow-[var(--myc-shadow-card)]"
+            >
+              <div className="tracking-[1px] text-accent" aria-hidden="true">
+                {"★".repeat(Math.max(1, Math.min(5, r.rating)))}
+              </div>
+              <blockquote className="font-[family-name:var(--font-cormorant)] text-[1.5rem] leading-[1.32] text-foreground text-pretty">
+                <span className="text-accent">“</span>
+                {r.body}
+                <span className="text-accent">”</span>
+              </blockquote>
+              <figcaption className="mt-auto flex items-center gap-3">
+                <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-[var(--myc-accent-soft)] to-accent" />
+                <div>
+                  <div className="text-sm font-semibold">
+                    {r.display_name_override ?? "Verified student"}
                   </div>
-                  <blockquote className="text-foreground text-pretty">
-                    “{r.body}”
-                  </blockquote>
-                  <figcaption className="mt-5 flex items-center justify-between text-sm">
-                    <div>
-                      <div className="font-medium">{r.display_name_override ?? "A student"}</div>
-                      <div className="text-muted-foreground text-xs">
-                        {r.display_location}
-                        {r.teacher_name ? ` · with ${r.teacher_name}` : ""}
-                      </div>
-                    </div>
-                  </figcaption>
-                </motion.figure>
-              ))}
-            </div>
+                  <div className="text-[13px] text-muted-foreground">
+                    {r.display_location ?? r.teacher_name ?? "Practising with us"}
+                  </div>
+                </div>
+              </figcaption>
+            </motion.figure>
           ))}
         </div>
       </div>

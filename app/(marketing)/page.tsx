@@ -1,4 +1,5 @@
 import { Hero } from "@/components/marketing/Hero";
+import { Marquee } from "@/components/marketing/Marquee";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { TeacherCarousel } from "@/components/marketing/TeacherCarousel";
 import { ClassGrid } from "@/components/marketing/ClassGrid";
@@ -51,12 +52,13 @@ export default async function LandingPage() {
         trustRating={trustRating}
         trustCount={trustCount}
       />
+      <Marquee />
+      <OutcomeStats />
       <HowItWorks />
       <TeacherCarousel teachers={teachers} />
       <ClassGrid categories={categories} />
-      <TestimonialWall reviews={reviews} />
-      <OutcomeStats />
       <PricingTeaser plans={plans} />
+      <TestimonialWall reviews={reviews} />
       <FAQ />
       <FinalCTA headline={finalHeadline} />
       <StickyMobileCTA />

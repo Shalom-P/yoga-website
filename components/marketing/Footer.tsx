@@ -1,21 +1,41 @@
 import Link from "next/link";
 import { NewsletterForm } from "@/components/marketing/NewsletterForm";
 
+function FooterMark() {
+  return (
+    <span className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-full bg-background text-foreground">
+      <svg viewBox="0 0 24 24" className="size-6" fill="none" aria-hidden="true">
+        <circle cx="12" cy="6" r="2.4" fill="currentColor" />
+        <path
+          d="M5 18c1.6-3.2 4-4.8 7-4.8s5.4 1.6 7 4.8"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+        <path
+          d="M12 11.5c-2.4 0-4.4 1-5.6 2.6M12 11.5c2.4 0 4.4 1 5.6 2.6"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  );
+}
+
 export function Footer() {
   return (
-    <footer className="mt-32 border-t border-border bg-muted/40">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-16 grid gap-12 md:grid-cols-5">
-        <div className="md:col-span-2">
-          <Link href="/" className="flex items-center gap-2 mb-4">
-            <span className="size-7 rounded-full bg-primary inline-flex items-center justify-center">
-              <span className="size-2.5 rounded-full bg-background" />
-            </span>
-            <span className="font-[family-name:var(--font-heading)] text-lg">
-              MYYOGACLASSES
+    <footer className="bg-foreground text-background">
+      <div className="mx-auto grid max-w-[1240px] gap-12 px-7 pb-10 pt-20 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+        <div>
+          <Link href="/" className="mb-4 flex items-center gap-3">
+            <FooterMark />
+            <span className="font-[family-name:var(--font-cormorant)] text-[1.55rem] font-semibold leading-none">
+              My Yoga Classes
             </span>
           </Link>
-          <p className="text-sm text-muted-foreground max-w-xs text-pretty">
-            Live online yoga with expert teachers from India. Book a free 1:1 in your
+          <p className="max-w-xs text-pretty text-sm text-background/75">
+            Live, private 1:1 yoga with expert teachers from India. Book a free session in your
             local time — no credit card required.
           </p>
           <div className="mt-6 max-w-sm">
@@ -24,43 +44,48 @@ export function Footer() {
         </div>
 
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          <div className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-background/60">
             Explore
           </div>
-          <ul className="space-y-2.5 text-sm">
-            <li><Link href="/teachers"  className="hover:text-foreground">Teachers</Link></li>
-            <li><Link href="/classes"   className="hover:text-foreground">Class types</Link></li>
-            <li><Link href="/pricing"   className="hover:text-foreground">Pricing</Link></li>
-            <li><Link href="/faq"       className="hover:text-foreground">FAQ</Link></li>
-            <li><Link href="/reviews"   className="hover:text-foreground">Reviews</Link></li>
+          <ul className="space-y-2.5 text-sm text-background/80">
+            <li><Link href="/teachers" className="hover:text-accent">Teachers</Link></li>
+            <li><Link href="/classes" className="hover:text-accent">Class types</Link></li>
+            <li><Link href="/pricing" className="hover:text-accent">Pricing</Link></li>
+            <li><Link href="/faq" className="hover:text-accent">FAQ</Link></li>
+            <li><Link href="/reviews" className="hover:text-accent">Reviews</Link></li>
           </ul>
         </div>
 
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          <div className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-background/60">
             Company
           </div>
-          <ul className="space-y-2.5 text-sm">
-            <li><Link href="/about"     className="hover:text-foreground">About</Link></li>
-            <li><Link href="/contact"   className="hover:text-foreground">Contact</Link></li>
-            <li><a href="mailto:hello@myyogaclasses.com.au" className="hover:text-foreground">Email us</a></li>
+          <ul className="space-y-2.5 text-sm text-background/80">
+            <li><Link href="/about" className="hover:text-accent">About</Link></li>
+            <li><Link href="/contact" className="hover:text-accent">Contact</Link></li>
+            <li>
+              <a href="mailto:hello@myyogaclasses.com.au" className="hover:text-accent">
+                Email us
+              </a>
+            </li>
           </ul>
         </div>
 
         <div>
-          <div className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">
+          <div className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-background/60">
             Legal
           </div>
-          <ul className="space-y-2.5 text-sm">
-            <li><Link href="/legal/terms"   className="hover:text-foreground">Terms</Link></li>
-            <li><Link href="/legal/privacy" className="hover:text-foreground">Privacy</Link></li>
-            <li><Link href="/legal/refund"  className="hover:text-foreground">Refund policy</Link></li>
+          <ul className="space-y-2.5 text-sm text-background/80">
+            <li><Link href="/legal/terms" className="hover:text-accent">Terms</Link></li>
+            <li><Link href="/legal/privacy" className="hover:text-accent">Privacy</Link></li>
+            <li><Link href="/legal/refund" className="hover:text-accent">Refund policy</Link></li>
           </ul>
         </div>
       </div>
-      <div className="border-t border-border">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-6 flex flex-col sm:flex-row justify-between text-xs text-muted-foreground">
-          <span>© {new Date().getFullYear()} MYYOGACLASSES. ABN xx xxx xxx xxx.</span>
+
+      <div className="border-t border-background/15">
+        <div className="mx-auto flex max-w-[1240px] flex-col justify-between gap-4 px-7 py-6 text-xs text-background/55 sm:flex-row">
+          <span>© {new Date().getFullYear()} My Yoga Classes. ABN xx xxx xxx xxx.</span>
           <span>Made with care in Australia · Teachers in India</span>
         </div>
       </div>

@@ -15,6 +15,29 @@ const NAV_LINKS = [
   { href: "/about", label: "About" },
 ] as const;
 
+function BrandMark() {
+  return (
+    <span className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
+      {/* seated/meditating figure glyph */}
+      <svg viewBox="0 0 24 24" className="size-6" fill="none" aria-hidden="true">
+        <circle cx="12" cy="6" r="2.4" fill="currentColor" />
+        <path
+          d="M5 18c1.6-3.2 4-4.8 7-4.8s5.4 1.6 7 4.8"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+        <path
+          d="M12 11.5c-2.4 0-4.4 1-5.6 2.6M12 11.5c2.4 0 4.4 1 5.6 2.6"
+          stroke="currentColor"
+          strokeWidth="1.6"
+          strokeLinecap="round"
+        />
+      </svg>
+    </span>
+  );
+}
+
 export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
@@ -32,50 +55,48 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
       className={cn(
-        "fixed top-0 inset-x-0 z-40 transition-colors duration-300",
+        "fixed inset-x-0 top-0 z-40 transition-colors duration-300",
         scrolled
-          ? "bg-background/85 backdrop-blur-md border-b border-border/60"
-          : "bg-transparent"
+          ? "border-b border-border/60 bg-background/85 backdrop-blur-md"
+          : "bg-transparent",
       )}
     >
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-        <Link href="/" className="flex items-center gap-2 group">
-          <span className="size-7 rounded-full bg-primary inline-flex items-center justify-center">
-            <span className="size-2.5 rounded-full bg-background" />
-          </span>
-          <span className="font-[family-name:var(--font-heading)] text-lg tracking-tight">
-            MYYOGACLASSES
+      <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-7">
+        <Link href="/" className="flex items-center gap-3" aria-label="My Yoga Classes home">
+          <BrandMark />
+          <span className="font-[family-name:var(--font-cormorant)] text-[1.55rem] font-semibold leading-none tracking-[-0.01em]">
+            My Yoga Classes
           </span>
         </Link>
 
-        <nav className="hidden md:flex items-center gap-7">
+        <nav className="hidden items-center gap-8 md:flex">
           {NAV_LINKS.map((l) => (
             <Link
               key={l.href}
               href={l.href}
-              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               {l.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2">
+        <div className="hidden items-center gap-3 md:flex">
           {isAuthenticated ? (
             <>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="hover:text-accent hover:bg-transparent">
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-              <Button asChild size="sm" className="rounded-full px-4">
+              <Button asChild size="sm" className="rounded-full px-5">
                 <Link href="/dashboard/book">Book a class</Link>
               </Button>
             </>
           ) : (
             <>
-              <Button asChild variant="ghost" size="sm">
+              <Button asChild variant="ghost" size="sm" className="hover:text-accent hover:bg-transparent">
                 <Link href="/login">Log in</Link>
               </Button>
-              <Button asChild size="sm" className="rounded-full px-4">
+              <Button asChild size="sm" className="rounded-full px-5">
                 <Link href="/login?next=/onboarding">Book free session</Link>
               </Button>
             </>
@@ -83,7 +104,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
         </div>
 
         <button
-          className="md:hidden inline-flex items-center justify-center size-9 rounded-md hover:bg-muted"
+          className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted md:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
         >
@@ -95,9 +116,9 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="md:hidden border-t border-border bg-background"
+          className="border-t border-border bg-background md:hidden"
         >
-          <div className="px-4 py-4 flex flex-col gap-3">
+          <div className="flex flex-col gap-3 px-7 py-4">
             {NAV_LINKS.map((l) => (
               <Link
                 key={l.href}

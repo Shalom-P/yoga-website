@@ -12,10 +12,10 @@ export default async function MarketingLayout({
   // looks like you got logged out.
   const user = await getCurrentUser();
   return (
-    <>
+    <div className="myc-theme">
       <MarketingNav isAuthenticated={!!user} />
       <main className="flex-1 pt-16">{children}</main>
       <Footer />
-    </>
+    </div>
   );
 }

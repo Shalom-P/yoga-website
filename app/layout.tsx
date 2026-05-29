@@ -1,5 +1,11 @@
 import type { Metadata, Viewport } from "next";
-import { Fraunces, Inter, Geist_Mono } from "next/font/google";
+import {
+  Fraunces,
+  Inter,
+  Geist_Mono,
+  Cormorant_Garamond,
+  Hanken_Grotesk,
+} from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/components/shared/AnalyticsProvider";
@@ -22,6 +28,23 @@ const fraunces = Fraunces({
 const geistMono = Geist_Mono({
   subsets: ["latin"],
   variable: "--font-geist-mono",
+  display: "swap",
+});
+
+// Marketing-surface fonts (My Yoga Classes design handoff): elegant display
+// serif + clean grotesk body. Scoped to .myc-theme in globals.css.
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  style: ["normal", "italic"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const hanken = Hanken_Grotesk({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-hanken",
   display: "swap",
 });
 
@@ -62,7 +85,7 @@ export default function RootLayout({
     <html
       lang="en-AU"
       suppressHydrationWarning
-      className={`${inter.variable} ${fraunces.variable} ${geistMono.variable} h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} ${geistMono.variable} ${cormorant.variable} ${hanken.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>

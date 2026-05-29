@@ -1,71 +1,85 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "motion/react";
-import { UserRound, CalendarClock, Video } from "lucide-react";
 
 const STEPS = [
   {
     n: "01",
-    icon: UserRound,
-    title: "Pick your teacher",
-    body: "Browse 200-hr+ certified yoga teachers from India. Read their stories, watch a 30-second intro, choose your match.",
+    title: "Match with your teacher",
+    body: "Tell us your level and goals. We'll pair you with the right 200-hr certified teacher from India — or pick your own.",
+    href: "/teachers",
+    cta: "Meet the teachers →",
   },
   {
     n: "02",
-    icon: CalendarClock,
-    title: "Choose a time",
-    body: "Slots are shown in your local Australian time. Mornings, evenings, weekends — 7 days a week.",
+    title: "Book a time that suits you",
+    body: "Choose a slot from live availability, shown in your local Australian time. Your first 1:1 is free — no card needed to start.",
+    href: "/pricing",
+    cta: "See pricing →",
   },
   {
     n: "03",
-    icon: Video,
-    title: "Join on Google Meet",
-    body: "We email you a Meet link. Roll out your mat. Your teacher sees you, corrects you, guides you for 60 minutes.",
+    title: "Meet live, one-on-one",
+    body: "Roll out your mat — it's just you and your teacher on Google Meet. Real-time corrections, your pace, their full attention.",
+    href: "/login?next=/onboarding",
+    cta: "Book free session →",
   },
 ];
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="py-24 md:py-32">
-      <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+    <section id="how-it-works" className="myc-sec-cream py-[68px] md:py-[104px]">
+      <div className="mx-auto max-w-[1240px] px-7">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, amount: 0.6 }}
+          viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-14"
+          className="mb-14 grid items-end gap-6 md:grid-cols-2 md:gap-14"
         >
-          <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-3">
-            How it works
+          <div>
+            <div className="myc-eyebrow mb-4">
+              <span className="myc-dot" aria-hidden="true" />
+              How it works
+            </div>
+            <h2 className="text-[clamp(2.25rem,5vw,4rem)] tracking-tight text-balance">
+              From sign-up to <span className="myc-accent">savasana</span> in three steps.
+            </h2>
           </div>
-          <h2 className="text-3xl md:text-5xl tracking-tight text-balance">
-            Three small steps to your first class.
-          </h2>
+          <p className="text-lg text-muted-foreground text-pretty">
+            No app to download. No equipment beyond your mat. Just you and a teacher who&apos;s
+            fully focused on you — pay only for the sessions you book.
+          </p>
         </motion.div>
 
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, amount: 0.2 }}
-          variants={{
-            hidden: {},
-            show: { transition: { staggerChildren: 0.12 } },
-          }}
-          className="grid md:grid-cols-3 gap-6 md:gap-8"
+          variants={{ hidden: {}, show: { transition: { staggerChildren: 0.12 } } }}
+          className="grid gap-5 md:grid-cols-3"
         >
-          {STEPS.map(({ n, icon: Icon, title, body }) => (
+          {STEPS.map(({ n, title, body, href, cta }) => (
             <motion.div
               key={n}
               variants={{
-                hidden: { opacity: 0, x: 40 },
-                show: { opacity: 1, x: 0, transition: { duration: 0.6, ease: "easeOut" } },
+                hidden: { opacity: 0, y: 24 },
+                show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
               }}
-              className="relative rounded-3xl border border-border bg-card p-7 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 transition-all duration-300"
+              className="flex min-h-[300px] flex-col gap-4 rounded-[var(--radius)] border border-border bg-card p-8 shadow-[var(--myc-shadow-card)]"
             >
-              <span className="absolute top-6 right-6 text-xs text-muted-foreground font-mono">{n}</span>
-              <Icon className="size-7 text-primary mb-5" />
-              <h3 className="text-xl font-medium mb-2">{title}</h3>
-              <p className="text-muted-foreground text-pretty">{body}</p>
+              <div className="font-[family-name:var(--font-cormorant)] text-5xl font-medium italic leading-none text-accent">
+                {n}
+              </div>
+              <h3 className="text-2xl">{title}</h3>
+              <p className="text-[15px] text-muted-foreground text-pretty">{body}</p>
+              <Link
+                href={href}
+                className="mt-auto self-start text-sm font-semibold text-primary hover:text-accent"
+              >
+                {cta}
+              </Link>
             </motion.div>
           ))}
         </motion.div>
