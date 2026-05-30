@@ -150,3 +150,187 @@
     scroll-snap-align: start;
   }
 }
+
+/* ============================================================
+   "My Yoga Classes" design handoff — brand skin.
+   Shared by the marketing surface (.myc-theme, on the (marketing)
+   layout) and the logged-in app (.myc-app, on dashboard + admin).
+   Every component uses semantic tokens, so overriding them here
+   recolours both surfaces for free.
+   ============================================================ */
+.myc-theme,
+.myc-app {
+  /* semantic token overrides — teal & coral on warm cream */
+  --background: #fbf7ef;        /* warm cream paper */
+  --foreground: #16352e;        /* deep pine */
+  --card: #ffffff;
+  --card-foreground: #16352e;
+  --popover: #ffffff;
+  --popover-foreground: #16352e;
+  --primary: #0f5c4e;           /* deep teal */
+  --primary-foreground: #fbf7ef;
+  --secondary: #f2ecdd;         /* deeper cream */
+  --secondary-foreground: #16352e;
+  --muted: #f2ecdd;
+  --muted-foreground: #4c645b;  /* muted green-grey */
+  --accent: #ff6a4d;            /* bright coral */
+  --accent-foreground: #ffffff;
+  --border: #e6dfce;            /* warm hairline */
+  --input: #e6dfce;
+  --ring: #0f5c4e;
+
+  /* sidebar tokens (admin shell) tracked to the skin */
+  --sidebar: #fbf7ef;
+  --sidebar-foreground: #16352e;
+  --sidebar-primary: #0f5c4e;
+  --sidebar-primary-foreground: #fbf7ef;
+  --sidebar-accent: #f2ecdd;
+  --sidebar-accent-foreground: #16352e;
+  --sidebar-border: #e6dfce;
+  --sidebar-ring: #0f5c4e;
+
+  /* brand fonts — remap heading/sans so both <h1>–<h4> and
+     font-[family-name:var(--font-heading)] utilities pick up the
+     brand serif/grotesk. */
+  --font-heading: var(--font-cormorant), Georgia, serif;
+  --font-sans: var(--font-hanken), system-ui, -apple-system, sans-serif;
+
+  /* extra design tokens (no semantic equivalent) */
+  --myc-ink-2: #4c645b;
+  --myc-ink-3: #8a9a90;
+  --myc-line: #e6dfce;
+  --myc-primary-hover: #0b463b;
+  --myc-accent-soft: #fbd9c9;   /* peach tint */
+  --myc-bg-2: #f2ecdd;
+  --myc-mint: #dceae0;
+  --myc-peach: #fbe3d5;
+  --myc-butter: #f6eccb;
+  --myc-sky: #dee8ea;
+  --myc-shadow-soft: 0 24px 60px -32px rgba(22, 53, 46, 0.28);
+  --myc-shadow-card: 0 2px 0 rgba(22, 53, 46, 0.02),
+    0 14px 40px -28px rgba(22, 53, 46, 0.2);
+
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-hanken), system-ui, -apple-system, sans-serif;
+}
+
+/* Marketing keeps the generous editorial scale + radius; the app
+   surface inherits the base size/radius so dense tables, forms and
+   buttons stay compact and on-density. */
+.myc-theme {
+  --radius: 1.5rem;             /* 24px */
+  font-size: 17px;
+  line-height: 1.6;
+}
+
+/* Heading weight/line-height polish (family comes from --font-heading
+   remap above, so utility-class display text is covered too). */
+.myc-theme :is(h1, h2, h3, h4),
+.myc-app :is(h1, h2, h3, h4) {
+  font-weight: 500;
+  line-height: 1.14;
+  letter-spacing: -0.01em;
+}
+
+/* Coral italic flourish used inside headings */
+.myc-theme .myc-accent {
+  color: var(--accent);
+  font-style: italic;
+}
+
+/* Eyebrow / kicker */
+.myc-theme .myc-eyebrow,
+.myc-app .myc-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  font-family: var(--font-hanken), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--myc-ink-2);
+}
+.myc-theme .myc-eyebrow .myc-dot,
+.myc-app .myc-eyebrow .myc-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 999px;
+  background: var(--accent);
+}
+
+/* Pastel section blocks */
+.myc-theme .myc-sec-mint { background: var(--myc-mint); }
+.myc-theme .myc-sec-peach { background: var(--myc-peach); }
+.myc-theme .myc-sec-cream { background: var(--myc-bg-2); }
+
+/* Marquee of class styles */
+.myc-marquee { overflow: hidden; white-space: nowrap; }
+.myc-marquee__track {
+  display: inline-flex;
+  gap: 2.75rem;
+  padding-right: 2.75rem;
+  font-family: var(--font-cormorant), Georgia, serif;
+  font-style: italic;
+  font-size: clamp(1.4rem, 3vw, 1.9rem);
+  color: var(--foreground);
+  animation: myc-scroll 42s linear infinite;
+}
+.myc-marquee__track span {
+  display: inline-flex;
+  align-items: center;
+  gap: 2.75rem;
+}
+.myc-marquee__track span::after {
+  content: "✦";
+  color: var(--accent);
+  font-style: normal;
+  font-size: 0.9rem;
+}
+
+/* Hero morphing blob + floating-card motion */
+.myc-blob {
+  border-radius: 48% 52% 56% 44% / 54% 46% 54% 46%;
+  animation: myc-blobmorph 16s ease-in-out infinite;
+}
+.myc-float { animation: myc-float 7s ease-in-out infinite; }
+.myc-float2 { animation: myc-float2 9s ease-in-out infinite; }
+.myc-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  animation: myc-pulse 1.8s infinite;
+}
+
+@keyframes myc-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes myc-blobmorph {
+  0%, 100% { border-radius: 48% 52% 56% 44% / 54% 46% 54% 46%; }
+  50% { border-radius: 56% 44% 48% 52% / 44% 56% 44% 56%; }
+}
+@keyframes myc-float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-10px) rotate(-1.5deg); }
+}
+@keyframes myc-float2 {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-14px) rotate(2deg); }
+}
+@keyframes myc-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(255, 106, 77, 0.5); }
+  100% { box-shadow: 0 0 0 12px rgba(255, 106, 77, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .myc-marquee__track,
+  .myc-blob,
+  .myc-float,
+  .myc-float2,
+  .myc-pulse-dot {
+    animation: none;
+  }
+}
