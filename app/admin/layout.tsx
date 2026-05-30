@@ -10,7 +10,7 @@ export default async function AdminLayout({
 }) {
   await requireAdmin();
   return (
-    <div className="min-h-screen flex">
+    <div className="myc-app min-h-screen flex">
       <AdminSidebar />
       <div className="flex-1 flex flex-col">
         <header className="border-b border-border bg-background h-14 flex items-center justify-between px-6">

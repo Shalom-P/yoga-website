@@ -10,7 +10,7 @@ export default async function DashboardLayout({
 }) {
   await requireUser("/dashboard");
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="myc-app min-h-screen flex flex-col">
       <header className="border-b border-border bg-background">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
