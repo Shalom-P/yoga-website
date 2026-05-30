@@ -2,9 +2,9 @@ export const metadata = { title: "Refund policy" };
 
 export default function RefundPage() {
   return (
-    <article className="pt-32 pb-24">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-heading)] tracking-tight">
+    <article className="px-7 pt-32 pb-24">
+      <div className="mx-auto max-w-3xl">
+        <h1 className="text-[clamp(2.25rem,4vw,3rem)] leading-[1.1] tracking-tight">
           Refund policy
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">Last updated: 28 May 2026</p>

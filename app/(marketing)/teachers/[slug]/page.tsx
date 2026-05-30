@@ -23,27 +23,33 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
   if (!t) notFound();
 
   return (
-    <article className="pt-32 pb-24">
-      <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8 grid lg:grid-cols-12 gap-10">
+    <article className="px-7 pt-32 pb-24">
+      <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-12">
         <div className="lg:col-span-5">
-          <div className="relative aspect-[4/5] rounded-3xl bg-gradient-to-br from-primary/20 to-accent/10 border border-border/60 overflow-hidden">
+          <div
+            className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius)] border border-border"
+            style={{
+              background:
+                "radial-gradient(circle at 30% 25%, var(--myc-peach), transparent 55%), radial-gradient(circle at 75% 70%, var(--myc-mint), transparent 55%), var(--myc-butter)",
+            }}
+          >
             <svg viewBox="0 0 300 375" className="absolute inset-0 size-full text-primary">
-              <circle cx="150" cy="135" r="56" fill="currentColor" opacity="0.6" />
+              <circle cx="150" cy="135" r="56" fill="currentColor" opacity="0.55" />
               <path
                 d="M 60 240 Q 150 160 240 240 Q 260 320 220 360 L 80 360 Q 40 320 60 240 Z"
                 fill="currentColor"
-                opacity="0.5"
+                opacity="0.45"
               />
             </svg>
           </div>
         </div>
         <div className="lg:col-span-7">
-          <div className="inline-flex items-center gap-1 text-sm bg-card border border-border px-3 py-1 rounded-full mb-4">
-            <Star className="size-3.5 fill-amber-400 text-amber-400" />
+          <div className="mb-4 inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-sm">
+            <Star className="size-3.5 fill-accent text-accent" />
             <span className="font-medium">{Number(t.rating_avg).toFixed(1)}</span>
             <span className="text-muted-foreground">· {t.rating_count} reviews</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-heading)] tracking-tight">
+          <h1 className="text-[clamp(2.5rem,5vw,3.5rem)] leading-[1.08] tracking-tight">
             {t.display_name}
           </h1>
           <p className="mt-2 text-lg text-muted-foreground">{t.headline}</p>
@@ -51,14 +57,14 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
 
           <div className="mt-8 space-y-4 text-sm">
             <div className="flex items-start gap-3">
-              <Award className="size-4 text-primary mt-0.5" />
+              <Award className="mt-0.5 size-4 text-accent" />
               <div>
                 <div className="font-medium">Specialties</div>
                 <div className="text-muted-foreground">{t.specialties.join(" · ")}</div>
               </div>
             </div>
             <div className="flex items-start gap-3">
-              <Globe className="size-4 text-primary mt-0.5" />
+              <Globe className="mt-0.5 size-4 text-accent" />
               <div>
                 <div className="font-medium">Languages</div>
                 <div className="text-muted-foreground">{t.languages.join(" · ")}</div>
@@ -66,8 +72,12 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
             </div>
           </div>
 
-          <div className="mt-10 flex gap-3">
-            <Button asChild size="lg" className="h-12 px-6 rounded-full">
+          <div className="mt-10 flex flex-wrap gap-3">
+            <Button
+              asChild
+              size="lg"
+              className="h-12 rounded-full bg-accent px-6 font-semibold text-white shadow-[var(--myc-shadow-soft)] hover:bg-accent/90"
+            >
               <Link href={`/login?next=/onboarding%3Fteacher%3D${t.slug}`}>
                 Book free 1:1 with {t.display_name.split(" ")[0]}
                 <ArrowRight className="size-4 ml-1" />

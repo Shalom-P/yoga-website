@@ -1,4 +1,5 @@
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
+import { PageHeader } from "@/components/marketing/PageHeader";
 import { FAQ } from "@/components/marketing/FAQ";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
 import { getPlansWithFeatures } from "@/lib/data/landing";
@@ -13,19 +14,11 @@ export default async function PricingPage() {
   const plans = await getPlansWithFeatures();
   return (
     <>
-      <section className="pt-32 pb-12 text-center">
-        <div className="mx-auto max-w-3xl px-6">
-          <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-3">
-            Pricing
-          </div>
-          <h1 className="text-4xl md:text-6xl font-[family-name:var(--font-heading)] tracking-tight text-balance">
-            Pay only when you&apos;re ready.
-          </h1>
-          <p className="mt-5 text-lg text-muted-foreground text-pretty">
-            Every plan starts with a free 1:1 — you choose to subscribe afterwards, or you don&apos;t.
-          </p>
-        </div>
-      </section>
+      <PageHeader
+        eyebrow="Pricing"
+        title={<>Pay only when <em>you&apos;re ready.</em></>}
+        subhead="Every plan starts with a free 1:1 — you choose to subscribe afterwards, or you don't."
+      />
       <PricingTeaser plans={plans} />
       <FAQ />
       <FinalCTA headline="Try your first 1:1 on us." />

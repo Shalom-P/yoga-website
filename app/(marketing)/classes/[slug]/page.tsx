@@ -20,12 +20,13 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
   if (!c) notFound();
 
   return (
-    <article className="pt-32 pb-24">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 text-center">
-        <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-3">
+    <article className="px-7 pt-32 pb-24">
+      <div className="mx-auto max-w-3xl text-center">
+        <div className="myc-eyebrow mb-4 justify-center capitalize">
+          <span className="myc-dot" aria-hidden="true" />
           {c.intensity} intensity
         </div>
-        <h1 className="text-4xl md:text-6xl font-[family-name:var(--font-heading)] tracking-tight">
+        <h1 className="text-[clamp(2.75rem,6vw,4.5rem)] leading-[1.08] tracking-tight">
           {c.name}
         </h1>
         <p className="mt-5 text-lg text-muted-foreground text-pretty">{c.description}</p>
