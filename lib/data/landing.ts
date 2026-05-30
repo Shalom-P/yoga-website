@@ -158,7 +158,7 @@ const MOCK_REVIEWS: (Review & { teacher_name?: string })[] = [
 ];
 
 const MOCK_SETTINGS: Record<string, unknown> = {
-  "brand.name": "MYYOGACLASSES",
+  "brand.name": "My Yoga Classes",
   "landing.hero_headline": "Find your free 1:1 yoga teacher — no credit card.",
   "landing.hero_subhead":
     "60-minute private session. Pick your teacher. Pick your time. We meet on Google Meet.",

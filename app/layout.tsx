@@ -60,18 +60,18 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myyogaclasses.com.a
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "MYYOGACLASSES — Free 1:1 yoga teacher · Online · No credit card",
-    template: "%s · MYYOGACLASSES",
+    default: "My Yoga Classes — Free 1:1 yoga teacher · Online · No credit card",
+    template: "%s · My Yoga Classes",
   },
   description:
     "Live online yoga with expert teachers from India. Book a free 60-minute private session — no credit card required. Times in your local AEST/AEDT.",
-  applicationName: "MYYOGACLASSES",
+  applicationName: "My Yoga Classes",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    siteName: "MYYOGACLASSES",
+    siteName: "My Yoga Classes",
     locale: "en_AU",
-    title: "MYYOGACLASSES — Free 1:1 yoga teacher · Online",
+    title: "My Yoga Classes — Free 1:1 yoga teacher · Online",
     description:
       "Find your free 1:1 yoga teacher. 60-minute private session. Pick your teacher. Pick your time. Meets on Google Meet.",
   },

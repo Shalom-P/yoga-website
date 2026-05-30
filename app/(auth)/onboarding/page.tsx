@@ -11,11 +11,12 @@ export default async function OnboardingPage() {
   return (
     <div className="min-h-screen px-6 py-12">
       <div className="mx-auto max-w-xl">
-        <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-3">
+        <div className="myc-eyebrow mb-3">
+          <span className="myc-dot" aria-hidden="true" />
           Step 1 of 2
         </div>
-        <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-heading)] tracking-tight">
-          Let&apos;s find your perfect teacher.
+        <h1 className="text-4xl md:text-5xl font-[family-name:var(--font-cormorant)] tracking-tight">
+          Let&apos;s find your <span className="text-accent italic">perfect teacher.</span>
         </h1>
         <p className="mt-3 text-muted-foreground">
           Three quick questions, then you&apos;ll see slots in your local time.

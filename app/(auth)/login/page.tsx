@@ -8,17 +8,23 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col">
       <header className="px-6 py-5">
-        <Link href="/" className="flex items-center gap-2 text-sm">
-          <span className="size-7 rounded-full bg-primary inline-flex items-center justify-center">
+        <Link href="/" className="flex items-center gap-2.5 text-sm">
+          <span className="size-8 rounded-full bg-primary inline-flex items-center justify-center">
             <span className="size-2.5 rounded-full bg-background" />
           </span>
-          <span className="font-[family-name:var(--font-heading)]">MYYOGACLASSES</span>
+          <span className="font-[family-name:var(--font-cormorant)] text-xl font-semibold">
+            My Yoga Classes
+          </span>
         </Link>
       </header>
       <main className="flex-1 grid place-items-center px-6 py-12">
         <div className="w-full max-w-md">
-          <h1 className="text-3xl font-[family-name:var(--font-heading)] tracking-tight text-center">
-            Continue with MYYOGACLASSES
+          <div className="myc-eyebrow mb-4 justify-center">
+            <span className="myc-dot" aria-hidden="true" />
+            Free 1:1 · No card needed
+          </div>
+          <h1 className="text-4xl font-[family-name:var(--font-cormorant)] tracking-tight text-center">
+            Continue with <span className="text-accent italic">My Yoga Classes</span>
           </h1>
           <p className="mt-2 text-center text-muted-foreground">
             Your free 1:1 session is one click away.

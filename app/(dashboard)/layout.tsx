@@ -18,7 +18,7 @@ export default async function DashboardLayout({
               <span className="size-2.5 rounded-full bg-background" />
             </span>
             <span className="font-[family-name:var(--font-heading)] text-lg">
-              MYYOGACLASSES
+              My Yoga Classes
             </span>
           </Link>
           <div className="flex items-center gap-2">
