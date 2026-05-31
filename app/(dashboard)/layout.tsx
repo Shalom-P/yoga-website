@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
-import { DashboardNav } from "@/components/dashboard/DashboardNav";
+import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SignOutButton } from "@/components/shared/SignOutButton";
 
 export default async function DashboardLayout({
@@ -8,26 +8,26 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  await requireUser("/dashboard");
+  const { user, supabase } = await requireUser("/dashboard");
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name")
+    .eq("id", user.id)
+    .single();
+  const name = profile?.full_name || user.email || "Member";
+
   return (
-    <div className="myc-app min-h-screen flex flex-col">
-      <header className="border-b border-border bg-background">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-          <Link href="/" className="flex items-center gap-2">
-            <span className="size-7 rounded-full bg-primary inline-flex items-center justify-center">
-              <span className="size-2.5 rounded-full bg-background" />
-            </span>
-            <span className="font-[family-name:var(--font-heading)] text-lg">
-              My Yoga Classes
-            </span>
+    <div className="myc-app min-h-screen flex">
+      <DashboardSidebar userName={name} userEmail={user.email ?? ""} />
+      <div className="flex-1 flex flex-col">
+        <header className="border-b border-border bg-background h-14 flex items-center justify-between px-6">
+          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground">
+            ← Back to site
           </Link>
-          <div className="flex items-center gap-2">
-            <DashboardNav />
-            <SignOutButton />
-          </div>
-        </div>
-      </header>
-      <main className="flex-1 bg-secondary/30">{children}</main>
+          <SignOutButton />
+        </header>
+        <main className="flex-1 bg-secondary/20">{children}</main>
+      </div>
     </div>
   );
 }

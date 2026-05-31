@@ -1,5 +1,8 @@
+import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
+import { Button } from "@/components/ui/button";
 import { BookingsList } from "@/components/dashboard/BookingsList";
+import { tzShort } from "@/lib/timezone";
 import type { BookingStatus } from "@/lib/supabase/types";
 
 type Row = {
@@ -13,6 +16,7 @@ type Row = {
     meet_link: string | null;
     meet_status: "pending" | "created" | "failed" | null;
     teacher: { display_name: string } | null;
+    class_category: { name: string } | null;
   } | null;
 };
 
@@ -23,7 +27,9 @@ export default async function BookingsPage() {
       .from("bookings")
       .select(
         `id, status, is_free_trial,
-         session:sessions(id, start_at, end_at, meet_link, meet_status, teacher:teachers(display_name))`
+         session:sessions(id, start_at, end_at, meet_link, meet_status,
+           teacher:teachers(display_name),
+           class_category:class_categories(name))`
       )
       .eq("customer_id", user.id)
       .order("created_at", { ascending: false })
@@ -31,18 +37,34 @@ export default async function BookingsPage() {
     supabase.from("profiles").select("timezone").eq("id", user.id).single(),
   ]);
 
+  const rows = (bookings as unknown as Row[]) ?? [];
+  const timezone = profile?.timezone ?? "Australia/Sydney";
+  const now = new Date().getTime();
+  const upcomingCount = rows.filter(
+    (r) => r.session && new Date(r.session.start_at).getTime() > now && r.status !== "cancelled"
+  ).length;
+
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10">
-      <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
-        Your bookings
+    <div className="mx-auto max-w-6xl px-6 py-8 md:px-10">
+      <div className="myc-eyebrow">
+        <span className="myc-dot" />
+        My bookings
       </div>
-      <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-heading)] tracking-tight mt-1">
-        Past & upcoming
-      </h1>
-      <BookingsList
-        rows={(bookings as unknown as Row[]) ?? []}
-        customerTimezone={profile?.timezone ?? "Australia/Sydney"}
-      />
+      <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="font-[family-name:var(--font-cormorant)] text-4xl md:text-[2.7rem] leading-[1.05] tracking-tight">
+            Your <span className="italic text-accent">sessions.</span>
+          </h1>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {upcomingCount} upcoming · times in {tzShort(timezone)}
+          </p>
+        </div>
+        <Button asChild className="rounded-full bg-accent text-white hover:bg-accent/90">
+          <Link href="/dashboard/book">Book a session</Link>
+        </Button>
+      </div>
+
+      <BookingsList rows={rows} customerTimezone={timezone} />
     </div>
   );
 }
