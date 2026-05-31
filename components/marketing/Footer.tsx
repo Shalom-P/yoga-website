@@ -1,35 +1,21 @@
 import Link from "next/link";
 import { NewsletterForm } from "@/components/marketing/NewsletterForm";
-
-function FooterMark() {
-  return (
-    <span className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-full bg-background text-foreground">
-      <svg viewBox="0 0 24 24" className="size-6" fill="none" aria-hidden="true">
-        <circle cx="12" cy="6" r="2.4" fill="currentColor" />
-        <path
-          d="M5 18c1.6-3.2 4-4.8 7-4.8s5.4 1.6 7 4.8"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M12 11.5c-2.4 0-4.4 1-5.6 2.6M12 11.5c2.4 0 4.4 1 5.6 2.6"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-      </svg>
-    </span>
-  );
-}
+import { BrandMark } from "@/components/shared/BrandMark";
+import { YogaFigure } from "@/components/shared/YogaFigure";
 
 export function Footer() {
   return (
-    <footer className="bg-foreground text-background">
+    <footer className="relative overflow-hidden bg-foreground text-background">
+      {/* decorative figure motif */}
+      <YogaFigure
+        pose="tree"
+        className="pointer-events-none absolute -right-6 top-10 hidden w-40 text-background/10 md:block"
+      />
+
       <div className="mx-auto grid max-w-[1240px] gap-12 px-7 pb-10 pt-20 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
         <div>
           <Link href="/" className="mb-4 flex items-center gap-3">
-            <FooterMark />
+            <BrandMark className="bg-background text-foreground" />
             <span className="font-[family-name:var(--font-cormorant)] text-[1.55rem] font-semibold leading-none">
               My Yoga Classes
             </span>

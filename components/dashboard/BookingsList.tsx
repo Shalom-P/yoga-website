@@ -1,11 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Video, Calendar, Loader2, X } from "lucide-react";
+import { Video, Loader2, CalendarDays } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
   Dialog,
   DialogContent,
@@ -16,8 +15,9 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { formatCustomerTime } from "@/lib/timezone";
+import { formatInTz, tzShort } from "@/lib/timezone";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import type { BookingStatus } from "@/lib/supabase/types";
 
 type Row = {
@@ -31,22 +31,58 @@ type Row = {
     meet_link: string | null;
     meet_status: "pending" | "created" | "failed" | null;
     teacher: { display_name: string } | null;
+    class_category: { name: string } | null;
   } | null;
 };
 
-export function BookingsList({ rows, customerTimezone }: { rows: Row[]; customerTimezone: string }) {
+type Filter = "upcoming" | "past" | "cancelled";
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: "upcoming", label: "Upcoming" },
+  { key: "past", label: "Past" },
+  { key: "cancelled", label: "Cancelled" },
+];
+
+function durationMin(start: string, end: string) {
+  return Math.max(0, Math.round((new Date(end).getTime() - new Date(start).getTime()) / 60000));
+}
+
+function StatusPill({ row }: { row: Row }) {
+  if (row.status === "cancelled") return <span className="myc-pill myc-pill-gray">Cancelled</span>;
+  if (row.status === "no_show") return <span className="myc-pill myc-pill-gray">No-show</span>;
+  if (row.status === "attended") return <span className="myc-pill myc-pill-teal">Attended</span>;
+  if (row.is_free_trial) return <span className="myc-pill myc-pill-free">Free trial</span>;
+  return <span className="myc-pill myc-pill-green">Confirmed</span>;
+}
+
+export function BookingsList({
+  rows,
+  customerTimezone,
+}: {
+  rows: Row[];
+  customerTimezone: string;
+}) {
   const router = useRouter();
+  const [filter, setFilter] = useState<Filter>("upcoming");
   const [cancelTarget, setCancelTarget] = useState<Row | null>(null);
   const [reason, setReason] = useState("");
   const [cancelling, setCancelling] = useState(false);
-  // Pin "now" to mount time so render stays pure. Stale by seconds, fine for this view.
+  // Pin "now" to mount time so render stays pure. Stale by seconds, fine here.
   const [now] = useState(() => Date.now());
-  const upcoming = rows.filter(
-    (r) => r.session && new Date(r.session.start_at).getTime() > now && r.status !== "cancelled"
-  );
-  const past = rows.filter(
-    (r) => !r.session || new Date(r.session.start_at).getTime() <= now || r.status === "cancelled"
-  );
+
+  const { upcoming, past, cancelled } = useMemo(() => {
+    const upcoming: Row[] = [];
+    const past: Row[] = [];
+    const cancelled: Row[] = [];
+    for (const r of rows) {
+      if (r.status === "cancelled") cancelled.push(r);
+      else if (r.session && new Date(r.session.start_at).getTime() > now) upcoming.push(r);
+      else past.push(r);
+    }
+    return { upcoming, past, cancelled };
+  }, [rows, now]);
+
+  const visible = filter === "upcoming" ? upcoming : filter === "past" ? past : cancelled;
 
   async function confirmCancel() {
     if (!cancelTarget) return;
@@ -62,7 +98,7 @@ export function BookingsList({ rows, customerTimezone }: { rows: Row[]; customer
         toast.error(`Couldn't cancel: ${body.error ?? "unknown"}`);
         return;
       }
-      toast.success("Booking cancelled.");
+      toast.success("Session cancelled.");
       setCancelTarget(null);
       setReason("");
       router.refresh();
@@ -75,11 +111,11 @@ export function BookingsList({ rows, customerTimezone }: { rows: Row[]; customer
 
   if (rows.length === 0) {
     return (
-      <div className="mt-10 rounded-3xl border border-dashed border-border bg-card p-12 text-center">
-        <Calendar className="size-10 text-muted-foreground mx-auto mb-4" />
-        <p className="text-muted-foreground">No bookings yet.</p>
-        <Button asChild className="mt-5 rounded-full">
-          <Link href="/dashboard/book">Book your first class</Link>
+      <div className="mt-8 rounded-2xl border border-dashed border-border bg-card p-12 text-center shadow-sm">
+        <CalendarDays className="mx-auto mb-4 size-10 text-muted-foreground" />
+        <p className="text-muted-foreground">No sessions yet.</p>
+        <Button asChild className="mt-5 rounded-full bg-accent text-white hover:bg-accent/90">
+          <Link href="/dashboard/book">Book your first session</Link>
         </Button>
       </div>
     );
@@ -87,43 +123,105 @@ export function BookingsList({ rows, customerTimezone }: { rows: Row[]; customer
 
   return (
     <>
-      {upcoming.length > 0 && (
-        <section className="mt-8">
-          <h2 className="text-lg font-medium mb-3">Upcoming</h2>
-          <div className="space-y-3">
-            {upcoming.map((r) => (
-              <BookingCard
-                key={r.id}
-                row={r}
-                customerTimezone={customerTimezone}
-                now={now}
-                onCancel={() => setCancelTarget(r)}
-              />
-            ))}
-          </div>
-        </section>
-      )}
+      <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+        <div className="flex flex-wrap gap-2 border-b border-border px-5 py-3.5">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              onClick={() => setFilter(f.key)}
+              className={cn(
+                "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
+                filter === f.key
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
+              )}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
 
-      {past.length > 0 && (
-        <section className="mt-10">
-          <h2 className="text-lg font-medium mb-3">Past & cancelled</h2>
-          <div className="space-y-3">
-            {past.map((r) => (
-              <BookingCard key={r.id} row={r} customerTimezone={customerTimezone} now={now} />
-            ))}
-          </div>
-        </section>
-      )}
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead>
+              <tr>
+                <Th>When ({tzShort(customerTimezone)})</Th>
+                <Th>Session</Th>
+                <Th>Teacher</Th>
+                <Th>Status</Th>
+                <Th className="text-right" />
+              </tr>
+            </thead>
+            <tbody>
+              {visible.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="border-t border-border px-5 py-10 text-center text-sm text-muted-foreground"
+                  >
+                    No {filter} sessions.
+                  </td>
+                </tr>
+              ) : (
+                visible.map((r) => {
+                  const s = r.session;
+                  return (
+                    <tr key={r.id}>
+                      <Td>
+                        {s ? (
+                          <>
+                            <strong className="font-semibold text-foreground">
+                              {formatInTz(s.start_at, customerTimezone, "EEE d MMM")}
+                            </strong>
+                            <div className="text-xs text-muted-foreground">
+                              {formatInTz(s.start_at, customerTimezone, "h:mm a")} ·{" "}
+                              {durationMin(s.start_at, s.end_at)} min
+                            </div>
+                          </>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </Td>
+                      <Td className="text-foreground">
+                        {s?.class_category?.name ?? "Yoga session"}
+                      </Td>
+                      <Td>{s?.teacher?.display_name ?? "Teacher"}</Td>
+                      <Td>
+                        <StatusPill row={r} />
+                      </Td>
+                      <Td className="text-right">
+                        <RowActions
+                          row={r}
+                          bucket={filter}
+                          onCancel={() => setCancelTarget(r)}
+                        />
+                      </Td>
+                    </tr>
+                  );
+                })
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
       <Dialog open={cancelTarget !== null} onOpenChange={(o) => !o && setCancelTarget(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Cancel this booking?</DialogTitle>
+            <DialogTitle>
+              Cancel this <span className="italic text-accent">session?</span>
+            </DialogTitle>
             <DialogDescription>
               {cancelTarget?.session && (
                 <>
+                  {cancelTarget.session.class_category?.name ?? "Yoga session"} ·{" "}
                   {cancelTarget.session.teacher?.display_name} ·{" "}
-                  {formatCustomerTime(cancelTarget.session.start_at, customerTimezone)}
+                  {formatInTz(
+                    cancelTarget.session.start_at,
+                    customerTimezone,
+                    "EEE d MMM, h:mm a"
+                  )}
                 </>
               )}
             </DialogDescription>
@@ -135,14 +233,15 @@ export function BookingsList({ rows, customerTimezone }: { rows: Row[]; customer
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={3}
+              placeholder="Let your teacher know why, if you'd like."
             />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setCancelTarget(null)} disabled={cancelling}>
-              Keep booking
+              Keep session
             </Button>
             <Button variant="destructive" onClick={confirmCancel} disabled={cancelling}>
-              {cancelling ? <Loader2 className="size-4 animate-spin" /> : "Cancel booking"}
+              {cancelling ? <Loader2 className="size-4 animate-spin" /> : "Cancel session"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -151,55 +250,71 @@ export function BookingsList({ rows, customerTimezone }: { rows: Row[]; customer
   );
 }
 
-function BookingCard({
+function RowActions({
   row,
-  customerTimezone,
-  now,
+  bucket,
   onCancel,
 }: {
   row: Row;
-  customerTimezone: string;
-  now: number;
-  onCancel?: () => void;
+  bucket: Filter;
+  onCancel: () => void;
 }) {
-  const cancelled = row.status === "cancelled";
-  const session = row.session;
-  return (
-    <div className="rounded-2xl border border-border bg-card p-5 flex flex-wrap items-center gap-4">
-      <div className="flex-1 min-w-0">
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium">{session?.teacher?.display_name ?? "Teacher"}</span>
-          {row.is_free_trial && <Badge variant="outline">Free trial</Badge>}
-          {cancelled && <Badge variant="outline">Cancelled</Badge>}
-          {row.status === "attended" && <Badge variant="secondary">Attended</Badge>}
-          {row.status === "no_show" && <Badge variant="outline">No-show</Badge>}
-        </div>
-        <div className="text-sm text-muted-foreground mt-0.5">
-          {session ? formatCustomerTime(session.start_at, customerTimezone) : "—"}
-        </div>
+  if (bucket === "upcoming") {
+    const link = row.session?.meet_link;
+    return (
+      <div className="flex items-center justify-end gap-2">
+        {link ? (
+          <Button asChild size="sm" className="h-8 rounded-full px-3 text-xs">
+            <a href={link} target="_blank" rel="noreferrer">
+              <Video className="size-3.5" />
+              Join
+            </a>
+          </Button>
+        ) : (
+          <span className="text-xs text-muted-foreground">
+            {row.session?.meet_status === "failed" ? "Link unavailable" : "Link soon"}
+          </span>
+        )}
+        <Button asChild size="sm" variant="outline" className="h-8 rounded-full px-3 text-xs">
+          <Link href="/dashboard/book">Reschedule</Link>
+        </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          className="h-8 rounded-full px-3 text-xs"
+          onClick={onCancel}
+        >
+          Cancel
+        </Button>
       </div>
-      {!cancelled && session && new Date(session.start_at).getTime() > now && (
-        <div className="flex items-center gap-2">
-          {session.meet_link ? (
-            <Button asChild size="sm" className="rounded-full">
-              <a href={session.meet_link} target="_blank" rel="noreferrer">
-                <Video className="size-3.5 mr-1" />
-                Join
-              </a>
-            </Button>
-          ) : (
-            <span className="text-xs text-muted-foreground">
-              {session.meet_status === "failed" ? "Link unavailable" : "Link soon"}
-            </span>
-          )}
-          {onCancel && (
-            <Button size="sm" variant="ghost" onClick={onCancel}>
-              <X className="size-3.5 mr-1" />
-              Cancel
-            </Button>
-          )}
-        </div>
-      )}
+    );
+  }
+  return (
+    <div className="flex justify-end">
+      <Button asChild size="sm" variant="outline" className="h-8 rounded-full px-3 text-xs">
+        <Link href="/dashboard/book">Book again</Link>
+      </Button>
     </div>
+  );
+}
+
+function Th({ children, className }: { children?: React.ReactNode; className?: string }) {
+  return (
+    <th
+      className={cn(
+        "bg-background px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
+        className
+      )}
+    >
+      {children}
+    </th>
+  );
+}
+
+function Td({ children, className }: { children?: React.ReactNode; className?: string }) {
+  return (
+    <td className={cn("border-t border-border px-5 py-3 align-middle text-muted-foreground", className)}>
+      {children}
+    </td>
   );
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { BrandMark } from "@/components/shared/BrandMark";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -14,29 +15,6 @@ const NAV_LINKS = [
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
 ] as const;
-
-function BrandMark() {
-  return (
-    <span className="inline-flex size-[42px] shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
-      {/* seated/meditating figure glyph */}
-      <svg viewBox="0 0 24 24" className="size-6" fill="none" aria-hidden="true">
-        <circle cx="12" cy="6" r="2.4" fill="currentColor" />
-        <path
-          d="M5 18c1.6-3.2 4-4.8 7-4.8s5.4 1.6 7 4.8"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-        <path
-          d="M12 11.5c-2.4 0-4.4 1-5.6 2.6M12 11.5c2.4 0 4.4 1 5.6 2.6"
-          stroke="currentColor"
-          strokeWidth="1.6"
-          strokeLinecap="round"
-        />
-      </svg>
-    </span>
-  );
-}
 
 export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
   const [scrolled, setScrolled] = useState(false);
@@ -63,7 +41,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
     >
       <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-7">
         <Link href="/" className="flex items-center gap-3" aria-label="My Yoga Classes home">
-          <BrandMark />
+          <BrandMark breathe />
           <span className="font-[family-name:var(--font-cormorant)] text-[1.55rem] font-semibold leading-none tracking-[-0.01em]">
             My Yoga Classes
           </span>
@@ -87,8 +65,8 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
               <Button asChild variant="ghost" size="sm" className="hover:text-accent hover:bg-transparent">
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-              <Button asChild size="sm" className="rounded-full px-5">
-                <Link href="/dashboard/book">Book a class</Link>
+              <Button asChild size="sm" className="rounded-full px-5 bg-accent text-white hover:bg-accent/90">
+                <Link href="/dashboard/book">Book a session</Link>
               </Button>
             </>
           ) : (
@@ -96,7 +74,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
               <Button asChild variant="ghost" size="sm" className="hover:text-accent hover:bg-transparent">
                 <Link href="/login">Log in</Link>
               </Button>
-              <Button asChild size="sm" className="rounded-full px-5">
+              <Button asChild size="sm" className="rounded-full px-5 bg-accent text-white hover:bg-accent/90">
                 <Link href="/login?next=/onboarding">Book free session</Link>
               </Button>
             </>
@@ -135,7 +113,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
                   <Button asChild variant="outline" className="flex-1">
                     <Link href="/dashboard">Dashboard</Link>
                   </Button>
-                  <Button asChild className="flex-1">
+                  <Button asChild className="flex-1 bg-accent text-white hover:bg-accent/90">
                     <Link href="/dashboard/book">Book</Link>
                   </Button>
                 </>
@@ -144,7 +122,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
                   <Button asChild variant="outline" className="flex-1">
                     <Link href="/login">Log in</Link>
                   </Button>
-                  <Button asChild className="flex-1">
+                  <Button asChild className="flex-1 bg-accent text-white hover:bg-accent/90">
                     <Link href="/login?next=/onboarding">Book free</Link>
                   </Button>
                 </>

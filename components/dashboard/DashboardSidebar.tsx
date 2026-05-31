@@ -3,36 +3,36 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, BookOpen, CalendarClock, BadgePercent,
-  Image as ImageIcon, Wallet, Calendar, UserRound, Settings, Briefcase,
+  LayoutDashboard, CalendarPlus, Receipt, Wallet, UserRound,
 } from "lucide-react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
-  { href: "/admin",            label: "Overview",  icon: LayoutDashboard },
-  { href: "/admin/teachers",   label: "Teachers",  icon: Briefcase },
-  { href: "/admin/sessions",   label: "Sessions",  icon: CalendarClock },
-  { href: "/admin/classes",    label: "Classes",   icon: BookOpen },
-  { href: "/admin/plans",      label: "Plans",     icon: Wallet },
-  { href: "/admin/discounts",  label: "Discounts", icon: BadgePercent },
-  { href: "/admin/media",      label: "Media",     icon: ImageIcon },
-  { href: "/admin/bookings",   label: "Bookings",  icon: Calendar },
-  { href: "/admin/customers",  label: "Customers", icon: UserRound },
-  { href: "/admin/settings",   label: "Settings",  icon: Settings },
+  { href: "/dashboard",          label: "Overview",          icon: LayoutDashboard },
+  { href: "/dashboard/book",     label: "Book a session",    icon: CalendarPlus },
+  { href: "/dashboard/bookings", label: "My bookings",       icon: Receipt },
+  { href: "/dashboard/plan",     label: "My plan & credits", icon: Wallet },
+  { href: "/dashboard/profile",  label: "Profile",           icon: UserRound },
 ];
 
-export function AdminSidebar() {
+export function DashboardSidebar({
+  userName,
+  userEmail,
+}: {
+  userName: string;
+  userEmail: string;
+}) {
   const pathname = usePathname();
   return (
     <aside className="w-60 shrink-0 border-r border-border bg-sidebar flex flex-col">
       <div className="p-5 border-b border-border">
-        <Link href="/admin" className="flex items-center gap-2.5">
+        <Link href="/dashboard" className="flex items-center gap-2.5">
           <BrandMark className="size-9 [&_svg]:size-5" />
           <span className="font-[family-name:var(--font-cormorant)] text-lg font-semibold leading-none">
             My Yoga Classes
             <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
-              Admin
+              Member
             </span>
           </span>
         </Link>
@@ -40,7 +40,9 @@ export function AdminSidebar() {
       <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
         {ITEMS.map(({ href, label, icon: Icon }) => {
           const active =
-            href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+            href === "/dashboard"
+              ? pathname === "/dashboard"
+              : pathname === href || pathname.startsWith(`${href}/`);
           return (
             <Link
               key={href}
@@ -58,6 +60,13 @@ export function AdminSidebar() {
           );
         })}
       </nav>
+      <div className="flex items-center gap-2.5 border-t border-border p-4">
+        <span className="size-9 shrink-0 rounded-full bg-gradient-to-br from-accent/40 to-accent" />
+        <div className="min-w-0">
+          <div className="truncate text-sm font-medium">{userName}</div>
+          <div className="truncate text-xs text-muted-foreground">{userEmail}</div>
+        </div>
+      </div>
     </aside>
   );
 }
