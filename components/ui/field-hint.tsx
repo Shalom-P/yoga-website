@@ -5,27 +5,28 @@ import { Info } from "lucide-react";
 
 import { Label } from "@/components/ui/label";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 type FieldHintProps = {
   /** One-sentence gist of what the adjacent form field is for. */
   children: React.ReactNode;
-  /** Side the tooltip pops out. Defaults to "top". */
+  /** Side the hint pops out. Defaults to "top". */
   side?: "top" | "right" | "bottom" | "left";
   /** Accessible label on the trigger button. Defaults to "More info". */
   label?: string;
 };
 
 /**
- * Small "i" button placed next to a form-field <Label>. Shows a short
- * explanation on hover, focus, and tap — base-ui's Tooltip handles all three,
- * which covers desktop pointer users, keyboard users, and mobile alike.
+ * Small "i" button placed next to a form-field <Label>. Tapping or clicking it
+ * opens a short explanation in a Popover — which, unlike a hover tooltip, works
+ * on touch screens (the majority of our traffic) as well as for mouse and
+ * keyboard users. It dismisses on outside-press or Escape.
  *
- * Rendered as `type="button"` so clicking it inside a <label> never propagates
- * to focus the associated input.
+ * Rendered as `type="button"` so activating it inside a <label> never toggles
+ * the associated input.
  */
 export function FieldHint({
   children,
@@ -33,8 +34,8 @@ export function FieldHint({
   label = "More info",
 }: FieldHintProps) {
   return (
-    <Tooltip>
-      <TooltipTrigger
+    <Popover>
+      <PopoverTrigger
         render={
           <button
             type="button"
@@ -45,20 +46,20 @@ export function FieldHint({
           </button>
         }
       />
-      <TooltipContent
+      <PopoverContent
         side={side}
-        className="max-w-xs whitespace-normal text-xs leading-relaxed"
+        className="w-auto max-w-xs text-xs leading-relaxed text-muted-foreground"
       >
         {children}
-      </TooltipContent>
-    </Tooltip>
+      </PopoverContent>
+    </Popover>
   );
 }
 
 type LabelWithHintProps = React.ComponentProps<typeof Label> & {
-  /** Text shown when the user hovers/taps the info button. */
+  /** Text shown when the user taps/clicks the info button. */
   hint: React.ReactNode;
-  /** Side the tooltip pops out. Defaults to "top". */
+  /** Side the hint pops out. Defaults to "top". */
   hintSide?: FieldHintProps["side"];
 };
 

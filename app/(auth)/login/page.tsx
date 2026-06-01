@@ -1,17 +1,16 @@
 import Link from "next/link";
 import { Suspense } from "react";
 import { LoginForm } from "@/components/shared/LoginForm";
+import { BrandMark } from "@/components/shared/BrandMark";
 
 export const metadata = { title: "Log in" };
 
 export default function LoginPage() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-dvh flex flex-col">
       <header className="px-6 py-5">
         <Link href="/" className="flex items-center gap-2.5 text-sm">
-          <span className="size-8 rounded-full bg-primary inline-flex items-center justify-center">
-            <span className="size-2.5 rounded-full bg-background" />
-          </span>
+          <BrandMark className="size-9 [&_svg]:size-5" />
           <span className="font-[family-name:var(--font-cormorant)] text-xl font-semibold">
             My Yoga Classes
           </span>

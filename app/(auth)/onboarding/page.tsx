@@ -9,7 +9,7 @@ export default async function OnboardingPage() {
   if (!user) redirect("/login?next=/onboarding");
 
   return (
-    <div className="min-h-screen px-6 py-12">
+    <div className="min-h-dvh px-6 py-12">
       <div className="mx-auto max-w-xl">
         <div className="myc-eyebrow mb-3">
           <span className="myc-dot" aria-hidden="true" />

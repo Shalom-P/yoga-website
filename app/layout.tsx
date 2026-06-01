@@ -9,7 +9,6 @@ import {
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/components/shared/AnalyticsProvider";
-import { LenisProvider } from "@/components/shared/LenisProvider";
 import "./globals.css";
 
 const inter = Inter({
@@ -89,9 +88,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
-          <LenisProvider>
-            <AnalyticsProvider>{children}</AnalyticsProvider>
-          </LenisProvider>
+          {/* Lenis smooth-scroll is scoped to the marketing layout — the app,
+              admin and auth surfaces use native scrolling (see (marketing)/layout). */}
+          <AnalyticsProvider>{children}</AnalyticsProvider>
           <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>
