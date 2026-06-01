@@ -1,5 +1,6 @@
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Footer } from "@/components/marketing/Footer";
+import { LenisProvider } from "@/components/shared/LenisProvider";
 import { getCurrentUser } from "@/lib/auth/guards";
 
 export default async function MarketingLayout({
@@ -12,10 +13,12 @@ export default async function MarketingLayout({
   // looks like you got logged out.
   const user = await getCurrentUser();
   return (
-    <div className="myc-theme">
-      <MarketingNav isAuthenticated={!!user} />
-      <main className="flex-1 pt-16">{children}</main>
-      <Footer />
-    </div>
+    <LenisProvider>
+      <div className="myc-theme">
+        <MarketingNav isAuthenticated={!!user} />
+        <main className="flex-1 pt-16">{children}</main>
+        <Footer />
+      </div>
+    </LenisProvider>
   );
 }
