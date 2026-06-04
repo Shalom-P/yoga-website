@@ -2,7 +2,7 @@
 
 Conversion-first multi-teacher yoga studio web app. **Australian customers, Indian teachers**, live on Google Meet.
 
-Built on Next.js 15 (App Router) + Supabase + PayPal + Google Calendar API, deployed to Netlify.
+Built on Next.js 15 (App Router) + Supabase + PayPal + Google Calendar API.
 
 ---
 
@@ -23,7 +23,6 @@ Built on Next.js 15 (App Router) + Supabase + PayPal + Google Calendar API, depl
 | SMS | Twilio (via Supabase) |
 | Analytics | PostHog (events + replay + flags) |
 | Errors | Sentry |
-| Hosting | Netlify (`@netlify/plugin-nextjs`) |
 
 ---
 
@@ -69,7 +68,7 @@ npm run dev
 4. **Resend**: domain verification → `RESEND_API_KEY`, `RESEND_FROM_EMAIL`.
 5. **PostHog**: project → `NEXT_PUBLIC_POSTHOG_KEY`. Create the trial + paid funnels (see plan).
 6. **Sentry**: project → `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`.
-7. **Netlify**: connect repo, paste env vars, ensure `NODE_VERSION=20` and `NPM_FLAGS=--legacy-peer-deps` in build settings (already in `netlify.toml`).
+7. **Hosting**: connect the repo to your host of choice, paste the env vars, and use **Node 20+**. Installs need `--legacy-peer-deps` (already set in `.npmrc`).
 
 ---
 
@@ -103,8 +102,6 @@ lib/
 supabase/
   migrations/             # 0001 … 0006 — authoritative schema + RLS + RPCs
   seed.sql                # Demo data
-netlify/
-  functions/              # Scheduled cron functions (reminder emails, no-show, PayPal reconcile)
 middleware.ts             # Session refresh + role guard
 ```
 

@@ -2,7 +2,7 @@ import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/lib/supabase/types";
 
 // Service-role client — bypasses RLS. Use ONLY in server code (route handlers,
-// Netlify functions, server actions you've gated with admin checks).
+// scheduled jobs, server actions you've gated with admin checks).
 export function createSupabaseServiceClient() {
   if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is not set");

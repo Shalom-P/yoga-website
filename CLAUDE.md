@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev          # Next dev server on :3000
-npm run build        # Production build (Netlify uses this)
+npm run build        # Production build
 npm run lint         # next lint (ESLint flat config in eslint.config.mjs)
 npm run typecheck    # tsc --noEmit — strict mode is on
 
@@ -18,9 +18,9 @@ npm run db:studio    # Open Drizzle Studio
 
 No test runner is wired up yet. There is no single-test command.
 
-`legacy-peer-deps=true` is forced via `.npmrc` because `@sentry/nextjs` hasn't bumped its Next.js peer cap to 16 — `npm install` without it will fail. The same flag is set in `netlify.toml`. Do not remove either.
+`legacy-peer-deps=true` is forced via `.npmrc` because `@sentry/nextjs` hasn't bumped its Next.js peer cap to 16 — `npm install` without it will fail. Do not remove it, and make sure your host honours `.npmrc` (or passes `--legacy-peer-deps`) at install time.
 
-Node ≥20 is required (`package.json` engines + `netlify.toml`).
+Node ≥20 is required (`package.json` engines).
 
 ## Big-picture architecture
 
@@ -82,10 +82,10 @@ After the booking commits, the handler calls `createMeetEvent` (`lib/google/cale
 
 Two subtle invariants in the webhook: an out-of-order `ACTIVATED` after `CANCELLED` must **not** reactivate (the `status !== 'cancelled'` guard), and only a real `CANCELLED` event sets `cancelled_at` (`SUSPENDED` is recoverable, `EXPIRED` is end-of-term).
 
-### Netlify
+### Scheduled jobs (not yet wired up)
 
-- `netlify.toml` declares `@netlify/plugin-nextjs` and three scheduled functions: `cron-reminder-emails` (hourly), `cron-no-show-sweep` (hourly +10m), `cron-paypal-reconcile` (daily 03:00 UTC).
-- `netlify/functions/` is currently **empty** — those handler files haven't been written yet. The scheduler entries are placeholders; deploying as-is will log "function not found" for the cron events.
+These background jobs are referenced by the app but have **no handlers or scheduler** yet — pick your host's cron / scheduled-function mechanism (or an external scheduler) when you implement them:
+- **reminder emails** (~hourly), **no-show sweep** (~hourly), **PayPal reconcile** (~daily), and the **Meet-link retry sweep** for sessions stuck at `meet_status='pending'|'failed'`.
 
 ## Conventions worth knowing before editing
 
