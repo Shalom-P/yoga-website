@@ -27,6 +27,10 @@ export function ProfileForm({ initial }: { initial: Initial }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (!state.phone.trim()) {
+      toast.error("Phone number is required.");
+      return;
+    }
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return;
@@ -34,7 +38,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       .from("profiles")
       .update({
         full_name: state.full_name,
-        phone: state.phone || null,
+        phone: state.phone.trim(),
         timezone: state.timezone,
         experience_level: state.experience_level,
         marketing_opt_in: state.marketing_opt_in,
@@ -73,11 +77,11 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       <div>
         <LabelWithHint
           htmlFor="phone"
-          hint="Used for SMS reminders 24h before class. Optional — leave blank to opt out of texts."
+          hint="Required. Used to confirm your booking and send SMS reminders 24h before class."
         >
-          Phone (optional)
+          Phone
         </LabelWithHint>
-        <Input id="phone" type="tel" value={state.phone ?? ""} onChange={(e) => set("phone", e.target.value)} className="mt-1.5" placeholder="+61 …" />
+        <Input id="phone" type="tel" required value={state.phone ?? ""} onChange={(e) => set("phone", e.target.value)} className="mt-1.5" placeholder="+61 …" />
       </div>
       <div>
         <LabelWithHint hint="Your local timezone. Drives the times shown on bookings, reminders, and the slot picker.">
@@ -97,7 +101,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           Experience level
         </LabelWithHint>
         <Select value={state.experience_level} onValueChange={(v) => v && set("experience_level", v as Initial["experience_level"])}>
-          <SelectTrigger className="mt-1.5 h-11"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="mt-1.5 h-11 capitalize"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="beginner">Beginner</SelectItem>
             <SelectItem value="intermediate">Intermediate</SelectItem>

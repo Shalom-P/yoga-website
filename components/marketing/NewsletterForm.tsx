@@ -44,7 +44,12 @@ export function NewsletterForm() {
         disabled={loading}
         className="bg-background"
       />
-      <Button type="submit" disabled={loading} variant="outline">
+      <Button
+        type="submit"
+        disabled={loading}
+        variant="outline"
+        className="shrink-0 text-foreground"
+      >
         {loading ? "…" : "Subscribe"}
       </Button>
     </form>

@@ -1,6 +1,7 @@
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Footer } from "@/components/marketing/Footer";
 import { LenisProvider } from "@/components/shared/LenisProvider";
+import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 import { getCurrentUser } from "@/lib/auth/guards";
 
 export default async function MarketingLayout({
@@ -18,6 +19,7 @@ export default async function MarketingLayout({
         <MarketingNav isAuthenticated={!!user} />
         <main className="flex-1 pt-16">{children}</main>
         <Footer />
+        <WhatsAppButton />
       </div>
     </LenisProvider>
   );

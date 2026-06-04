@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { SignOutButton } from "@/components/shared/SignOutButton";
+import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 
 export default async function DashboardLayout({
   children,
@@ -28,6 +29,7 @@ export default async function DashboardLayout({
         </header>
         <main className="flex-1 bg-secondary/20">{children}</main>
       </div>
+      <WhatsAppButton />
     </div>
   );
 }

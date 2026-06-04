@@ -46,6 +46,17 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "bad request" }, { status: 400 });
 
+  // A phone number is mandatory to confirm a booking (especially the free 1:1).
+  // The client collects it before this call; this guard makes it non-bypassable.
+  const { data: bookerProfile } = await supabase
+    .from("profiles")
+    .select("phone")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (!bookerProfile?.phone?.trim()) {
+    return NextResponse.json({ error: "phone_required" }, { status: 400 });
+  }
+
   const start = new Date(parsed.data.startAt);
   if (Number.isNaN(start.getTime())) {
     return NextResponse.json({ error: "bad request" }, { status: 400 });

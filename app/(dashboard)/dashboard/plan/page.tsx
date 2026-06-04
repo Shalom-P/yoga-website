@@ -1,11 +1,17 @@
 import { Suspense } from "react";
+import { PartyPopper } from "lucide-react";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { PlanAutoStart } from "@/components/dashboard/PlanAutoStart";
 import { CurrentSubscription } from "@/components/dashboard/CurrentSubscription";
 import { getPlansWithFeatures } from "@/lib/data/landing";
 import { requireUser } from "@/lib/auth/guards";
 
-export default async function PlanPage() {
+export default async function PlanPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ booked?: string }>;
+}) {
+  const { booked } = await searchParams;
   const { user, supabase } = await requireUser("/dashboard/plan");
   const [{ data: subRow }, plans] = await Promise.all([
     supabase
@@ -45,6 +51,19 @@ export default async function PlanPage() {
       <p className="mt-2 text-muted-foreground">
         {sub ? "Manage your subscription below." : "Upgrade when you're ready. Cancel anytime."}
       </p>
+
+      {booked && !sub && (
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
+          <PartyPopper className="mt-0.5 size-5 shrink-0 text-primary" />
+          <div className="text-sm">
+            <p className="font-medium text-foreground">Your free 1:1 is booked 🎉</p>
+            <p className="mt-0.5 text-muted-foreground">
+              We&apos;ll email your Google Meet link. Want to keep practising after your trial?
+              Pick a plan below — cancel anytime.
+            </p>
+          </div>
+        </div>
+      )}
 
       <Suspense fallback={null}>
         <PlanAutoStart />

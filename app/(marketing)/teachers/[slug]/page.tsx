@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Star, ArrowRight, Globe, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TeacherIntroVideo } from "@/components/shared/TeacherIntroVideo";
 import { getFeaturedTeachers } from "@/lib/data/landing";
 
 export const revalidate = 300;
@@ -26,22 +27,31 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
     <article className="px-7 pt-32 pb-24">
       <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-12">
         <div className="lg:col-span-5">
-          <div
-            className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius)] border border-border"
-            style={{
-              background:
-                "radial-gradient(circle at 30% 25%, var(--myc-peach), transparent 55%), radial-gradient(circle at 75% 70%, var(--myc-mint), transparent 55%), var(--myc-butter)",
-            }}
-          >
-            <svg viewBox="0 0 300 375" className="absolute inset-0 size-full text-primary">
-              <circle cx="150" cy="135" r="56" fill="currentColor" opacity="0.55" />
-              <path
-                d="M 60 240 Q 150 160 240 240 Q 260 320 220 360 L 80 360 Q 40 320 60 240 Z"
-                fill="currentColor"
-                opacity="0.45"
-              />
-            </svg>
-          </div>
+          {t.intro_video_url ? (
+            <div className="space-y-2">
+              <TeacherIntroVideo src={t.intro_video_url} poster={t.avatar_url} name={t.display_name} />
+              <p className="text-center text-xs text-muted-foreground">
+                Meet {t.display_name.split(" ")[0]} — a quick hello.
+              </p>
+            </div>
+          ) : (
+            <div
+              className="relative aspect-[4/5] overflow-hidden rounded-[var(--radius)] border border-border"
+              style={{
+                background:
+                  "radial-gradient(circle at 30% 25%, var(--myc-peach), transparent 55%), radial-gradient(circle at 75% 70%, var(--myc-mint), transparent 55%), var(--myc-butter)",
+              }}
+            >
+              <svg viewBox="0 0 300 375" className="absolute inset-0 size-full text-primary">
+                <circle cx="150" cy="135" r="56" fill="currentColor" opacity="0.55" />
+                <path
+                  d="M 60 240 Q 150 160 240 240 Q 260 320 220 360 L 80 360 Q 40 320 60 240 Z"
+                  fill="currentColor"
+                  opacity="0.45"
+                />
+              </svg>
+            </div>
+          )}
         </div>
         <div className="lg:col-span-7">
           <div className="mb-4 inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-sm">

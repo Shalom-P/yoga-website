@@ -2,7 +2,7 @@ import Link from "next/link";
 import { ArrowRight, Video, Calendar, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/guards";
-import { formatCustomerTime } from "@/lib/timezone";
+import { LocalTime, LocalTzName } from "@/components/dashboard/local-time";
 
 type NextBooking = {
   id: string;
@@ -55,7 +55,9 @@ export default async function DashboardHome() {
         <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-heading)] tracking-tight mt-1">
           Hello, {firstName}.
         </h1>
-        <p className="mt-1 text-muted-foreground text-sm">Times shown in {timezone}.</p>
+        <p className="mt-1 text-muted-foreground text-sm">
+          Times shown in <LocalTzName fallbackTz={timezone} />.
+        </p>
       </header>
 
       <NextClassCard booking={nextBooking} timezone={timezone} />
@@ -134,7 +136,9 @@ function NextClassCard({
         {session.teacher?.display_name ?? "Your teacher"}
         {booking.is_free_trial ? " · Free 1:1" : ""}
       </h2>
-      <p className="mt-2 text-muted-foreground">{formatCustomerTime(session.start_at, timezone)}</p>
+      <p className="mt-2 text-muted-foreground">
+        <LocalTime iso={session.start_at} pattern="EEEE d MMM, h:mm a" fallbackTz={timezone} />
+      </p>
       <div className="mt-6 flex flex-wrap gap-3">
         {session.meet_link ? (
           <Button asChild size="lg" className="h-11 rounded-full">

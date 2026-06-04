@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
 import { Button } from "@/components/ui/button";
 import { BookingsList } from "@/components/dashboard/BookingsList";
-import { tzShort } from "@/lib/timezone";
+import { LocalTzLabel } from "@/components/dashboard/local-time";
 import type { BookingStatus } from "@/lib/supabase/types";
 
 type Row = {
@@ -56,7 +56,7 @@ export default async function BookingsPage() {
             Your <span className="italic text-accent">sessions.</span>
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
-            {upcomingCount} upcoming · times in {tzShort(timezone)}
+            {upcomingCount} upcoming · times in <LocalTzLabel fallbackTz={timezone} />
           </p>
         </div>
         <Button asChild className="rounded-full bg-accent text-white hover:bg-accent/90">

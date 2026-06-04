@@ -16,6 +16,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { formatInTz, tzShort } from "@/lib/timezone";
+import { useBrowserTz } from "@/components/dashboard/local-time";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { BookingStatus } from "@/lib/supabase/types";
@@ -63,6 +64,8 @@ export function BookingsList({
   customerTimezone: string;
 }) {
   const router = useRouter();
+  // Display in the timezone the customer is actually in right now.
+  const tz = useBrowserTz(customerTimezone);
   const [filter, setFilter] = useState<Filter>("upcoming");
   const [cancelTarget, setCancelTarget] = useState<Row | null>(null);
   const [reason, setReason] = useState("");
@@ -146,7 +149,7 @@ export function BookingsList({
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <Th>When ({tzShort(customerTimezone)})</Th>
+                <Th>When ({tzShort(tz)})</Th>
                 <Th>Session</Th>
                 <Th>Teacher</Th>
                 <Th>Status</Th>
@@ -172,10 +175,10 @@ export function BookingsList({
                         {s ? (
                           <>
                             <strong className="font-semibold text-foreground">
-                              {formatInTz(s.start_at, customerTimezone, "EEE d MMM")}
+                              {formatInTz(s.start_at, tz, "EEE d MMM")}
                             </strong>
                             <div className="text-xs text-muted-foreground">
-                              {formatInTz(s.start_at, customerTimezone, "h:mm a")} ·{" "}
+                              {formatInTz(s.start_at, tz, "h:mm a")} ·{" "}
                               {durationMin(s.start_at, s.end_at)} min
                             </div>
                           </>
@@ -219,7 +222,7 @@ export function BookingsList({
                   {cancelTarget.session.teacher?.display_name} ·{" "}
                   {formatInTz(
                     cancelTarget.session.start_at,
-                    customerTimezone,
+                    tz,
                     "EEE d MMM, h:mm a"
                   )}
                 </>

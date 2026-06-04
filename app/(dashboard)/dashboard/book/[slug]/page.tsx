@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/guards";
 import { TeacherSlotPicker } from "@/components/dashboard/TeacherSlotPicker";
+import { TeacherIntroVideo } from "@/components/shared/TeacherIntroVideo";
 
 export default async function TeacherBookingPage({
   params,
@@ -14,7 +15,7 @@ export default async function TeacherBookingPage({
   const supabase = await createSupabaseServerClient();
   const { data: teacher } = await supabase
     .from("teachers")
-    .select("id, slug, display_name, headline, bio, timezone, rating_avg, is_active")
+    .select("id, slug, display_name, headline, bio, timezone, rating_avg, is_active, intro_video_url, avatar_url")
     .eq("slug", slug)
     .eq("is_active", true)
     .maybeSingle();
@@ -30,7 +31,7 @@ export default async function TeacherBookingPage({
   // row hasn't been created by the auth trigger yet).
   const { data: profile } = await supabase
     .from("profiles")
-    .select("timezone")
+    .select("timezone, phone")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -45,10 +46,21 @@ export default async function TeacherBookingPage({
       <p className="mt-2 text-muted-foreground">{teacher.headline}</p>
       {teacher.bio && <p className="mt-3 text-sm text-muted-foreground">{teacher.bio}</p>}
 
+      {teacher.intro_video_url && (
+        <div className="mt-6 max-w-lg">
+          <TeacherIntroVideo
+            src={teacher.intro_video_url}
+            poster={teacher.avatar_url}
+            name={teacher.display_name}
+          />
+        </div>
+      )}
+
       <TeacherSlotPicker
         teacherId={teacher.id}
         teacherTimezone={teacher.timezone ?? "Asia/Kolkata"}
         customerTimezone={profile?.timezone ?? "Australia/Sydney"}
+        customerPhone={profile?.phone ?? null}
         availability={availability ?? []}
       />
     </div>

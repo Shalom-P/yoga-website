@@ -1,10 +1,20 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addDays, addMinutes } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
+import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+} from "@/components/ui/dialog";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { useBrowserTz } from "@/components/dashboard/local-time";
+import { toast } from "sonner";
 
 type Availability = {
   day_of_week: number; // 0 = Sun..6 = Sat
@@ -17,6 +27,7 @@ type Props = {
   teacherId: string;
   teacherTimezone: string;
   customerTimezone: string;
+  customerPhone: string | null;
   availability: Availability[];
 };
 
@@ -67,24 +78,38 @@ export function TeacherSlotPicker({
   teacherId,
   teacherTimezone,
   customerTimezone,
+  customerPhone,
   availability,
 }: Props) {
   const router = useRouter();
+  // Show slot times in the timezone the customer is actually in right now.
+  const customerTz = useBrowserTz(customerTimezone);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  // A phone number is mandatory to confirm a free class. If none is on file, a
+  // slot click opens a dialog to collect it before the booking goes through.
+  const [phone, setPhone] = useState(customerPhone ?? "");
+  const [pendingSlot, setPendingSlot] = useState<Date | null>(null);
+  const [savingPhone, setSavingPhone] = useState(false);
+  const hasPhone = Boolean((customerPhone ?? "").trim());
 
   const grouped = useMemo(() => {
     const now = new Date();
     const slots = generateSlots(availability, teacherTimezone, now);
     const buckets = new Map<string, Date[]>();
     for (const s of slots) {
-      const dayKey = formatInTimeZone(s, customerTimezone, "yyyy-MM-dd");
+      const dayKey = formatInTimeZone(s, customerTz, "yyyy-MM-dd");
       const arr = buckets.get(dayKey) ?? [];
       arr.push(s);
       buckets.set(dayKey, arr);
     }
     return Array.from(buckets.entries()).slice(0, 7);
-  }, [availability, teacherTimezone, customerTimezone]);
+  }, [availability, teacherTimezone, customerTz]);
+
+  function onSlotClick(slot: Date) {
+    if (hasPhone) book(slot);
+    else setPendingSlot(slot);
+  }
 
   async function book(slot: Date) {
     setBusy(slot.toISOString());
@@ -101,11 +126,47 @@ export function TeacherSlotPicker({
     });
     setBusy(null);
     if (res.ok) {
-      router.push("/dashboard?booked=1");
+      // Free 1:1 is claimed — guide them to pick a plan to keep booking.
+      router.push("/dashboard/plan?booked=1");
       return;
     }
     const body = (await res.json().catch(() => ({}))) as { error?: string };
+    // Server fell back to requiring a phone — collect it and retry this slot.
+    if (body.error === "phone_required") {
+      setPendingSlot(slot);
+      return;
+    }
     setError(body.error ?? "booking_failed");
+  }
+
+  // Save the phone to the profile, then confirm the pending booking.
+  async function savePhoneAndBook() {
+    const cleaned = phone.trim();
+    if (cleaned.replace(/\D/g, "").length < 6) {
+      toast.error("Please enter a valid phone number.");
+      return;
+    }
+    if (!pendingSlot) return;
+    setSavingPhone(true);
+    const supabase = createSupabaseBrowserClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      setSavingPhone(false);
+      toast.error("Session expired — please log in again.");
+      return;
+    }
+    const { error: saveErr } = await supabase
+      .from("profiles")
+      .update({ phone: cleaned })
+      .eq("id", user.id);
+    setSavingPhone(false);
+    if (saveErr) {
+      toast.error(saveErr.message);
+      return;
+    }
+    const slot = pendingSlot;
+    setPendingSlot(null);
+    await book(slot);
   }
 
   if (grouped.length === 0) {
@@ -120,26 +181,35 @@ export function TeacherSlotPicker({
     <div className="mt-8 space-y-6">
       {error && (
         <div className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {error === "trial_already_claimed"
-            ? "You've already claimed your free 1:1. Upgrade to a plan to book more sessions."
-            : error === "slot_taken"
-            ? "That slot was just booked by someone else. Try another time."
-            : "Couldn't book that slot. Please try again."}
+          {error === "trial_already_claimed" ? (
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <span>
+                You&apos;ve already claimed your free 1:1. Choose a plan to keep booking sessions.
+              </span>
+              <Button asChild size="sm" className="shrink-0 rounded-full">
+                <Link href="/dashboard/plan">View plans &amp; pricing</Link>
+              </Button>
+            </div>
+          ) : error === "slot_taken" ? (
+            "That slot was just booked by someone else. Try another time."
+          ) : (
+            "Couldn't book that slot. Please try again."
+          )}
         </div>
       )}
 
       <div className="text-xs text-muted-foreground">
-        Times shown in your local time ({customerTimezone}). Teacher is in {teacherTimezone}.
+        Times shown in your local time ({customerTz}). Teacher is in {teacherTimezone}.
       </div>
 
       {grouped.map(([dayKey, slots]) => (
         <div key={dayKey}>
           <div className="text-sm font-medium mb-2">
-            {formatInTimeZone(slots[0], customerTimezone, "EEE, d LLL")}
+            {formatInTimeZone(slots[0], customerTz, "EEE, d LLL")}
           </div>
           <div className="flex flex-wrap gap-2">
             {slots.map((s) => {
-              const label = formatInTimeZone(s, customerTimezone, "h:mm a");
+              const label = formatInTimeZone(s, customerTz, "h:mm a");
               const teacherLabel = formatInTimeZone(s, teacherTimezone, "h:mm a");
               const id = s.toISOString();
               return (
@@ -148,7 +218,7 @@ export function TeacherSlotPicker({
                   variant="outline"
                   size="sm"
                   disabled={busy !== null}
-                  onClick={() => book(s)}
+                  onClick={() => onSlotClick(s)}
                   className="rounded-full text-xs"
                   title={`Teacher's time: ${teacherLabel}`}
                 >
@@ -159,6 +229,39 @@ export function TeacherSlotPicker({
           </div>
         </div>
       ))}
+
+      <Dialog open={pendingSlot !== null} onOpenChange={(o) => !o && setPendingSlot(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add your phone number</DialogTitle>
+            <DialogDescription>
+              {pendingSlot
+                ? `We'll confirm your free 1:1 on ${formatInTimeZone(pendingSlot, customerTz, "EEE d MMM, h:mm a")} and text you the details. A phone number is required to book.`
+                : "A phone number is required to confirm your free class."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="booking-phone">Phone number</Label>
+            <Input
+              id="booking-phone"
+              type="tel"
+              inputMode="tel"
+              autoComplete="tel"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              placeholder="+61 4xx xxx xxx"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPendingSlot(null)} disabled={savingPhone}>
+              Cancel
+            </Button>
+            <Button onClick={savePhoneAndBook} disabled={savingPhone}>
+              {savingPhone ? <Loader2 className="size-4 animate-spin" /> : "Confirm free booking"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

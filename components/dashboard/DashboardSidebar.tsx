@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, CalendarPlus, Receipt, Wallet, UserRound, Menu, ArrowLeft,
+  LayoutDashboard, CalendarPlus, CalendarCheck, Wallet, UserRound, Menu, ArrowLeft,
 } from "lucide-react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
@@ -17,7 +17,7 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { href: "/dashboard",          label: "Overview",          icon: LayoutDashboard },
   { href: "/dashboard/book",     label: "Book a session",    icon: CalendarPlus },
-  { href: "/dashboard/bookings", label: "My bookings",       icon: Receipt },
+  { href: "/dashboard/bookings", label: "My bookings",       icon: CalendarCheck },
   { href: "/dashboard/plan",     label: "My plan & credits", icon: Wallet },
   { href: "/dashboard/profile",  label: "Profile",           icon: UserRound },
 ];
@@ -26,9 +26,9 @@ function BrandHeader({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-2.5">
       <BrandMark className="size-9 [&_svg]:size-5" />
-      <span className="font-[family-name:var(--font-cormorant)] text-lg font-semibold leading-none">
-        My Yoga Classes
-        <span className="block text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+      <span className="font-[family-name:var(--font-cormorant)] text-lg font-semibold leading-tight">
+        <span className="block">My Yoga Classes</span>
+        <span className="mt-1 block text-[11px] font-medium uppercase leading-none tracking-[0.14em] text-muted-foreground">
           Member
         </span>
       </span>
