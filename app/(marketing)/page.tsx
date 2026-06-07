@@ -2,8 +2,7 @@ import { Hero } from "@/components/marketing/Hero";
 import { Marquee } from "@/components/marketing/Marquee";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { TeacherCarousel } from "@/components/marketing/TeacherCarousel";
-import { ClassGrid } from "@/components/marketing/ClassGrid";
-import { ConditionsSection } from "@/components/marketing/ConditionsSection";
+import { PracticeSection } from "@/components/marketing/PracticeSection";
 import { TestimonialWall } from "@/components/marketing/TestimonialWall";
 import { OutcomeStats } from "@/components/marketing/OutcomeStats";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
@@ -57,8 +56,7 @@ export default async function LandingPage() {
       <OutcomeStats />
       <HowItWorks />
       <TeacherCarousel teachers={teachers} />
-      <ClassGrid categories={categories} />
-      <ConditionsSection />
+      <PracticeSection categories={categories} />
       <PricingTeaser plans={plans} />
       <TestimonialWall reviews={reviews} />
       <FAQ />
