@@ -13,6 +13,7 @@ export type DiscountType = "percentage" | "fixed_aud_cents";
 export type SubscriptionStatus =
   | "pending" | "active" | "suspended" | "cancelled" | "expired";
 export type PaymentStatus = "pending" | "completed" | "refunded" | "failed";
+export type CreditReason = "purchase" | "booking_spend" | "refund" | "admin_adjust";
 export type MediaKind =
   | "hero_video" | "hero_image" | "banner" | "testimonial_photo" | "class_thumbnail";
 
@@ -125,6 +126,7 @@ export type Plan = {
   description: string | null;
   price_aud_cents: number;
   billing_interval: BillingInterval;
+  session_credits: number;
   paypal_plan_id: string | null;
   included_sessions_per_month: number | null;
   included_session_types: string[];
@@ -176,6 +178,8 @@ export type Payment = {
   customer_id: string;
   subscription_id: string | null;
   paypal_capture_id: string | null;
+  razorpay_order_id: string | null;
+  razorpay_payment_id: string | null;
   amount_aud_cents: number;
   currency: string;
   status: PaymentStatus;
@@ -236,6 +240,26 @@ export type PaypalWebhookEvent = {
   received_at: string;
   payload: unknown;
 }
+export type CustomerCredits = {
+  customer_id: string;
+  balance: number;
+  updated_at: string;
+}
+export type CreditLedger = {
+  id: string;
+  customer_id: string;
+  delta: number;
+  reason: CreditReason;
+  payment_id: string | null;
+  booking_id: string | null;
+  created_at: string;
+}
+export type RazorpayWebhookEvent = {
+  event_id: string;
+  event_type: string | null;
+  received_at: string;
+  payload: unknown;
+}
 
 type Table<R, I = Partial<R>, U = Partial<R>> = {
   Row: R;
@@ -267,6 +291,9 @@ export type Database = {
       newsletter_signups: Table<NewsletterSignup, { email: string; source?: string | null }>;
       audit_log: Table<AuditLog, { action: string; entity_type: string; entity_id?: string | null; actor_id?: string | null; payload?: unknown }>;
       paypal_webhook_events: Table<PaypalWebhookEvent, { event_id: string; event_type: string; payload?: unknown }>;
+      customer_credits: Table<CustomerCredits, Partial<CustomerCredits> & { customer_id: string }>;
+      credit_ledger: Table<CreditLedger, Partial<CreditLedger> & { customer_id: string; delta: number; reason: CreditReason }>;
+      razorpay_webhook_events: Table<RazorpayWebhookEvent, { event_id: string; event_type?: string | null; payload?: unknown }>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -294,6 +321,14 @@ export type Database = {
       is_admin: { Args: { uid: string }; Returns: boolean };
       apply_discount_to_subscription: { Args: { p_subscription_id: string }; Returns: null };
       subscribe_newsletter: { Args: { p_email: string; p_source: string }; Returns: null };
+      grant_session_credits: {
+        Args: { p_customer: string; p_delta: number; p_reason: CreditReason; p_payment_id?: string | null };
+        Returns: null;
+      };
+      spend_session_credit: {
+        Args: { p_customer: string; p_booking_id?: string | null };
+        Returns: boolean;
+      };
     };
     Enums: {
       user_role: UserRole;
@@ -307,6 +342,7 @@ export type Database = {
       payment_status: PaymentStatus;
       media_kind: MediaKind;
       meet_status: MeetStatus;
+      credit_reason: CreditReason;
     };
     CompositeTypes: { [_ in never]: never };
   };
