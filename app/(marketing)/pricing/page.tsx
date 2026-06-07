@@ -17,7 +17,7 @@ export default async function PricingPage() {
       <PageHeader
         eyebrow="Pricing"
         title={<>Pay only when <em>you&apos;re ready.</em></>}
-        subhead="Every plan starts with a free 1:1 — you choose to subscribe afterwards, or you don't."
+        subhead="Every plan starts with a free 1:1 — buy a pack of sessions afterwards, or you don't."
       />
       <PricingTeaser plans={plans} />
       <FAQ />
