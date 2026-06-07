@@ -32,7 +32,7 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 - **`(auth)/`** — `/login`, `/onboarding`, `/auth/callback`. Login uses Supabase: Google OAuth + Phone OTP via Twilio Verify (the same flow handles `+61` AU customers and `+91` IN teachers).
 - **`(dashboard)/`** — customer area, gated by middleware.
 - **`admin/`** — role-gated by middleware *and* `requireAdmin()` in pages. Admin-edited landing copy lives in the `admin_settings` table (key→jsonb) and is read with `revalidate: 60`, so changes propagate ≤1 min.
-- **`api/`** — route handlers for booking confirm/cancel, Meet link creation, PayPal subscription create/confirm/cancel + **webhook**, newsletter signup. Middleware **does not** run on `/api/` (see `middleware.ts` matcher) — every handler must auth itself.
+- **`api/`** — route handlers for booking confirm/cancel, Meet link creation/retry (`meet/create-link`), admin session create/cancel (`admin/sessions`), PayPal subscription create/confirm/cancel + plan-catalog sync (`paypal/sync-plan`) + **webhook**, newsletter signup. Middleware **does not** run on `/api/` (see `middleware.ts` matcher) — every handler must auth itself, and admin-only routes re-check `profiles.role` inline.
 
 ### Two auth-guard paths — use the right one
 
@@ -53,8 +53,12 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 
 ### Schema ownership
 
-- **Authoritative migrations live in `supabase/migrations/0001…0007`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes — none of which Drizzle generates.
+- **Authoritative migrations live in `supabase/migrations/0001…0008`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates.
 - `drizzle.config.ts` points `out` at `supabase/migrations`, but `db:generate` is for *introspection and ad-hoc work*. When you change schema, write the SQL by hand to keep RLS / RPCs intact and bump the migration number. `0007_security_fixes.sql` is the canonical example of how add-on migrations are structured.
+
+### Storage buckets
+
+Migration `0008` provisions two **public-read, admin-write** Storage buckets: `promotional-media` (hero videos, banners, testimonial photos, class thumbnails — the `/admin/media` tab) and `teacher-media` (per-teacher avatars, covers, intro videos — `TeacherFormDialog`). Writes are gated by the same `public.is_admin(auth.uid())` helper that guards app tables. If an admin upload fails with *"new row violates row-level security policy"*, the bucket policy is the cause — re-apply `0008`, don't make the bucket world-writable.
 
 ### Mock fallback for the marketing site
 
@@ -82,6 +86,8 @@ After the booking commits, the handler calls `createMeetEvent` (`lib/google/cale
 
 Two subtle invariants in the webhook: an out-of-order `ACTIVATED` after `CANCELLED` must **not** reactivate (the `status !== 'cancelled'` guard), and only a real `CANCELLED` event sets `cancelled_at` (`SUSPENDED` is recoverable, `EXPIRED` is end-of-term).
 
+**REST calls + plan setup.** `lib/paypal/client.ts` (`getPayPalToken`, `paypalFetch`) is a thin server-only REST wrapper with OAuth-token caching; `PAYPAL_ENV=live` flips the base URL from sandbox to production. A plan isn't subscribable until an admin clicks **Sync to PayPal** in `/admin/plans` → `POST /api/paypal/sync-plan`, which creates the PayPal catalog product + billing plan and stores `paypal_plan_id` on the row; `create-subscription` then references that id.
+
 ### Scheduled jobs (not yet wired up)
 
 These background jobs are referenced by the app but have **no handlers or scheduler** yet — pick your host's cron / scheduled-function mechanism (or an external scheduler) when you implement them:
@@ -94,7 +100,9 @@ These background jobs are referenced by the app but have **no handlers or schedu
 - **Forms:** `react-hook-form` + `zod` + `@hookform/resolvers`. Mirror the zod schema on both client and the route handler.
 - **Animation:** Motion (the rebrand of Framer Motion) + Lenis smooth scroll (provider in `app/layout.tsx`) + GSAP ScrollTrigger when timeline scrubbing is needed.
 - **Locale:** `en-AU`. Money helpers in `lib/i18n/money.ts`. Internal money is `*_aud_cents` (integer); never store floats. Default currency code "AUD".
-- **`server-only` import:** `lib/db/client.ts` and `lib/google/calendar.ts` use the `server-only` package — importing them from a client component will hard-fail the build. Keep that boundary.
+- **Analytics:** `lib/analytics/events.ts` — call `track(name, props)` with a name from the typed `EventName` allow-list (extend the union, don't pass free-form strings). `track()` / `initPosthog()` are silent no-ops when `NEXT_PUBLIC_POSTHOG_KEY` is unset, matching the zero-env preview story.
+- **`cn` helper:** lives in `lib/utils.ts`; `lib/utils/cn.ts` just re-exports it. shadcn's `components.json` aliases `utils → @/lib/utils`, so import `cn` from `@/lib/utils`.
+- **`server-only` import:** `lib/db/client.ts`, `lib/google/calendar.ts`, and `lib/paypal/client.ts` use the `server-only` package — importing them from a client component will hard-fail the build. Keep that boundary.
 
 ## Conversion notes — read before changing landing copy
 

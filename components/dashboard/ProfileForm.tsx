@@ -77,7 +77,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       <div>
         <LabelWithHint
           htmlFor="phone"
-          hint="Required. Used to confirm your booking and send SMS reminders 24h before class."
+          hint="Required. Used to verify your account and contact you about your bookings."
         >
           Phone
         </LabelWithHint>

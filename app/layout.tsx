@@ -9,6 +9,7 @@ import {
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/components/shared/AnalyticsProvider";
+import type { Organization, WithContext } from "schema-dts";
 import "./globals.css";
 
 const inter = Inter({
@@ -54,7 +55,7 @@ export const viewport: Viewport = {
   ],
 };
 
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://myyogaclasses.com.au";
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
@@ -77,6 +78,17 @@ export const metadata: Metadata = {
   twitter: { card: "summary_large_image" },
 };
 
+// Site-wide Organization structured data (uses the schema-dts types that were
+// installed but previously unused). Rendered as JSON-LD in the document body.
+const orgJsonLd: WithContext<Organization> = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  name: "My Yoga Classes",
+  url: siteUrl,
+  description:
+    "Live online 1:1 yoga with expert teachers from India for students across Australia. Book a free private session — no credit card required.",
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
@@ -87,6 +99,10 @@ export default function RootLayout({
       className={`${inter.variable} ${fraunces.variable} ${geistMono.variable} ${cormorant.variable} ${hanken.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
+        />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
           {/* Lenis smooth-scroll is scoped to the marketing layout — the app,
               admin and auth surfaces use native scrolling (see (marketing)/layout). */}

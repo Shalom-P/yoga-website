@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { verifyPayPalWebhook } from "@/lib/paypal/verify-webhook";
 import type { SubscriptionStatus } from "@/lib/supabase/types";
+import { sendSubscriptionActivated } from "@/lib/email";
+import { trackServer } from "@/lib/analytics/server";
 
 type PayPalEvent = {
   id?: string;
@@ -57,7 +59,7 @@ export async function POST(req: Request) {
       if (!r?.id) break;
       const { data: subRow } = await svc
         .from("subscriptions")
-        .select("id, status")
+        .select("id, status, customer_id, plan_id")
         .eq("paypal_subscription_id", r.id)
         .single();
       // Guard against out-of-order delivery: never reactivate a cancelled sub.
@@ -73,6 +75,18 @@ export async function POST(req: Request) {
           .eq("id", subRow.id);
         await svc.rpc("apply_discount_to_subscription", {
           p_subscription_id: subRow.id,
+        });
+        // Notify the customer their plan is live (fire-and-forget; no-op without Resend).
+        const [{ data: prof }, { data: plan }] = await Promise.all([
+          svc.from("profiles").select("email").eq("id", subRow.customer_id).maybeSingle(),
+          svc.from("plans").select("name").eq("id", subRow.plan_id).maybeSingle(),
+        ]);
+        if (prof?.email) {
+          // Awaited so the email actually sends before the webhook returns.
+          await sendSubscriptionActivated({ to: prof.email, planName: plan?.name ?? "your plan" });
+        }
+        void trackServer(subRow.customer_id, "subscription_activated", {
+          plan_id: subRow.plan_id,
         });
       }
       break;
@@ -134,6 +148,35 @@ export async function POST(req: Request) {
           { onConflict: "paypal_capture_id" },
         );
       }
+      break;
+    }
+    case "PAYMENT.SALE.REFUNDED":
+    case "PAYMENT.CAPTURE.REFUNDED": {
+      // Best-effort: flip the original capture/sale's payment row to refunded.
+      // PayPal carries the original id in sale_id (SALE.REFUNDED) or an "up"
+      // link (CAPTURE.REFUNDED).
+      const r = event.resource as
+        | { id?: string; sale_id?: string; links?: { rel?: string; href?: string }[] }
+        | undefined;
+      const captureId =
+        r?.sale_id ?? r?.links?.find((l) => l.rel === "up")?.href?.split("/").pop() ?? null;
+      if (captureId) {
+        await svc
+          .from("payments")
+          .update({ status: "refunded" })
+          .eq("paypal_capture_id", captureId);
+      }
+      break;
+    }
+    case "BILLING.SUBSCRIPTION.RE-ACTIVATED": {
+      const r = event.resource as { id?: string } | undefined;
+      if (!r?.id) break;
+      // Reactivation after a suspension. Never resurrect a real cancellation.
+      await svc
+        .from("subscriptions")
+        .update({ status: "active" as SubscriptionStatus, cancelled_at: null })
+        .eq("paypal_subscription_id", r.id)
+        .neq("status", "cancelled");
       break;
     }
   }

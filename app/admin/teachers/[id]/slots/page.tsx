@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/guards";
 import { AvailabilityGrid } from "@/components/admin/AvailabilityGrid";
+import { SlotOverrides } from "@/components/admin/SlotOverrides";
 
 export default async function TeacherSlotsPage({
   params,
@@ -19,10 +20,17 @@ export default async function TeacherSlotsPage({
     .single();
   if (!teacher) notFound();
 
-  const { data: availability } = await supabase
-    .from("teacher_availability")
-    .select("*")
-    .eq("teacher_id", id);
+  const [{ data: availability }, { data: overrides }] = await Promise.all([
+    supabase
+      .from("teacher_availability")
+      .select("*")
+      .eq("teacher_id", id),
+    supabase
+      .from("teacher_slot_overrides")
+      .select("*")
+      .eq("teacher_id", id)
+      .order("date", { ascending: true }),
+  ]);
 
   return (
     <div className="p-8 max-w-6xl">
@@ -41,6 +49,12 @@ export default async function TeacherSlotsPage({
       </p>
 
       <AvailabilityGrid teacherId={id} initial={availability ?? []} />
+
+      <SlotOverrides
+        teacherId={id}
+        teacherTimezone={teacher.timezone}
+        initial={overrides ?? []}
+      />
     </div>
   );
 }

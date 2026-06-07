@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Star } from "lucide-react";
 import { getFeaturedTeachers } from "@/lib/data/landing";
 import { PageHeader } from "@/components/marketing/PageHeader";
@@ -35,19 +36,31 @@ export default async function TeachersPage() {
                     "radial-gradient(circle at 30% 25%, var(--myc-peach), transparent 55%), radial-gradient(circle at 75% 70%, var(--myc-mint), transparent 55%), var(--myc-butter)",
                 }}
               >
-                <svg viewBox="0 0 300 375" className="absolute inset-0 size-full text-primary">
-                  <circle cx="150" cy="135" r="48" fill="currentColor" opacity="0.55" />
-                  <path
-                    d="M 60 240 Q 150 160 240 240 Q 260 320 220 360 L 80 360 Q 40 320 60 240 Z"
-                    fill="currentColor"
-                    opacity="0.45"
+                {t.avatar_url ? (
+                  <Image
+                    src={t.avatar_url}
+                    alt={t.display_name}
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />
-                </svg>
-                <div className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full border border-border bg-card/90 px-2.5 py-1 text-xs backdrop-blur">
-                  <Star className="size-3 fill-accent text-accent" />
-                  <span className="font-medium">{Number(t.rating_avg).toFixed(1)}</span>
-                  <span className="text-muted-foreground">· {t.rating_count}</span>
-                </div>
+                ) : (
+                  <svg viewBox="0 0 300 375" className="absolute inset-0 size-full text-primary">
+                    <circle cx="150" cy="135" r="48" fill="currentColor" opacity="0.55" />
+                    <path
+                      d="M 60 240 Q 150 160 240 240 Q 260 320 220 360 L 80 360 Q 40 320 60 240 Z"
+                      fill="currentColor"
+                      opacity="0.45"
+                    />
+                  </svg>
+                )}
+                {t.rating_count > 0 && (
+                  <div className="absolute left-4 top-4 inline-flex items-center gap-1 rounded-full border border-border bg-card/90 px-2.5 py-1 text-xs backdrop-blur">
+                    <Star className="size-3 fill-accent text-accent" />
+                    <span className="font-medium">{Number(t.rating_avg).toFixed(1)}</span>
+                    <span className="text-muted-foreground">· {t.rating_count}</span>
+                  </div>
+                )}
               </div>
               <div className="p-6">
                 <div className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold leading-tight">

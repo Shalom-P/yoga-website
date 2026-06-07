@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, Video, Ban } from "lucide-react";
+import { Plus, Loader2, Video, Ban, PlayCircle, CheckCircle2, Link2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -27,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { formatCustomerTime } from "@/lib/timezone";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type SessionRow = {
   id: string;
@@ -37,6 +38,7 @@ type SessionRow = {
   is_free_trial: boolean;
   meet_link: string | null;
   meet_status: "pending" | "created" | "failed" | null;
+  recording_url: string | null;
   teacher: { id: string; display_name: string } | null;
   category: { id: string; name: string } | null;
 };
@@ -68,16 +70,23 @@ export function SessionsAdmin({
   sessions,
   teachers,
   categories,
+  showPast,
 }: {
   sessions: SessionRow[];
   teachers: Teacher[];
   categories: Category[];
+  showPast: boolean;
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [cancelling, setCancelling] = useState<string | null>(null);
+  const [transitioning, setTransitioning] = useState<string | null>(null);
+  const [recordingSession, setRecordingSession] = useState<SessionRow | null>(null);
+  const [recordingUrl, setRecordingUrl] = useState("");
+  const [recordingSaving, setRecordingSaving] = useState(false);
+  const supabase = createSupabaseBrowserClient();
 
   function handleOpenChange(next: boolean) {
     if (!next) setDraft(EMPTY);
@@ -153,6 +162,41 @@ export function SessionsAdmin({
     }
   }
 
+  async function transitionStatus(id: string, status: "live" | "completed") {
+    setTransitioning(id);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ status })
+      .eq("id", id);
+    setTransitioning(null);
+    if (error) return toast.error(error.message);
+    toast.success(`Session marked as ${status}.`);
+    router.refresh();
+  }
+
+  function openRecordingDialog(s: SessionRow) {
+    setRecordingSession(s);
+    setRecordingUrl(s.recording_url ?? "");
+  }
+
+  async function saveRecordingUrl() {
+    if (!recordingSession) return;
+    setRecordingSaving(true);
+    const { error } = await supabase
+      .from("sessions")
+      .update({ recording_url: recordingUrl || null })
+      .eq("id", recordingSession.id);
+    setRecordingSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Recording URL saved.");
+    setRecordingSession(null);
+    router.refresh();
+  }
+
+  function toggleShowPast() {
+    router.push(showPast ? "/admin/sessions" : "/admin/sessions?past=1");
+  }
+
   return (
     <>
       <div className="flex items-center justify-between mb-6">
@@ -164,10 +208,15 @@ export function SessionsAdmin({
             Schedule classes — Meet links are auto-created.
           </p>
         </div>
-        <Button className="rounded-full" onClick={() => setOpen(true)}>
-          <Plus className="size-4 mr-1" />
-          Schedule session
-        </Button>
+        <div className="flex gap-2">
+          <Button variant="outline" className="rounded-full" onClick={toggleShowPast}>
+            {showPast ? "Show upcoming" : "Show past sessions"}
+          </Button>
+          <Button className="rounded-full" onClick={() => setOpen(true)}>
+            <Plus className="size-4 mr-1" />
+            Schedule session
+          </Button>
+        </div>
       </div>
 
       {sessions.length === 0 ? (
@@ -185,7 +234,7 @@ export function SessionsAdmin({
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Capacity</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Meet</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3"></th>
+                <th className="px-4 py-3 font-medium text-muted-foreground text-left">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -228,18 +277,55 @@ export function SessionsAdmin({
                       {s.is_free_trial && " · trial"}
                     </Badge>
                   </td>
-                  <td className="px-4 py-3 text-right">
-                    {s.status === "scheduled" && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => cancelSession(s.id)}
-                        disabled={cancelling === s.id}
-                      >
-                        <Ban className="size-3.5 mr-1" />
-                        {cancelling === s.id ? "…" : "Cancel"}
-                      </Button>
-                    )}
+                  <td className="px-4 py-3">
+                    <div className="flex flex-wrap gap-1">
+                      {s.status === "scheduled" && (
+                        <>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => transitionStatus(s.id, "live")}
+                            disabled={transitioning === s.id}
+                            title="Mark as live"
+                          >
+                            <PlayCircle className="size-3.5 mr-1" />
+                            {transitioning === s.id ? "…" : "Go live"}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => cancelSession(s.id)}
+                            disabled={cancelling === s.id}
+                          >
+                            <Ban className="size-3.5 mr-1" />
+                            {cancelling === s.id ? "…" : "Cancel"}
+                          </Button>
+                        </>
+                      )}
+                      {s.status === "live" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => transitionStatus(s.id, "completed")}
+                          disabled={transitioning === s.id}
+                          title="Mark as completed"
+                        >
+                          <CheckCircle2 className="size-3.5 mr-1" />
+                          {transitioning === s.id ? "…" : "Complete"}
+                        </Button>
+                      )}
+                      {(s.status === "completed" || new Date(s.end_at) < new Date()) && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => openRecordingDialog(s)}
+                          title={s.recording_url ? "Edit recording URL" : "Add recording URL"}
+                        >
+                          <Link2 className="size-3.5 mr-1" />
+                          {s.recording_url ? "Recording" : "Add recording"}
+                        </Button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -247,6 +333,35 @@ export function SessionsAdmin({
           </table>
         </div>
       )}
+
+      {/* Recording URL dialog */}
+      <Dialog open={recordingSession !== null} onOpenChange={(o) => !o && setRecordingSession(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Recording URL</DialogTitle>
+            <DialogDescription>
+              Paste the recording link (Google Drive, Vimeo, etc.). Customers with a booking can see this from their dashboard.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="rec_url">URL</Label>
+            <Input
+              id="rec_url"
+              value={recordingUrl}
+              onChange={(e) => setRecordingUrl(e.target.value)}
+              placeholder="https://drive.google.com/…"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRecordingSession(null)} disabled={recordingSaving}>
+              Cancel
+            </Button>
+            <Button onClick={saveRecordingUrl} disabled={recordingSaving}>
+              {recordingSaving ? <Loader2 className="size-4 animate-spin" /> : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={open} onOpenChange={handleOpenChange}>
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">

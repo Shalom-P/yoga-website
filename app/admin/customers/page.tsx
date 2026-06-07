@@ -5,7 +5,9 @@ export default async function AdminCustomersPage() {
   const { supabase } = await requireAdmin();
   const { data: customers } = await supabase
     .from("profiles")
-    .select("id, full_name, email, phone, timezone, role, created_at")
+    .select(
+      "id, full_name, email, phone, timezone, role, created_at, experience_level, goals, referral_source, marketing_opt_in"
+    )
     .order("created_at", { ascending: false })
     .limit(200);
 

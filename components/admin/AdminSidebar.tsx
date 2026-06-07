@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BookOpen, CalendarClock, BadgePercent,
   Image as ImageIcon, Wallet, Calendar, UserRound, Settings, Briefcase,
-  Menu, ArrowLeft,
+  Menu, ArrowLeft, Star,
 } from "lucide-react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
@@ -26,6 +26,7 @@ const ITEMS = [
   { href: "/admin/media",      label: "Media",     icon: ImageIcon },
   { href: "/admin/bookings",   label: "Bookings",  icon: Calendar },
   { href: "/admin/customers",  label: "Customers", icon: UserRound },
+  { href: "/admin/reviews",    label: "Reviews",   icon: Star },
   { href: "/admin/settings",   label: "Settings",  icon: Settings },
 ];
 

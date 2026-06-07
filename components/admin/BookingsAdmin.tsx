@@ -6,6 +6,16 @@ import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import {
   Select,
   SelectContent,
@@ -44,6 +54,9 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
   const [busy, setBusy] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | BookingStatus>("all");
   const [search, setSearch] = useState("");
+  const [cancelTarget, setCancelTarget] = useState<Row | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
 
   const filtered = rows.filter((r) => {
     if (filter !== "all" && r.status !== filter) return false;
@@ -66,6 +79,31 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
     setBusy(null);
     if (error) return toast.error(error.message);
     toast.success(`Marked as ${STATUS_LABEL[status]}.`);
+    router.refresh();
+  }
+
+  function openCancelDialog(row: Row) {
+    setCancelTarget(row);
+    setCancelReason("");
+  }
+
+  async function confirmCancel() {
+    if (!cancelTarget) return;
+    setCancelling(true);
+    const patch: {
+      status: BookingStatus;
+      cancelled_at: string;
+      cancellation_reason?: string;
+    } = {
+      status: "cancelled",
+      cancelled_at: new Date().toISOString(),
+    };
+    if (cancelReason.trim()) patch.cancellation_reason = cancelReason.trim();
+    const { error } = await supabase.from("bookings").update(patch).eq("id", cancelTarget.id);
+    setCancelling(false);
+    if (error) return toast.error(error.message);
+    toast.success("Booking cancelled.");
+    setCancelTarget(null);
     router.refresh();
   }
 
@@ -165,10 +203,10 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
                           size="sm"
                           variant="ghost"
                           className="text-destructive hover:text-destructive"
-                          onClick={() => updateStatus(r.id, "cancelled")}
+                          onClick={() => openCancelDialog(r)}
                           disabled={busy === r.id}
                         >
-                          {busy === r.id ? <Loader2 className="size-3.5 animate-spin" /> : "Cancel"}
+                          Cancel
                         </Button>
                       </div>
                     )}
@@ -179,6 +217,35 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
           </table>
         </div>
       )}
+
+      <Dialog open={cancelTarget !== null} onOpenChange={(o) => !o && setCancelTarget(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Cancel booking?</DialogTitle>
+            <DialogDescription>
+              {cancelTarget?.customer?.full_name ?? cancelTarget?.customer?.email ?? "This customer"}&apos;s booking will be marked as cancelled. Optionally add a reason (stored internally).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-2">
+            <Label htmlFor="cancel_reason">Reason (optional)</Label>
+            <Textarea
+              id="cancel_reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              placeholder="e.g. Customer requested cancellation, teacher unavailable…"
+              rows={2}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)} disabled={cancelling}>
+              Back
+            </Button>
+            <Button variant="destructive" onClick={confirmCancel} disabled={cancelling}>
+              {cancelling ? <Loader2 className="size-4 animate-spin" /> : "Confirm cancel"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

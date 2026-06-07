@@ -54,7 +54,7 @@ export function FinalCTA({ headline }: { headline: string }) {
             </Link>
           </Button>
           <div className="mt-6 text-sm text-primary-foreground/70">
-            Trusted by 1,200+ students · 4.9 ★ rating · 100% private 1:1s
+            100% private 1:1s · Cancel anytime · No credit card for your trial
           </div>
         </div>
       </motion.div>

@@ -1,7 +1,10 @@
 import { Mail } from "lucide-react";
 import { PageHeader } from "@/components/marketing/PageHeader";
 
-export const metadata = { title: "Contact" };
+export const metadata = {
+  title: "Contact",
+  description: "Get in touch with My Yoga Classes. Questions about teachers, classes, or your subscription? We reply within 1 business day.",
+};
 
 export default function ContactPage() {
   return (

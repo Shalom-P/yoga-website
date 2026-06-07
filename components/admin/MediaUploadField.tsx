@@ -20,6 +20,13 @@ type Props = {
   onChange: (url: string | null) => void;
   /** Disabled while a parent save is in flight, etc. */
   disabled?: boolean;
+  /**
+   * Optional client-side size cap in MB. Files larger than this are rejected
+   * with a friendly message *before* hitting the network, instead of failing
+   * server-side with an opaque 413. Should match the bucket's file_size_limit
+   * (see supabase/migrations/0009_storage_limits.sql).
+   */
+  maxSizeMb?: number;
 };
 
 /**
@@ -34,12 +41,23 @@ export function MediaUploadField({
   value,
   onChange,
   disabled,
+  maxSizeMb,
 }: Props) {
   const supabase = createSupabaseBrowserClient();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
 
   async function handleFile(file: File) {
+    // Reject oversize files up front so the admin gets an actionable message
+    // instead of an opaque server 413 mid-upload.
+    if (maxSizeMb && file.size > maxSizeMb * 1024 * 1024) {
+      toast.error(
+        `That ${accept} is ${(file.size / 1024 / 1024).toFixed(0)} MB — the limit is ${maxSizeMb} MB. Compress or trim it and try again.`,
+      );
+      if (inputRef.current) inputRef.current.value = "";
+      return;
+    }
+
     setUploading(true);
     const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
     const path = `${folder}/${crypto.randomUUID()}.${ext}`;
@@ -55,10 +73,14 @@ export function MediaUploadField({
       const msg = uploadErr.message ?? "";
       const isRlsOrMissing =
         /row-level security|bucket not found|Bucket not found/i.test(msg);
+      const isTooLarge =
+        /maximum allowed size|payload too large|exceeded the maximum|413/i.test(msg);
       toast.error(
-        isRlsOrMissing
-          ? `Upload blocked: the "${bucket}" bucket isn't set up yet. Apply supabase/migrations/0008_storage_buckets.sql in the Supabase SQL editor.`
-          : `Upload failed: ${msg}`,
+        isTooLarge
+          ? `Upload too large: this ${accept} exceeds the storage limit. Raise the bucket limit (supabase/migrations/0009_storage_limits.sql) and the project-wide cap in Supabase → Project Settings → Storage.`
+          : isRlsOrMissing
+            ? `Upload blocked: the "${bucket}" bucket isn't set up yet. Apply supabase/migrations/0008_storage_buckets.sql in the Supabase SQL editor.`
+            : `Upload failed: ${msg}`,
       );
       return;
     }

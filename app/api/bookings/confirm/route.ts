@@ -4,6 +4,8 @@ import { formatInTimeZone } from "date-fns-tz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { createMeetEvent } from "@/lib/google/calendar";
+import { sendBookingConfirmation } from "@/lib/email";
+import { trackServer } from "@/lib/analytics/server";
 
 const schema = z.object({
   teacherId: z.string().uuid(),
@@ -50,11 +52,27 @@ export async function POST(req: Request) {
   // The client collects it before this call; this guard makes it non-bypassable.
   const { data: bookerProfile } = await supabase
     .from("profiles")
-    .select("phone")
+    .select("phone, timezone")
     .eq("id", user.id)
     .maybeSingle();
   if (!bookerProfile?.phone?.trim()) {
     return NextResponse.json({ error: "phone_required" }, { status: 400 });
+  }
+
+  // Paid (non-trial) sessions require an active subscription. The free 1:1 trial
+  // does not. Without this, anyone could POST isFreeTrial:false and book paid
+  // sessions with no plan. Runs as the user (RLS-scoped to their own rows).
+  if (!parsed.data.isFreeTrial) {
+    const { data: activeSub } = await supabase
+      .from("subscriptions")
+      .select("id")
+      .eq("customer_id", user.id)
+      .eq("status", "active")
+      .limit(1)
+      .maybeSingle();
+    if (!activeSub) {
+      return NextResponse.json({ error: "subscription_required" }, { status: 403 });
+    }
   }
 
   const start = new Date(parsed.data.startAt);
@@ -149,16 +167,18 @@ export async function POST(req: Request) {
   // Awaited Meet creation. On failure we keep the booking; meet_status stays
   // 'pending' so the cron sweeper can retry, and the dashboard can show a
   // "Link will be available shortly" state.
+  let meetLink: string | null = null;
   try {
-    const { meetLink, eventId } = await createMeetEvent({
+    const created = await createMeetEvent({
       summary: `Yoga with ${teacher.display_name}`,
       startUtc: start.toISOString(),
       endUtc: end.toISOString(),
       attendeeEmails: user.email ? [user.email] : [],
     });
+    meetLink = created.meetLink;
     await svc
       .from("sessions")
-      .update({ meet_link: meetLink, meet_event_id: eventId, meet_status: "created" })
+      .update({ meet_link: created.meetLink, meet_event_id: created.eventId, meet_status: "created" })
       .eq("id", session.id);
   } catch {
     await svc
@@ -166,6 +186,26 @@ export async function POST(req: Request) {
       .update({ meet_status: "failed" })
       .eq("id", session.id);
   }
+
+  // Fire-and-forget confirmation email. No-ops if Resend isn't configured and
+  // never throws, so it can't break a committed booking.
+  if (user.email) {
+    // Awaited (not fire-and-forget): in serverless, work started after the
+    // response may not run. The helper never throws, so this can't break the
+    // committed booking. ~one HTTP call; no-ops instantly without Resend.
+    await sendBookingConfirmation({
+      to: user.email,
+      teacherName: teacher.display_name,
+      startUtc: start.toISOString(),
+      customerTz: bookerProfile?.timezone ?? "Australia/Sydney",
+      meetLink,
+    });
+  }
+
+  void trackServer(user.id, parsed.data.isFreeTrial ? "trial_booked" : "session_booked", {
+    teacher_id: teacher.id,
+    session_id: session.id,
+  });
 
   return NextResponse.json({ bookingId: booking.id, sessionId: session.id });
 }

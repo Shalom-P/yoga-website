@@ -26,7 +26,10 @@ import {
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { MediaUploadField } from "./MediaUploadField";
 import type { ClassCategory, IntensityLevel } from "@/lib/supabase/types";
+
+const CLASS_MEDIA_BUCKET = "promotional-media";
 
 type Draft = {
   id?: string;
@@ -35,7 +38,9 @@ type Draft = {
   description: string;
   intensity: IntensityLevel;
   icon_name: string;
+  cover_image_url: string | null;
   props_needed: string;
+  sort_order: number;
   is_active: boolean;
 };
 
@@ -45,7 +50,9 @@ const EMPTY: Draft = {
   description: "",
   intensity: "moderate",
   icon_name: "",
+  cover_image_url: null,
   props_needed: "",
+  sort_order: 0,
   is_active: true,
 };
 
@@ -73,7 +80,9 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
       description: c.description ?? "",
       intensity: c.intensity,
       icon_name: c.icon_name ?? "",
+      cover_image_url: c.cover_image_url ?? null,
       props_needed: c.props_needed.join(", "),
+      sort_order: c.sort_order ?? 0,
       is_active: c.is_active,
     });
     setOpen(true);
@@ -96,10 +105,12 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
       description: draft.description || null,
       intensity: draft.intensity,
       icon_name: draft.icon_name || null,
+      cover_image_url: draft.cover_image_url,
       props_needed: draft.props_needed
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean),
+      sort_order: draft.sort_order,
       is_active: draft.is_active,
     };
     const { error } = draft.id
@@ -248,19 +259,51 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             </div>
 
             <div>
-              <LabelWithHint
-                htmlFor="props"
-                hint="Equipment students should have ready. Shown as 'What you'll need' on the class page."
-              >
-                Props needed (comma-separated)
+              <LabelWithHint hint="Thumbnail/hero image shown on the /classes grid card. JPG/PNG up to 10 MB.">
+                Cover image
               </LabelWithHint>
-              <Input
-                id="props"
-                value={draft.props_needed}
-                onChange={(e) => setDraft({ ...draft, props_needed: e.target.value })}
-                placeholder="mat, bolster, blocks"
-                className="mt-1.5"
+              <MediaUploadField
+                bucket={CLASS_MEDIA_BUCKET}
+                folder={`class-covers/${draft.slug || "new"}`}
+                accept="image"
+                maxSizeMb={10}
+                value={draft.cover_image_url}
+                onChange={(url) => setDraft({ ...draft, cover_image_url: url })}
+                disabled={saving}
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <LabelWithHint
+                  htmlFor="props"
+                  hint="Equipment students should have ready. Shown as 'What you'll need' on the class page."
+                >
+                  Props needed (comma-separated)
+                </LabelWithHint>
+                <Input
+                  id="props"
+                  value={draft.props_needed}
+                  onChange={(e) => setDraft({ ...draft, props_needed: e.target.value })}
+                  placeholder="mat, bolster, blocks"
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <LabelWithHint
+                  htmlFor="class_sort"
+                  hint="Lower numbers appear first on the /classes grid. Default 0."
+                >
+                  Sort order
+                </LabelWithHint>
+                <Input
+                  id="class_sort"
+                  type="number"
+                  value={draft.sort_order}
+                  onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) || 0 })}
+                  className="mt-1.5"
+                />
+              </div>
             </div>
 
             <Label className="flex items-center gap-2 text-sm font-normal">

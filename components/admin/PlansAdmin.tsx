@@ -42,6 +42,8 @@ type Draft = {
   price_aud_cents: number;
   billing_interval: BillingInterval;
   included_sessions_per_month: number | null;
+  included_session_types: string;
+  sort_order: number;
   is_featured: boolean;
   is_active: boolean;
   features: FeatureDraft[];
@@ -54,6 +56,8 @@ const EMPTY: Draft = {
   price_aud_cents: 4900,
   billing_interval: "monthly",
   included_sessions_per_month: null,
+  included_session_types: "",
+  sort_order: 0,
   is_featured: false,
   is_active: true,
   features: [{ feature_text: "", is_included: true }],
@@ -66,6 +70,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState<string | null>(null);
+  const [resyncing, setResyncing] = useState<string | null>(null);
 
   function openAdd() {
     setDraft({ ...EMPTY, features: [{ feature_text: "", is_included: true }] });
@@ -81,6 +86,8 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
       price_aud_cents: p.price_aud_cents,
       billing_interval: p.billing_interval,
       included_sessions_per_month: p.included_sessions_per_month,
+      included_session_types: (p.included_session_types ?? []).join(", "),
+      sort_order: p.sort_order ?? 0,
       is_featured: p.is_featured,
       is_active: p.is_active,
       features: p.features.length
@@ -112,6 +119,11 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
       price_aud_cents: draft.price_aud_cents,
       billing_interval: draft.billing_interval,
       included_sessions_per_month: draft.included_sessions_per_month,
+      included_session_types: draft.included_session_types
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean),
+      sort_order: draft.sort_order,
       is_featured: draft.is_featured,
       is_active: draft.is_active,
     };
@@ -194,6 +206,24 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
     }
   }
 
+  async function resyncToPaypal(planId: string) {
+    setResyncing(planId);
+    try {
+      // Clear the existing paypal_plan_id so the sync endpoint creates a fresh one.
+      const { error: clearErr } = await supabase
+        .from("plans")
+        .update({ paypal_plan_id: null })
+        .eq("id", planId);
+      if (clearErr) {
+        toast.error(`Couldn't clear PayPal plan ID: ${clearErr.message}`);
+        return;
+      }
+      await syncToPaypal(planId);
+    } finally {
+      setResyncing(null);
+    }
+  }
+
   function updateFeature(i: number, patch: Partial<FeatureDraft>) {
     setDraft((d) => ({
       ...d,
@@ -258,25 +288,42 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
               <Button size="sm" variant="outline" className="rounded-full" onClick={() => openEdit(p)}>
                 Edit
               </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                className="rounded-full"
-                onClick={() => syncToPaypal(p.id)}
-                disabled={syncing === p.id || !!p.paypal_plan_id}
-                title={p.paypal_plan_id ? "Already synced" : undefined}
-              >
-                {syncing === p.id ? (
-                  <>
-                    <Loader2 className="size-3.5 animate-spin mr-1" />
-                    Syncing…
-                  </>
-                ) : p.paypal_plan_id ? (
-                  "Synced"
-                ) : (
-                  "Sync to PayPal"
-                )}
-              </Button>
+              {p.paypal_plan_id ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => resyncToPaypal(p.id)}
+                  disabled={resyncing === p.id || syncing === p.id}
+                  title="Clear the stored PayPal plan ID and create a new one (needed after price changes)"
+                >
+                  {resyncing === p.id || syncing === p.id ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin mr-1" />
+                      Re-syncing…
+                    </>
+                  ) : (
+                    "Re-sync PayPal"
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="rounded-full"
+                  onClick={() => syncToPaypal(p.id)}
+                  disabled={syncing === p.id}
+                >
+                  {syncing === p.id ? (
+                    <>
+                      <Loader2 className="size-3.5 animate-spin mr-1" />
+                      Syncing…
+                    </>
+                  ) : (
+                    "Sync to PayPal"
+                  )}
+                </Button>
+              )}
             </div>
           </div>
         ))}
@@ -409,6 +456,39 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
                 }
                 className="mt-1.5"
               />
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <LabelWithHint
+                  htmlFor="session_types"
+                  hint="Comma-separated class-category slugs this plan covers. Leave blank to include all types."
+                >
+                  Included session types (slugs)
+                </LabelWithHint>
+                <Input
+                  id="session_types"
+                  value={draft.included_session_types}
+                  onChange={(e) => setDraft({ ...draft, included_session_types: e.target.value })}
+                  placeholder="hatha, yin, restorative"
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <LabelWithHint
+                  htmlFor="plan_sort"
+                  hint="Lower numbers appear first on /pricing. Default 0."
+                >
+                  Sort order
+                </LabelWithHint>
+                <Input
+                  id="plan_sort"
+                  type="number"
+                  value={draft.sort_order}
+                  onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) || 0 })}
+                  className="mt-1.5"
+                />
+              </div>
             </div>
 
             <div className="flex gap-6">
