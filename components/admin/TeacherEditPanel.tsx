@@ -87,6 +87,15 @@ export function TeacherEditPanel({ teacher }: { teacher: Teacher }) {
             <p className="text-sm whitespace-pre-wrap">{teacher.bio}</p>
           </div>
         )}
+
+        <div className="mt-6 border-t border-border pt-5">
+          <div className="text-xs uppercase tracking-wide text-muted-foreground mb-3">Media</div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <MediaPreview label="Avatar" url={teacher.avatar_url} kind="image" aspect="aspect-square" />
+            <MediaPreview label="Cover image" url={teacher.cover_image_url} kind="image" aspect="aspect-video" />
+            <MediaPreview label="Intro video" url={teacher.intro_video_url} kind="video" aspect="aspect-video" />
+          </div>
+        </div>
       </div>
 
       <TeacherFormDialog open={editOpen} onOpenChange={setEditOpen} teacher={teacher} />
@@ -119,6 +128,48 @@ function Detail({ label, value }: { label: string; value: string | null }) {
     <div>
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
       <div className="mt-0.5">{value ?? "—"}</div>
+    </div>
+  );
+}
+
+function MediaPreview({
+  label,
+  url,
+  kind,
+  aspect,
+}: {
+  label: string;
+  url: string | null;
+  kind: "image" | "video";
+  aspect: string;
+}) {
+  return (
+    <div>
+      <div className="text-xs font-medium text-muted-foreground mb-1.5">{label}</div>
+      {url ? (
+        kind === "video" ? (
+          <video
+            src={url}
+            controls
+            preload="metadata"
+            className={`w-full ${aspect} rounded-lg border border-border bg-black object-cover`}
+          />
+        ) : (
+          // Public Storage URL — plain <img> avoids next/image remotePatterns config.
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={url}
+            alt={label}
+            className={`w-full ${aspect} rounded-lg border border-border object-cover`}
+          />
+        )
+      ) : (
+        <div
+          className={`w-full ${aspect} rounded-lg border border-dashed border-border bg-muted/40 flex items-center justify-center text-center text-xs text-muted-foreground`}
+        >
+          Not uploaded
+        </div>
+      )}
     </div>
   );
 }
