@@ -7,7 +7,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev          # Next dev server on :3000
 npm run build        # Production build
-npm run lint         # next lint (ESLint flat config in eslint.config.mjs)
+npm run lint         # eslint . — flat config in eslint.config.mjs (was `next lint`; swapped for Next 16)
 npm run typecheck    # tsc --noEmit — strict mode is on
 
 # Drizzle (schema source of truth is supabase/migrations — see "Schema ownership")
@@ -32,12 +32,13 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 - **`(auth)/`** — `/login`, `/onboarding`, `/auth/callback`. Login uses Supabase: Google OAuth + Phone OTP via Twilio Verify (the same flow handles `+61` AU customers and `+91` IN teachers).
 - **`(dashboard)/`** — customer area, gated by middleware.
 - **`admin/`** — role-gated by middleware *and* `requireAdmin()` in pages. Admin-edited landing copy lives in the `admin_settings` table (key→jsonb) and is read with `revalidate: 60`, so changes propagate ≤1 min.
-- **`api/`** — route handlers for booking confirm/cancel, Meet link creation/retry (`meet/create-link`), admin session create/cancel (`admin/sessions`), PayPal subscription create/confirm/cancel + plan-catalog sync (`paypal/sync-plan`) + **webhook**, newsletter signup. Middleware **does not** run on `/api/` (see `middleware.ts` matcher) — every handler must auth itself, and admin-only routes re-check `profiles.role` inline.
+- **`api/`** — route handlers for booking confirm/cancel, Meet link creation/retry (`meet/create-link`), admin session create/cancel (`admin/sessions`), PayPal subscription create/confirm/cancel + plan-catalog sync (`paypal/sync-plan`) + **webhook**, newsletter signup, on-demand ISR busting (`admin/revalidate`), and the scheduled-job handlers under `cron/*` (see "Scheduled jobs"). Middleware **does not** run on `/api/` (see `middleware.ts` matcher) — every handler must auth itself, and admin-only routes re-check `profiles.role` inline.
 
-### Two auth-guard paths — use the right one
+### Three auth-guard paths — use the right one
 
 1. **`middleware.ts` → `lib/supabase/middleware.ts`** runs on every non-API, non-static request. Refreshes the Supabase session cookie *and* redirects unauth users away from `/dashboard|/admin`, and non-admins away from `/admin`. Cookies set during the auth refresh have to be re-applied to redirect responses — that's what the `pendingCookies` array is doing; don't drop it if you edit the file.
 2. **`lib/auth/guards.ts`** — `requireUser()` / `requireAdmin()` for Server Components and Server Actions. **API route handlers must call `supabase.auth.getUser()` themselves** because middleware skips `/api/`.
+3. **`lib/cron/auth.ts` → `assertCron(req)`** — for the machine-triggered `cron/*` handlers, which use no Supabase auth at all. It checks `Authorization: Bearer <CRON_SECRET>` and fails **closed**: 503 if `CRON_SECRET` is unset, 401 if it's wrong. Call it first in every cron handler.
 
 ### Three Supabase clients — pick by context
 
@@ -53,12 +54,15 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 
 ### Schema ownership
 
-- **Authoritative migrations live in `supabase/migrations/0001…0008`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates.
+- **Authoritative migrations live in `supabase/migrations/0001…0010`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates. (Newest: `0009` raises per-bucket upload size limits; `0010` adds the `demote_from_admin` RPC.)
 - `drizzle.config.ts` points `out` at `supabase/migrations`, but `db:generate` is for *introspection and ad-hoc work*. When you change schema, write the SQL by hand to keep RLS / RPCs intact and bump the migration number. `0007_security_fixes.sql` is the canonical example of how add-on migrations are structured.
+- **Writing the migration file is not enough — apply it to the live DB** (`psql`/SQL editor). Features break until their object exists: e.g. the `/admin/customers` Demote button 500s until `0010`'s RPC is applied.
 
 ### Storage buckets
 
 Migration `0008` provisions two **public-read, admin-write** Storage buckets: `promotional-media` (hero videos, banners, testimonial photos, class thumbnails — the `/admin/media` tab) and `teacher-media` (per-teacher avatars, covers, intro videos — `TeacherFormDialog`). Writes are gated by the same `public.is_admin(auth.uid())` helper that guards app tables. If an admin upload fails with *"new row violates row-level security policy"*, the bucket policy is the cause — re-apply `0008`, don't make the bucket world-writable.
+
+Marketing pages render these images via `next/image`, so the bucket host (`**.supabase.co/storage/v1/object/public/**`) is allow-listed in `next.config.ts` → `images.remotePatterns`; add any new image host there or optimization throws. Teacher edits are a client-side Supabase write (which can only `router.refresh()` the admin route), so after a save the admin client calls `POST /api/admin/revalidate` to bust the ISR cache on `/`, `/teachers`, `/teachers/[slug]` (the teacher listing/detail pages set `revalidate = 300`).
 
 ### Mock fallback for the marketing site
 
@@ -88,10 +92,15 @@ Two subtle invariants in the webhook: an out-of-order `ACTIVATED` after `CANCELL
 
 **REST calls + plan setup.** `lib/paypal/client.ts` (`getPayPalToken`, `paypalFetch`) is a thin server-only REST wrapper with OAuth-token caching; `PAYPAL_ENV=live` flips the base URL from sandbox to production. A plan isn't subscribable until an admin clicks **Sync to PayPal** in `/admin/plans` → `POST /api/paypal/sync-plan`, which creates the PayPal catalog product + billing plan and stores `paypal_plan_id` on the row; `create-subscription` then references that id.
 
-### Scheduled jobs (not yet wired up)
+### Scheduled jobs (handlers exist; scheduler is BYO)
 
-These background jobs are referenced by the app but have **no handlers or scheduler** yet — pick your host's cron / scheduled-function mechanism (or an external scheduler) when you implement them:
-- **reminder emails** (~hourly), **no-show sweep** (~hourly), **PayPal reconcile** (~daily), and the **Meet-link retry sweep** for sessions stuck at `meet_status='pending'|'failed'`.
+Four cron handlers live under `app/api/cron/`, each gated by `assertCron` (Bearer `CRON_SECRET` — see auth paths above) and running on the service-role client:
+- **`reminders`** (~hourly) — emails a ±10-min band around now+24h and now+1h. **Not yet DB-idempotent** (no `reminded_at` column): a double-fire in the same band sends duplicate reminders. Read the TODO at the top of the file before relying on it.
+- **`no-show-sweep`** (~hourly) — flips still-`confirmed` bookings to `no_show` 2h after the session ended (`booking_status` enum from `0003`).
+- **`paypal-reconcile`** (~daily) — diffs local `subscriptions` against the PayPal API and reconciles, honouring the same out-of-order guard as the webhook (never reactivate a locally-cancelled sub).
+- **`meet-retry`** (~15–30 min) — retries `createMeetEvent` for not-yet-started sessions stuck at `meet_status='pending'|'failed'`, batched (50/run) to avoid Calendar rate limits.
+
+There is **no scheduler in the repo** (no `vercel.json` / host config). Wire each endpoint to your host's cron, an external scheduler, or Supabase `pg_cron` + `pg_net`, POSTing with `Authorization: Bearer $CRON_SECRET`.
 
 ## Conventions worth knowing before editing
 
