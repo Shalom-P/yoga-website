@@ -16,8 +16,12 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const lenis = new Lenis({
-      duration: 1.1,
-      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      // Framerate-independent smoothing: every frame closes ~10% of the distance
+      // left to the target, so the page settles in a few frames and tracks the
+      // wheel closely. The previous time-based tween (duration: 1.1s) kept
+      // gliding for over a second after the wheel stopped — that trailing glide
+      // is what read as "lag" next to a native-scrolling site.
+      lerp: 0.1,
       autoRaf: true,
     });
     lenisRef.current = lenis;
