@@ -133,6 +133,33 @@
   }
 }
 
+/* Lenis smooth scroll (components/shared/LenisProvider.tsx). Lenis drives the
+   scroll position itself, so the native `scroll-behavior: smooth` set on <html>
+   above has to be disabled while Lenis is active — otherwise the browser's own
+   smooth-scroll fights Lenis's interpolation and scrolling feels sluggish. Lenis
+   toggles these classes on <html>; kept unlayered so they beat the @layer base
+   rule in the cascade. Reduced-motion users never get the `lenis` class, so they
+   keep native smooth scrolling. */
+html.lenis,
+html.lenis body {
+  height: auto;
+}
+.lenis {
+  /* Whenever Lenis is mounted it owns scrolling, so kill the native smooth
+     behaviour set on <html> above (this version only adds `lenis-smooth` mid
+     scroll, so scoping to it would let native smooth-scroll fight anchor jumps). */
+  scroll-behavior: auto !important;
+}
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overscroll-behavior: contain;
+}
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+.lenis.lenis-smooth iframe {
+  pointer-events: none;
+}
+
 /* Subtle utilities for the marketing landing page */
 @layer utilities {
   .text-balance { text-wrap: balance; }
