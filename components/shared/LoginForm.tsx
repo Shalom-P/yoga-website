@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,22 @@ import { track } from "@/lib/analytics/events";
 export function LoginForm() {
   const params = useSearchParams();
   const next = params.get("next") ?? "/dashboard";
+  const errorParam = params.get("error");
+
+  // Fix 4: surface OAuth callback errors passed as ?error=
+  useEffect(() => {
+    if (errorParam) {
+      toast.error(errorParam);
+    }
+  }, [errorParam]);
 
   return (
     <div className="mt-8">
+      {errorParam && (
+        <div role="alert" className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">
+          {errorParam}
+        </div>
+      )}
       <Tabs defaultValue="google" className="w-full">
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="google">Google</TabsTrigger>
@@ -89,45 +102,88 @@ function toE164(cc: string, national: string): string {
   return `+${cc}${digits}`;
 }
 
+const RESEND_COOLDOWN_SECONDS = 30;
+
 function PhoneLogin({ next }: { next: string }) {
   const [phase, setPhase] = useState<"phone" | "otp">("phone");
   const [cc, setCc] = useState<string>("61");
   const [national, setNational] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  // Fix 3: resend cooldown state
+  const [resendCooldown, setResendCooldown] = useState(0);
   const supabase = createSupabaseBrowserClient();
 
   const nationalDigits = national.replace(/\D/g, "").replace(/^0+/, "");
   const e164 = toE164(cc, national);
 
-  async function sendOtp(e: React.FormEvent) {
-    e.preventDefault();
+  // Fix 3: countdown timer effect
+  useEffect(() => {
+    if (resendCooldown <= 0) return;
+    const id = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
+    return () => clearTimeout(id);
+  }, [resendCooldown]);
+
+  async function doSendOtp() {
     if (nationalDigits.length < 6 || nationalDigits.length > 12) {
       toast.error("Enter a valid mobile number (digits only, without the country code).");
-      return;
+      return false;
     }
     setLoading(true);
-    track("signup_started", { method_intent: "phone", next_path: next });
     const { error } = await supabase.auth.signInWithOtp({
       phone: e164,
       options: { channel: "sms" },
     });
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) { toast.error(error.message); return false; }
+    return true;
+  }
+
+  async function sendOtp(e: React.FormEvent) {
+    e.preventDefault();
+    track("signup_started", { method_intent: "phone", next_path: next });
+    const ok = await doSendOtp();
+    if (!ok) return;
     toast.success("Code sent. Check your phone.");
     setPhase("otp");
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+  }
+
+  // Fix 3: resend handler
+  async function resendOtp() {
+    const ok = await doSendOtp();
+    if (!ok) return;
+    toast.success("New code sent. Check your phone.");
+    setResendCooldown(RESEND_COOLDOWN_SECONDS);
   }
 
   async function verifyOtp(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.verifyOtp({
+    const { data, error } = await supabase.auth.verifyOtp({
       phone: e164,
       token: otp.replace(/\D/g, ""),
       type: "sms",
     });
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
+    // Fix 1: check onboarding completion for phone OTP users
+    const userId = data.user?.id;
+    if (userId) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("experience_level")
+        .eq("id", userId)
+        .single();
+      if (!profile?.experience_level) {
+        const onboardingNext = next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : "";
+        window.location.href = `/onboarding${onboardingNext}`;
+        return;
+      }
+    }
     setLoading(false);
-    if (error) return toast.error(error.message);
     window.location.href = next;
   }
 
@@ -151,6 +207,15 @@ function PhoneLogin({ next }: { next: string }) {
         <Button type="submit" disabled={loading} className="w-full h-11 rounded-full">
           {loading ? <Loader2 className="size-4 animate-spin" /> : "Verify & continue"}
         </Button>
+        {/* Fix 3: Resend code button with cooldown */}
+        <button
+          type="button"
+          disabled={loading || resendCooldown > 0}
+          className="text-xs text-muted-foreground hover:text-foreground mx-auto block disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={resendOtp}
+        >
+          {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
+        </button>
         <button
           type="button"
           className="text-xs text-muted-foreground hover:text-foreground mx-auto block"

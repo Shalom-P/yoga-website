@@ -33,6 +33,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
   const [annual, setAnnual] = useState(false);
   const visiblePlans = annual && hasYearly ? yearlyPlans : monthlyPlans;
   const [pending, setPending] = useState<string | null>(null);
+  const [promo, setPromo] = useState("");
 
   async function startSubscribe(planSlug: string) {
     setPending(planSlug);
@@ -48,7 +49,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
       const res = await fetch("/api/paypal/create-subscription", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ planSlug }),
+        body: JSON.stringify({ planSlug, discountCode: promo.trim() || undefined }),
       });
       const body = (await res.json().catch(() => ({}))) as {
         approveUrl?: string;
@@ -113,6 +114,20 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
             </div>
           )}
         </motion.div>
+
+        <div className="mb-10 flex flex-col items-center gap-1.5">
+          <label htmlFor="promo" className="text-xs text-muted-foreground">
+            Have a promo code?
+          </label>
+          <input
+            id="promo"
+            value={promo}
+            onChange={(e) => setPromo(e.target.value)}
+            placeholder="Enter code"
+            autoComplete="off"
+            className="w-48 rounded-full border border-border bg-card px-4 py-1.5 text-center text-sm uppercase tracking-wide outline-none focus:border-primary"
+          />
+        </div>
 
         <motion.div
           initial="hidden"

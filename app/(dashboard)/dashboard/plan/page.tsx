@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { PartyPopper } from "lucide-react";
+import { PartyPopper, Info } from "lucide-react";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { PlanAutoStart } from "@/components/dashboard/PlanAutoStart";
 import { CurrentSubscription } from "@/components/dashboard/CurrentSubscription";
@@ -9,9 +9,9 @@ import { requireUser } from "@/lib/auth/guards";
 export default async function PlanPage({
   searchParams,
 }: {
-  searchParams: Promise<{ booked?: string }>;
+  searchParams: Promise<{ booked?: string; canceled?: string }>;
 }) {
-  const { booked } = await searchParams;
+  const { booked, canceled } = await searchParams;
   const { user, supabase } = await requireUser("/dashboard/plan");
   const [{ data: subRow }, plans] = await Promise.all([
     supabase
@@ -60,6 +60,18 @@ export default async function PlanPage({
             <p className="mt-0.5 text-muted-foreground">
               We&apos;ll email your Google Meet link. Want to keep practising after your trial?
               Pick a plan below — cancel anytime.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {canceled && !sub && (
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-4">
+          <Info className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+          <div className="text-sm">
+            <p className="font-medium text-foreground">Checkout cancelled</p>
+            <p className="mt-0.5 text-muted-foreground">
+              No worries — you weren&apos;t charged. Pick a plan below whenever you&apos;re ready.
             </p>
           </div>
         </div>

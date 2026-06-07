@@ -2,7 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { Upload, Loader2, Trash2 } from "lucide-react";
+import { Upload, Loader2, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,7 +37,20 @@ type Draft = {
   starts_at: string;
   ends_at: string;
   is_active: boolean;
+  sort_order: number;
   file: File | null;
+};
+
+type EditDraft = {
+  id: string;
+  kind: MediaKind;
+  placement: string;
+  alt_text: string;
+  caption: string;
+  starts_at: string;
+  ends_at: string;
+  is_active: boolean;
+  sort_order: number;
 };
 
 const EMPTY: Draft = {
@@ -48,6 +61,7 @@ const EMPTY: Draft = {
   starts_at: "",
   ends_at: "",
   is_active: true,
+  sort_order: 0,
   file: null,
 };
 
@@ -67,6 +81,8 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [editTarget, setEditTarget] = useState<EditDraft | null>(null);
+  const [editSaving, setEditSaving] = useState(false);
 
   function handleOpenChange(next: boolean) {
     if (!next) setDraft(EMPTY);
@@ -113,6 +129,7 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
       alt_text: draft.alt_text || null,
       caption: draft.caption || null,
       is_active: draft.is_active,
+      sort_order: draft.sort_order,
       starts_at: draft.starts_at ? new Date(draft.starts_at).toISOString() : null,
       ends_at: draft.ends_at ? new Date(draft.ends_at).toISOString() : null,
     });
@@ -157,6 +174,43 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
     }
     setDeleting(null);
     toast.success("Removed.");
+    router.refresh();
+  }
+
+  function openEditDialog(m: PromotionalMedia) {
+    setEditTarget({
+      id: m.id,
+      kind: m.kind,
+      placement: m.placement ?? "",
+      alt_text: m.alt_text ?? "",
+      caption: m.caption ?? "",
+      starts_at: m.starts_at ? m.starts_at.slice(0, 16) : "",
+      ends_at: m.ends_at ? m.ends_at.slice(0, 16) : "",
+      is_active: m.is_active,
+      sort_order: m.sort_order ?? 0,
+    });
+  }
+
+  async function saveEdit() {
+    if (!editTarget) return;
+    setEditSaving(true);
+    const { error } = await supabase
+      .from("promotional_media")
+      .update({
+        kind: editTarget.kind,
+        placement: editTarget.placement || null,
+        alt_text: editTarget.alt_text || null,
+        caption: editTarget.caption || null,
+        is_active: editTarget.is_active,
+        sort_order: editTarget.sort_order,
+        starts_at: editTarget.starts_at ? new Date(editTarget.starts_at).toISOString() : null,
+        ends_at: editTarget.ends_at ? new Date(editTarget.ends_at).toISOString() : null,
+      })
+      .eq("id", editTarget.id);
+    setEditSaving(false);
+    if (error) return toast.error(error.message);
+    toast.success("Media updated.");
+    setEditTarget(null);
     router.refresh();
   }
 
@@ -220,14 +274,23 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
                   <span className={`text-xs ${m.is_active ? "text-primary" : "text-muted-foreground"}`}>
                     {m.is_active ? "Active" : "Hidden"}
                   </span>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => remove(m)}
-                    disabled={deleting === m.id}
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => openEditDialog(m)}
+                    >
+                      <Pencil className="size-3.5" />
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      onClick={() => remove(m)}
+                      disabled={deleting === m.id}
+                    >
+                      <Trash2 className="size-3.5" />
+                    </Button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -368,6 +431,22 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
               </div>
             </div>
 
+            <div>
+              <LabelWithHint
+                htmlFor="upload_sort"
+                hint="Lower numbers are served first when a placement has multiple assets. Default 0."
+              >
+                Sort order
+              </LabelWithHint>
+              <Input
+                id="upload_sort"
+                type="number"
+                value={draft.sort_order}
+                onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) || 0 })}
+                className="mt-1.5"
+              />
+            </div>
+
             <Label className="flex items-center gap-2 text-sm font-normal">
               <Checkbox
                 checked={draft.is_active}
@@ -386,6 +465,145 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
             </Button>
             <Button onClick={save} disabled={saving}>
               {saving ? <Loader2 className="size-4 animate-spin" /> : "Upload"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit metadata dialog — no file re-upload */}
+      <Dialog open={editTarget !== null} onOpenChange={(o) => !o && setEditTarget(null)}>
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit media metadata</DialogTitle>
+            <DialogDescription>
+              Update placement, kind, visibility and scheduling. The file itself is not changed.
+            </DialogDescription>
+          </DialogHeader>
+
+          {editTarget && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <LabelWithHint hint="Where on the site this slot is rendered.">
+                    Kind
+                  </LabelWithHint>
+                  <Select
+                    value={editTarget.kind}
+                    onValueChange={(v) => v && setEditTarget({ ...editTarget, kind: v as MediaKind })}
+                  >
+                    <SelectTrigger className="mt-1.5">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(Object.keys(KIND_LABELS) as MediaKind[]).map((k) => (
+                        <SelectItem key={k} value={k}>
+                          {KIND_LABELS[k]}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <LabelWithHint
+                    htmlFor="edit_placement"
+                    hint="Free-text label landing components query against (e.g. 'landing.hero')."
+                  >
+                    Placement
+                  </LabelWithHint>
+                  <Input
+                    id="edit_placement"
+                    value={editTarget.placement}
+                    onChange={(e) => setEditTarget({ ...editTarget, placement: e.target.value })}
+                    placeholder="landing.hero"
+                    className="mt-1.5"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <LabelWithHint htmlFor="edit_alt" hint="Screen-reader description of the image.">
+                  Alt text
+                </LabelWithHint>
+                <Input
+                  id="edit_alt"
+                  value={editTarget.alt_text}
+                  onChange={(e) => setEditTarget({ ...editTarget, alt_text: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+
+              <div>
+                <LabelWithHint htmlFor="edit_caption" hint="Short caption rendered under the media.">
+                  Caption (optional)
+                </LabelWithHint>
+                <Input
+                  id="edit_caption"
+                  value={editTarget.caption}
+                  onChange={(e) => setEditTarget({ ...editTarget, caption: e.target.value })}
+                  className="mt-1.5"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <LabelWithHint htmlFor="edit_starts" hint="Show from this date/time. Leave blank to publish immediately.">
+                    Starts (optional)
+                  </LabelWithHint>
+                  <Input
+                    id="edit_starts"
+                    type="datetime-local"
+                    value={editTarget.starts_at}
+                    onChange={(e) => setEditTarget({ ...editTarget, starts_at: e.target.value })}
+                    className="mt-1.5"
+                  />
+                </div>
+                <div>
+                  <LabelWithHint htmlFor="edit_ends" hint="Stop showing after this date/time.">
+                    Ends (optional)
+                  </LabelWithHint>
+                  <Input
+                    id="edit_ends"
+                    type="datetime-local"
+                    value={editTarget.ends_at}
+                    onChange={(e) => setEditTarget({ ...editTarget, ends_at: e.target.value })}
+                    className="mt-1.5"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <LabelWithHint
+                  htmlFor="edit_sort"
+                  hint="Lower numbers are served first when a placement has multiple assets."
+                >
+                  Sort order
+                </LabelWithHint>
+                <Input
+                  id="edit_sort"
+                  type="number"
+                  value={editTarget.sort_order}
+                  onChange={(e) => setEditTarget({ ...editTarget, sort_order: Number(e.target.value) || 0 })}
+                  className="mt-1.5"
+                />
+              </div>
+
+              <Label className="flex items-center gap-2 text-sm font-normal">
+                <Checkbox
+                  checked={editTarget.is_active}
+                  onCheckedChange={(v) => setEditTarget({ ...editTarget, is_active: v === true })}
+                />
+                Visible on the site
+                <FieldHint>Master switch. Uncheck to hide without deleting the file.</FieldHint>
+              </Label>
+            </div>
+          )}
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditTarget(null)} disabled={editSaving}>
+              Cancel
+            </Button>
+            <Button onClick={saveEdit} disabled={editSaving}>
+              {editSaving ? <Loader2 className="size-4 animate-spin" /> : "Save"}
             </Button>
           </DialogFooter>
         </DialogContent>

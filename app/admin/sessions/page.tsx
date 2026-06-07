@@ -10,25 +10,42 @@ type SessionWithJoins = {
   is_free_trial: boolean;
   meet_link: string | null;
   meet_status: "pending" | "created" | "failed" | null;
+  recording_url: string | null;
   teacher: { id: string; display_name: string } | null;
   category: { id: string; name: string } | null;
 };
 
-export default async function AdminSessionsPage() {
+export default async function AdminSessionsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ past?: string }>;
+}) {
   const { supabase } = await requireAdmin();
-  // eslint-disable-next-line react-hooks/purity -- Server Component, runs per request
-  const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { past } = await searchParams;
+  const showPast = past === "1";
+
+  // In "upcoming" mode show from 7 days ago (to catch recently-started sessions);
+  // in "past" mode show everything older than that window, up to 90 days back.
+  const cutoff = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const sessionQuery = supabase
+    .from("sessions")
+    .select(
+      `id, start_at, end_at, capacity, status, is_free_trial, meet_link, meet_status, recording_url,
+       teacher:teachers(id, display_name),
+       category:class_categories(id, name)`
+    )
+    .order("start_at", { ascending: !showPast })
+    .limit(200);
+
+  if (showPast) {
+    sessionQuery.lt("start_at", cutoff);
+  } else {
+    sessionQuery.gte("start_at", cutoff);
+  }
+
   const [{ data: sessions }, { data: teachers }, { data: categories }] = await Promise.all([
-    supabase
-      .from("sessions")
-      .select(
-        `id, start_at, end_at, capacity, status, is_free_trial, meet_link, meet_status,
-         teacher:teachers(id, display_name),
-         category:class_categories(id, name)`
-      )
-      .gte("start_at", since)
-      .order("start_at", { ascending: true })
-      .limit(100),
+    sessionQuery,
     supabase
       .from("teachers")
       .select("id, display_name")
@@ -47,6 +64,7 @@ export default async function AdminSessionsPage() {
         sessions={(sessions as unknown as SessionWithJoins[]) ?? []}
         teachers={teachers ?? []}
         categories={categories ?? []}
+        showPast={showPast}
       />
     </div>
   );

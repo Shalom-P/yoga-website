@@ -17,12 +17,22 @@ export async function POST(req: Request) {
   // conflict timing the way they could with a direct upsert.
   try {
     const supabase = await createSupabaseServerClient();
-    await supabase.rpc("subscribe_newsletter", {
+    const { error } = await supabase.rpc("subscribe_newsletter", {
       p_email: parsed.data.email.toLowerCase(),
       p_source: parsed.data.source ?? "",
     });
-  } catch {
-    // Supabase not configured (dev) — no-op so the form still feels responsive.
+    if (error) {
+      // Log for monitoring but still return a generic OK so callers can't probe
+      // for existing emails via error timing. A persistent error means the
+      // RPC/DB needs attention.
+      console.error("[newsletter] subscribe_newsletter failed:", error.message);
+    }
+  } catch (err) {
+    // Supabase genuinely not configured (dev/preview) — silent no-op. If env IS
+    // present this is unexpected, so surface it in logs.
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      console.error("[newsletter] unexpected error:", err);
+    }
   }
   return NextResponse.json({ ok: true });
 }

@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Loader2 } from "lucide-react";
+import { Loader2, Trash2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -12,7 +12,7 @@ type Props = {
   initial: TeacherAvailability[];
 };
 
-const HOURS = Array.from({ length: 12 }, (_, i) => 6 + i); // 06..17
+const HOURS = Array.from({ length: 18 }, (_, i) => 5 + i); // 05..22
 const DAYS = [
   { dow: 0, label: "Sun" },
   { dow: 1, label: "Mon" },
@@ -33,6 +33,10 @@ function timeKey(dow: number, hour: number) {
 export function AvailabilityGrid({ teacherId, initial }: Props) {
   const supabase = createSupabaseBrowserClient();
 
+  // Custom rows whose deletions are tracked locally so the list updates without a full refresh.
+  const [deletedCustomIds, setDeletedCustomIds] = useState<Set<string>>(new Set());
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
+
   // Map cellKey -> rowId for one-hour windows we can edit in the grid.
   // Custom-duration / cross-hour rows are left untouched and surfaced below.
   const [cells, setCells] = useState<Map<string, string>>(() => {
@@ -47,8 +51,8 @@ export function AvailabilityGrid({ teacherId, initial }: Props) {
         endM === 0 &&
         r.slot_duration_minutes === 60 &&
         endH - startH === 1 &&
-        startH >= 6 &&
-        startH <= 17
+        startH >= 5 &&
+        startH <= 22
       ) {
         m.set(timeKey(r.day_of_week, startH), r.id);
       }
@@ -59,6 +63,7 @@ export function AvailabilityGrid({ teacherId, initial }: Props) {
   const customRows = useMemo(
     () =>
       initial.filter((r) => {
+        if (deletedCustomIds.has(r.id)) return false;
         const startH = Number(r.start_time.slice(0, 2));
         const startM = Number(r.start_time.slice(3, 5));
         const endH = Number(r.end_time.slice(0, 2));
@@ -68,12 +73,24 @@ export function AvailabilityGrid({ teacherId, initial }: Props) {
           endM === 0 &&
           r.slot_duration_minutes === 60 &&
           endH - startH === 1 &&
-          startH >= 6 &&
-          startH <= 17
+          startH >= 5 &&
+          startH <= 22
         );
       }),
-    [initial]
+    [initial, deletedCustomIds]
   );
+
+  async function deleteCustomRow(id: string) {
+    setPendingDeleteId(id);
+    const { error } = await supabase.from("teacher_availability").delete().eq("id", id);
+    setPendingDeleteId(null);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success("Availability window removed.");
+    setDeletedCustomIds((prev) => new Set(prev).add(id));
+  }
 
   const [pending, setPending] = useState<Set<string>>(new Set());
 
@@ -185,18 +202,38 @@ export function AvailabilityGrid({ teacherId, initial }: Props) {
 
       {customRows.length > 0 && (
         <div className="mt-6 rounded-xl border border-border bg-muted/30 p-4 text-xs">
-          <div className="font-medium mb-1">Custom windows (not editable in the grid)</div>
-          <ul className="text-muted-foreground space-y-1">
-            {customRows.map((r) => (
-              <li key={r.id}>
-                {DAYS.find((d) => d.dow === r.day_of_week)?.label} ·{" "}
-                {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)} ({r.slot_duration_minutes} min slots)
-              </li>
-            ))}
+          <div className="font-medium mb-2">Custom windows (not editable in the grid)</div>
+          <ul className="space-y-1.5">
+            {customRows.map((r) => {
+              const isDeleting = pendingDeleteId === r.id;
+              return (
+                <li key={r.id} className="flex items-center justify-between gap-2">
+                  <span className="text-muted-foreground">
+                    {DAYS.find((d) => d.dow === r.day_of_week)?.label} ·{" "}
+                    {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}{" "}
+                    ({r.slot_duration_minutes} min slots)
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => deleteCustomRow(r.id)}
+                    disabled={isDeleting}
+                    aria-label="Delete this custom window"
+                    className="flex items-center gap-1 rounded px-1.5 py-0.5 text-destructive hover:bg-destructive/10 transition-colors disabled:opacity-50"
+                  >
+                    {isDeleting ? (
+                      <Loader2 className="size-3 animate-spin" />
+                    ) : (
+                      <Trash2 className="size-3" />
+                    )}
+                    <span>Delete</span>
+                  </button>
+                </li>
+              );
+            })}
           </ul>
-          <p className="mt-2">
-            These were created outside the grid (e.g., a 90-minute Sunday workshop). Edit them
-            directly in the database for now.
+          <p className="mt-2 text-muted-foreground">
+            These were created outside the grid (e.g., a 90-minute Sunday workshop). To create new
+            custom windows use the Date overrides section below.
           </p>
         </div>
       )}

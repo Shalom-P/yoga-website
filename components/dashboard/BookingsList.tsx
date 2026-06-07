@@ -279,7 +279,7 @@ function RowActions({
           </span>
         )}
         <Button asChild size="sm" variant="outline" className="h-8 rounded-full px-3 text-xs">
-          <Link href="/dashboard/book">Reschedule</Link>
+          <Link href="/dashboard/book">Book another</Link>
         </Button>
         <Button
           size="sm"

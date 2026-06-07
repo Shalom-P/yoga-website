@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { motion, useScroll, useTransform } from "motion/react";
 import { useRef } from "react";
 import { Star } from "lucide-react";
@@ -59,20 +60,32 @@ export function TeacherCarousel({ teachers }: { teachers: Teacher[] }) {
                 className="block w-[260px] sm:w-[300px] group"
               >
                 <div className="relative aspect-[3/4] rounded-3xl bg-gradient-to-br from-primary/20 via-accent/10 to-secondary border border-border/60 overflow-hidden transition-transform duration-500 group-hover:scale-[1.02]">
-                  {/* Stylised silhouette placeholder until photos are uploaded */}
-                  <svg viewBox="0 0 300 400" className="absolute inset-0 size-full text-primary">
-                    <circle cx="150" cy="135" r="48" fill="currentColor" opacity="0.6" />
-                    <path
-                      d="M 60 240 Q 150 160 240 240 Q 260 320 220 360 L 80 360 Q 40 320 60 240 Z"
-                      fill="currentColor"
-                      opacity="0.5"
+                  {t.avatar_url ? (
+                    <Image
+                      src={t.avatar_url}
+                      alt={t.display_name}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 640px) 260px, 300px"
                     />
-                  </svg>
-                  <div className="absolute top-4 left-4 inline-flex items-center gap-1 text-xs bg-background/85 backdrop-blur px-2.5 py-1 rounded-full">
-                    <Star className="size-3 fill-amber-400 text-amber-400" />
-                    <span className="font-medium">{Number(t.rating_avg).toFixed(1)}</span>
-                    <span className="text-muted-foreground">· {t.rating_count}</span>
-                  </div>
+                  ) : (
+                    /* Stylised silhouette placeholder until photos are uploaded */
+                    <svg viewBox="0 0 300 400" className="absolute inset-0 size-full text-primary">
+                      <circle cx="150" cy="135" r="48" fill="currentColor" opacity="0.6" />
+                      <path
+                        d="M 60 240 Q 150 160 240 240 Q 260 320 220 360 L 80 360 Q 40 320 60 240 Z"
+                        fill="currentColor"
+                        opacity="0.5"
+                      />
+                    </svg>
+                  )}
+                  {t.rating_count > 0 && (
+                    <div className="absolute top-4 left-4 inline-flex items-center gap-1 text-xs bg-background/85 backdrop-blur px-2.5 py-1 rounded-full">
+                      <Star className="size-3 fill-amber-400 text-amber-400" />
+                      <span className="font-medium">{Number(t.rating_avg).toFixed(1)}</span>
+                      <span className="text-muted-foreground">· {t.rating_count}</span>
+                    </div>
+                  )}
                 </div>
                 <div className="mt-4 px-1">
                   <div className="font-medium text-base">{t.display_name}</div>

@@ -33,6 +33,8 @@ type Draft = {
   specialties: string;
   languages: string;
   years_experience: number;
+  certifications: string;
+  sort_order: number;
   timezone: string;
   google_calendar_id: string;
   avatar_url: string | null;
@@ -42,6 +44,12 @@ type Draft = {
 };
 
 function toDraft(t: Teacher | null): Draft {
+  const certs = t?.certifications;
+  const certLines = Array.isArray(certs)
+    ? (certs as string[]).join("\n")
+    : typeof certs === "string"
+    ? certs
+    : "";
   return {
     id: t?.id,
     slug: t?.slug ?? "",
@@ -51,6 +59,8 @@ function toDraft(t: Teacher | null): Draft {
     specialties: (t?.specialties ?? []).join(", "),
     languages: (t?.languages ?? []).join(", "),
     years_experience: t?.years_experience ?? 0,
+    certifications: certLines,
+    sort_order: t?.sort_order ?? 0,
     timezone: t?.timezone ?? "Asia/Kolkata",
     google_calendar_id: t?.google_calendar_id ?? "",
     avatar_url: t?.avatar_url ?? null,
@@ -100,6 +110,11 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
     }
 
     setSaving(true);
+    const certifications: string[] = draft.certifications
+      .split("\n")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
     const payload = {
       slug,
       display_name: draft.display_name,
@@ -114,6 +129,8 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
         .map((s) => s.trim())
         .filter(Boolean),
       years_experience: draft.years_experience,
+      certifications,
+      sort_order: draft.sort_order,
       timezone: draft.timezone || "Asia/Kolkata",
       google_calendar_id: draft.google_calendar_id || null,
       avatar_url: draft.avatar_url,
@@ -290,6 +307,40 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
 
           <div className="grid grid-cols-2 gap-3">
             <div>
+              <LabelWithHint
+                htmlFor="certifications"
+                hint="One certification per line. Stored as a JSON array; shown on the teacher's profile page."
+              >
+                Certifications (one per line)
+              </LabelWithHint>
+              <Textarea
+                id="certifications"
+                value={draft.certifications}
+                onChange={(e) => setDraft({ ...draft, certifications: e.target.value })}
+                rows={3}
+                placeholder={"RYT-200 (Yoga Alliance)\nAyurvedic Yoga Specialist"}
+                className="mt-1.5"
+              />
+            </div>
+            <div>
+              <LabelWithHint
+                htmlFor="sort_order"
+                hint="Lower numbers appear first on the /teachers listing. Default 0."
+              >
+                Sort order
+              </LabelWithHint>
+              <Input
+                id="sort_order"
+                type="number"
+                value={draft.sort_order}
+                onChange={(e) => setDraft({ ...draft, sort_order: Number(e.target.value) || 0 })}
+                className="mt-1.5"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-3">
+            <div>
               <LabelWithHint hint="Square headshot shown on teacher cards and the booking page. JPG/PNG, ideally 600×600.">
                 Avatar photo
               </LabelWithHint>
@@ -297,6 +348,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
                 bucket={TEACHER_MEDIA_BUCKET}
                 folder={`avatars/${draft.slug || "new"}`}
                 accept="image"
+                maxSizeMb={10}
                 value={draft.avatar_url}
                 onChange={(url) => setDraft({ ...draft, avatar_url: url })}
                 disabled={saving}
@@ -310,6 +362,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
                 bucket={TEACHER_MEDIA_BUCKET}
                 folder={`covers/${draft.slug || "new"}`}
                 accept="image"
+                maxSizeMb={10}
                 value={draft.cover_image_url}
                 onChange={(url) => setDraft({ ...draft, cover_image_url: url })}
                 disabled={saving}
@@ -318,13 +371,14 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
           </div>
 
           <div>
-            <LabelWithHint hint="Short (30–60s) intro video where the teacher introduces themselves. MP4, served from Supabase Storage.">
+            <LabelWithHint hint="Short (30–60s) intro video where the teacher introduces themselves. MP4 or WebM, up to 100 MB, served from Supabase Storage.">
               Intro video
             </LabelWithHint>
             <MediaUploadField
               bucket={TEACHER_MEDIA_BUCKET}
               folder={`intros/${draft.slug || "new"}`}
               accept="video"
+              maxSizeMb={100}
               value={draft.intro_video_url}
               onChange={(url) => setDraft({ ...draft, intro_video_url: url })}
               disabled={saving}

@@ -64,6 +64,16 @@ export type TeacherAvailability = {
   created_at: string;
   updated_at: string;
 }
+export type TeacherSlotOverride = {
+  id: string;
+  teacher_id: string;
+  date: string;
+  start_time: string | null;
+  end_time: string | null;
+  is_blocked: boolean;
+  reason: string | null;
+  created_at: string;
+}
 export type ClassCategory = {
   id: string;
   slug: string;
@@ -242,6 +252,7 @@ export type Database = {
       profiles: Table<Profile, Partial<Profile> & { id: string }>;
       teachers: Table<Teacher, Partial<Teacher> & { slug: string; display_name: string }>;
       teacher_availability: Table<TeacherAvailability, Partial<TeacherAvailability> & { teacher_id: string; day_of_week: number; start_time: string; end_time: string }>;
+      teacher_slot_overrides: Table<TeacherSlotOverride, Partial<TeacherSlotOverride> & { teacher_id: string; date: string }>;
       class_categories: Table<ClassCategory, Partial<ClassCategory> & { slug: string; name: string }>;
       sessions: Table<Session, Partial<Session> & { teacher_id: string; start_at: string; end_at: string }>;
       bookings: Table<Booking, Partial<Booking> & { session_id: string; customer_id: string }>;
@@ -279,6 +290,7 @@ export type Database = {
         };
       };
       promote_to_admin: { Args: { target_user_id: string }; Returns: null };
+      demote_from_admin: { Args: { target_user_id: string }; Returns: null };
       is_admin: { Args: { uid: string }; Returns: boolean };
       apply_discount_to_subscription: { Args: { p_subscription_id: string }; Returns: null };
       subscribe_newsletter: { Args: { p_email: string; p_source: string }; Returns: null };

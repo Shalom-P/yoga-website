@@ -115,7 +115,7 @@ function NextClassCard({
             </Link>
           </Button>
           <Button asChild variant="outline" size="lg" className="h-11 rounded-full">
-            <Link href="/teachers">Browse teachers</Link>
+            <Link href="/dashboard/book">Browse teachers</Link>
           </Button>
         </div>
         <div className="mt-6 text-xs text-muted-foreground flex items-center gap-2">

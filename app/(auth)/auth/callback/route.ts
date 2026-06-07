@@ -23,6 +23,22 @@ export async function GET(request: Request) {
     if (error) {
       return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin));
     }
+    // Check whether onboarding is complete. If experience_level is NULL the user
+    // hasn't finished onboarding yet — redirect there instead of straight to the
+    // dashboard. Preserve an explicit ?next= so we can bounce them on to their
+    // original destination after onboarding finishes.
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("experience_level")
+        .eq("id", user.id)
+        .single();
+      if (!profile?.experience_level) {
+        const onboardingNext = next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : "";
+        return NextResponse.redirect(new URL(`/onboarding${onboardingNext}`, url.origin));
+      }
+    }
   }
   return NextResponse.redirect(new URL(next, url.origin));
 }

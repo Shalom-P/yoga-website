@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getFeaturedTeachers } from "@/lib/data/landing";
@@ -25,18 +26,30 @@ export default async function BookPage() {
             className="rounded-3xl border border-border bg-card p-5 flex flex-col gap-4"
           >
             <div className="relative aspect-[5/4] rounded-2xl bg-gradient-to-br from-primary/15 to-accent/10 overflow-hidden">
-              <svg viewBox="0 0 300 240" className="absolute inset-0 size-full text-primary">
-                <circle cx="150" cy="100" r="38" fill="currentColor" opacity="0.6" />
-                <path
-                  d="M 70 200 Q 150 130 230 200 Q 240 230 200 240 L 100 240 Q 60 230 70 200 Z"
-                  fill="currentColor"
-                  opacity="0.5"
+              {t.avatar_url ? (
+                <Image
+                  src={t.avatar_url}
+                  alt={t.display_name}
+                  fill
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  className="object-cover"
                 />
-              </svg>
-              <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-xs bg-background/85 backdrop-blur px-2 py-0.5 rounded-full">
-                <Star className="size-3 fill-amber-400 text-amber-400" />
-                <span className="font-medium">{Number(t.rating_avg).toFixed(1)}</span>
-              </div>
+              ) : (
+                <svg viewBox="0 0 300 240" className="absolute inset-0 size-full text-primary">
+                  <circle cx="150" cy="100" r="38" fill="currentColor" opacity="0.6" />
+                  <path
+                    d="M 70 200 Q 150 130 230 200 Q 240 230 200 240 L 100 240 Q 60 230 70 200 Z"
+                    fill="currentColor"
+                    opacity="0.5"
+                  />
+                </svg>
+              )}
+              {t.rating_count > 0 && (
+                <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-xs bg-background/85 backdrop-blur px-2 py-0.5 rounded-full">
+                  <Star className="size-3 fill-amber-400 text-amber-400" />
+                  <span className="font-medium">{Number(t.rating_avg).toFixed(1)}</span>
+                </div>
+              )}
             </div>
             <div>
               <div className="font-medium">{t.display_name}</div>

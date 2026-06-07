@@ -88,14 +88,27 @@ export function CurrentSubscription({
               </div>
             )}
           </div>
-          <Button
-            variant="outline"
-            className="rounded-full"
-            onClick={() => setOpen(true)}
-            disabled={status !== "active"}
-          >
-            Cancel subscription
-          </Button>
+          <div className="flex flex-col gap-2 sm:items-end">
+            {status === "suspended" && (
+              <Button asChild className="rounded-full">
+                <a
+                  href="https://www.paypal.com/myaccount/autopay/"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Update payment in PayPal
+                </a>
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              className="rounded-full"
+              onClick={() => setOpen(true)}
+              disabled={status !== "active"}
+            >
+              Cancel subscription
+            </Button>
+          </div>
         </div>
       </div>
 

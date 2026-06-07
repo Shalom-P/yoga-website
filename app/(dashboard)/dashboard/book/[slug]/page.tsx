@@ -35,6 +35,16 @@ export default async function TeacherBookingPage({
     .eq("id", user.id)
     .maybeSingle();
 
+  // Members (active subscription) book paid sessions; everyone else books the
+  // free 1:1 trial. This drives `isFreeTrial` in the picker.
+  const { data: activeSub } = await supabase
+    .from("subscriptions")
+    .select("id")
+    .eq("customer_id", user.id)
+    .eq("status", "active")
+    .limit(1)
+    .maybeSingle();
+
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
       <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
@@ -62,6 +72,7 @@ export default async function TeacherBookingPage({
         customerTimezone={profile?.timezone ?? "Australia/Sydney"}
         customerPhone={profile?.phone ?? null}
         availability={availability ?? []}
+        isMember={Boolean(activeSub)}
       />
     </div>
   );

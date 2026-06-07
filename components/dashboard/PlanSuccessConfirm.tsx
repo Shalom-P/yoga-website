@@ -11,14 +11,10 @@ type State = "loading" | "ok" | "pending" | "error";
 export function PlanSuccessConfirm() {
   const params = useSearchParams();
   const subscriptionId = params.get("subscription_id");
-  const [state, setState] = useState<State>("loading");
-  const [statusLabel, setStatusLabel] = useState<string | null>(null);
+  const [state, setState] = useState<State>(subscriptionId ? "loading" : "error");
 
   useEffect(() => {
-    if (!subscriptionId) {
-      setState("error");
-      return;
-    }
+    if (!subscriptionId) return;
     fetch("/api/paypal/confirm-subscription", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -30,7 +26,6 @@ export function PlanSuccessConfirm() {
           return;
         }
         const data = (await r.json()) as { status?: string };
-        setStatusLabel(data.status ?? null);
         setState(data.status === "active" ? "ok" : "pending");
       })
       .catch(() => setState("error"));
@@ -70,8 +65,7 @@ export function PlanSuccessConfirm() {
           Almost there.
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          PayPal is finalising your subscription. We&apos;ll email you the moment it activates
-          {statusLabel ? ` (status: ${statusLabel})` : ""}.
+          PayPal is finalising your subscription. We&apos;ll email you the moment it activates.
         </p>
         <Button asChild variant="outline" className="rounded-full mt-6">
           <Link href="/dashboard">Go to dashboard</Link>

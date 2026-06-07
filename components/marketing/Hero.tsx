@@ -104,9 +104,14 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                 ))}
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <span className="tracking-[1px] text-accent">★★★★★</span>
+                {trustRating && (
+                  <span className="tracking-[1px] text-accent">★★★★★</span>
+                )}
                 <span>
-                  <strong className="text-foreground">{trustRating}</strong> · {trustCount}
+                  {trustRating && (
+                    <><strong className="text-foreground">{trustRating}</strong> · </>
+                  )}
+                  {trustCount}
                 </span>
               </div>
             </motion.div>
@@ -143,7 +148,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                 </g>
               </svg>
               <span className="absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-border bg-card px-3 py-1 text-[11px] text-muted-foreground">
-                your teacher · live, mid-pose
+                Your private session
               </span>
             </div>
 
@@ -158,13 +163,13 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
             {/* Floating "next session" card */}
             <div className="myc-float2 absolute bottom-[8%] right-[-18px] max-w-[230px] rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--myc-shadow-soft)]">
               <div className="mb-1 text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
-                Next available 1:1
+                Example session
               </div>
               <div className="font-[family-name:var(--font-cormorant)] text-xl font-semibold leading-tight">
                 Gentle Hatha with Aarti
               </div>
               <div className="mt-0.5 text-[13px] text-muted-foreground">
-                Tomorrow · 7:30 AM AEST · 60 min
+                Your chosen time · 60 min
               </div>
             </div>
           </motion.div>

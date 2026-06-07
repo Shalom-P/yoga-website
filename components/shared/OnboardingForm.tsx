@@ -3,13 +3,14 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { AU_TIMEZONES, detectBrowserTimezone } from "@/lib/timezone";
+import { AU_TIMEZONES, detectBrowserTimezone, DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { track } from "@/lib/analytics/events";
 
 const GOALS = [
@@ -22,9 +23,17 @@ const GOALS = [
   "Meditation / focus",
 ] as const;
 
+// Fix 5: clamp a detected timezone to the AU list, falling back to Sydney.
+function clampToAuTz(detected: string): string {
+  return AU_TIMEZONES.some((z) => z.id === detected) ? detected : DEFAULT_CUSTOMER_TZ;
+}
+
 export function OnboardingForm() {
   const router = useRouter();
-  const [tz, setTz] = useState(detectBrowserTimezone());
+  // Fix 2: full name field state
+  const [fullName, setFullName] = useState("");
+  // Fix 5: clamp detected timezone to the AU list
+  const [tz, setTz] = useState(() => clampToAuTz(detectBrowserTimezone()));
   const [level, setLevel] = useState("beginner");
   const [goals, setGoals] = useState<string[]>([]);
   const [marketing, setMarketing] = useState(true);
@@ -37,9 +46,16 @@ export function OnboardingForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Fix 2: validate full name before proceeding
+    if (!fullName.trim()) {
+      toast.error("Please enter your full name.");
+      return;
+    }
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
+      // Fix 6: reset loading before early return so button isn't stuck
+      setLoading(false);
       toast.error("Session expired — please log in again.");
       router.push("/login");
       return;
@@ -47,6 +63,8 @@ export function OnboardingForm() {
     const { error } = await supabase
       .from("profiles")
       .update({
+        // Fix 2: persist full name
+        full_name: fullName.trim(),
         timezone: tz,
         experience_level: level as "beginner" | "intermediate" | "advanced",
         goals,
@@ -62,6 +80,23 @@ export function OnboardingForm() {
 
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-7">
+      {/* Fix 2: Full name field — required for phone-OTP users who have no name */}
+      <div>
+        <Label htmlFor="full-name" className="mb-2 block">
+          Full name <span aria-hidden="true" className="text-destructive">*</span>
+        </Label>
+        <Input
+          id="full-name"
+          type="text"
+          autoComplete="name"
+          required
+          value={fullName}
+          onChange={(e) => setFullName(e.target.value)}
+          placeholder="Your full name"
+          className="h-11"
+        />
+      </div>
+
       <div>
         <LabelWithHint
           className="mb-2"
