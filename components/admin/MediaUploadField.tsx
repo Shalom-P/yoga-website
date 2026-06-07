@@ -30,6 +30,48 @@ type Props = {
 };
 
 /**
+ * Downscale + re-encode an image to JPEG entirely in the browser before upload.
+ * This is what makes real phone photos work: a 12-megapixel JPEG/HEIC is often
+ * 10-30 MB, which the fixed size cap used to reject outright — leaving every
+ * teacher's avatar_url null. Re-encoding also flattens Apple HEIC (which only
+ * Safari can render) into a universally-viewable JPEG. Throws if the browser
+ * can't decode the file, so the caller can fall back to the original bytes.
+ */
+async function downscaleImage(file: File, maxEdge = 1600, quality = 0.85): Promise<Blob> {
+  const url = URL.createObjectURL(file);
+  try {
+    const img = document.createElement("img");
+    await new Promise<void>((resolve, reject) => {
+      img.onload = () => resolve();
+      img.onerror = () => reject(new Error("decode failed"));
+      img.src = url;
+    });
+    const nw = img.naturalWidth;
+    const nh = img.naturalHeight;
+    if (!nw || !nh) throw new Error("zero dimensions");
+    const scale = Math.min(1, maxEdge / Math.max(nw, nh));
+    const w = Math.max(1, Math.round(nw * scale));
+    const h = Math.max(1, Math.round(nh * scale));
+    const canvas = document.createElement("canvas");
+    canvas.width = w;
+    canvas.height = h;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) throw new Error("no 2d context");
+    // White matte so transparent PNGs don't flatten to black under JPEG.
+    ctx.fillStyle = "#ffffff";
+    ctx.fillRect(0, 0, w, h);
+    ctx.drawImage(img, 0, 0, w, h);
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", quality),
+    );
+    if (!blob) throw new Error("encode failed");
+    return blob;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+}
+
+/**
  * Generic single-file Storage upload tile. Renders a preview thumbnail when a
  * value is set, otherwise a "Choose file" picker. Used by TeacherFormDialog
  * for avatar / cover / intro_video.
@@ -48,44 +90,62 @@ export function MediaUploadField({
   const [uploading, setUploading] = useState(false);
 
   async function handleFile(file: File) {
-    // Reject oversize files up front so the admin gets an actionable message
-    // instead of an opaque server 413 mid-upload.
-    if (maxSizeMb && file.size > maxSizeMb * 1024 * 1024) {
-      toast.error(
-        `That ${accept} is ${(file.size / 1024 / 1024).toFixed(0)} MB — the limit is ${maxSizeMb} MB. Compress or trim it and try again.`,
-      );
-      if (inputRef.current) inputRef.current.value = "";
-      return;
-    }
-
     setUploading(true);
-    const ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
-    const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+    try {
+      // Images get downscaled + re-encoded to JPEG in the browser first, so a
+      // large phone photo or HEIC turns into a small, viewable upload. If the
+      // browser can't decode it (e.g. HEIC outside Safari), fall back to the
+      // original bytes and let the size guard below decide.
+      let blob: Blob = file;
+      let ext = file.name.split(".").pop()?.toLowerCase() ?? "bin";
+      if (accept === "image") {
+        try {
+          blob = await downscaleImage(file);
+          ext = "jpg";
+        } catch {
+          blob = file;
+        }
+      }
 
-    const { error: uploadErr } = await supabase.storage.from(bucket).upload(path, file, {
-      cacheControl: "3600",
-      upsert: false,
-      contentType: file.type || undefined,
-    });
-    setUploading(false);
+      // Size guard runs on the *final* bytes, so a compressed photo sails
+      // through and only a giant, un-compressible original is rejected — with
+      // an actionable message instead of an opaque server 413 mid-upload.
+      if (maxSizeMb && blob.size > maxSizeMb * 1024 * 1024) {
+        toast.error(
+          `That ${accept} is ${(blob.size / 1024 / 1024).toFixed(0)} MB — the limit is ${maxSizeMb} MB. Compress or trim it and try again.`,
+        );
+        return;
+      }
 
-    if (uploadErr) {
-      const msg = uploadErr.message ?? "";
-      const isRlsOrMissing =
-        /row-level security|bucket not found|Bucket not found/i.test(msg);
-      const isTooLarge =
-        /maximum allowed size|payload too large|exceeded the maximum|413/i.test(msg);
-      toast.error(
-        isTooLarge
-          ? `Upload too large: this ${accept} exceeds the storage limit. Raise the bucket limit (supabase/migrations/0009_storage_limits.sql) and the project-wide cap in Supabase → Project Settings → Storage.`
-          : isRlsOrMissing
-            ? `Upload blocked: the "${bucket}" bucket isn't set up yet. Apply supabase/migrations/0008_storage_buckets.sql in the Supabase SQL editor.`
-            : `Upload failed: ${msg}`,
-      );
-      return;
+      const path = `${folder}/${crypto.randomUUID()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage.from(bucket).upload(path, blob, {
+        cacheControl: "3600",
+        upsert: false,
+        contentType: blob.type || file.type || undefined,
+      });
+
+      if (uploadErr) {
+        const msg = uploadErr.message ?? "";
+        const isRlsOrMissing =
+          /row-level security|bucket not found|Bucket not found/i.test(msg);
+        const isTooLarge =
+          /maximum allowed size|payload too large|exceeded the maximum|413/i.test(msg);
+        toast.error(
+          isTooLarge
+            ? `Upload too large: this ${accept} exceeds the storage limit. Raise the bucket limit (supabase/migrations/0009_storage_limits.sql) and the project-wide cap in Supabase → Project Settings → Storage.`
+            : isRlsOrMissing
+              ? `Upload blocked: the "${bucket}" bucket isn't set up yet. Apply supabase/migrations/0008_storage_buckets.sql in the Supabase SQL editor.`
+              : `Upload failed: ${msg}`,
+        );
+        return;
+      }
+      const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
+      onChange(pub.publicUrl);
+    } finally {
+      setUploading(false);
+      // Reset the picker so re-selecting the same file (after an error) re-fires onChange.
+      if (inputRef.current) inputRef.current.value = "";
     }
-    const { data: pub } = supabase.storage.from(bucket).getPublicUrl(path);
-    onChange(pub.publicUrl);
   }
 
   function clear() {
