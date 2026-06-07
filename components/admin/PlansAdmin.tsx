@@ -71,8 +71,6 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [saving, setSaving] = useState(false);
-  const [syncing, setSyncing] = useState<string | null>(null);
-  const [resyncing, setResyncing] = useState<string | null>(null);
 
   function openAdd() {
     setDraft({ ...EMPTY, features: [{ feature_text: "", is_included: true }] });
@@ -181,53 +179,6 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
     router.refresh();
   }
 
-  async function syncToPaypal(planId: string) {
-    setSyncing(planId);
-    try {
-      const res = await fetch("/api/paypal/sync-plan", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({ planId }),
-      });
-      const body = (await res.json().catch(() => ({}))) as {
-        paypalPlanId?: string;
-        error?: string;
-      };
-      if (!res.ok || !body.paypalPlanId) {
-        toast.error(
-          body.error === "paypal_product_failed" || body.error === "paypal_plan_failed"
-            ? "PayPal rejected the sync. Check the price and try again."
-            : `Sync failed: ${body.error ?? "unknown"}`
-        );
-        return;
-      }
-      toast.success(`Synced. PayPal plan ID: ${body.paypalPlanId}`);
-      router.refresh();
-    } catch {
-      toast.error("Network error.");
-    } finally {
-      setSyncing(null);
-    }
-  }
-
-  async function resyncToPaypal(planId: string) {
-    setResyncing(planId);
-    try {
-      // Clear the existing paypal_plan_id so the sync endpoint creates a fresh one.
-      const { error: clearErr } = await supabase
-        .from("plans")
-        .update({ paypal_plan_id: null })
-        .eq("id", planId);
-      if (clearErr) {
-        toast.error(`Couldn't clear PayPal plan ID: ${clearErr.message}`);
-        return;
-      }
-      await syncToPaypal(planId);
-    } finally {
-      setResyncing(null);
-    }
-  }
-
   function updateFeature(i: number, patch: Partial<FeatureDraft>) {
     setDraft((d) => ({
       ...d,
@@ -273,9 +224,6 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
               {formatAud(p.price_aud_cents)}
               <span className="text-sm text-muted-foreground">/{p.billing_interval}</span>
             </div>
-            <div className="mt-1 text-xs text-muted-foreground break-all">
-              PayPal: {p.paypal_plan_id ?? "— (not synced)"}
-            </div>
             <ul className="mt-5 space-y-1.5 text-sm">
               {p.features?.map((f) => (
                 <li key={f.id} className="flex gap-2 items-start">
@@ -292,42 +240,6 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
               <Button size="sm" variant="outline" className="rounded-full" onClick={() => openEdit(p)}>
                 Edit
               </Button>
-              {p.paypal_plan_id ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => resyncToPaypal(p.id)}
-                  disabled={resyncing === p.id || syncing === p.id}
-                  title="Clear the stored PayPal plan ID and create a new one (needed after price changes)"
-                >
-                  {resyncing === p.id || syncing === p.id ? (
-                    <>
-                      <Loader2 className="size-3.5 animate-spin mr-1" />
-                      Re-syncing…
-                    </>
-                  ) : (
-                    "Re-sync PayPal"
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="rounded-full"
-                  onClick={() => syncToPaypal(p.id)}
-                  disabled={syncing === p.id}
-                >
-                  {syncing === p.id ? (
-                    <>
-                      <Loader2 className="size-3.5 animate-spin mr-1" />
-                      Syncing…
-                    </>
-                  ) : (
-                    "Sync to PayPal"
-                  )}
-                </Button>
-              )}
             </div>
           </div>
         ))}
@@ -339,8 +251,8 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
             <DialogTitle>{draft.id ? "Edit plan" : "Add plan"}</DialogTitle>
             <DialogDescription>
               {draft.id
-                ? "Update the plan details. Run 'Sync to PayPal' after price changes — PayPal plans are immutable, so you'll need to create a new PayPal plan to apply new pricing to new subscribers."
-                : "Create a new subscription plan. After saving, click 'Sync to PayPal' to register it for billing."}
+                ? "Update the pack details. Changes apply to new purchases immediately."
+                : "Create a new session pack — set its price and how many session-credits a purchase grants."}
             </DialogDescription>
           </DialogHeader>
 
@@ -349,7 +261,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
               <div>
                 <LabelWithHint
                   htmlFor="slug"
-                  hint="Stable identifier passed to /api/paypal/create-subscription. Don't change after launch."
+                  hint="Stable identifier used at checkout to resolve this pack's price. Don't change after launch."
                 >
                   Slug
                 </LabelWithHint>
@@ -398,7 +310,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
               <div>
                 <LabelWithHint
                   htmlFor="price"
-                  hint="Recurring price in AUD per billing cycle. Stored as integer cents. PayPal plans are immutable — bumping the price creates a new PayPal plan on Sync."
+                  hint="One-time price of this pack in AUD. Stored as integer cents."
                 >
                   Price (AUD)
                 </LabelWithHint>

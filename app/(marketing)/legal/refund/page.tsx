@@ -23,50 +23,37 @@ export default function RefundPage() {
             <h2 className="text-xl font-semibold text-foreground">1. Free introductory session</h2>
             <p>
               Your <strong>first 1:1 session is completely free</strong> — no credit card or
-              PayPal account is required to book it. If you choose not to continue after your
+              payment is required to book it. If you choose not to continue after your
               trial, simply do nothing; you will not be charged.
             </p>
           </section>
 
-          {/* 2. Subscription billing */}
+          {/* 2. Session pack payments */}
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">2. Subscription billing</h2>
+            <h2 className="text-xl font-semibold text-foreground">2. Session pack payments</h2>
             <p>
-              Paid subscriptions are billed in <strong>AUD via PayPal</strong> at the start of
-              each billing period (weekly, fortnightly, or monthly, depending on your chosen
-              plan). Your subscription renews automatically until you cancel.
+              Paid access is sold as <strong>one-time session packs in AUD via Razorpay</strong>.
+              You are charged once when you buy a pack — there is no subscription and no
+              automatic recurring charge.
             </p>
             <p>
-              You will receive an email receipt from PayPal each time a payment is processed.
-              If you believe a charge is incorrect, contact us within 30 days of the billing
-              date.
+              You will receive an email receipt each time a payment is processed. If you believe
+              a charge is incorrect, contact us within 30 days of the purchase date.
             </p>
           </section>
 
-          {/* 3. Cancellation and access */}
+          {/* 3. Unused credits */}
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">
-              3. Cancellation and access after cancellation
-            </h2>
+            <h2 className="text-xl font-semibold text-foreground">3. Unused credits</h2>
             <p>
-              You may cancel your subscription at any time from your account dashboard or by
-              emailing{" "}
-              <a className="underline" href="mailto:hello@myyogaclasses.fit">
-                hello@myyogaclasses.fit
-              </a>
-              .
+              Because packs are one-time purchases, there is no subscription to cancel and no
+              recurring charge to stop. Any session credits you have purchased remain on your
+              account until you use them.
             </p>
             <p>
-              When you cancel, your subscription remains active until the{" "}
-              <strong>end of the current paid billing period</strong>. You will retain full
-              access to the Service (including the ability to book sessions within your plan
-              allowance) until that date. After the period ends, your account reverts to
-              inactive and no further payments are taken.
-            </p>
-            <p>
-              We do <strong>not</strong> provide partial-period refunds for unused days or
-              sessions remaining in a billing period unless required by law (see Section 5
-              below).
+              We do <strong>not</strong> provide refunds for unused credits except as required
+              by law (see Section 5 below) or at our discretion. If you have a problem with a
+              purchase, please contact us — see Section 4.
             </p>
           </section>
 
@@ -89,8 +76,8 @@ export default function RefundPage() {
             <p>
               We will acknowledge your request within 2 business days and aim to resolve it
               within 10 business days. Where a refund is approved, funds are returned to your
-              original PayPal payment method. PayPal&apos;s own processing timelines apply once
-              a refund is initiated from our side.
+              original payment method via Razorpay. Razorpay&apos;s own processing timelines apply
+              once a refund is initiated from our side.
             </p>
           </section>
 
@@ -112,8 +99,8 @@ export default function RefundPage() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                A full or partial refund, or cancellation of the subscription with a refund of
-                the unused portion, in the case of a major failure; or
+                A full or partial refund, including a refund of unused credits, in the case
+                of a major failure; or
               </li>
               <li>
                 Rectification within a reasonable time, and a refund if rectification is not
