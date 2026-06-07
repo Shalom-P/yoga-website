@@ -70,6 +70,24 @@ function toDraft(t: Teacher | null): Draft {
   };
 }
 
+/**
+ * Bust the ISR cache on the marketing pages that render this teacher's media.
+ * The save below is a client-side Supabase write, so it can't call
+ * revalidatePath itself — this pings an admin-only route that does. Best-effort:
+ * if it fails, the pages' own `revalidate = 300` window is the fallback.
+ */
+async function revalidateMarketing(slug: string) {
+  try {
+    await fetch("/api/admin/revalidate", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slug }),
+    });
+  } catch {
+    // ignore — non-fatal
+  }
+}
+
 function slugify(s: string) {
   return s
     .toLowerCase()
@@ -141,8 +159,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
 
     if (draft.id) {
       const { error } = await supabase.from("teachers").update(payload).eq("id", draft.id);
+      if (error) {
+        setSaving(false);
+        return toast.error(error.message);
+      }
+      await revalidateMarketing(slug);
       setSaving(false);
-      if (error) return toast.error(error.message);
       toast.success("Teacher updated.");
       onOpenChange(false);
       router.refresh();
@@ -152,8 +174,12 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
         .insert(payload)
         .select("id")
         .single();
+      if (error || !data) {
+        setSaving(false);
+        return toast.error(error?.message ?? "Insert failed");
+      }
+      await revalidateMarketing(slug);
       setSaving(false);
-      if (error || !data) return toast.error(error?.message ?? "Insert failed");
       toast.success("Teacher added.");
       onOpenChange(false);
       if (redirectAfterCreate) router.push(`/admin/teachers/${data.id}`);
