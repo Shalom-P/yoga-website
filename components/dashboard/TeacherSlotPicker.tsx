@@ -34,8 +34,10 @@ type Props = {
   customerTimezone: string;
   customerPhone: string | null;
   availability: Availability[];
-  /** True when the customer has an active subscription → books paid sessions. */
-  isMember: boolean;
+  /** True until the customer has used their free 1:1 trial. */
+  freeTrialAvailable: boolean;
+  /** Session-credits available for paid bookings (after the trial is used). */
+  creditBalance: number;
 };
 
 function padHms(hms: string): string {
@@ -87,7 +89,8 @@ export function TeacherSlotPicker({
   customerTimezone,
   customerPhone,
   availability,
-  isMember,
+  freeTrialAvailable,
+  creditBalance,
 }: Props) {
   const router = useRouter();
   // Show slot times in the timezone the customer is actually in right now.
@@ -114,7 +117,14 @@ export function TeacherSlotPicker({
     return Array.from(buckets.entries()).slice(0, 7);
   }, [availability, teacherTimezone, customerTz]);
 
+  // Once the free trial is used, every booking is paid and spends a credit.
+  const isPaid = !freeTrialAvailable;
+
   function onSlotClick(slot: Slot) {
+    if (isPaid && creditBalance <= 0) {
+      setError("insufficient_credits");
+      return;
+    }
     if (hasPhone) book(slot);
     else setPendingSlot(slot);
   }
@@ -129,13 +139,13 @@ export function TeacherSlotPicker({
         teacherId,
         startAt: slot.at.toISOString(),
         durationMinutes: slot.durationMinutes,
-        isFreeTrial: !isMember,
+        isFreeTrial: freeTrialAvailable,
       }),
     });
     setBusy(null);
     if (res.ok) {
-      // Members go to their bookings; trial users get the plan upsell.
-      router.push(isMember ? "/dashboard/bookings?booked=1" : "/dashboard/plan?booked=1");
+      // Paid bookings go to the bookings list; the free trial gets the upsell.
+      router.push(isPaid ? "/dashboard/bookings?booked=1" : "/dashboard/plan?booked=1");
       return;
     }
     const body = (await res.json().catch(() => ({}))) as { error?: string };
@@ -198,11 +208,11 @@ export function TeacherSlotPicker({
                 <Link href="/dashboard/plan">View plans &amp; pricing</Link>
               </Button>
             </div>
-          ) : error === "subscription_required" ? (
+          ) : error === "insufficient_credits" ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <span>Your subscription isn&apos;t active. Choose a plan to book sessions.</span>
+              <span>You&apos;re out of session credits. Buy a pack to keep booking.</span>
               <Button asChild size="sm" className="shrink-0 rounded-full">
-                <Link href="/dashboard/plan">View plans &amp; pricing</Link>
+                <Link href="/dashboard/plan">Buy a pack</Link>
               </Button>
             </div>
           ) : error === "slot_taken" ? (

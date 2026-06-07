@@ -41,6 +41,7 @@ type Draft = {
   description: string;
   price_aud_cents: number;
   billing_interval: BillingInterval;
+  session_credits: number;
   included_sessions_per_month: number | null;
   included_session_types: string;
   sort_order: number;
@@ -55,6 +56,7 @@ const EMPTY: Draft = {
   description: "",
   price_aud_cents: 4900,
   billing_interval: "monthly",
+  session_credits: 4,
   included_sessions_per_month: null,
   included_session_types: "",
   sort_order: 0,
@@ -85,6 +87,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
       description: p.description ?? "",
       price_aud_cents: p.price_aud_cents,
       billing_interval: p.billing_interval,
+      session_credits: p.session_credits,
       included_sessions_per_month: p.included_sessions_per_month,
       included_session_types: (p.included_session_types ?? []).join(", "),
       sort_order: p.sort_order ?? 0,
@@ -118,6 +121,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
       description: draft.description || null,
       price_aud_cents: draft.price_aud_cents,
       billing_interval: draft.billing_interval,
+      session_credits: draft.session_credits,
       included_sessions_per_month: draft.included_sessions_per_month,
       included_session_types: draft.included_session_types
         .split(",")
@@ -433,6 +437,25 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
                   </SelectContent>
                 </Select>
               </div>
+            </div>
+
+            <div>
+              <LabelWithHint
+                htmlFor="session_credits"
+                hint="How many session-credits a customer receives when they buy this pack. Each paid booking spends one credit."
+              >
+                Session credits (per purchase)
+              </LabelWithHint>
+              <Input
+                id="session_credits"
+                type="number"
+                min={0}
+                value={draft.session_credits}
+                onChange={(e) =>
+                  setDraft({ ...draft, session_credits: Math.max(0, Number(e.target.value) || 0) })
+                }
+                className="mt-1.5"
+              />
             </div>
 
             <div>

@@ -59,21 +59,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "phone_required" }, { status: 400 });
   }
 
-  // Paid (non-trial) sessions require an active subscription. The free 1:1 trial
-  // does not. Without this, anyone could POST isFreeTrial:false and book paid
-  // sessions with no plan. Runs as the user (RLS-scoped to their own rows).
-  if (!parsed.data.isFreeTrial) {
-    const { data: activeSub } = await supabase
-      .from("subscriptions")
-      .select("id")
-      .eq("customer_id", user.id)
-      .eq("status", "active")
-      .limit(1)
-      .maybeSingle();
-    if (!activeSub) {
-      return NextResponse.json({ error: "subscription_required" }, { status: 403 });
-    }
-  }
+  // Paid (non-trial) sessions spend one session-credit, reserved after the slot
+  // is confirmed available (see below). The free 1:1 trial never spends credits.
 
   const start = new Date(parsed.data.startAt);
   if (Number.isNaN(start.getTime())) {
@@ -123,6 +110,21 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "slot_taken" }, { status: 409 });
   }
 
+  // Paid booking: reserve one session-credit now that the slot is free. Atomic
+  // (UPDATE ... WHERE balance > 0), so two concurrent bookings can't both spend
+  // the last credit. Refunded below if the session/booking insert fails.
+  if (!parsed.data.isFreeTrial) {
+    const { data: spent, error: spendErr } = await svc.rpc("spend_session_credit", {
+      p_customer: user.id,
+    });
+    if (spendErr) {
+      return NextResponse.json({ error: "credit_error" }, { status: 500 });
+    }
+    if (!spent) {
+      return NextResponse.json({ error: "insufficient_credits" }, { status: 402 });
+    }
+  }
+
   // Create the session — meet_status='pending' marks it for a Meet-link retry sweep
   // if the Google call below fails.
   const { data: session, error: sessionErr } = await svc
@@ -139,6 +141,9 @@ export async function POST(req: Request) {
     .select("id")
     .single();
   if (sessionErr || !session) {
+    if (!parsed.data.isFreeTrial) {
+      await svc.rpc("grant_session_credits", { p_customer: user.id, p_delta: 1, p_reason: "refund" });
+    }
     return NextResponse.json({ error: "session_create_failed" }, { status: 500 });
   }
 
@@ -155,8 +160,11 @@ export async function POST(req: Request) {
     .select("id")
     .single();
   if (bookingErr || !booking) {
-    // Roll back the session so the slot isn't orphaned.
+    // Roll back the session so the slot isn't orphaned, and refund the credit.
     await svc.from("sessions").delete().eq("id", session.id);
+    if (!parsed.data.isFreeTrial) {
+      await svc.rpc("grant_session_credits", { p_customer: user.id, p_delta: 1, p_reason: "refund" });
+    }
     const code = (bookingErr as { code?: string } | null)?.code;
     if (code === "23505") {
       return NextResponse.json({ error: "trial_already_claimed" }, { status: 409 });

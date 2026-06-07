@@ -1,77 +1,64 @@
 import { Suspense } from "react";
-import { PartyPopper, Info } from "lucide-react";
+import Link from "next/link";
+import { PartyPopper, CheckCircle2, Ticket } from "lucide-react";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { PlanAutoStart } from "@/components/dashboard/PlanAutoStart";
-import { CurrentSubscription } from "@/components/dashboard/CurrentSubscription";
+import { Button } from "@/components/ui/button";
 import { getPlansWithFeatures } from "@/lib/data/landing";
 import { requireUser } from "@/lib/auth/guards";
 
 export default async function PlanPage({
   searchParams,
 }: {
-  searchParams: Promise<{ booked?: string; canceled?: string }>;
+  searchParams: Promise<{ booked?: string; purchased?: string }>;
 }) {
-  const { booked, canceled } = await searchParams;
+  const { booked, purchased } = await searchParams;
   const { user, supabase } = await requireUser("/dashboard/plan");
-  const [{ data: subRow }, plans] = await Promise.all([
+  const [{ data: credits }, plans] = await Promise.all([
     supabase
-      .from("subscriptions")
-      .select(
-        "paypal_subscription_id, status, next_billing_at, plan:plans(name, price_aud_cents, billing_interval)"
-      )
+      .from("customer_credits")
+      .select("balance")
       .eq("customer_id", user.id)
-      .in("status", ["active", "pending", "suspended"])
-      .order("created_at", { ascending: false })
-      .limit(1)
       .maybeSingle(),
     getPlansWithFeatures(),
   ]);
-
-  const sub = subRow as
-    | {
-        paypal_subscription_id: string;
-        status: "active" | "pending" | "suspended";
-        next_billing_at: string | null;
-        plan: { name: string; price_aud_cents: number; billing_interval: "monthly" | "quarterly" | "yearly" } | null;
-      }
-    | null;
+  const balance = credits?.balance ?? 0;
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
       <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
-        Your plan
+        Your sessions
       </div>
       <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-heading)] tracking-tight mt-1">
-        {sub?.status === "active"
-          ? "You're a member."
-          : sub?.status === "pending"
-          ? "Activating your plan…"
+        {balance > 0
+          ? `${balance} session credit${balance === 1 ? "" : "s"} ready.`
           : "You're on the free trial."}
       </h1>
       <p className="mt-2 text-muted-foreground">
-        {sub ? "Manage your subscription below." : "Upgrade when you're ready. Cancel anytime."}
+        {balance > 0
+          ? "Use them to book any paid class. Top up with another pack anytime."
+          : "Upgrade when you're ready — buy a pack of sessions, no subscription."}
       </p>
 
-      {booked && !sub && (
+      {booked && (
         <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
           <PartyPopper className="mt-0.5 size-5 shrink-0 text-primary" />
           <div className="text-sm">
             <p className="font-medium text-foreground">Your free 1:1 is booked 🎉</p>
             <p className="mt-0.5 text-muted-foreground">
-              We&apos;ll email your Google Meet link. Want to keep practising after your trial?
-              Pick a plan below — cancel anytime.
+              We&apos;ll email your Google Meet link. Want to keep practising? Grab a pack below.
             </p>
           </div>
         </div>
       )}
 
-      {canceled && !sub && (
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-border bg-muted/40 px-5 py-4">
-          <Info className="mt-0.5 size-5 shrink-0 text-muted-foreground" />
+      {purchased && (
+        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
+          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
           <div className="text-sm">
-            <p className="font-medium text-foreground">Checkout cancelled</p>
+            <p className="font-medium text-foreground">Pack purchased 🎉</p>
             <p className="mt-0.5 text-muted-foreground">
-              No worries — you weren&apos;t charged. Pick a plan below whenever you&apos;re ready.
+              Your credits are ready — time to book your next class.
             </p>
           </div>
         </div>
@@ -81,18 +68,28 @@ export default async function PlanPage({
         <PlanAutoStart />
       </Suspense>
 
-      {sub && sub.plan ? (
-        <CurrentSubscription
-          paypalSubscriptionId={sub.paypal_subscription_id}
-          planName={sub.plan.name}
-          planPriceCents={sub.plan.price_aud_cents}
-          billingInterval={sub.plan.billing_interval}
-          status={sub.status}
-          nextBillingAt={sub.next_billing_at}
-        />
-      ) : (
-        <PricingTeaser plans={plans} />
+      {balance > 0 && (
+        <div className="mt-8 rounded-3xl border border-border bg-card p-7">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <Ticket className="size-6 text-primary" />
+              <div>
+                <div className="text-2xl font-[family-name:var(--font-heading)]">
+                  {balance} session{balance === 1 ? "" : "s"} left
+                </div>
+                <div className="text-sm text-muted-foreground">
+                  Credits don&apos;t expire. Book whenever you like.
+                </div>
+              </div>
+            </div>
+            <Button asChild className="rounded-full">
+              <Link href="/dashboard/book">Book a class</Link>
+            </Button>
+          </div>
+        </div>
       )}
+
+      <PricingTeaser plans={plans} />
     </div>
   );
 }
