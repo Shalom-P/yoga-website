@@ -374,7 +374,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
                 bucket={TEACHER_MEDIA_BUCKET}
                 folder={`avatars/${draft.slug || "new"}`}
                 accept="image"
-                maxSizeMb={10}
+                maxSizeMb={25}
                 value={draft.avatar_url}
                 onChange={(url) => setDraft({ ...draft, avatar_url: url })}
                 disabled={saving}
@@ -388,7 +388,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
                 bucket={TEACHER_MEDIA_BUCKET}
                 folder={`covers/${draft.slug || "new"}`}
                 accept="image"
-                maxSizeMb={10}
+                maxSizeMb={25}
                 value={draft.cover_image_url}
                 onChange={(url) => setDraft({ ...draft, cover_image_url: url })}
                 disabled={saving}
