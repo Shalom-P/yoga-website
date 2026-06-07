@@ -35,15 +35,25 @@ export default async function TeacherBookingPage({
     .eq("id", user.id)
     .maybeSingle();
 
-  // Members (active subscription) book paid sessions; everyone else books the
-  // free 1:1 trial. This drives `isFreeTrial` in the picker.
-  const { data: activeSub } = await supabase
-    .from("subscriptions")
-    .select("id")
-    .eq("customer_id", user.id)
-    .eq("status", "active")
-    .limit(1)
-    .maybeSingle();
+  // The free 1:1 trial is available until the customer has used it; after that,
+  // booking a paid session spends a session-credit. These drive the picker.
+  const [{ data: trialBooking }, { data: credits }] = await Promise.all([
+    supabase
+      .from("bookings")
+      .select("id")
+      .eq("customer_id", user.id)
+      .eq("is_free_trial", true)
+      .neq("status", "cancelled")
+      .limit(1)
+      .maybeSingle(),
+    supabase
+      .from("customer_credits")
+      .select("balance")
+      .eq("customer_id", user.id)
+      .maybeSingle(),
+  ]);
+  const freeTrialAvailable = !trialBooking;
+  const creditBalance = credits?.balance ?? 0;
 
   return (
     <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
@@ -72,7 +82,8 @@ export default async function TeacherBookingPage({
         customerTimezone={profile?.timezone ?? "Australia/Sydney"}
         customerPhone={profile?.phone ?? null}
         availability={availability ?? []}
-        isMember={Boolean(activeSub)}
+        freeTrialAvailable={freeTrialAvailable}
+        creditBalance={creditBalance}
       />
     </div>
   );

@@ -5,6 +5,14 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { startRazorpayCheckout } from "@/components/shared/razorpay-checkout";
+
+/**
+ * Resumes checkout after a logged-out customer clicks a pack and signs in: the
+ * pricing button sends them to /login?next=/dashboard/plan?planSlug=…, and this
+ * opens the Razorpay modal for that pack on arrival. The loading card shows
+ * while `planSlug` is in the URL; each outcome replaces the URL to clear it.
+ */
 export function PlanAutoStart() {
   const params = useSearchParams();
   const router = useRouter();
@@ -15,32 +23,28 @@ export function PlanAutoStart() {
     if (!planSlug || fired.current) return;
     fired.current = true;
 
-    (async () => {
-      try {
-        const res = await fetch("/api/paypal/create-subscription", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ planSlug }),
-        });
-        const body = (await res.json().catch(() => ({}))) as {
-          approveUrl?: string;
-          error?: string;
-        };
-        if (!res.ok || !body.approveUrl) {
-          toast.error(
-            body.error === "plan not configured"
-              ? "This plan isn't ready for purchase yet."
-              : "Couldn't start checkout. Please try again."
-          );
-          router.replace("/dashboard/plan");
-          return;
-        }
-        window.location.href = body.approveUrl;
-      } catch {
-        toast.error("Network error — please try again.");
+    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
+    if (!keyId) {
+      toast.error("Checkout isn't configured.");
+      router.replace("/dashboard/plan");
+      return;
+    }
+    startRazorpayCheckout({
+      planSlug,
+      keyId,
+      onPaid: () => {
+        toast.success("Payment successful!");
+        router.replace("/dashboard/plan?purchased=1");
+        router.refresh();
+      },
+      onError: (message) => {
+        toast.error(message);
         router.replace("/dashboard/plan");
-      }
-    })();
+      },
+      onDismiss: () => {
+        router.replace("/dashboard/plan");
+      },
+    });
   }, [planSlug, router]);
 
   if (!planSlug) return null;
@@ -48,7 +52,7 @@ export function PlanAutoStart() {
   return (
     <div className="mt-10 rounded-3xl border border-border bg-card p-12 text-center">
       <Loader2 className="size-8 mx-auto animate-spin text-primary" />
-      <p className="mt-4 text-sm text-muted-foreground">Starting PayPal checkout…</p>
+      <p className="mt-4 text-sm text-muted-foreground">Opening checkout…</p>
     </div>
   );
 }
