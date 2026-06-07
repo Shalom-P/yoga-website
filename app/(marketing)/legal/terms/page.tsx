@@ -107,33 +107,28 @@ export default function TermsPage() {
             </p>
           </section>
 
-          {/* 5. Subscriptions and billing */}
+          {/* 5. Session packs and payment */}
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">
-              5. Subscriptions and recurring billing
+              5. Session packs and payment
             </h2>
             <p>
-              Paid access to the Service requires a subscription, billed in{" "}
-              <strong>Australian Dollars (AUD)</strong> via PayPal on a recurring basis
-              (weekly, fortnightly, or monthly depending on your chosen plan).
+              Paid access is sold as <strong>one-time session packs</strong>, priced in{" "}
+              <strong>Australian Dollars (AUD)</strong> and paid via Razorpay. There is no
+              subscription and no automatic recurring charge.
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                By selecting a paid plan and completing the PayPal subscription flow you
-                authorise us (through PayPal) to charge your payment method automatically at
-                the start of each billing period.
+                Buying a pack grants a number of session credits to your account. Each paid
+                class you book uses one credit. You are charged once, at the time of purchase.
               </li>
               <li>
-                Prices are displayed inclusive of any applicable GST. We will notify you at
-                least 14 days before any price increase takes effect.
+                Prices are displayed inclusive of any applicable GST. We will notify you before
+                any change to pack pricing takes effect.
               </li>
               <li>
-                Your subscription is personal to you and may not be transferred to another
-                person.
-              </li>
-              <li>
-                Unused sessions within a billing period do not carry over to the next period
-                unless we expressly state otherwise.
+                Credits are personal to you, may not be transferred to another person, and do
+                not expire unless we expressly state otherwise.
               </li>
             </ul>
           </section>

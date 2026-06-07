@@ -216,7 +216,7 @@ export function DiscountsAdmin({
           <DialogHeader>
             <DialogTitle>{draft.id ? "Edit code" : "New discount code"}</DialogTitle>
             <DialogDescription>
-              Discount applies to the first billing cycle of new subscriptions. 100%-off codes are floored to AUD 1.00/cycle (PayPal rejects $0).
+              Discount codes are not yet applied at one-time checkout. Codes created here are stored for when discounts are re-enabled.
             </DialogDescription>
           </DialogHeader>
 
@@ -264,7 +264,7 @@ export function DiscountsAdmin({
                   htmlFor="value"
                   hint={
                     draft.discount_type === "percentage"
-                      ? "Percent off the first billing cycle. 100% is floored to AUD 1.00 because PayPal rejects $0 subscriptions."
+                      ? "Percent off the purchase amount. Not yet applied to one-time checkout."
                       : "Dollar amount off the first billing cycle, in AUD. Final price is floored at AUD 1.00."
                   }
                 >
@@ -283,7 +283,7 @@ export function DiscountsAdmin({
               <div>
                 <LabelWithHint
                   htmlFor="max"
-                  hint="Total redemptions allowed across all customers. Counter increments when the PayPal webhook activates the subscription."
+                  hint="Total redemptions allowed across all customers."
                 >
                   Max uses (blank = unlimited)
                 </LabelWithHint>

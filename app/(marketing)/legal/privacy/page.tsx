@@ -57,10 +57,10 @@ export default function PrivacyPage() {
                 or cancelled; teacher assigned; session notes you opt to save.
               </li>
               <li>
-                <strong>Payment metadata:</strong> subscription plan, billing status, and
-                PayPal subscription IDs. We do <strong>not</strong> store card numbers, bank
-                account details, or full PayPal credentials — all payment processing is handled
-                directly by PayPal and subject to PayPal&apos;s privacy policy.
+                <strong>Payment metadata:</strong> the session pack you purchased, payment
+                status, and Razorpay order / payment IDs. We do <strong>not</strong> store card
+                numbers, bank account details, or full payment credentials — all payment
+                processing is handled directly by Razorpay and subject to Razorpay&apos;s privacy policy.
               </li>
               <li>
                 <strong>Technical data:</strong> IP address, browser type, device identifiers,
@@ -88,7 +88,7 @@ export default function PrivacyPage() {
               <li>Create and manage your account and authenticate you securely.</li>
               <li>Match you with an available teacher and schedule sessions across timezones.</li>
               <li>Generate and send Google Meet links for your sessions.</li>
-              <li>Process and manage PayPal subscription billing in AUD.</li>
+              <li>Process one-time session-pack payments in AUD via Razorpay.</li>
               <li>Send booking confirmations, reminders, and account notifications by email or SMS.</li>
               <li>Provide customer support.</li>
               <li>Improve our platform and personalise your experience.</li>
@@ -127,9 +127,9 @@ export default function PrivacyPage() {
                     <td className="py-2">USA (AWS)</td>
                   </tr>
                   <tr>
-                    <td className="py-2 pr-4">PayPal</td>
-                    <td className="py-2 pr-4">Subscription billing and payment processing</td>
-                    <td className="py-2">USA</td>
+                    <td className="py-2 pr-4">Razorpay</td>
+                    <td className="py-2 pr-4">One-time payment processing (session packs)</td>
+                    <td className="py-2">India</td>
                   </tr>
                   <tr>
                     <td className="py-2 pr-4">Twilio (via Supabase)</td>

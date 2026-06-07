@@ -24,7 +24,7 @@ Node ≥20 is required (`package.json` engines).
 
 ## Big-picture architecture
 
-This is a **conversion-first marketing site + customer dashboard + admin shell + booking backend** for a yoga studio: **Australian customers, Indian teachers, sessions on Google Meet, PayPal Subscriptions for billing**. The cross-timezone story (AU ↔ IN) is load-bearing — see the Timezones section.
+This is a **conversion-first marketing site + customer dashboard + admin shell + booking backend** for a yoga studio: **Australian customers, Indian teachers, sessions on Google Meet, Razorpay one-time session-pack payments for billing**. The cross-timezone story (AU ↔ IN) is load-bearing — see the Timezones section.
 
 ### Route groups in `app/`
 
@@ -32,7 +32,7 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 - **`(auth)/`** — `/login`, `/onboarding`, `/auth/callback`. Login uses Supabase: Google OAuth + Phone OTP via Twilio Verify (the same flow handles `+61` AU customers and `+91` IN teachers).
 - **`(dashboard)/`** — customer area, gated by middleware.
 - **`admin/`** — role-gated by middleware *and* `requireAdmin()` in pages. Admin-edited landing copy lives in the `admin_settings` table (key→jsonb) and is read with `revalidate: 60`, so changes propagate ≤1 min.
-- **`api/`** — route handlers for booking confirm/cancel, Meet link creation/retry (`meet/create-link`), admin session create/cancel (`admin/sessions`), PayPal subscription create/confirm/cancel + plan-catalog sync (`paypal/sync-plan`) + **webhook**, newsletter signup, on-demand ISR busting (`admin/revalidate`), and the scheduled-job handlers under `cron/*` (see "Scheduled jobs"). Middleware **does not** run on `/api/` (see `middleware.ts` matcher) — every handler must auth itself, and admin-only routes re-check `profiles.role` inline.
+- **`api/`** — route handlers for booking confirm/cancel, Meet link creation/retry (`meet/create-link`), admin session create/cancel (`admin/sessions`), Razorpay order-create + payment-verify (`razorpay/create-order`, `razorpay/verify-payment`) + **webhook**, newsletter signup, on-demand ISR busting (`admin/revalidate`), and the scheduled-job handlers under `cron/*` (see "Scheduled jobs"). Middleware **does not** run on `/api/` (see `middleware.ts` matcher) — every handler must auth itself, and admin-only routes re-check `profiles.role` inline.
 
 ### Three auth-guard paths — use the right one
 
@@ -46,7 +46,7 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 |---|---|---|
 | Browser | `lib/supabase/client.ts` (`createSupabaseBrowserClient`) | Client components, calls protected by RLS |
 | Server (cookie-bound) | `lib/supabase/server.ts` (`createSupabaseServerClient`) | Server components, route handlers, Server Actions — runs as the logged-in user, subject to RLS |
-| Service-role | `lib/supabase/service.ts` (`createSupabaseServiceClient`) | Server-only, **bypasses RLS**. Required for `sessions` and `bookings` writes (admin-only INSERT policy), PayPal webhook handling, cron jobs. Always gate behind your own auth/role check first. |
+| Service-role | `lib/supabase/service.ts` (`createSupabaseServiceClient`) | Server-only, **bypasses RLS**. Required for `sessions` and `bookings` writes (admin-only INSERT policy), Razorpay fulfilment + webhook, cron jobs. Always gate behind your own auth/role check first. |
 
 ### Drizzle alongside `supabase-js`
 
@@ -80,24 +80,21 @@ Marketing pages render these images via `next/image`, so the bucket host (`**.su
 
 After the booking commits, the handler calls `createMeetEvent` (`lib/google/calendar.ts`, service-account JWT against the Calendar API). On failure it leaves the booking in place and sets `meet_status='failed'` so a cron sweeper can retry — **do not roll back the booking on Meet failure**. The dashboard shows "Link available shortly" for `pending` / `failed`.
 
-### PayPal subscriptions + webhook
+### Razorpay one-time payments (session-pack credits)
 
-`/api/paypal/webhook` is **the single point of truth** for subscription state. It:
-1. Verifies the signature via `lib/paypal/verify-webhook.ts` (uses `PAYPAL_WEBHOOK_ID`).
-2. Inserts into `paypal_webhook_events` keyed by `event_id` — replays return early.
-3. Handles `BILLING.SUBSCRIPTION.ACTIVATED|CANCELLED|EXPIRED|SUSPENDED` and `PAYMENT.SALE|CAPTURE.COMPLETED`.
-4. Calls `apply_discount_to_subscription` RPC — service-role-only, idempotent via `subscriptions.discount_applied_at`.
+Billing is **Razorpay one-time Checkout in AUD**. A plan = a pack: a price + N `session_credits`. Buying a pack grants credits; booking a *paid* session spends one (the free 1:1 trial never touches credits). No subscriptions, no "sync" step — order amounts are set at create time.
 
-Two subtle invariants in the webhook: an out-of-order `ACTIVATED` after `CANCELLED` must **not** reactivate (the `status !== 'cancelled'` guard), and only a real `CANCELLED` event sets `cancelled_at` (`SUSPENDED` is recoverable, `EXPIRED` is end-of-term).
+Flow: `POST /api/razorpay/create-order` resolves the price server-side from the `plans` table by `planSlug` (the client never sends an amount) and stamps the order `notes` with `{customerId, planId}`. The browser opens Checkout, then **either** path fulfils:
+1. `POST /api/razorpay/verify-payment` — constant-time HMAC-SHA256 signature check, then `fulfillRazorpayPayment`.
+2. `POST /api/razorpay/webhook` — `X-Razorpay-Signature`-verified (uses `RAZORPAY_WEBHOOK_SECRET`); the authoritative path for when the browser never returns.
 
-**REST calls + plan setup.** `lib/paypal/client.ts` (`getPayPalToken`, `paypalFetch`) is a thin server-only REST wrapper with OAuth-token caching; `PAYPAL_ENV=live` flips the base URL from sandbox to production. A plan isn't subscribable until an admin clicks **Sync to PayPal** in `/admin/plans` → `POST /api/paypal/sync-plan`, which creates the PayPal catalog product + billing plan and stores `paypal_plan_id` on the row; `create-subscription` then references that id.
+**`lib/razorpay/fulfillment.ts` is the single fulfilment point and is idempotent**: it re-checks capture against the Razorpay API, upserts `payments` keyed on a UNIQUE `razorpay_payment_id`, then grants credits via the `grant_session_credits` RPC (purchase-once via a partial unique index on `credit_ledger`). **Never grant value from the client `onPaid` callback** — call fulfilment server-side. Booking spends a credit atomically via `spend_session_credit` (refunded if the insert fails). `lib/razorpay/client.ts` is the server-only SDK singleton: `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` server-side, `NEXT_PUBLIC_RAZORPAY_KEY_ID` for Checkout. AUD orders need Razorpay **International** enabled on the account (Indian accounts settle INR by default).
 
 ### Scheduled jobs (handlers exist; scheduler is BYO)
 
-Four cron handlers live under `app/api/cron/`, each gated by `assertCron` (Bearer `CRON_SECRET` — see auth paths above) and running on the service-role client:
+Three cron handlers live under `app/api/cron/`, each gated by `assertCron` (Bearer `CRON_SECRET` — see auth paths above) and running on the service-role client:
 - **`reminders`** (~hourly) — emails a ±10-min band around now+24h and now+1h. **Not yet DB-idempotent** (no `reminded_at` column): a double-fire in the same band sends duplicate reminders. Read the TODO at the top of the file before relying on it.
 - **`no-show-sweep`** (~hourly) — flips still-`confirmed` bookings to `no_show` 2h after the session ended (`booking_status` enum from `0003`).
-- **`paypal-reconcile`** (~daily) — diffs local `subscriptions` against the PayPal API and reconciles, honouring the same out-of-order guard as the webhook (never reactivate a locally-cancelled sub).
 - **`meet-retry`** (~15–30 min) — retries `createMeetEvent` for not-yet-started sessions stuck at `meet_status='pending'|'failed'`, batched (50/run) to avoid Calendar rate limits.
 
 There is **no scheduler in the repo** (no `vercel.json` / host config). Wire each endpoint to your host's cron, an external scheduler, or Supabase `pg_cron` + `pg_net`, POSTing with `Authorization: Bearer $CRON_SECRET`.
@@ -111,7 +108,7 @@ There is **no scheduler in the repo** (no `vercel.json` / host config). Wire eac
 - **Locale:** `en-AU`. Money helpers in `lib/i18n/money.ts`. Internal money is `*_aud_cents` (integer); never store floats. Default currency code "AUD".
 - **Analytics:** `lib/analytics/events.ts` — call `track(name, props)` with a name from the typed `EventName` allow-list (extend the union, don't pass free-form strings). `track()` / `initPosthog()` are silent no-ops when `NEXT_PUBLIC_POSTHOG_KEY` is unset, matching the zero-env preview story.
 - **`cn` helper:** lives in `lib/utils.ts`; `lib/utils/cn.ts` just re-exports it. shadcn's `components.json` aliases `utils → @/lib/utils`, so import `cn` from `@/lib/utils`.
-- **`server-only` import:** `lib/db/client.ts`, `lib/google/calendar.ts`, and `lib/paypal/client.ts` use the `server-only` package — importing them from a client component will hard-fail the build. Keep that boundary.
+- **`server-only` import:** `lib/db/client.ts`, `lib/google/calendar.ts`, and `lib/razorpay/{client,fulfillment,catalog}.ts` use the `server-only` package — importing them from a client component will hard-fail the build. Keep that boundary.
 
 ## Conversion notes — read before changing landing copy
 

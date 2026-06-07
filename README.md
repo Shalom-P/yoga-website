@@ -2,7 +2,7 @@
 
 Conversion-first multi-teacher yoga studio web app. **Australian customers, Indian teachers**, live on Google Meet.
 
-Built on Next.js 15 (App Router) + Supabase + PayPal + Google Calendar API.
+Built on Next.js 16 (App Router) + Supabase + Razorpay + Google Calendar API.
 
 ---
 
@@ -17,7 +17,7 @@ Built on Next.js 15 (App Router) + Supabase + PayPal + Google Calendar API.
 | Backend | Supabase (Postgres + Auth + Storage + Realtime) |
 | ORM | Drizzle (typed complex queries) alongside `supabase-js` (auth + simple CRUD) |
 | Auth | Supabase: Google OAuth + Phone OTP via Twilio Verify (handles +61 AU and +91 IN) |
-| Payments | PayPal Subscriptions API (AUD) |
+| Payments | Razorpay one-time Checkout (AUD, session-pack credits) |
 | Conferencing | Google Calendar API → Meet links (service account) |
 | Email | Resend + React Email |
 | SMS | Twilio (via Supabase) |
@@ -55,11 +55,12 @@ npm run dev
    - Auth → Providers → enable **Phone**, choose **Twilio Verify**, paste Twilio credentials.
    - Storage → create buckets `teacher-avatars`, `promotional-media`, `session-recordings`.
    - Promote yourself to admin: `UPDATE profiles SET role='admin' WHERE id='<your-uuid>';`
-2. **PayPal**
-   - Create a REST app in PayPal Developer dashboard (start in **sandbox**).
-   - Set `PAYPAL_CLIENT_ID`, `PAYPAL_SECRET`, `PAYPAL_ENV=sandbox`, `NEXT_PUBLIC_PAYPAL_CLIENT_ID`.
-   - In `/admin/plans`, click **Sync to PayPal** for each plan → saves `paypal_plan_id` on each row.
-   - Create a webhook in PayPal pointing to `https://<yourdomain>/api/paypal/webhook` for events: `BILLING.SUBSCRIPTION.ACTIVATED|CANCELLED|EXPIRED|SUSPENDED`, `PAYMENT.CAPTURE.COMPLETED`, `PAYMENT.SALE.COMPLETED`. Copy webhook ID → `PAYPAL_WEBHOOK_ID`.
+2. **Razorpay**
+   - Create API keys in the Razorpay dashboard (start with **test** keys, `rzp_test_…`).
+   - Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `NEXT_PUBLIC_RAZORPAY_KEY_ID` (must equal the key id).
+   - Enable **International / foreign-currency** acceptance so AUD orders are accepted (Indian accounts settle INR by default).
+   - In `/admin/plans`, set each pack's **price** and **session credits**.
+   - Create a webhook in the Razorpay dashboard pointing to `https://<yourdomain>/api/razorpay/webhook` for the `payment.captured` event. Copy its signing secret → `RAZORPAY_WEBHOOK_SECRET`.
 3. **Google Meet** (via Calendar API)
    - Enable the **Google Calendar API** in your GCP project.
    - Create a **service account**, download the JSON key.
@@ -80,7 +81,7 @@ app/
   (auth)/                 # /login, /onboarding, /auth/callback
   (dashboard)/            # Customer dashboard (auth-guarded by middleware)
   admin/                  # Admin shell (role-guarded)
-  api/                    # Route handlers — PayPal, Meet, bookings, newsletter
+  api/                    # Route handlers — Razorpay, Meet, bookings, newsletter
 components/
   ui/                     # shadcn primitives
   marketing/              # Hero, HowItWorks, TeacherCarousel, …
@@ -89,7 +90,7 @@ components/
   shared/                 # Login form, onboarding form, theme + analytics providers
 lib/
   supabase/               # browser / server / service / middleware clients + types
-  paypal/                 # REST client + webhook verifier
+  razorpay/               # SDK client + order/fulfilment helpers
   google/                 # Calendar/Meet client (service account)
   email/                  # Resend client + React Email templates
   analytics/              # PostHog event helpers
