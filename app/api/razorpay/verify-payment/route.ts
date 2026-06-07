@@ -5,27 +5,22 @@ import crypto from "node:crypto";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
-import { getRazorpayClient, isRazorpayConfigured } from "@/lib/razorpay/client";
+import { isRazorpayConfigured } from "@/lib/razorpay/client";
+import { fulfillRazorpayPayment } from "@/lib/razorpay/fulfillment";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/razorpay/verify-payment
  *
- * Confirms a Checkout success payload, in two steps:
+ * Confirms a Checkout success payload and fulfils the purchase:
  *  1. Recompute the HMAC-SHA256 signature over "<order_id>|<payment_id>" and
- *     compare it (constant-time) to what Razorpay returned. This proves the
- *     payload is authentic.
- *  2. Fetch the payment from Razorpay and confirm it is actually captured/
- *     authorized and bound to this order. A valid signature alone does NOT
- *     prove money changed hands, so this guards against treating a created/
- *     failed payment as paid.
+ *     compare it constant-time — proves the payload is authentic.
+ *  2. fulfillRazorpayPayment re-checks capture against the Razorpay API and
+ *     grants the pack's credits server-side, idempotently (a replay, or the
+ *     webhook racing this call, is a no-op). The grant NEVER happens client-side.
  *
- * Returns 200 { verified: true } only when both pass.
- *
- * NOTE: this is not yet replay-safe — replaying a genuine (order, payment,
- * signature) triple still returns verified:true. True idempotency requires
- * persisting the payment id and rejecting duplicates, which needs a
- * hand-written Supabase migration (see CLAUDE.md "Schema ownership"). TODO.
+ * This is the optimistic, fast-feedback path; /api/razorpay/webhook is the
+ * authoritative backstop for when the browser never makes it back here.
  */
 
 const bodySchema = z.object({
@@ -71,36 +66,29 @@ export async function POST(req: Request): Promise<Response> {
   const expectedBuf = Buffer.from(expected, "utf8");
   const actualBuf = Buffer.from(razorpay_signature, "utf8");
   const signatureValid =
-    expectedBuf.length === actualBuf.length &&
-    crypto.timingSafeEqual(expectedBuf, actualBuf);
-
+    expectedBuf.length === actualBuf.length && crypto.timingSafeEqual(expectedBuf, actualBuf);
   if (!signatureValid) {
-    // Signature mismatch — DO NOT mark as paid.
     return Response.json({ verified: false, error: "Signature verification failed" }, { status: 400 });
   }
 
-  // 2. Confirm the payment is real and paid, straight from Razorpay.
+  // 2. Confirm capture + grant credits server-side (idempotent).
   try {
-    const payment = await getRazorpayClient().payments.fetch(razorpay_payment_id);
-    const boundToOrder = payment.order_id === razorpay_order_id;
-    const paid = payment.status === "captured" || payment.status === "authorized";
-    if (!boundToOrder || !paid) {
+    const result = await fulfillRazorpayPayment(razorpay_order_id, razorpay_payment_id);
+    if (!result.ok) {
       return Response.json(
-        { verified: false, error: "Payment not captured", status: payment.status },
+        { verified: false, error: "Payment not confirmed", reason: result.reason },
         { status: 400 },
       );
     }
-
     return Response.json({
       verified: true,
       orderId: razorpay_order_id,
       paymentId: razorpay_payment_id,
-      amount: payment.amount,
-      currency: payment.currency,
-      status: payment.status,
+      credits: result.credits,
     });
   } catch (err) {
-    // Razorpay unreachable / fetch failed — don't grant value; let the client retry.
+    // Razorpay unreachable / fetch failed — don't grant value; let the webhook
+    // (or a client retry) settle it.
     Sentry.captureException(err, { tags: { route: "razorpay/verify-payment" } });
     return Response.json({ verified: false, error: "Could not confirm payment status" }, { status: 502 });
   }

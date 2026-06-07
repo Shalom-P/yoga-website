@@ -4,24 +4,24 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
 import { getRazorpayClient, isRazorpayConfigured } from "@/lib/razorpay/client";
-import { getRazorpayProduct } from "@/lib/razorpay/catalog";
+import { resolvePackBySlug } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 /**
  * POST /api/razorpay/create-order
  *
- * Creates a Razorpay order for a signed-in customer and returns
- * { orderId, amount, currency }. Middleware does not run on /api/* (see
+ * Creates a Razorpay order for a signed-in customer buying a session pack and
+ * returns { orderId, amount, currency }. Middleware does not run on /api/* (see
  * CLAUDE.md "Three auth-guard paths"), so this handler authenticates itself.
  *
- * The price is resolved server-side from the catalog by `productId` — the
- * client never sends an amount, so it can't tamper with what it's charged.
+ * The price + credit count are resolved server-side from the `plans` table by
+ * `planSlug` — the client never sends an amount, so it can't tamper with what
+ * it's charged. The order's notes bind it to the customer + plan so fulfilment
+ * (verify-payment / webhook) can credit the right account for the right pack.
  */
 
 const bodySchema = z.object({
-  productId: z.string().trim().min(1).max(64),
-  // Optional caller reference, surfaced in the Razorpay dashboard. Max 40 chars.
-  receipt: z.string().trim().min(1).max(40).optional(),
+  planSlug: z.string().trim().min(1).max(64),
 });
 
 export async function POST(req: Request): Promise<Response> {
@@ -53,19 +53,19 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
-  // Trusted price lookup — reject anything not in the catalog.
-  const product = getRazorpayProduct(parsed.data.productId);
-  if (!product) {
-    return Response.json({ error: "Unknown product" }, { status: 400 });
+  // Trusted price lookup — reject anything that isn't an active plan.
+  const pack = await resolvePackBySlug(parsed.data.planSlug);
+  if (!pack) {
+    return Response.json({ error: "Unknown plan" }, { status: 400 });
   }
 
   try {
     const order = await getRazorpayClient().orders.create({
-      amount: product.amount,
-      currency: product.currency,
-      receipt: parsed.data.receipt ?? `rcpt_${Date.now()}`,
-      // Ties the order to the customer + product for later reconciliation.
-      notes: { customerId: user.id, productId: parsed.data.productId },
+      amount: pack.amount,
+      currency: pack.currency,
+      // Razorpay caps receipt at 40 chars.
+      receipt: `plan_${pack.slug}_${Date.now()}`.slice(0, 40),
+      notes: { customerId: user.id, planSlug: pack.slug, planId: pack.planId },
     });
 
     return Response.json({
@@ -74,8 +74,8 @@ export async function POST(req: Request): Promise<Response> {
       currency: order.currency,
     });
   } catch (err) {
-    // The SDK rejects with { statusCode, error } on API failures (see its
-    // normalizeError); a network failure surfaces here as a generic throw.
+    // The SDK rejects with { statusCode, error } on API failures; a network
+    // failure surfaces here as a generic throw.
     const e = err as { statusCode?: number; error?: { description?: string } };
     const status = e?.statusCode === 401 ? 401 : 500;
     Sentry.captureException(err, { tags: { route: "razorpay/create-order" } });

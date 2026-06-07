@@ -104,7 +104,7 @@ const MOCK_PLANS: (Plan & { features: PlanFeature[] })[] = [
   {
     id: "p1", slug: "starter", name: "Starter",
     description: "Unlimited group classes — the gentle on-ramp.",
-    price_aud_cents: 4900, billing_interval: "monthly",
+    price_aud_cents: 4900, billing_interval: "monthly", session_credits: 4,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: ["hatha", "vinyasa", "yin", "restorative"],
     is_active: true, is_featured: false, sort_order: 1,
@@ -119,7 +119,7 @@ const MOCK_PLANS: (Plan & { features: PlanFeature[] })[] = [
   {
     id: "p2", slug: "unlimited", name: "Unlimited",
     description: "Unlimited group + 4 private 1:1 sessions per month.",
-    price_aud_cents: 12900, billing_interval: "monthly",
+    price_aud_cents: 12900, billing_interval: "monthly", session_credits: 12,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: ["hatha", "vinyasa", "yin", "restorative", "prenatal", "therapy"],
     is_active: true, is_featured: true, sort_order: 2,
@@ -134,7 +134,7 @@ const MOCK_PLANS: (Plan & { features: PlanFeature[] })[] = [
   {
     id: "p3", slug: "therapy", name: "Therapy",
     description: "Weekly 1:1 therapy yoga for pain relief and rehabilitation.",
-    price_aud_cents: 19900, billing_interval: "monthly",
+    price_aud_cents: 19900, billing_interval: "monthly", session_credits: 4,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: ["therapy", "restorative", "prenatal", "hatha"],
     is_active: true, is_featured: false, sort_order: 3,
