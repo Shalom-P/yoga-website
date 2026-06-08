@@ -113,7 +113,10 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     error?: string;
   };
   if (orderRes.status === 401) {
-    args.onError("Please sign in to continue.");
+    // Session expired server-side after the client-side auth check. Redirect
+    // to login; PlanAutoStart on /dashboard/plan?planSlug=… resumes checkout.
+    const next = encodeURIComponent(`/dashboard/plan?planSlug=${encodeURIComponent(args.planSlug)}`);
+    window.location.href = `/login?next=${next}`;
     return;
   }
   if (!orderRes.ok || !order.orderId || order.amount == null || !order.currency) {

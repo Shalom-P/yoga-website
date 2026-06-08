@@ -77,10 +77,13 @@ export async function POST(req: Request): Promise<Response> {
     // The SDK rejects with { statusCode, error } on API failures; a network
     // failure surfaces here as a generic throw.
     const e = err as { statusCode?: number; error?: { description?: string } };
-    const status = e?.statusCode === 401 ? 401 : 500;
     Sentry.captureException(err, { tags: { route: "razorpay/create-order" } });
+    // A 401 from Razorpay means bad API keys (our config problem), not a user
+    // auth failure. Return 502 so the client's "401 = not signed in" branch
+    // doesn't fire and mislead the user.
+    const status = e?.statusCode === 401 ? 502 : 500;
     const message =
-      status === 401
+      e?.statusCode === 401
         ? "Razorpay authentication failed — check your API keys."
         : e?.error?.description ?? "Failed to create Razorpay order.";
     return Response.json({ error: message }, { status });
