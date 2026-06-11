@@ -1,5 +1,5 @@
 // DRAFT — substantive but NOT a substitute for legal review before launch.
-// TODO: confirm contact email hello@myyogaclasses.fit with the business owner before publishing.
+// TODO: confirm contact email hello@myyogaclasses.com.au with the business owner before publishing.
 
 export const metadata = {
   title: "Privacy policy — My Yoga Classes",
@@ -242,8 +242,8 @@ export default function PrivacyPage() {
             </ul>
             <p>
               To exercise these rights, contact us at{" "}
-              <a className="underline" href="mailto:hello@myyogaclasses.fit">
-                hello@myyogaclasses.fit
+              <a className="underline" href="mailto:hello@myyogaclasses.com.au">
+                hello@myyogaclasses.com.au
               </a>
               . We will respond within 30 days. We may need to verify your identity before
               fulfilling a request.
@@ -281,8 +281,8 @@ export default function PrivacyPage() {
             <h2 className="text-xl font-semibold text-foreground">11. Contact us</h2>
             <p>
               For privacy enquiries, please email us at{" "}
-              <a className="underline" href="mailto:hello@myyogaclasses.fit">
-                hello@myyogaclasses.fit
+              <a className="underline" href="mailto:hello@myyogaclasses.com.au">
+                hello@myyogaclasses.com.au
               </a>
               .
             </p>

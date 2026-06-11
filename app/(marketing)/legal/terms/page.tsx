@@ -1,5 +1,5 @@
 // DRAFT — substantive but NOT a substitute for legal review before launch.
-// TODO: confirm contact email hello@myyogaclasses.fit with the business owner before publishing.
+// TODO: confirm contact email hello@myyogaclasses.com.au with the business owner before publishing.
 
 import Link from "next/link";
 
@@ -139,8 +139,8 @@ export default function TermsPage() {
             <p>
               You may cancel your subscription at any time from your account dashboard or by
               emailing us at{" "}
-              <a className="underline" href="mailto:hello@myyogaclasses.fit">
-                hello@myyogaclasses.fit
+              <a className="underline" href="mailto:hello@myyogaclasses.com.au">
+                hello@myyogaclasses.com.au
               </a>
               .
             </p>
@@ -291,8 +291,8 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold text-foreground">14. Contact us</h2>
             <p>
               Questions about these Terms? Email us at{" "}
-              <a className="underline" href="mailto:hello@myyogaclasses.fit">
-                hello@myyogaclasses.fit
+              <a className="underline" href="mailto:hello@myyogaclasses.com.au">
+                hello@myyogaclasses.com.au
               </a>
               .
             </p>

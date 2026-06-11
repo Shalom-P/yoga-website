@@ -32,7 +32,7 @@ export function StickyMobileCTA() {
           className="shrink-0 rounded-full bg-accent text-white hover:bg-accent/90"
           onClick={() => track("cta_click", { position: "sticky_mobile" })}
         >
-          <Link href="/login?next=/onboarding">Book now</Link>
+          <Link href="/login?next=/dashboard/book">Book now</Link>
         </Button>
       </div>
     </div>

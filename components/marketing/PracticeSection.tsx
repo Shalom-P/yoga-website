@@ -142,7 +142,7 @@ export function PracticeSection({ categories }: { categories: ClassCategory[] })
           <p className="mt-8 text-center text-sm text-muted-foreground">
             Not sure where to start?{" "}
             <a
-              href="/login?next=/onboarding"
+              href="/login?next=/dashboard/book"
               className="font-medium text-primary hover:underline"
             >
               Book a free 1:1

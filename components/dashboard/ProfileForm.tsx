@@ -33,8 +33,15 @@ export function ProfileForm({ initial }: { initial: Initial }) {
     }
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-    const { error } = await supabase
+    if (!user) {
+      setLoading(false);
+      toast.error("Session expired — please log in again.");
+      window.location.href = "/login?next=/dashboard/profile";
+      return;
+    }
+    // `.select("id")` surfaces a zero-row update (missing profile row / RLS
+    // mismatch), which supabase-js otherwise reports as success.
+    const { data: updated, error } = await supabase
       .from("profiles")
       .update({
         full_name: state.full_name,
@@ -43,9 +50,13 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         experience_level: state.experience_level,
         marketing_opt_in: state.marketing_opt_in,
       })
-      .eq("id", user.id);
+      .eq("id", user.id)
+      .select("id");
     setLoading(false);
     if (error) return toast.error(error.message);
+    if (!updated?.length) {
+      return toast.error("We couldn't save your changes. Please try again or contact support.");
+    }
     toast.success("Saved.");
   }
 

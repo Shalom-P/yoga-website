@@ -50,7 +50,7 @@ export default async function AdminBookingsPage({
         <div className="mt-6 flex items-center gap-3">
           {page > 1 && (
             <Button variant="outline" size="sm" asChild>
-              <Link href={`?page=${page - 1}`}>← Previous</Link>
+              <Link href={`/admin/bookings?page=${page - 1}`}>← Previous</Link>
             </Button>
           )}
           <span className="text-sm text-muted-foreground">
@@ -59,7 +59,7 @@ export default async function AdminBookingsPage({
           </span>
           {page < totalPages && (
             <Button variant="outline" size="sm" asChild>
-              <Link href={`?page=${page + 1}`}>Next →</Link>
+              <Link href={`/admin/bookings?page=${page + 1}`}>Next →</Link>
             </Button>
           )}
         </div>

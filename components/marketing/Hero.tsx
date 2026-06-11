@@ -65,7 +65,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                   })
                 }
               >
-                <Link href="/login?next=/onboarding">
+                <Link href="/login?next=/dashboard/book">
                   Book my free 1:1 session
                   <ArrowRight className="size-4 ml-1" />
                 </Link>
