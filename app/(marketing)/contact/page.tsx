@@ -16,11 +16,11 @@ export default function ContactPage() {
       />
       <div className="px-7 pb-24 text-center">
         <a
-          href="mailto:hello@myyogaclasses.com.au"
+          href="mailto:hello@myyogaclasses.fit"
           className="inline-flex h-12 items-center gap-2 rounded-full bg-accent px-6 font-semibold text-white shadow-[var(--myc-shadow-soft)] transition-opacity hover:opacity-90"
         >
           <Mail className="size-4" />
-          hello@myyogaclasses.com.au
+          hello@myyogaclasses.fit
         </a>
       </div>
     </>

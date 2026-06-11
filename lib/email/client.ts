@@ -4,7 +4,7 @@ import "server-only";
 
 import { Resend } from "resend";
 
-const DEFAULT_FROM = "My Yoga Classes <hello@myyogaclasses.com.au>";
+const DEFAULT_FROM = "My Yoga Classes <hello@myyogaclasses.fit>";
 
 let _client: Resend | null = null;
 

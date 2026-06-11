@@ -50,7 +50,7 @@ export function Footer() {
             <li><Link href="/about" className="hover:text-accent">About</Link></li>
             <li><Link href="/contact" className="hover:text-accent">Contact</Link></li>
             <li>
-              <a href="mailto:hello@myyogaclasses.com.au" className="hover:text-accent">
+              <a href="mailto:hello@myyogaclasses.fit" className="hover:text-accent">
                 Email us
               </a>
             </li>

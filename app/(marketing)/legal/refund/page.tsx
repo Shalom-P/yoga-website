@@ -1,5 +1,4 @@
 // DRAFT — substantive but NOT a substitute for legal review before launch.
-// TODO: confirm contact email hello@myyogaclasses.com.au with the business owner before publishing.
 
 export const metadata = {
   title: "Refund policy — My Yoga Classes",
@@ -63,8 +62,8 @@ export default function RefundPage() {
             <p>
               If you believe you are entitled to a refund (including under Section 5), please
               contact us at{" "}
-              <a className="underline" href="mailto:hello@myyogaclasses.com.au">
-                hello@myyogaclasses.com.au
+              <a className="underline" href="mailto:hello@myyogaclasses.fit">
+                hello@myyogaclasses.fit
               </a>{" "}
               with:
             </p>
@@ -136,8 +135,8 @@ export default function RefundPage() {
             <h2 className="text-xl font-semibold text-foreground">7. Contact us</h2>
             <p>
               Refund queries and cancellation requests:{" "}
-              <a className="underline" href="mailto:hello@myyogaclasses.com.au">
-                hello@myyogaclasses.com.au
+              <a className="underline" href="mailto:hello@myyogaclasses.fit">
+                hello@myyogaclasses.fit
               </a>
               .
             </p>
