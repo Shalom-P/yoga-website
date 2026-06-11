@@ -12,14 +12,17 @@ import {
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import { track } from "@/lib/analytics/events";
 
 export function LoginForm() {
   const params = useSearchParams();
-  const next = params.get("next") ?? "/dashboard";
+  // Sanitize at the source: the phone-OTP path assigns this to
+  // window.location.href, which would otherwise be an open redirect.
+  const next = safeNext(params.get("next"));
   const errorParam = params.get("error");
 
-  // Fix 4: surface OAuth callback errors passed as ?error=
+  // Surface OAuth callback errors passed as ?error=
   useEffect(() => {
     if (errorParam) {
       toast.error(errorParam);
@@ -110,14 +113,14 @@ function PhoneLogin({ next }: { next: string }) {
   const [national, setNational] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
-  // Fix 3: resend cooldown state
+  // resend cooldown state
   const [resendCooldown, setResendCooldown] = useState(0);
   const supabase = createSupabaseBrowserClient();
 
   const nationalDigits = national.replace(/\D/g, "").replace(/^0+/, "");
   const e164 = toE164(cc, national);
 
-  // Fix 3: countdown timer effect
+  // countdown timer effect
   useEffect(() => {
     if (resendCooldown <= 0) return;
     const id = setTimeout(() => setResendCooldown((c) => c - 1), 1000);
@@ -149,7 +152,7 @@ function PhoneLogin({ next }: { next: string }) {
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
   }
 
-  // Fix 3: resend handler
+  // resend handler
   async function resendOtp() {
     const ok = await doSendOtp();
     if (!ok) return;
@@ -169,7 +172,9 @@ function PhoneLogin({ next }: { next: string }) {
       setLoading(false);
       return toast.error(error.message);
     }
-    // Fix 1: check onboarding completion for phone OTP users
+    // Route through onboarding if it isn't complete yet (phone-OTP users skip
+    // the OAuth callback, so the check has to happen here too).
+    let onboarded = true;
     const userId = data.user?.id;
     if (userId) {
       const { data: profile } = await supabase
@@ -177,14 +182,9 @@ function PhoneLogin({ next }: { next: string }) {
         .select("experience_level")
         .eq("id", userId)
         .maybeSingle();
-      if (!profile?.experience_level) {
-        const onboardingNext = next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : "";
-        window.location.href = `/onboarding${onboardingNext}`;
-        return;
-      }
+      onboarded = Boolean(profile?.experience_level);
     }
-    setLoading(false);
-    window.location.href = next;
+    window.location.href = postAuthTarget(next, onboarded);
   }
 
   if (phase === "otp") {
@@ -207,7 +207,7 @@ function PhoneLogin({ next }: { next: string }) {
         <Button type="submit" disabled={loading} className="w-full h-11 rounded-full">
           {loading ? <Loader2 className="size-4 animate-spin" /> : "Verify & continue"}
         </Button>
-        {/* Fix 3: Resend code button with cooldown */}
+        {/* Resend code button with cooldown */}
         <button
           type="button"
           disabled={loading || resendCooldown > 0}

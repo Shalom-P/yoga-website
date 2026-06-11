@@ -1,25 +1,13 @@
 import Link from "next/link";
 import { Suspense } from "react";
-import { redirect } from "next/navigation";
-import { getCurrentUser } from "@/lib/auth/guards";
-import { safeNext } from "@/lib/auth/redirects";
 import { LoginForm } from "@/components/shared/LoginForm";
 import { BrandMark } from "@/components/shared/BrandMark";
 
 export const metadata = { title: "Log in" };
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ next?: string }>;
-}) {
-  // Already signed in — showing the login form again only confuses people
-  // (and a stale ?next=/onboarding would re-run onboarding). Send them on.
-  const user = await getCurrentUser();
-  if (user) {
-    const { next } = await searchParams;
-    redirect(safeNext(next));
-  }
+// Already-signed-in visitors never reach this page: the middleware redirects
+// them (through onboarding if incomplete), keeping this statically prerendered.
+export default function LoginPage() {
   return (
     <div className="min-h-dvh flex flex-col">
       <header className="px-6 py-5">

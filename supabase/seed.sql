@@ -8,7 +8,7 @@ insert into public.admin_settings (key, value) values
   ('brand.tagline',           '"Find your free 1:1 yoga teacher — no credit card."'),
   ('brand.primary_color',     '"#5B7C5A"'),
   ('brand.accent_color',      '"#C66B4E"'),
-  ('support.email',           '"hello@myyogaclasses.com.au"'),
+  ('support.email',           '"hello@myyogaclasses.fit"'),
   ('landing.hero_headline',   '"Find your free 1:1 yoga teacher — no credit card."'),
   ('landing.hero_subhead',    '"60-minute private session. Pick your teacher. Pick your time. We meet on Google Meet."'),
   ('landing.trust_count',     '"1,200+ reviews"'),

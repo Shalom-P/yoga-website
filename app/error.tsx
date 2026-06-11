@@ -2,10 +2,11 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
+import * as Sentry from "@sentry/nextjs";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/shared/BrandMark";
 
-export default function GlobalError({
+export default function ErrorPage({
   error,
   reset,
 }: {
@@ -13,6 +14,9 @@ export default function GlobalError({
   reset: () => void;
 }) {
   useEffect(() => {
+    // Boundary-caught render errors never become unhandled window errors, so
+    // they must be reported explicitly or they vanish from monitoring.
+    Sentry.captureException(error);
     console.error(error);
   }, [error]);
 

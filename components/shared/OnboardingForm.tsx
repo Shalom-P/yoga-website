@@ -23,7 +23,7 @@ const GOALS = [
   "Meditation / focus",
 ] as const;
 
-// Fix 5: clamp a detected timezone to the AU list, falling back to Sydney.
+// clamp a detected timezone to the AU list, falling back to Sydney.
 function clampToAuTz(detected: string): string {
   return AU_TIMEZONES.some((z) => z.id === detected) ? detected : DEFAULT_CUSTOMER_TZ;
 }
@@ -36,10 +36,10 @@ export function OnboardingForm({
   next?: string;
 }) {
   const router = useRouter();
-  // Fix 2: full name field state — prefilled from the profile (Google logins
+  // full name field state — prefilled from the profile (Google logins
   // already carry a name; phone-OTP users start blank).
   const [fullName, setFullName] = useState(initialFullName);
-  // Fix 5: clamp detected timezone to the AU list
+  // clamp detected timezone to the AU list
   const [tz, setTz] = useState(() => clampToAuTz(detectBrowserTimezone()));
   const [level, setLevel] = useState("beginner");
   const [goals, setGoals] = useState<string[]>([]);
@@ -53,7 +53,7 @@ export function OnboardingForm({
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Fix 2: validate full name before proceeding
+    // validate full name before proceeding
     if (!fullName.trim()) {
       toast.error("Please enter your full name.");
       return;
@@ -61,7 +61,7 @@ export function OnboardingForm({
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
-      // Fix 6: reset loading before early return so button isn't stuck
+      // reset loading before early return so button isn't stuck
       setLoading(false);
       toast.error("Session expired — please log in again.");
       router.push("/login");
@@ -75,7 +75,7 @@ export function OnboardingForm({
       .from("profiles")
       .upsert({
         id: user.id,
-        // Fix 2: persist full name
+        // persist full name
         full_name: fullName.trim(),
         timezone: tz,
         experience_level: level as "beginner" | "intermediate" | "advanced",
@@ -95,7 +95,7 @@ export function OnboardingForm({
 
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-7">
-      {/* Fix 2: Full name field — required for phone-OTP users who have no name */}
+      {/* Full name field — required for phone-OTP users who have no name */}
       <div>
         <Label htmlFor="full-name" className="mb-2 block">
           Full name <span aria-hidden="true" className="text-destructive">*</span>
