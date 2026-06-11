@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { safeNext } from "@/lib/auth/redirects";
+import { requireUser } from "@/lib/auth/guards";
+import { isOnboardingPath, postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import { OnboardingForm } from "@/components/shared/OnboardingForm";
 
 export const metadata = { title: "Welcome" };
@@ -11,13 +11,13 @@ export default async function OnboardingPage({
   searchParams: Promise<{ next?: string }>;
 }) {
   const { next: rawNext } = await searchParams;
-  const next = safeNext(rawNext, "/dashboard/book");
+  // Where the form sends the user after completing onboarding. A stale
+  // self-referencing ?next=/onboarding would bounce them straight back here,
+  // so it falls through to the teacher picker like a missing param.
+  const requested = safeNext(rawNext, "/dashboard/book");
+  const next = isOnboardingPath(requested) ? "/dashboard/book" : requested;
 
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) redirect("/login?next=/onboarding");
+  const { user, supabase } = await requireUser("/onboarding");
 
   // Returning users who already finished onboarding should never see this form
   // again — send them on to wherever they were headed.
@@ -27,7 +27,7 @@ export default async function OnboardingPage({
     .eq("id", user.id)
     .maybeSingle();
   if (profile?.experience_level) {
-    redirect(rawNext ? next : "/dashboard");
+    redirect(postAuthTarget(safeNext(rawNext, "/dashboard"), true));
   }
 
   return (
