@@ -75,7 +75,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
                 <Link href="/login">Log in</Link>
               </Button>
               <Button asChild size="sm" className="rounded-full px-5 bg-accent text-white hover:bg-accent/90">
-                <Link href="/login?next=/onboarding">Book free session</Link>
+                <Link href="/login?next=/dashboard/book">Book free session</Link>
               </Button>
             </>
           )}
@@ -123,7 +123,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
                     <Link href="/login">Log in</Link>
                   </Button>
                   <Button asChild className="flex-1 bg-accent text-white hover:bg-accent/90">
-                    <Link href="/login?next=/onboarding">Book free</Link>
+                    <Link href="/login?next=/dashboard/book">Book free</Link>
                   </Button>
                 </>
               )}

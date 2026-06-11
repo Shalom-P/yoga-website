@@ -101,7 +101,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
               size="lg"
               className="h-12 rounded-full bg-accent px-6 font-semibold text-white shadow-[var(--myc-shadow-soft)] hover:bg-accent/90"
             >
-              <Link href={`/login?next=/onboarding%3Fteacher%3D${t.slug}`}>
+              <Link href={`/login?next=${encodeURIComponent(`/dashboard/book/${t.slug}`)}`}>
                 Book free 1:1 with {t.display_name.split(" ")[0]}
                 <ArrowRight className="size-4 ml-1" />
               </Link>

@@ -1,21 +1,11 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-
-// Only same-origin relative paths are accepted as redirect targets.
-// `new URL(arg, base)` ignores the base when arg is absolute, so an unvalidated
-// `?next=https://evil.com` would otherwise become an open redirect.
-function safeNext(raw: string | null): string {
-  if (!raw) return "/dashboard";
-  if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) {
-    return "/dashboard";
-  }
-  return raw;
-}
+import { safeNext } from "@/lib/auth/redirects";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
-  const next = safeNext(url.searchParams.get("next"));
+  let next = safeNext(url.searchParams.get("next"));
 
   if (code) {
     const supabase = await createSupabaseServerClient();
@@ -33,10 +23,15 @@ export async function GET(request: Request) {
         .from("profiles")
         .select("experience_level")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
       if (!profile?.experience_level) {
         const onboardingNext = next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : "";
         return NextResponse.redirect(new URL(`/onboarding${onboardingNext}`, url.origin));
+      }
+      // Already onboarded — never bounce a returning user back to the
+      // onboarding form (e.g. a stale "?next=/onboarding" link).
+      if (next === "/onboarding" || next.startsWith("/onboarding?")) {
+        next = "/dashboard";
       }
     }
   }

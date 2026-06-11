@@ -176,7 +176,7 @@ function PhoneLogin({ next }: { next: string }) {
         .from("profiles")
         .select("experience_level")
         .eq("id", userId)
-        .single();
+        .maybeSingle();
       if (!profile?.experience_level) {
         const onboardingNext = next !== "/dashboard" ? `?next=${encodeURIComponent(next)}` : "";
         window.location.href = `/onboarding${onboardingNext}`;

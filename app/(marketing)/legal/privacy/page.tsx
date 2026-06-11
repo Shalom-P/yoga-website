@@ -1,5 +1,4 @@
 // DRAFT — substantive but NOT a substitute for legal review before launch.
-// TODO: confirm contact email hello@myyogaclasses.fit with the business owner before publishing.
 
 export const metadata = {
   title: "Privacy policy — My Yoga Classes",

@@ -28,10 +28,17 @@ function clampToAuTz(detected: string): string {
   return AU_TIMEZONES.some((z) => z.id === detected) ? detected : DEFAULT_CUSTOMER_TZ;
 }
 
-export function OnboardingForm() {
+export function OnboardingForm({
+  initialFullName = "",
+  next = "/dashboard/book",
+}: {
+  initialFullName?: string;
+  next?: string;
+}) {
   const router = useRouter();
-  // Fix 2: full name field state
-  const [fullName, setFullName] = useState("");
+  // Fix 2: full name field state — prefilled from the profile (Google logins
+  // already carry a name; phone-OTP users start blank).
+  const [fullName, setFullName] = useState(initialFullName);
   // Fix 5: clamp detected timezone to the AU list
   const [tz, setTz] = useState(() => clampToAuTz(detectBrowserTimezone()));
   const [level, setLevel] = useState("beginner");
@@ -60,9 +67,14 @@ export function OnboardingForm() {
       router.push("/login");
       return;
     }
-    const { error } = await supabase
+    // Upsert (not update): a plain UPDATE matching zero rows (profile row
+    // missing because the signup trigger didn't fire) reports success, so
+    // onboarding silently no-ops and re-appears on every login. The
+    // `.select("id")` keeps any remaining zero-row case visible.
+    const { data: updated, error } = await supabase
       .from("profiles")
-      .update({
+      .upsert({
+        id: user.id,
         // Fix 2: persist full name
         full_name: fullName.trim(),
         timezone: tz,
@@ -70,12 +82,15 @@ export function OnboardingForm() {
         goals,
         marketing_opt_in: marketing,
       })
-      .eq("id", user.id);
+      .select("id");
     setLoading(false);
     if (error) return toast.error(error.message);
+    if (!updated?.length) {
+      return toast.error("We couldn't save your profile. Please try again or contact support.");
+    }
     track("onboarding_completed", { experience_level: level, goals_count: goals.length, timezone: tz });
     toast.success("All set. Now pick a teacher.");
-    router.push("/dashboard/book");
+    router.push(next);
   }
 
   return (

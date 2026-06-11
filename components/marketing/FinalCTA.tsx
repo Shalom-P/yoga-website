@@ -48,7 +48,7 @@ export function FinalCTA({ headline }: { headline: string }) {
             className="mt-9 h-12 rounded-full bg-accent px-8 text-base font-semibold text-white hover:bg-accent/90"
             onClick={() => track("cta_click", { position: "final" })}
           >
-            <Link href="/login?next=/onboarding">
+            <Link href="/login?next=/dashboard/book">
               Book my free session
               <ArrowRight className="ml-1 size-4" />
             </Link>

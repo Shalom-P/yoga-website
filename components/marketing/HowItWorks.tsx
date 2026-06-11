@@ -22,7 +22,7 @@ const STEPS = [
     n: "03",
     title: "Meet live, one-on-one",
     body: "Roll out your mat — it's just you and your teacher on Google Meet. Real-time corrections, your pace, their full attention.",
-    href: "/login?next=/onboarding",
+    href: "/login?next=/dashboard/book",
     cta: "Book free session →",
   },
 ];

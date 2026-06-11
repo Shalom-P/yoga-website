@@ -37,7 +37,7 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
           </p>
         )}
         <Button asChild size="lg" className="mt-10 h-12 px-6 rounded-full">
-          <Link href={`/login?next=/onboarding%3Fclass%3D${c.slug}`}>
+          <Link href="/login?next=/dashboard/book">
             Book a free {c.name} session
             <ArrowRight className="size-4 ml-1" />
           </Link>
