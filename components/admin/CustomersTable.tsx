@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ShieldCheck, ShieldOff } from "lucide-react";
+import { Coins, ShieldCheck, ShieldOff } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Dialog,
   DialogContent,
@@ -27,6 +28,7 @@ type Row = {
   goals: string[] | null;
   referral_source: string | null;
   marketing_opt_in: boolean;
+  credits: number;
 };
 
 export function CustomersTable({ rows }: { rows: Row[] }) {
@@ -36,6 +38,9 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
   const [promoting, setPromoting] = useState(false);
   const [demoteTarget, setDemoteTarget] = useState<Row | null>(null);
   const [demoting, setDemoting] = useState(false);
+  const [creditTarget, setCreditTarget] = useState<Row | null>(null);
+  const [creditAmount, setCreditAmount] = useState("1");
+  const [granting, setGranting] = useState(false);
 
   async function promote() {
     if (!target) return;
@@ -67,6 +72,34 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
     router.refresh();
   }
 
+  async function addCredits() {
+    if (!creditTarget) return;
+    const amount = Number(creditAmount);
+    if (!Number.isInteger(amount) || amount < 1 || amount > 100) {
+      toast.error("Enter a whole number between 1 and 100.");
+      return;
+    }
+    setGranting(true);
+    const res = await fetch("/api/admin/credits", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ customerId: creditTarget.id, amount }),
+    });
+    setGranting(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      toast.error(body?.error ?? "Failed to add credits.");
+      return;
+    }
+    const { balance } = await res.json();
+    toast.success(
+      `Added ${amount} credit${amount === 1 ? "" : "s"} to ${creditTarget.full_name ?? creditTarget.email}. New balance: ${balance}.`
+    );
+    setCreditTarget(null);
+    setCreditAmount("1");
+    router.refresh();
+  }
+
   return (
     <>
       <div className="rounded-2xl border border-border bg-card overflow-hidden">
@@ -80,6 +113,7 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Goals</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Referral</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Mktg</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Credits</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Role</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Joined</th>
               <th className="px-4 py-3"></th>
@@ -99,6 +133,7 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">{c.referral_source ?? "—"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{c.marketing_opt_in ? "Yes" : "No"}</td>
+                <td className="px-4 py-3 tabular-nums">{c.credits}</td>
                 <td className="px-4 py-3">
                   <span
                     className={
@@ -114,7 +149,11 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
                 <td className="px-4 py-3 text-muted-foreground">
                   {new Date(c.created_at).toLocaleDateString("en-AU")}
                 </td>
-                <td className="px-4 py-3 text-right">
+                <td className="px-4 py-3 text-right whitespace-nowrap">
+                  <Button size="sm" variant="ghost" onClick={() => setCreditTarget(c)}>
+                    <Coins className="size-3.5 mr-1" />
+                    Add credits
+                  </Button>
                   {c.role !== "admin" ? (
                     <Button size="sm" variant="ghost" onClick={() => setTarget(c)}>
                       Promote to admin
@@ -135,7 +174,7 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={10} className="text-center px-4 py-12 text-muted-foreground">
+                <td colSpan={11} className="text-center px-4 py-12 text-muted-foreground">
                   No customers yet.
                 </td>
               </tr>
@@ -159,6 +198,50 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
             </Button>
             <Button onClick={promote} disabled={promoting}>
               {promoting ? "Promoting…" : "Promote"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={creditTarget !== null}
+        onOpenChange={(o) => {
+          if (!o) {
+            setCreditTarget(null);
+            setCreditAmount("1");
+          }
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add session credits</DialogTitle>
+            <DialogDescription>
+              Grant extra credits to {creditTarget?.full_name ?? creditTarget?.email}. Current
+              balance: {creditTarget?.credits}. Credits can only be added, never removed.
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            type="number"
+            min={1}
+            max={100}
+            step={1}
+            value={creditAmount}
+            onChange={(e) => setCreditAmount(e.target.value)}
+            aria-label="Credits to add"
+          />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setCreditTarget(null);
+                setCreditAmount("1");
+              }}
+              disabled={granting}
+            >
+              Cancel
+            </Button>
+            <Button onClick={addCredits} disabled={granting}>
+              {granting ? "Adding…" : "Add credits"}
             </Button>
           </DialogFooter>
         </DialogContent>
