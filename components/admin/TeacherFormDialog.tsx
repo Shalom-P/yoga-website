@@ -198,7 +198,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
         </DialogHeader>
 
         <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <LabelWithHint
                 htmlFor="display_name"
@@ -262,7 +262,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <LabelWithHint
                 htmlFor="specialties"
@@ -295,7 +295,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <LabelWithHint
                 htmlFor="years"
@@ -331,7 +331,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <LabelWithHint
                 htmlFor="certifications"
@@ -365,7 +365,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <LabelWithHint hint="Square headshot shown on teacher cards and the booking page. JPG/PNG, ideally 600×600.">
                 Avatar photo

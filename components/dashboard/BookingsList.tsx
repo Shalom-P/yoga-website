@@ -278,7 +278,7 @@ function RowActions({
             {row.session?.meet_status === "failed" ? "Link unavailable" : "Link soon"}
           </span>
         )}
-        <Button asChild size="sm" variant="outline" className="h-8 rounded-full px-3 text-xs">
+        <Button asChild size="sm" variant="outline" className="hidden h-8 rounded-full px-3 text-xs sm:inline-flex">
           <Link href="/dashboard/book">Book another</Link>
         </Button>
         <Button

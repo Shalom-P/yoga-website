@@ -102,8 +102,8 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
 
   return (
     <>
-      <div className="rounded-2xl border border-border bg-card overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="rounded-2xl border border-border bg-card overflow-x-auto">
+        <table className="w-full min-w-max text-sm">
           <thead className="bg-muted/40">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>

@@ -11,7 +11,7 @@ export default async function AdminSettingsPage() {
         Settings
       </h1>
       <Tabs defaultValue="landing" className="w-full">
-        <TabsList>
+        <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="landing">Landing copy</TabsTrigger>
           <TabsTrigger value="brand">Brand</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>

@@ -99,7 +99,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           Timezone
         </LabelWithHint>
         <Select value={state.timezone} onValueChange={(v) => v && set("timezone", v)}>
-          <SelectTrigger className="mt-1.5 h-11"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="mt-1.5 h-11 w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             {AU_TIMEZONES.map((z) => (
               <SelectItem key={z.id} value={z.id}>{z.label}</SelectItem>
@@ -112,7 +112,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           Experience level
         </LabelWithHint>
         <Select value={state.experience_level} onValueChange={(v) => v && set("experience_level", v as Initial["experience_level"])}>
-          <SelectTrigger className="mt-1.5 h-11 capitalize"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="mt-1.5 h-11 w-full capitalize"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="beginner">Beginner</SelectItem>
             <SelectItem value="intermediate">Intermediate</SelectItem>

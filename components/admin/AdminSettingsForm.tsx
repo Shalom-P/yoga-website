@@ -58,6 +58,7 @@ export function AdminSettingsForm({ section, fields }: { section: string; fields
               onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
               className="mt-1.5"
               rows={3}
+              disabled={saving}
             />
           ) : (
             <Input
@@ -65,6 +66,7 @@ export function AdminSettingsForm({ section, fields }: { section: string; fields
               value={values[f.key] ?? ""}
               onChange={(e) => setValues((v) => ({ ...v, [f.key]: e.target.value }))}
               className="mt-1.5"
+              disabled={saving}
             />
           )}
         </div>

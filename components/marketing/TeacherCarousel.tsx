@@ -17,7 +17,7 @@ export function TeacherCarousel({ teachers }: { teachers: Teacher[] }) {
   const parallaxY = useTransform(scrollYProgress, [0, 1], [40, -40]);
 
   return (
-    <section ref={sectionRef} className="py-24 md:py-32 bg-secondary/40">
+    <section ref={sectionRef} className="relative py-24 md:py-32 bg-secondary/40">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
           <motion.div
