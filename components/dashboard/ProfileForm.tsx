@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
+import { PhoneField } from "@/components/ui/phone-field";
 import { Label } from "@/components/ui/label";
 import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Button } from "@/components/ui/button";
@@ -9,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AU_TIMEZONES } from "@/lib/timezone";
+import { toE164, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
 import { toast } from "sonner";
 
 type Initial = {
@@ -27,8 +29,9 @@ export function ProfileForm({ initial }: { initial: Initial }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!state.phone.trim()) {
-      toast.error("Phone number is required.");
+    const e164 = toE164(state.phone);
+    if (!e164) {
+      toast.error(state.phone.trim() ? PHONE_ERROR_MESSAGE : "Phone number is required.");
       return;
     }
     setLoading(true);
@@ -45,7 +48,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       .from("profiles")
       .update({
         full_name: state.full_name,
-        phone: state.phone.trim(),
+        phone: e164,
         timezone: state.timezone,
         experience_level: state.experience_level,
         marketing_opt_in: state.marketing_opt_in,
@@ -92,7 +95,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         >
           Phone
         </LabelWithHint>
-        <Input id="phone" type="tel" required value={state.phone ?? ""} onChange={(e) => set("phone", e.target.value)} className="mt-1.5" placeholder="+61 …" />
+        <PhoneField id="phone" value={state.phone ?? ""} onChange={(v) => set("phone", v)} className="mt-1.5" />
       </div>
       <div>
         <LabelWithHint hint="Your local timezone. Drives the times shown on bookings, reminders, and the slot picker.">

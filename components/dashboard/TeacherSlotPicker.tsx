@@ -7,7 +7,7 @@ import { addDays, addMinutes } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { PhoneField } from "@/components/ui/phone-field";
 import { Label } from "@/components/ui/label";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -15,7 +15,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useBrowserTz } from "@/components/dashboard/local-time";
 import { toast } from "sonner";
-import { isValidPhoneNumber } from "libphonenumber-js";
+import { toE164, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
 
 type Availability = {
   day_of_week: number; // 0 = Sun..6 = Sat
@@ -99,7 +99,7 @@ export function TeacherSlotPicker({
   const [busy, setBusy] = useState<string | null>(null);
   // A phone number is mandatory to confirm a free class. If none is on file, a
   // slot click opens a dialog to collect it before the booking goes through.
-  const [phone, setPhone] = useState(customerPhone ?? "+61 ");
+  const [phone, setPhone] = useState(customerPhone ?? "");
   const [pendingSlot, setPendingSlot] = useState<Slot | null>(null);
   const [savingPhone, setSavingPhone] = useState(false);
   const hasPhone = Boolean((customerPhone ?? "").trim());
@@ -159,9 +159,10 @@ export function TeacherSlotPicker({
 
   // Save the phone to the profile, then confirm the pending booking.
   async function savePhoneAndBook() {
-    const cleaned = phone.trim();
-    if (!isValidPhoneNumber(cleaned)) {
-      toast.error("Enter a valid phone number with country code, e.g. +61 4XX XXX XXX.");
+    // <PhoneField> already reports E.164; toE164 is the final guard + canonicaliser.
+    const e164 = toE164(phone);
+    if (!e164) {
+      toast.error(PHONE_ERROR_MESSAGE);
       return;
     }
     if (!pendingSlot) return;
@@ -175,7 +176,7 @@ export function TeacherSlotPicker({
     }
     const { error: saveErr } = await supabase
       .from("profiles")
-      .update({ phone: cleaned })
+      .update({ phone: e164 })
       .eq("id", user.id);
     setSavingPhone(false);
     if (saveErr) {
@@ -271,15 +272,7 @@ export function TeacherSlotPicker({
           </DialogHeader>
           <div className="space-y-2">
             <Label htmlFor="booking-phone">Phone number</Label>
-            <Input
-              id="booking-phone"
-              type="tel"
-              inputMode="tel"
-              autoComplete="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+61 4xx xxx xxx"
-            />
+            <PhoneField id="booking-phone" value={phone} onChange={setPhone} />
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setPendingSlot(null)} disabled={savingPhone}>
