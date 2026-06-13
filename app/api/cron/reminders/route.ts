@@ -6,15 +6,14 @@ import { sendBookingReminder } from "@/lib/email";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 
 // ---------------------------------------------------------------------------
-// Duplicate-send safety note
+// Duplicate-send safety
 // ---------------------------------------------------------------------------
-// TODO: Add a `reminded_at` column (or a separate `booking_reminders` sent-log
-// table) to make this idempotent at the DB level. Right now idempotency relies
-// on the scheduler hitting each window at most once: the 24 h pass queries a
-// ±10-minute band around now+24h, and the 1 h pass a ±10-minute band around
-// now+1h. If the cron fires twice within the same band (e.g. after a restart)
-// the customer will receive duplicate reminders. A `reminded_at_24h` /
-// `reminded_at_1h` timestamptz column on `bookings` would fully prevent this.
+// Idempotent at the DB level (migration 0016): each window claims a booking with
+// a conditional UPDATE (set reminded_at_24h / reminded_at_1h WHERE it IS NULL)
+// before sending. The claim is atomic, so overlapping ±10-min bands between
+// consecutive 15-min runs — or a re-fire of the same band after a restart — send
+// at most once. At-most-once by design: if the email throws after the claim,
+// that single reminder is skipped (and logged), which beats duplicates.
 
 /** Half-width of the reminder time window in milliseconds. */
 const WINDOW_MS = 10 * 60 * 1000; // ±10 minutes
@@ -94,6 +93,26 @@ export async function POST(req: Request): Promise<Response> {
         ? booking.sessions[0]
         : booking.sessions;
       if (!session) continue;
+
+      // Idempotency claim: stamp this (booking, window) before any send work.
+      // The conditional UPDATE (... WHERE stamp IS NULL) is atomic, so an
+      // overlapping band or a re-fire can't double-send. Skips if already sent.
+      const nowIso = new Date().toISOString();
+      const claimQuery =
+        window.label === "24 hours"
+          ? svc.from("bookings").update({ reminded_at_24h: nowIso }).is("reminded_at_24h", null)
+          : svc.from("bookings").update({ reminded_at_1h: nowIso }).is("reminded_at_1h", null);
+      const { data: claimed, error: claimErr } = await claimQuery
+        .eq("id", booking.id)
+        .select("id")
+        .maybeSingle();
+      if (claimErr) {
+        // Idempotency unavailable (e.g. migration 0016 not yet applied) — fall
+        // back to a best-effort send rather than silently dropping the reminder.
+        console.error(`[cron/reminders] claim failed for booking ${booking.id}:`, claimErr.message);
+      } else if (!claimed) {
+        continue; // already reminded for this window
+      }
 
       // Fetch customer profile for email + timezone.
       const { data: profile } = await svc

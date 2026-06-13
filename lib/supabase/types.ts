@@ -117,6 +117,8 @@ export type Booking = {
   payment_id: string | null;
   cancellation_reason: string | null;
   cancelled_at: string | null;
+  reminded_at_24h: string | null;
+  reminded_at_1h: string | null;
   created_at: string;
   updated_at: string;
 }

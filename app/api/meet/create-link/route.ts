@@ -51,6 +51,7 @@ export async function POST(req: Request) {
       summary: `Yoga with ${teacher?.display_name ?? "Teacher"}`,
       attendeeEmails: user.email ? [user.email] : [],
       calendarId: teacher?.google_calendar_id,
+      recover: true, // manual recovery: adopt an orphaned event instead of duplicating
     },
   );
   if (!meetLink) return NextResponse.json({ error: "meet_create_failed" }, { status: 502 });
