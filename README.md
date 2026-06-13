@@ -66,6 +66,8 @@ npm run dev
    - Create a **service account**, download the JSON key.
    - Paste the full JSON (as a single line) into `GOOGLE_SERVICE_ACCOUNT_JSON`.
    - In Google Calendar settings, share the chosen system calendar with the service account email (give "Make changes to events"). Set `GOOGLE_SYSTEM_CALENDAR_ID` to that calendar's ID.
+   - **Per-teacher calendars (optional but recommended):** to host a teacher's sessions on their *own* Google Calendar — so they see every booked session and its Meet link natively — share that calendar with the service-account email ("Make changes to events"), then paste its calendar ID into the **Google Calendar ID** field on the teacher in `/admin/teachers`. Leave blank to fall back to the system calendar.
+   - **Schedule the Meet-retry sweep:** set `CRON_SECRET` (`openssl rand -hex 32`) and wire the `/api/cron/*` endpoints — see `supabase/migrations/0015_cron_schedule.sql` for the host-agnostic pg_cron + pg_net setup, or POST them from any external scheduler with an `Authorization: Bearer $CRON_SECRET` header. Until this is wired, a Meet link that fails to create at booking time is only recoverable via the dashboard's "Get link" button.
 4. **Resend**: domain verification → `RESEND_API_KEY`, `RESEND_FROM_EMAIL`.
 5. **PostHog**: project → `NEXT_PUBLIC_POSTHOG_KEY`. Create the trial + paid funnels (see plan).
 6. **Sentry**: project → `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`.

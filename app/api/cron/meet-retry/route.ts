@@ -2,7 +2,7 @@ import "server-only";
 
 import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import { createMeetEvent } from "@/lib/google/calendar";
+import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 
 // Maximum number of sessions to process per cron invocation.
 // Keeps each run short and avoids Google Calendar rate-limit bursts.
@@ -51,10 +51,10 @@ export async function POST(req: Request): Promise<Response> {
   let processed = 0;
 
   for (const session of sessions) {
-    // Look up the teacher display name for the calendar event summary.
+    // Look up the teacher for the calendar event summary + their own calendar.
     const { data: teacher } = await svc
       .from("teachers")
-      .select("display_name")
+      .select("display_name, google_calendar_id")
       .eq("id", session.teacher_id)
       .maybeSingle();
 
@@ -79,31 +79,19 @@ export async function POST(req: Request): Promise<Response> {
       }
     }
 
-    try {
-      const created = await createMeetEvent({
+    // Idempotent: adopts an existing event for this session if one is already on
+    // the calendar, else creates one. On failure, meet_status stays 'failed' so
+    // the next run picks it up again.
+    const meetLink = await provisionSessionMeet(
+      svc,
+      { id: session.id, start_at: session.start_at, end_at: session.end_at },
+      {
         summary: `Yoga${teacher?.display_name ? ` with ${teacher.display_name}` : ""}`,
-        startUtc: session.start_at,
-        endUtc: session.end_at,
         attendeeEmails,
-      });
-
-      await svc
-        .from("sessions")
-        .update({
-          meet_link: created.meetLink,
-          meet_event_id: created.eventId,
-          meet_status: "created",
-        })
-        .eq("id", session.id);
-
-      processed++;
-    } catch {
-      // Leave meet_status as 'failed' so the next run picks it up again.
-      await svc
-        .from("sessions")
-        .update({ meet_status: "failed" })
-        .eq("id", session.id);
-    }
+        calendarId: teacher?.google_calendar_id,
+      },
+    );
+    if (meetLink) processed++;
   }
 
   return Response.json({ ok: true, processed });

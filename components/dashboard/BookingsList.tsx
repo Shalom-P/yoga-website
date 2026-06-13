@@ -274,9 +274,7 @@ function RowActions({
             </a>
           </Button>
         ) : (
-          <span className="text-xs text-muted-foreground">
-            {row.session?.meet_status === "failed" ? "Link unavailable" : "Link soon"}
-          </span>
+          <GenerateLink row={row} />
         )}
         <Button asChild size="sm" variant="outline" className="hidden h-8 rounded-full px-3 text-xs sm:inline-flex">
           <Link href="/dashboard/book">Book another</Link>
@@ -298,6 +296,51 @@ function RowActions({
         <Link href="/dashboard/book">Book again</Link>
       </Button>
     </div>
+  );
+}
+
+// For an upcoming session without a link yet (pending or failed), let the
+// customer force creation on demand instead of waiting for the retry cron.
+// /api/meet/create-link is idempotent — returns the existing link if one exists.
+function GenerateLink({ row }: { row: Row }) {
+  const router = useRouter();
+  const [loading, setLoading] = useState(false);
+  const sessionId = row.session?.id;
+  if (!sessionId) return <span className="text-xs text-muted-foreground">—</span>;
+
+  async function generate() {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/meet/create-link", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ sessionId }),
+      });
+      const body = (await res.json().catch(() => ({}))) as { meetLink?: string; error?: string };
+      if (!res.ok || !body.meetLink) {
+        toast.error("Your link isn't ready yet — please try again in a moment.");
+        return;
+      }
+      toast.success("Meet link ready.");
+      router.refresh();
+    } catch {
+      toast.error("Network error.");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      className="h-8 rounded-full px-3 text-xs"
+      onClick={generate}
+      disabled={loading}
+      title="Generate your Google Meet join link"
+    >
+      {loading ? <Loader2 className="size-3.5 animate-spin" /> : "Get link"}
+    </Button>
   );
 }
 

@@ -129,6 +129,7 @@ export const sessions = pgTable(
     status: sessionStatusEnum("status").notNull().default("scheduled"),
     meet_link: text("meet_link"),
     meet_event_id: text("meet_event_id"),
+    meet_calendar_id: text("meet_calendar_id"),
     is_free_trial: boolean("is_free_trial").notNull().default(false),
     recording_url: text("recording_url"),
     notes: text("notes"),

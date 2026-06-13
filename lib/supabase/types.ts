@@ -100,6 +100,7 @@ export type Session = {
   status: SessionStatus;
   meet_link: string | null;
   meet_event_id: string | null;
+  meet_calendar_id: string | null;
   meet_status: MeetStatus | null;
   is_free_trial: boolean;
   recording_url: string | null;
