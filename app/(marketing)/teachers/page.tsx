@@ -23,7 +23,7 @@ export default async function TeachersPage() {
 
       <section className="pb-24">
         <div className="mx-auto grid max-w-[1240px] gap-6 px-7 sm:grid-cols-2 lg:grid-cols-3">
-          {teachers.map((t) => (
+          {teachers.map((t, i) => (
             <Link
               key={t.id}
               href={`/teachers/${t.slug}`}
@@ -41,6 +41,7 @@ export default async function TeachersPage() {
                     src={t.avatar_url}
                     alt={t.display_name}
                     fill
+                    priority={i < 3}
                     className="object-cover"
                     sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   />

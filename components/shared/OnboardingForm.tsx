@@ -120,7 +120,7 @@ export function OnboardingForm({
           What&apos;s your level?
         </LabelWithHint>
         <Select value={level} onValueChange={(v) => v && setLevel(v)}>
-          <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-11 w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="beginner">Beginner — new or returning</SelectItem>
             <SelectItem value="intermediate">Intermediate — a few months of practice</SelectItem>
@@ -137,7 +137,7 @@ export function OnboardingForm({
           Your timezone
         </LabelWithHint>
         <Select value={tz} onValueChange={(v) => v && setTz(v)}>
-          <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-11 w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
             {AU_TIMEZONES.map((z) => (
               <SelectItem key={z.id} value={z.id}>

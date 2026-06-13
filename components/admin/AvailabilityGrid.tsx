@@ -9,6 +9,7 @@ import type { TeacherAvailability } from "@/lib/supabase/types";
 
 type Props = {
   teacherId: string;
+  teacherTimezone: string;
   initial: TeacherAvailability[];
 };
 
@@ -30,7 +31,7 @@ function timeKey(dow: number, hour: number) {
   return `${dow}:${pad(hour)}`;
 }
 
-export function AvailabilityGrid({ teacherId, initial }: Props) {
+export function AvailabilityGrid({ teacherId, teacherTimezone, initial }: Props) {
   const supabase = createSupabaseBrowserClient();
 
   // Custom rows whose deletions are tracked locally so the list updates without a full refresh.
@@ -148,10 +149,12 @@ export function AvailabilityGrid({ teacherId, initial }: Props) {
   return (
     <>
       <div className="mt-8 rounded-2xl border border-border bg-card overflow-x-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[640px] text-sm">
           <thead className="bg-muted/40">
             <tr>
-              <th className="px-3 py-2 text-left text-muted-foreground font-medium">Time (IST)</th>
+              <th className="px-3 py-2 text-left text-muted-foreground font-medium">
+                Time ({teacherTimezone === "Asia/Kolkata" ? "IST" : teacherTimezone})
+              </th>
               {DAYS.map((d) => (
                 <th key={d.dow} className="px-3 py-2 text-left text-muted-foreground font-medium">
                   {d.label}

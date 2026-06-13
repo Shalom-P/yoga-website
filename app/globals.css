@@ -121,6 +121,9 @@
   html {
     @apply font-sans;
     scroll-behavior: smooth;
+    /* Motion's useScroll measures target offsets against the scroll container
+       (documentElement); it must be positioned for that math to be reliable. */
+    position: relative;
   }
   body {
     @apply bg-background text-foreground;

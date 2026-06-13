@@ -75,8 +75,14 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
     setBusy(id);
     const patch: { status: BookingStatus; cancelled_at?: string } = { status };
     if (status === "cancelled") patch.cancelled_at = new Date().toISOString();
-    const { error } = await supabase.from("bookings").update(patch).eq("id", id);
-    setBusy(null);
+    let error: { message: string } | null = null;
+    try {
+      ({ error } = await supabase.from("bookings").update(patch).eq("id", id));
+    } catch (e) {
+      error = { message: e instanceof Error ? e.message : "Network error — please retry." };
+    } finally {
+      setBusy(null);
+    }
     if (error) return toast.error(error.message);
     toast.success(`Marked as ${STATUS_LABEL[status]}.`);
     router.refresh();
@@ -99,8 +105,14 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
       cancelled_at: new Date().toISOString(),
     };
     if (cancelReason.trim()) patch.cancellation_reason = cancelReason.trim();
-    const { error } = await supabase.from("bookings").update(patch).eq("id", cancelTarget.id);
-    setCancelling(false);
+    let error: { message: string } | null = null;
+    try {
+      ({ error } = await supabase.from("bookings").update(patch).eq("id", cancelTarget.id));
+    } catch (e) {
+      error = { message: e instanceof Error ? e.message : "Network error — please retry." };
+    } finally {
+      setCancelling(false);
+    }
     if (error) return toast.error(error.message);
     toast.success("Booking cancelled.");
     setCancelTarget(null);

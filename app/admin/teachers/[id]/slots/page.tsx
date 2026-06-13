@@ -48,7 +48,7 @@ export default async function TeacherSlotsPage({
         Times shown in the teacher&apos;s local timezone ({teacher.timezone}). Click cells to toggle availability.
       </p>
 
-      <AvailabilityGrid teacherId={id} initial={availability ?? []} />
+      <AvailabilityGrid teacherId={id} teacherTimezone={teacher.timezone} initial={availability ?? []} />
 
       <SlotOverrides
         teacherId={id}
