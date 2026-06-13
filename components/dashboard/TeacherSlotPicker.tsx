@@ -5,17 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { addDays, addMinutes } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
-import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { PhoneField } from "@/components/ui/phone-field";
-import { Label } from "@/components/ui/label";
-import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
-} from "@/components/ui/dialog";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { useBrowserTz } from "@/components/dashboard/local-time";
-import { toast } from "sonner";
-import { toE164, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
 
 type Availability = {
   day_of_week: number; // 0 = Sun..6 = Sat
@@ -32,7 +23,6 @@ type Props = {
   teacherId: string;
   teacherTimezone: string;
   customerTimezone: string;
-  customerPhone: string | null;
   availability: Availability[];
   /** True until the customer has used their free 1:1 trial. */
   freeTrialAvailable: boolean;
@@ -87,7 +77,6 @@ export function TeacherSlotPicker({
   teacherId,
   teacherTimezone,
   customerTimezone,
-  customerPhone,
   availability,
   freeTrialAvailable,
   creditBalance,
@@ -97,12 +86,6 @@ export function TeacherSlotPicker({
   const customerTz = useBrowserTz(customerTimezone);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
-  // A phone number is mandatory to confirm a free class. If none is on file, a
-  // slot click opens a dialog to collect it before the booking goes through.
-  const [phone, setPhone] = useState(customerPhone ?? "");
-  const [pendingSlot, setPendingSlot] = useState<Slot | null>(null);
-  const [savingPhone, setSavingPhone] = useState(false);
-  const hasPhone = Boolean((customerPhone ?? "").trim());
 
   const grouped = useMemo(() => {
     const now = new Date();
@@ -125,8 +108,7 @@ export function TeacherSlotPicker({
       setError("insufficient_credits");
       return;
     }
-    if (hasPhone) book(slot);
-    else setPendingSlot(slot);
+    book(slot);
   }
 
   async function book(slot: Slot) {
@@ -149,43 +131,7 @@ export function TeacherSlotPicker({
       return;
     }
     const body = (await res.json().catch(() => ({}))) as { error?: string };
-    // Server fell back to requiring a phone — collect it and retry this slot.
-    if (body.error === "phone_required") {
-      setPendingSlot(slot);
-      return;
-    }
     setError(body.error ?? "booking_failed");
-  }
-
-  // Save the phone to the profile, then confirm the pending booking.
-  async function savePhoneAndBook() {
-    // <PhoneField> already reports E.164; toE164 is the final guard + canonicaliser.
-    const e164 = toE164(phone);
-    if (!e164) {
-      toast.error(PHONE_ERROR_MESSAGE);
-      return;
-    }
-    if (!pendingSlot) return;
-    setSavingPhone(true);
-    const supabase = createSupabaseBrowserClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      setSavingPhone(false);
-      toast.error("Session expired — please log in again.");
-      return;
-    }
-    const { error: saveErr } = await supabase
-      .from("profiles")
-      .update({ phone: e164 })
-      .eq("id", user.id);
-    setSavingPhone(false);
-    if (saveErr) {
-      toast.error(saveErr.message);
-      return;
-    }
-    const slot = pendingSlot;
-    setPendingSlot(null);
-    await book(slot);
   }
 
   if (grouped.length === 0) {
@@ -259,31 +205,6 @@ export function TeacherSlotPicker({
           </div>
         </div>
       ))}
-
-      <Dialog open={pendingSlot !== null} onOpenChange={(o) => !o && setPendingSlot(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add your phone number</DialogTitle>
-            <DialogDescription>
-              {pendingSlot
-                ? `We'll confirm your free 1:1 on ${formatInTimeZone(pendingSlot.at, customerTz, "EEE d MMM, h:mm a")} and text you the details. A phone number is required to book.`
-                : "A phone number is required to confirm your free class."}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-2">
-            <Label htmlFor="booking-phone">Phone number</Label>
-            <PhoneField id="booking-phone" value={phone} onChange={setPhone} />
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setPendingSlot(null)} disabled={savingPhone}>
-              Cancel
-            </Button>
-            <Button onClick={savePhoneAndBook} disabled={savingPhone}>
-              {savingPhone ? <Loader2 className="size-4 animate-spin" /> : "Confirm free booking"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

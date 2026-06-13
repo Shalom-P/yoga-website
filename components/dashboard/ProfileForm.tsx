@@ -29,9 +29,11 @@ export function ProfileForm({ initial }: { initial: Initial }) {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const e164 = toE164(state.phone);
-    if (!e164) {
-      toast.error(state.phone.trim() ? PHONE_ERROR_MESSAGE : "Phone number is required.");
+    // Phone is optional. Empty clears it; a non-empty value must still parse.
+    const hasPhone = Boolean(state.phone.trim());
+    const e164 = hasPhone ? toE164(state.phone) : null;
+    if (hasPhone && !e164) {
+      toast.error(PHONE_ERROR_MESSAGE);
       return;
     }
     setLoading(true);
@@ -81,7 +83,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       <div>
         <LabelWithHint
           htmlFor="email"
-          hint="Comes from your login provider (Google or phone). To change, sign in with a different account."
+          hint="Comes from your login provider (Google or email). To change, sign in with a different account."
         >
           Email
         </LabelWithHint>
@@ -91,9 +93,9 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       <div>
         <LabelWithHint
           htmlFor="phone"
-          hint="Required. Used to verify your account and contact you about your bookings."
+          hint="Optional. If you add it, we may use it to contact you about your bookings."
         >
-          Phone
+          Phone (optional)
         </LabelWithHint>
         <PhoneField id="phone" value={state.phone ?? ""} onChange={(v) => set("phone", v)} className="mt-1.5" />
       </div>

@@ -16,11 +16,10 @@ Built on Next.js 16 (App Router) + Supabase + Razorpay + Google Calendar API.
 | Animation | Motion (Framer Motion's rebrand) + Lenis smooth scroll + GSAP ScrollTrigger |
 | Backend | Supabase (Postgres + Auth + Storage + Realtime) |
 | ORM | Drizzle (typed complex queries) alongside `supabase-js` (auth + simple CRUD) |
-| Auth | Supabase: Google OAuth + Phone OTP via Twilio Verify (handles +61 AU and +91 IN) |
+| Auth | Supabase: Google OAuth + passwordless Email OTP (handles AU customers and IN teachers) |
 | Payments | Razorpay one-time Checkout (AUD, session-pack credits) |
 | Conferencing | Google Calendar API → Meet links (service account) |
 | Email | Resend + React Email |
-| SMS | Twilio (via Supabase) |
 | Analytics | PostHog (events + replay + flags) |
 | Errors | Sentry |
 
@@ -52,7 +51,7 @@ npm run dev
    - Apply migrations in `supabase/migrations/0001…0006` (Supabase SQL editor or `psql`).
    - Run `supabase/seed.sql` for demo content.
    - Auth → Providers → enable **Google** (paste your GCP OAuth client/secret).
-   - Auth → Providers → enable **Phone**, choose **Twilio Verify**, paste Twilio credentials.
+   - Auth → Providers → enable **Email**; for the inline 6-digit code flow, edit the **Magic Link** email template to include `{{ .Token }}` (otherwise Supabase sends a magic link instead of a code).
    - Storage → create buckets `teacher-avatars`, `promotional-media`, `session-recordings`.
    - Promote yourself to admin: `UPDATE profiles SET role='admin' WHERE id='<your-uuid>';`
 2. **Razorpay**

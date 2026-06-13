@@ -6,7 +6,6 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
-import { isValidPhone } from "@/lib/validation/phone";
 
 const schema = z.object({
   teacherId: z.string().uuid(),
@@ -49,18 +48,12 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "bad request" }, { status: 400 });
 
-  // A valid phone number is mandatory to confirm a booking (especially the free
-  // 1:1). The client collects it before this call; this guard makes it
-  // non-bypassable and also rejects a malformed/legacy stored number, which
-  // re-opens the collect-phone dialog on the client.
+  // Load the booker's timezone for the confirmation email below.
   const { data: bookerProfile } = await supabase
     .from("profiles")
-    .select("phone, timezone")
+    .select("timezone")
     .eq("id", user.id)
     .maybeSingle();
-  if (!isValidPhone(bookerProfile?.phone)) {
-    return NextResponse.json({ error: "phone_required" }, { status: 400 });
-  }
 
   // Paid (non-trial) sessions spend one session-credit, reserved after the slot
   // is confirmed available (see below). The free 1:1 trial never spends credits.
