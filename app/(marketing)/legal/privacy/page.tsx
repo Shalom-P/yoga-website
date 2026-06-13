@@ -13,7 +13,7 @@ export default function PrivacyPage() {
         <h1 className="text-[clamp(2.25rem,4vw,3rem)] leading-[1.1] tracking-tight">
           Privacy policy
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 7 June 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 13 June 2026</p>
 
         <div className="mt-10 space-y-10 text-foreground/85 text-pretty">
 
@@ -44,8 +44,9 @@ export default function PrivacyPage() {
             <p>We collect personal information that is reasonably necessary for our functions:</p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <strong>Identity &amp; contact:</strong> full name, email address, phone number
-                (used for SMS one-time passcode authentication via Twilio).
+                <strong>Identity &amp; contact:</strong> full name, email address (used for
+                one-time passcode authentication), and an optional phone number you may choose
+                to provide for booking-related contact.
               </li>
               <li>
                 <strong>Account details:</strong> your preferred timezone, yoga goals, and any
@@ -88,7 +89,7 @@ export default function PrivacyPage() {
               <li>Match you with an available teacher and schedule sessions across timezones.</li>
               <li>Generate and send Google Meet links for your sessions.</li>
               <li>Process one-time session-pack payments in AUD via Razorpay.</li>
-              <li>Send booking confirmations, reminders, and account notifications by email or SMS.</li>
+              <li>Send booking confirmations, reminders, and account notifications by email.</li>
               <li>Provide customer support.</li>
               <li>Improve our platform and personalise your experience.</li>
               <li>Comply with applicable laws and enforce our terms.</li>
@@ -129,11 +130,6 @@ export default function PrivacyPage() {
                     <td className="py-2 pr-4">Razorpay</td>
                     <td className="py-2 pr-4">One-time payment processing (session packs)</td>
                     <td className="py-2">India</td>
-                  </tr>
-                  <tr>
-                    <td className="py-2 pr-4">Twilio (via Supabase)</td>
-                    <td className="py-2 pr-4">SMS one-time passcode (phone verification)</td>
-                    <td className="py-2">USA</td>
                   </tr>
                   <tr>
                     <td className="py-2 pr-4">Google (Calendar &amp; Meet)</td>

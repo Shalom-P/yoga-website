@@ -37,7 +37,7 @@ export function OnboardingForm({
 }) {
   const router = useRouter();
   // full name field state — prefilled from the profile (Google logins
-  // already carry a name; phone-OTP users start blank).
+  // already carry a name; email-OTP users start blank).
   const [fullName, setFullName] = useState(initialFullName);
   // clamp detected timezone to the AU list
   const [tz, setTz] = useState(() => clampToAuTz(detectBrowserTimezone()));

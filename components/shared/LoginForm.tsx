@@ -11,12 +11,10 @@ import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import { track } from "@/lib/analytics/events";
-import { PhoneField } from "@/components/ui/phone-field";
-import { isValidPhone, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
 
 export function LoginForm() {
   const params = useSearchParams();
-  // Sanitize at the source: the phone-OTP path assigns this to
+  // Sanitize at the source: the email-OTP path assigns this to
   // window.location.href, which would otherwise be an open redirect.
   const next = safeNext(params.get("next"));
   const errorParam = params.get("error");
@@ -38,13 +36,13 @@ export function LoginForm() {
       <Tabs defaultValue="google" className="w-full">
         <TabsList className="w-full grid grid-cols-2">
           <TabsTrigger value="google">Google</TabsTrigger>
-          <TabsTrigger value="phone">Phone</TabsTrigger>
+          <TabsTrigger value="email">Email</TabsTrigger>
         </TabsList>
         <TabsContent value="google" className="mt-6">
           <GoogleLogin next={next} />
         </TabsContent>
-        <TabsContent value="phone" className="mt-6">
-          <PhoneLogin next={next} />
+        <TabsContent value="email" className="mt-6">
+          <EmailLogin next={next} />
         </TabsContent>
       </Tabs>
     </div>
@@ -92,10 +90,15 @@ function GoogleLogin({ next }: { next: string }) {
 
 const RESEND_COOLDOWN_SECONDS = 30;
 
-function PhoneLogin({ next }: { next: string }) {
-  const [phase, setPhase] = useState<"phone" | "otp">("phone");
-  // E.164 from <PhoneField> ("+61402281827"); "" until the number parses.
-  const [phone, setPhone] = useState("");
+// Lightweight client-side guard. Supabase rejects malformed addresses anyway;
+// this just avoids spending a send on an obvious typo (e.g. a missing "@").
+function isValidEmail(value: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
+}
+
+function EmailLogin({ next }: { next: string }) {
+  const [phase, setPhase] = useState<"email" | "otp">("email");
+  const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   // resend cooldown state
@@ -110,16 +113,17 @@ function PhoneLogin({ next }: { next: string }) {
   }, [resendCooldown]);
 
   async function doSendOtp() {
-    // Validate before spending an SMS: a malformed number is silently "accepted"
+    // Validate before spending a send: a malformed address is silently "accepted"
     // by signInWithOtp but no code ever lands.
-    if (!isValidPhone(phone)) {
-      toast.error(PHONE_ERROR_MESSAGE);
+    if (!isValidEmail(email)) {
+      toast.error("Enter a valid email address.");
       return false;
     }
     setLoading(true);
+    // shouldCreateUser:true keeps the OTP flow self-service for new sign-ups.
     const { error } = await supabase.auth.signInWithOtp({
-      phone,
-      options: { channel: "sms" },
+      email: email.trim(),
+      options: { shouldCreateUser: true },
     });
     setLoading(false);
     if (error) { toast.error(error.message); return false; }
@@ -128,10 +132,10 @@ function PhoneLogin({ next }: { next: string }) {
 
   async function sendOtp(e: React.FormEvent) {
     e.preventDefault();
-    track("signup_started", { method_intent: "phone", next_path: next });
+    track("signup_started", { method_intent: "email", next_path: next });
     const ok = await doSendOtp();
     if (!ok) return;
-    toast.success("Code sent. Check your phone.");
+    toast.success("Code sent. Check your email.");
     setPhase("otp");
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
   }
@@ -140,7 +144,7 @@ function PhoneLogin({ next }: { next: string }) {
   async function resendOtp() {
     const ok = await doSendOtp();
     if (!ok) return;
-    toast.success("New code sent. Check your phone.");
+    toast.success("New code sent. Check your email.");
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
   }
 
@@ -148,15 +152,15 @@ function PhoneLogin({ next }: { next: string }) {
     e.preventDefault();
     setLoading(true);
     const { data, error } = await supabase.auth.verifyOtp({
-      phone,
+      email: email.trim(),
       token: otp.replace(/\D/g, ""),
-      type: "sms",
+      type: "email",
     });
     if (error) {
       setLoading(false);
       return toast.error(error.message);
     }
-    // Route through onboarding if it isn't complete yet (phone-OTP users skip
+    // Route through onboarding if it isn't complete yet (email-OTP users skip
     // the OAuth callback, so the check has to happen here too).
     let onboarded = true;
     const userId = data.user?.id;
@@ -186,7 +190,7 @@ function PhoneLogin({ next }: { next: string }) {
             maxLength={6}
             className="mt-1.5 text-center tracking-[0.4em] text-lg"
           />
-          <p className="mt-1.5 text-xs text-muted-foreground">Sent to {phone}.</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">Sent to {email}.</p>
         </div>
         <Button type="submit" disabled={loading} className="w-full h-11 rounded-full">
           {loading ? <Loader2 className="size-4 animate-spin" /> : "Verify & continue"}
@@ -203,9 +207,9 @@ function PhoneLogin({ next }: { next: string }) {
         <button
           type="button"
           className="text-xs text-muted-foreground hover:text-foreground mx-auto block"
-          onClick={() => setPhase("phone")}
+          onClick={() => setPhase("email")}
         >
-          ← Change number
+          ← Change email
         </button>
       </form>
     );
@@ -214,11 +218,20 @@ function PhoneLogin({ next }: { next: string }) {
   return (
     <form onSubmit={sendOtp} className="space-y-4">
       <div>
-        <Label htmlFor="phone">Phone number</Label>
-        <PhoneField id="phone" value={phone} onChange={setPhone} className="mt-1.5" />
+        <Label htmlFor="email">Email address</Label>
+        <Input
+          id="email"
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@example.com"
+          className="mt-1.5"
+        />
         <p className="mt-1.5 text-xs text-muted-foreground">
-          We&apos;ll text a 6-digit code to{" "}
-          {phone ? <span className="tabular-nums">{phone}</span> : "your mobile"}.
+          We&apos;ll email a 6-digit code to{" "}
+          {email ? <span>{email}</span> : "your inbox"}.
         </p>
       </div>
       <Button type="submit" disabled={loading} className="h-11 w-full rounded-full">

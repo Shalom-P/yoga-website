@@ -31,7 +31,7 @@ export default async function TeacherBookingPage({
   // row hasn't been created by the auth trigger yet).
   const { data: profile } = await supabase
     .from("profiles")
-    .select("timezone, phone")
+    .select("timezone")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -80,7 +80,6 @@ export default async function TeacherBookingPage({
         teacherId={teacher.id}
         teacherTimezone={teacher.timezone ?? "Asia/Kolkata"}
         customerTimezone={profile?.timezone ?? "Australia/Sydney"}
-        customerPhone={profile?.phone ?? null}
         availability={availability ?? []}
         freeTrialAvailable={freeTrialAvailable}
         creditBalance={creditBalance}
