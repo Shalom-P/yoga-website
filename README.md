@@ -60,13 +60,23 @@ npm run dev
    - Enable **International / foreign-currency** acceptance so AUD orders are accepted (Indian accounts settle INR by default).
    - In `/admin/plans`, set each pack's **price** and **session credits**.
    - Create a webhook in the Razorpay dashboard pointing to `https://<yourdomain>/api/razorpay/webhook` for the `payment.captured` event. Copy its signing secret → `RAZORPAY_WEBHOOK_SECRET`.
-3. **Google Meet** (via Calendar API)
-   - Enable the **Google Calendar API** in your GCP project.
-   - Create a **service account**, download the JSON key.
-   - Paste the full JSON (as a single line) into `GOOGLE_SERVICE_ACCOUNT_JSON`.
-   - In Google Calendar settings, share the chosen system calendar with the service account email (give "Make changes to events"). Set `GOOGLE_SYSTEM_CALENDAR_ID` to that calendar's ID.
-   - **Per-teacher calendars (optional but recommended):** to host a teacher's sessions on their *own* Google Calendar — so they see every booked session and its Meet link natively — share that calendar with the service-account email ("Make changes to events"), then paste its calendar ID into the **Google Calendar ID** field on the teacher in `/admin/teachers`. Leave blank to fall back to the system calendar.
-   - **Schedule the Meet-retry sweep:** set `CRON_SECRET` (`openssl rand -hex 32`) and wire the `/api/cron/*` endpoints — see `supabase/migrations/0015_cron_schedule.sql` for the host-agnostic pg_cron + pg_net setup, or POST them from any external scheduler with an `Authorization: Bearer $CRON_SECRET` header. Until this is wired, a Meet link that fails to create at booking time is only recoverable via the dashboard's "Get link" button.
+3. **Google Meet (keyless — Vercel OIDC → GCP Workload Identity Federation → domain-wide delegation)**
+
+   No downloadable service-account JSON key (orgs that enforce `iam.disableServiceAccountKeyCreation` block them). Instead, Vercel's per-request OIDC identity is federated into GCP, used to `signJwt` as a service account, and that JWT impersonates a real Google **Workspace** mailbox (whose calendar can mint Meet links). The auth chain lives in [`lib/google/calendar.ts`](lib/google/calendar.ts) → `getAccessToken()`.
+
+   **GCP** (run as project owner; the audience uses the project **NUMBER**, not the id):
+   - Enable APIs: `iamcredentials`, `sts`, `calendar-json`, `iam`.
+   - Create a service account (e.g. `meet-signer`) — **no key**.
+   - Create a **Workload Identity Pool + OIDC provider** trusting Vercel: `--issuer-uri=https://oidc.vercel.com/<TEAM_SLUG>`, `--allowed-audiences=https://vercel.com/<TEAM_SLUG>`, map `google.subject=assertion.sub`, and pin an attribute condition to the immutable team id + project + `environment=='production'`.
+   - Grant the federated principal **`roles/iam.serviceAccountTokenCreator`** on the SA (NOT just `workloadIdentityUser` — `signJwt` needs Token Creator), bound to the exact `sub`.
+   - `GOOGLE_WORKLOAD_IDENTITY_PROVIDER` = `//iam.googleapis.com/projects/<NUMBER>/locations/global/workloadIdentityPools/<POOL>/providers/<PROVIDER>`.
+
+   **Google Workspace Admin** (admin.google.com → Security → API controls → Domain-Wide Delegation): authorize the SA's **numeric client ID** with the single scope `https://www.googleapis.com/auth/calendar.events`. Ensure the impersonated mailbox (`GOOGLE_IMPERSONATE_SUBJECT`) is a licensed user with Calendar/Meet.
+
+   **Vercel**: Settings → Security → enable **OIDC Federation**; set `GOOGLE_WORKLOAD_IDENTITY_PROVIDER`, `GOOGLE_IMPERSONATE_SERVICE_ACCOUNT`, `GOOGLE_IMPERSONATE_SUBJECT`, `GOOGLE_SYSTEM_CALENDAR_ID` (Production scope). `VERCEL_OIDC_TOKEN` is injected automatically. Locally: `vercel env pull` then **`vercel dev`** (not `next dev` — plain `next dev` has no OIDC token, so Meet creation fails loud with a clear hint).
+
+   - **Per-teacher calendars (optional):** to host a teacher's sessions on their *own* calendar, share it with the impersonated mailbox ("Make changes to events"), then paste its calendar ID into **Google Calendar ID** on the teacher in `/admin/teachers`. Blank → falls back to `GOOGLE_SYSTEM_CALENDAR_ID`.
+   - **Schedule the Meet-retry sweep:** set `CRON_SECRET` (`openssl rand -hex 32`) and wire the `/api/cron/*` endpoints — see `supabase/migrations/0015_cron_schedule.sql` for the pg_cron + pg_net setup, or POST from any scheduler with `Authorization: Bearer $CRON_SECRET`. Until wired, a failed Meet link is recoverable via the dashboard's "Get link" button.
 4. **Resend**: domain verification → `RESEND_API_KEY`, `RESEND_FROM_EMAIL`.
 5. **PostHog**: project → `NEXT_PUBLIC_POSTHOG_KEY`. Create the trial + paid funnels (see plan).
 6. **Sentry**: project → `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`.
