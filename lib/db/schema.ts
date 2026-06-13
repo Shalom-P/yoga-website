@@ -153,6 +153,8 @@ export const bookings = pgTable(
     payment_id: uuid("payment_id"),
     cancellation_reason: text("cancellation_reason"),
     cancelled_at: timestamp("cancelled_at", { withTimezone: true }),
+    reminded_at_24h: timestamp("reminded_at_24h", { withTimezone: true }),
+    reminded_at_1h: timestamp("reminded_at_1h", { withTimezone: true }),
     created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

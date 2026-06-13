@@ -5,6 +5,7 @@
 
 import "server-only";
 
+import * as Sentry from "@sentry/nextjs";
 import {
   createMeetEvent,
   deleteMeetEvent,
@@ -28,6 +29,10 @@ type ProvisionOptions = {
   // to GOOGLE_SYSTEM_CALENDAR_ID. The resolved value is recorded on the session
   // so cancellation deletes from the right calendar.
   calendarId?: string | null;
+  // Look up an existing event for this session before creating (idempotent
+  // recovery). Only meaningful for retry paths — on first creation there is
+  // never a prior event, so the lookup is pure overhead. Defaults to false.
+  recover?: boolean;
 };
 
 /**
@@ -49,7 +54,12 @@ export async function provisionSessionMeet(
 ): Promise<string | null> {
   const calendarId = opts.calendarId || undefined;
   try {
-    const existing = await findMeetEventBySession(session.id, calendarId);
+    // Only retry/recovery paths (cron sweep, manual "Get link") look up an
+    // existing event — on first creation there is never one, so the lookup would
+    // be a guaranteed-empty Google round-trip on the booking hot path.
+    const existing = opts.recover
+      ? await findMeetEventBySession(session.id, calendarId)
+      : null;
     const result =
       existing ??
       (await createMeetEvent({
@@ -73,8 +83,15 @@ export async function provisionSessionMeet(
       .is("meet_event_id", null); // don't clobber a concurrent writer
 
     return result.meetLink;
-  } catch {
-    // Leave a marker for the retry sweep / manual button.
+  } catch (err) {
+    // Surface the cause (bad/unshared teacher calendar, Google quota, etc.) —
+    // otherwise this is an invisible 'failed' with no diagnostics. Then leave
+    // the 'failed' marker for the retry sweep / manual button.
+    console.error(`[provisionMeet] session ${session.id} failed:`, err);
+    Sentry.captureException(err, {
+      tags: { module: "provisionMeet" },
+      extra: { sessionId: session.id },
+    });
     await svc
       .from("sessions")
       .update({ meet_status: "failed" })

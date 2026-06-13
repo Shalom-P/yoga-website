@@ -89,6 +89,7 @@ export async function POST(req: Request): Promise<Response> {
         summary: `Yoga${teacher?.display_name ? ` with ${teacher.display_name}` : ""}`,
         attendeeEmails,
         calendarId: teacher?.google_calendar_id,
+        recover: true, // retry path: adopt an orphaned event instead of duplicating
       },
     );
     if (meetLink) processed++;
