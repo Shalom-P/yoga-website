@@ -80,7 +80,12 @@ export async function provisionSessionMeet(
         meet_status: "created",
       })
       .eq("id", session.id)
-      .is("meet_event_id", null); // don't clobber a concurrent writer
+      // Compare-and-set on status, NOT on meet_event_id IS NULL: a recover/retry
+      // run may have a stale meet_event_id from an attempt that set it then
+      // failed — gating on null would match zero rows and wedge the session in
+      // 'pending'/'failed' forever. Gating on "not already created" both adopts
+      // the recovered event and still refuses to clobber a concurrent winner.
+      .neq("meet_status", "created");
 
     return result.meetLink;
   } catch (err) {

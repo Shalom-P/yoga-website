@@ -28,6 +28,8 @@ type Props = {
   freeTrialAvailable: boolean;
   /** Session-credits available for paid bookings (after the trial is used). */
   creditBalance: number;
+  /** Teacher-TZ "yyyy-MM-dd" dates the teacher has blocked off (no bookings). */
+  blockedDates?: string[];
 };
 
 function padHms(hms: string): string {
@@ -47,13 +49,17 @@ function generateSlots(
   availability: Availability[],
   teacherTz: string,
   now: Date,
+  blockedDates: string[],
 ): Slot[] {
   const out: Slot[] = [];
+  const blocked = new Set(blockedDates);
   const todayStr = formatInTimeZone(now, teacherTz, "yyyy-MM-dd");
   const noonAnchorUtc = fromZonedTime(`${todayStr}T12:00:00`, teacherTz);
   for (let i = 0; i < 7; i++) {
     const dayAnchorUtc = addDays(noonAnchorUtc, i);
     const dateStr = formatInTimeZone(dayAnchorUtc, teacherTz, "yyyy-MM-dd");
+    // A one-off blocked date overrides the recurring weekly availability.
+    if (blocked.has(dateStr)) continue;
     // date-fns-tz formats "i" as 1=Mon..7=Sun; Postgres day_of_week is 0=Sun..6=Sat.
     const isoDow = Number(formatInTimeZone(dayAnchorUtc, teacherTz, "i"));
     const dow = isoDow === 7 ? 0 : isoDow;
@@ -80,6 +86,7 @@ export function TeacherSlotPicker({
   availability,
   freeTrialAvailable,
   creditBalance,
+  blockedDates,
 }: Props) {
   const router = useRouter();
   // Show slot times in the timezone the customer is actually in right now.
@@ -89,7 +96,7 @@ export function TeacherSlotPicker({
 
   const grouped = useMemo(() => {
     const now = new Date();
-    const slots = generateSlots(availability, teacherTimezone, now);
+    const slots = generateSlots(availability, teacherTimezone, now, blockedDates ?? []);
     const buckets = new Map<string, Slot[]>();
     for (const s of slots) {
       const dayKey = formatInTimeZone(s.at, customerTz, "yyyy-MM-dd");
@@ -98,7 +105,7 @@ export function TeacherSlotPicker({
       buckets.set(dayKey, arr);
     }
     return Array.from(buckets.entries()).slice(0, 7);
-  }, [availability, teacherTimezone, customerTz]);
+  }, [availability, teacherTimezone, customerTz, blockedDates]);
 
   // Once the free trial is used, every booking is paid and spends a credit.
   const isPaid = !freeTrialAvailable;

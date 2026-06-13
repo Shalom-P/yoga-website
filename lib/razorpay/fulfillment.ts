@@ -22,6 +22,7 @@ export type FulfillResult =
 export async function fulfillRazorpayPayment(
   orderId: string,
   paymentId: string,
+  opts: { expectedCustomerId?: string } = {},
 ): Promise<FulfillResult> {
   const rzp = getRazorpayClient();
 
@@ -31,20 +32,30 @@ export async function fulfillRazorpayPayment(
     rzp.payments.fetch(paymentId),
   ]);
 
-  // The payment must belong to this order and actually be paid. A valid signature
-  // alone never proves capture — this does.
+  // The payment must belong to this order and the money must have SETTLED. An
+  // `authorized` payment is only a hold that can still void/expire — granting
+  // credits on it would release value before capture. Require `captured`; the
+  // capture webhook arrives separately and fulfils then.
   if (payment.order_id !== orderId) return { ok: false, reason: "order_mismatch" };
-  const paid = payment.status === "captured" || payment.status === "authorized";
-  if (!paid) return { ok: false, reason: `not_paid:${payment.status}` };
-  // Defence-in-depth: the captured amount must match the order we created.
+  if (payment.status !== "captured") return { ok: false, reason: `not_paid:${payment.status}` };
+  // Defence-in-depth: the captured amount + currency must match the order.
   if (Number(payment.amount) !== Number(order.amount)) {
     return { ok: false, reason: "amount_mismatch" };
+  }
+  if (order.currency && payment.currency && payment.currency !== order.currency) {
+    return { ok: false, reason: "currency_mismatch" };
   }
 
   const notes = (order.notes ?? {}) as Record<string, string | number>;
   const customerId = typeof notes.customerId === "string" ? notes.customerId : undefined;
   const planId = typeof notes.planId === "string" ? notes.planId : undefined;
   if (!customerId || !planId) return { ok: false, reason: "missing_notes" };
+  // When called from the per-user verify endpoint, the order must belong to the
+  // caller — a signed-in user can't force-fulfil (or read the balance of)
+  // someone else's pending payment. The webhook omits this (it has no user).
+  if (opts.expectedCustomerId && customerId !== opts.expectedCustomerId) {
+    return { ok: false, reason: "customer_mismatch" };
+  }
 
   const pack = await resolvePackById(planId);
   if (!pack) return { ok: false, reason: "plan_not_found" };
@@ -86,4 +97,61 @@ export async function fulfillRazorpayPayment(
     .maybeSingle();
 
   return { ok: true, customerId, credits: bal?.balance ?? 0 };
+}
+
+export type RefundResult =
+  | { ok: true; clawedBack: number }
+  | { ok: false; reason: string };
+
+/**
+ * Reverse a fulfilled Razorpay payment when it is refunded: claw back the
+ * credits the purchase granted (idempotent on the refund id) and mark the
+ * payment `refunded`. Only FULL refunds are auto-reconciled — a partial refund
+ * is a product decision (which credits to reclaim) and is flagged for manual
+ * handling rather than guessed at. Safe to call repeatedly (redelivered webhook).
+ */
+export async function reverseRazorpayPayment(
+  paymentId: string,
+  refundId: string,
+): Promise<RefundResult> {
+  const svc = createSupabaseServiceClient();
+
+  // The payment row we recorded at fulfilment.
+  const { data: paymentRow } = await svc
+    .from("payments")
+    .select("id, customer_id")
+    .eq("razorpay_payment_id", paymentId)
+    .maybeSingle();
+  if (!paymentRow) return { ok: false, reason: "payment_not_found" };
+
+  // Only auto-clawback a FULL refund.
+  const rzp = getRazorpayClient();
+  const payment = await rzp.payments.fetch(paymentId);
+  const total = Number(payment.amount ?? 0);
+  const refunded = Number(payment.amount_refunded ?? 0);
+  if (total > 0 && refunded < total) {
+    return { ok: false, reason: "partial_refund_manual" };
+  }
+
+  // How many credits this payment granted (its 'purchase' ledger row).
+  const { data: grant } = await svc
+    .from("credit_ledger")
+    .select("delta")
+    .eq("payment_id", paymentRow.id)
+    .eq("reason", "purchase")
+    .maybeSingle();
+  const granted = grant?.delta ?? 0;
+
+  if (granted > 0) {
+    const { error: clawErr } = await svc.rpc("clawback_session_credits", {
+      p_customer: paymentRow.customer_id,
+      p_amount: granted,
+      p_external_ref: refundId,
+      p_payment_id: paymentRow.id,
+    });
+    if (clawErr) return { ok: false, reason: "clawback_failed" };
+  }
+
+  await svc.from("payments").update({ status: "refunded" }).eq("id", paymentRow.id);
+  return { ok: true, clawedBack: granted };
 }

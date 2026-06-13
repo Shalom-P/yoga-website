@@ -4,6 +4,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 
+// provisionSessionMeet -> lib/google/calendar.ts uses @vercel/oidc (Node only).
+export const runtime = "nodejs";
+
 const schema = z.object({
   sessionId: z.string().uuid(),
 });

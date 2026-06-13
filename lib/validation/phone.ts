@@ -32,8 +32,9 @@ export function isValidPhone(
 
 /**
  * Normalize any accepted input to canonical E.164 ("+61402281827"), or null if
- * it isn't a valid number. Run this on every write so stored numbers have one
- * shape — SMS reminders and Supabase phone-OTP both key off the exact string.
+ * it isn't a valid number. Run this on every write so the stored number has one
+ * canonical shape. Phone is an optional contact field only — auth is email OTP,
+ * not SMS — so this is purely about storing a consistent value.
  */
 export function toE164(
   value: string | null | undefined,

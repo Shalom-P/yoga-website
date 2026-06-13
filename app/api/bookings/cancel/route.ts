@@ -4,6 +4,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { releaseSessionMeet } from "@/lib/google/provisionMeet";
 
+// releaseSessionMeet -> lib/google/calendar.ts uses @vercel/oidc (Node only).
+export const runtime = "nodejs";
+
 const schema = z.object({
   bookingId: z.string().uuid(),
   reason: z.string().max(500).optional(),
@@ -19,7 +22,7 @@ export async function POST(req: Request) {
 
   const { data: booking } = await supabase
     .from("bookings")
-    .select("id, session_id, customer_id, status")
+    .select("id, session_id, customer_id, status, is_free_trial")
     .eq("id", parsed.data.bookingId)
     .single();
   if (!booking || booking.customer_id !== user.id) {
@@ -33,7 +36,7 @@ export async function POST(req: Request) {
   }
 
   const svc = createSupabaseServiceClient();
-  const { error: updateErr } = await svc
+  const { data: cancelled, error: updateErr } = await svc
     .from("bookings")
     .update({
       status: "cancelled",
@@ -41,9 +44,30 @@ export async function POST(req: Request) {
       cancelled_at: new Date().toISOString(),
     })
     .eq("id", booking.id)
-    .eq("status", "confirmed"); // optimistic guard against double-cancel races
+    .eq("status", "confirmed") // optimistic guard against double-cancel races
+    .select("id");
   if (updateErr) {
     return NextResponse.json({ error: "db_error" }, { status: 500 });
+  }
+  // A concurrent request already cancelled this booking — don't refund twice.
+  if (!cancelled || cancelled.length === 0) {
+    return NextResponse.json({ error: "not_cancellable" }, { status: 409 });
+  }
+
+  // Refund the session-credit for a paid booking (the free trial never spent one).
+  // This claims THIS cancel transition (the .eq("status","confirmed") guard above
+  // ensures only one request gets here), so it can't double-refund.
+  if (!booking.is_free_trial) {
+    const { error: refundErr } = await svc.rpc("grant_session_credits", {
+      p_customer: user.id,
+      p_delta: 1,
+      p_reason: "refund",
+    });
+    if (refundErr) {
+      // The booking is already cancelled; surface the refund failure so it can be
+      // reconciled rather than silently swallowing a lost credit.
+      console.error("[bookings/cancel] credit refund failed:", refundErr.message);
+    }
   }
 
   const { data: session } = await svc

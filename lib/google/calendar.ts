@@ -23,6 +23,13 @@ type GoogleEvent = {
   conferenceData?: { entryPoints?: { entryPointType: string; uri: string }[] };
 };
 
+// Truncate Google error bodies before they reach thrown errors / Sentry / logs.
+// STS+IAM bodies can echo request context, and Calendar bodies can include
+// attendee emails — none of which belongs in logs unbounded.
+async function errBody(res: Response): Promise<string> {
+  return (await res.text().catch(() => "")).slice(0, 200);
+}
+
 // The Meet join URL lives in either hangoutLink or a "video" conference entry point.
 function extractMeetLink(event: GoogleEvent): string {
   return (
@@ -117,7 +124,7 @@ async function exchangeOidcForFederatedToken(oidcToken: string): Promise<string>
   if (!res.ok) {
     // A 4xx here is almost always config: the WIF provider's allowed-audiences /
     // issuer-uri / attribute-condition disagree with the Vercel token's aud/sub.
-    throw new Error(`Google STS token exchange failed: ${res.status} ${await res.text()}`);
+    throw new Error(`Google STS token exchange failed: ${res.status} ${await errBody(res)}`);
   }
   const data = (await res.json()) as { access_token?: string };
   if (!data.access_token) throw new Error("Google STS token exchange returned no access_token");
@@ -162,7 +169,7 @@ async function signDwdJwt(federatedToken: string): Promise<string> {
   if (!res.ok) {
     // 403 here => the federated principal lacks roles/iam.serviceAccountTokenCreator
     // on saEmail (workloadIdentityUser alone is NOT enough for signJwt).
-    throw new Error(`Google IAM signJwt failed: ${res.status} ${await res.text()}`);
+    throw new Error(`Google IAM signJwt failed: ${res.status} ${await errBody(res)}`);
   }
   const data = (await res.json()) as { signedJwt?: string };
   if (!data.signedJwt) throw new Error("Google IAM signJwt returned no signedJwt");
@@ -191,7 +198,7 @@ async function getAccessToken(): Promise<string> {
   if (!res.ok) {
     // 4xx here (typically invalid_grant) => DWD not authorized in Workspace, or
     // the scope/subject doesn't match the DWD grant for this SA's client id.
-    throw new Error(`Google token exchange failed: ${res.status} ${await res.text()}`);
+    throw new Error(`Google token exchange failed: ${res.status} ${await errBody(res)}`);
   }
   const data = (await res.json()) as { access_token: string; expires_in: number };
   cachedToken = { token: data.access_token, expires_at: Date.now() + data.expires_in * 1000 };
@@ -227,7 +234,7 @@ export async function createMeetEvent(args: CreateMeetArgs): Promise<{ meetLink:
       }),
     }
   );
-  if (!res.ok) throw new Error(`Calendar event create failed: ${res.status} ${await res.text()}`);
+  if (!res.ok) throw new Error(`Calendar event create failed: ${res.status} ${await errBody(res)}`);
   const data = (await res.json()) as GoogleEvent;
   const meetLink = extractMeetLink(data);
   if (!meetLink) throw new Error("No Meet link returned from Calendar API");
@@ -263,8 +270,13 @@ export async function findMeetEventBySession(
 export async function deleteMeetEvent(eventId: string, calendarId?: string) {
   const token = await getAccessToken();
   const id = calendarId ?? process.env.GOOGLE_SYSTEM_CALENDAR_ID ?? "primary";
-  await fetch(
+  const res = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(id)}/events/${eventId}`,
     { method: "DELETE", headers: { Authorization: `Bearer ${token}` } }
   );
+  // 410 = already deleted (fine). Anything else non-2xx leaves an orphan event
+  // with a live join link — log it so it's observable rather than silent.
+  if (!res.ok && res.status !== 410) {
+    console.warn(`[calendar] deleteMeetEvent failed: ${res.status} (event ${eventId})`);
+  }
 }

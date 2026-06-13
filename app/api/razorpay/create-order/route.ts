@@ -7,6 +7,9 @@ import { getRazorpayClient, isRazorpayConfigured } from "@/lib/razorpay/client";
 import { resolvePackBySlug } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+// The Razorpay SDK requires the Node runtime.
+export const runtime = "nodejs";
+
 /**
  * POST /api/razorpay/create-order
  *
