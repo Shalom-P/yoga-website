@@ -10,6 +10,7 @@ type CreateMeetArgs = {
   endUtc: string;   // ISO
   attendeeEmails?: string[];
   calendarId?: string; // defaults to GOOGLE_SYSTEM_CALENDAR_ID
+  sessionId?: string;  // tags the event for idempotent recovery (see findMeetEventBySession)
 };
 
 type GoogleEvent = {
@@ -17,6 +18,15 @@ type GoogleEvent = {
   hangoutLink?: string;
   conferenceData?: { entryPoints?: { entryPointType: string; uri: string }[] };
 };
+
+// The Meet join URL lives in either hangoutLink or a "video" conference entry point.
+function extractMeetLink(event: GoogleEvent): string {
+  return (
+    event.hangoutLink ??
+    event.conferenceData?.entryPoints?.find((e) => e.entryPointType === "video")?.uri ??
+    ""
+  );
+}
 
 let cachedToken: { token: string; expires_at: number } | null = null;
 
@@ -56,7 +66,9 @@ async function getAccessToken(): Promise<string> {
 export async function createMeetEvent(args: CreateMeetArgs): Promise<{ meetLink: string; eventId: string }> {
   const token = await getAccessToken();
   const calendarId = args.calendarId ?? process.env.GOOGLE_SYSTEM_CALENDAR_ID ?? "primary";
-  const requestId = crypto.randomUUID();
+  // Deterministic requestId per session so a retry reuses the same conference
+  // instead of minting a new one; random fallback for ad-hoc calls.
+  const requestId = args.sessionId ? `meet-${args.sessionId}` : crypto.randomUUID();
   const res = await fetch(
     `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(calendarId)}/events?conferenceDataVersion=1&sendUpdates=all`,
     {
@@ -68,6 +80,12 @@ export async function createMeetEvent(args: CreateMeetArgs): Promise<{ meetLink:
         start: { dateTime: args.startUtc, timeZone: "UTC" },
         end:   { dateTime: args.endUtc,   timeZone: "UTC" },
         attendees: args.attendeeEmails?.map((email) => ({ email })) ?? [],
+        // Tag with the session id so a partial failure (event created at Google
+        // but DB write failed) can be recovered via findMeetEventBySession
+        // instead of creating a duplicate event.
+        extendedProperties: args.sessionId
+          ? { private: { sessionId: args.sessionId } }
+          : undefined,
         conferenceData: {
           createRequest: { requestId, conferenceSolutionKey: { type: "hangoutsMeet" } },
         },
@@ -76,12 +94,35 @@ export async function createMeetEvent(args: CreateMeetArgs): Promise<{ meetLink:
   );
   if (!res.ok) throw new Error(`Calendar event create failed: ${res.status} ${await res.text()}`);
   const data = (await res.json()) as GoogleEvent;
-  const meetLink =
-    data.hangoutLink ??
-    data.conferenceData?.entryPoints?.find((e) => e.entryPointType === "video")?.uri ??
-    "";
+  const meetLink = extractMeetLink(data);
   if (!meetLink) throw new Error("No Meet link returned from Calendar API");
   return { meetLink, eventId: data.id };
+}
+
+/**
+ * Find a Meet event previously created for this session, tagged via
+ * extendedProperties.private.sessionId. Returns null if none exists (or no link
+ * yet). Lets provisioning be idempotent: adopt an orphaned event rather than
+ * minting a duplicate. Searches the given calendar (the one the event lives on).
+ */
+export async function findMeetEventBySession(
+  sessionId: string,
+  calendarId?: string,
+): Promise<{ meetLink: string; eventId: string } | null> {
+  const token = await getAccessToken();
+  const id = calendarId ?? process.env.GOOGLE_SYSTEM_CALENDAR_ID ?? "primary";
+  const url =
+    `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(id)}/events` +
+    `?privateExtendedProperty=${encodeURIComponent(`sessionId=${sessionId}`)}` +
+    `&showDeleted=false&singleEvents=true&maxResults=1`;
+  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+  if (!res.ok) throw new Error(`Calendar event lookup failed: ${res.status}`);
+  const data = (await res.json()) as { items?: GoogleEvent[] };
+  const event = data.items?.[0];
+  if (!event) return null;
+  const meetLink = extractMeetLink(event);
+  if (!meetLink) return null;
+  return { meetLink, eventId: event.id };
 }
 
 export async function deleteMeetEvent(eventId: string, calendarId?: string) {

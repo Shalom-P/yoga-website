@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import { deleteMeetEvent } from "@/lib/google/calendar";
+import { releaseSessionMeet } from "@/lib/google/provisionMeet";
 
 const schema = z.object({
   bookingId: z.string().uuid(),
@@ -48,7 +48,7 @@ export async function POST(req: Request) {
 
   const { data: session } = await svc
     .from("sessions")
-    .select("meet_event_id, start_at")
+    .select("meet_event_id, meet_calendar_id, start_at")
     .eq("id", booking.session_id)
     .single();
   // Only delete the Meet event if (a) the session hasn't started yet — avoids
@@ -66,7 +66,7 @@ export async function POST(req: Request) {
       .eq("session_id", booking.session_id)
       .neq("status", "cancelled");
     if ((remaining ?? 0) === 0) {
-      deleteMeetEvent(session.meet_event_id).catch(() => {});
+      await releaseSessionMeet(session);
     }
   }
 

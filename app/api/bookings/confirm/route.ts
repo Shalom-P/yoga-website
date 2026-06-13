@@ -3,7 +3,7 @@ import { z } from "zod";
 import { formatInTimeZone } from "date-fns-tz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import { createMeetEvent } from "@/lib/google/calendar";
+import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
 
@@ -77,7 +77,7 @@ export async function POST(req: Request) {
 
   const { data: teacher } = await svc
     .from("teachers")
-    .select("id, display_name, timezone, is_active")
+    .select("id, display_name, timezone, is_active, google_calendar_id")
     .eq("id", parsed.data.teacherId)
     .single();
   if (!teacher || !teacher.is_active) {
@@ -172,28 +172,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: bookingErr?.message ?? "booking_failed" }, { status: 500 });
   }
 
-  // Awaited Meet creation. On failure we keep the booking; meet_status stays
-  // 'pending' so the cron sweeper can retry, and the dashboard can show a
-  // "Link will be available shortly" state.
-  let meetLink: string | null = null;
-  try {
-    const created = await createMeetEvent({
+  // Awaited Meet provisioning. On failure we keep the booking; meet_status is set
+  // to 'failed' so the cron sweeper / manual "Generate link" button can retry,
+  // and the dashboard shows a "Link soon" state. Hosted on the teacher's own
+  // calendar when they have one, else the system calendar.
+  const meetLink = await provisionSessionMeet(
+    svc,
+    { id: session.id, start_at: start.toISOString(), end_at: end.toISOString() },
+    {
       summary: `Yoga with ${teacher.display_name}`,
-      startUtc: start.toISOString(),
-      endUtc: end.toISOString(),
       attendeeEmails: user.email ? [user.email] : [],
-    });
-    meetLink = created.meetLink;
-    await svc
-      .from("sessions")
-      .update({ meet_link: created.meetLink, meet_event_id: created.eventId, meet_status: "created" })
-      .eq("id", session.id);
-  } catch {
-    await svc
-      .from("sessions")
-      .update({ meet_status: "failed" })
-      .eq("id", session.id);
-  }
+      calendarId: teacher.google_calendar_id,
+    },
+  );
 
   // Fire-and-forget confirmation email. No-ops if Resend isn't configured and
   // never throws, so it can't break a committed booking.

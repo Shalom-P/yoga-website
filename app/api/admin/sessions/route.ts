@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import { createMeetEvent, deleteMeetEvent } from "@/lib/google/calendar";
+import { provisionSessionMeet, releaseSessionMeet } from "@/lib/google/provisionMeet";
 
 const schema = z.object({
   teacherId: z.string().uuid(),
@@ -47,7 +47,7 @@ export async function POST(req: Request) {
 
   const { data: teacher } = await svc
     .from("teachers")
-    .select("id, display_name")
+    .select("id, display_name, google_calendar_id")
     .eq("id", parsed.data.teacherId)
     .single();
   if (!teacher) {
@@ -86,21 +86,13 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "create_failed", details: sessionErr?.message }, { status: 500 });
   }
 
-  // Async-best-effort Meet link creation. Failure leaves meet_status='pending'
-  // for the cron sweeper to retry.
-  try {
-    const { meetLink, eventId } = await createMeetEvent({
-      summary: `Yoga with ${teacher.display_name}`,
-      startUtc: start.toISOString(),
-      endUtc: end.toISOString(),
-    });
-    await svc
-      .from("sessions")
-      .update({ meet_link: meetLink, meet_event_id: eventId, meet_status: "created" })
-      .eq("id", session.id);
-  } catch {
-    await svc.from("sessions").update({ meet_status: "failed" }).eq("id", session.id);
-  }
+  // Best-effort Meet provisioning. Failure leaves meet_status='failed' for the
+  // cron sweeper to retry. Hosted on the teacher's own calendar when set.
+  await provisionSessionMeet(
+    svc,
+    { id: session.id, start_at: start.toISOString(), end_at: end.toISOString() },
+    { summary: `Yoga with ${teacher.display_name}`, calendarId: teacher.google_calendar_id },
+  );
 
   return NextResponse.json({ sessionId: session.id });
 }
@@ -120,7 +112,7 @@ export async function DELETE(req: Request) {
   const svc = createSupabaseServiceClient();
   const { data: session } = await svc
     .from("sessions")
-    .select("id, status, meet_event_id, start_at")
+    .select("id, status, meet_event_id, meet_calendar_id, start_at")
     .eq("id", parsed.data.sessionId)
     .single();
   if (!session) {
@@ -151,13 +143,13 @@ export async function DELETE(req: Request) {
     .neq("status", "cancelled");
 
   // Best-effort Meet cleanup — only if the class hasn't started, so we don't
-  // kill an in-progress live class.
+  // kill an in-progress live class. Deletes from the calendar the event lives on.
   if (
     session.meet_event_id &&
     session.start_at &&
     new Date(session.start_at).getTime() > Date.now()
   ) {
-    deleteMeetEvent(session.meet_event_id).catch(() => {});
+    await releaseSessionMeet(session);
   }
 
   return NextResponse.json({ ok: true });
