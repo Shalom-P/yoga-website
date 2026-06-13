@@ -6,14 +6,13 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
-} from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import { track } from "@/lib/analytics/events";
+import { PhoneField } from "@/components/ui/phone-field";
+import { isValidPhone, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
 
 export function LoginForm() {
   const params = useSearchParams();
@@ -91,34 +90,17 @@ function GoogleLogin({ next }: { next: string }) {
   );
 }
 
-const COUNTRIES = [
-  { cc: "61", label: "Australia", flag: "🇦🇺", example: "412 345 678" },
-  { cc: "91", label: "India", flag: "🇮🇳", example: "98765 43210" },
-] as const;
-
-// Build an E.164 number from a calling code + the national part the user typed.
-// Strips spaces/punctuation and a leading trunk "0" (common in AU input), so a
-// "+61" selection with "0412 345 678" becomes "+61412345678". A malformed number
-// is the usual reason an OTP is "accepted" but no SMS ever lands.
-function toE164(cc: string, national: string): string {
-  const digits = national.replace(/\D/g, "").replace(/^0+/, "");
-  return `+${cc}${digits}`;
-}
-
 const RESEND_COOLDOWN_SECONDS = 30;
 
 function PhoneLogin({ next }: { next: string }) {
   const [phase, setPhase] = useState<"phone" | "otp">("phone");
-  const [cc, setCc] = useState<string>("61");
-  const [national, setNational] = useState("");
+  // E.164 from <PhoneField> ("+61402281827"); "" until the number parses.
+  const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   // resend cooldown state
   const [resendCooldown, setResendCooldown] = useState(0);
   const supabase = createSupabaseBrowserClient();
-
-  const nationalDigits = national.replace(/\D/g, "").replace(/^0+/, "");
-  const e164 = toE164(cc, national);
 
   // countdown timer effect
   useEffect(() => {
@@ -128,13 +110,15 @@ function PhoneLogin({ next }: { next: string }) {
   }, [resendCooldown]);
 
   async function doSendOtp() {
-    if (nationalDigits.length < 6 || nationalDigits.length > 12) {
-      toast.error("Enter a valid mobile number (digits only, without the country code).");
+    // Validate before spending an SMS: a malformed number is silently "accepted"
+    // by signInWithOtp but no code ever lands.
+    if (!isValidPhone(phone)) {
+      toast.error(PHONE_ERROR_MESSAGE);
       return false;
     }
     setLoading(true);
     const { error } = await supabase.auth.signInWithOtp({
-      phone: e164,
+      phone,
       options: { channel: "sms" },
     });
     setLoading(false);
@@ -164,7 +148,7 @@ function PhoneLogin({ next }: { next: string }) {
     e.preventDefault();
     setLoading(true);
     const { data, error } = await supabase.auth.verifyOtp({
-      phone: e164,
+      phone,
       token: otp.replace(/\D/g, ""),
       type: "sms",
     });
@@ -202,7 +186,7 @@ function PhoneLogin({ next }: { next: string }) {
             maxLength={6}
             className="mt-1.5 text-center tracking-[0.4em] text-lg"
           />
-          <p className="mt-1.5 text-xs text-muted-foreground">Sent to {e164}.</p>
+          <p className="mt-1.5 text-xs text-muted-foreground">Sent to {phone}.</p>
         </div>
         <Button type="submit" disabled={loading} className="w-full h-11 rounded-full">
           {loading ? <Loader2 className="size-4 animate-spin" /> : "Verify & continue"}
@@ -227,39 +211,14 @@ function PhoneLogin({ next }: { next: string }) {
     );
   }
 
-  const activeCountry = COUNTRIES.find((c) => c.cc === cc) ?? COUNTRIES[0];
-
   return (
     <form onSubmit={sendOtp} className="space-y-4">
       <div>
         <Label htmlFor="phone">Phone number</Label>
-        <div className="mt-1.5 flex gap-2">
-          <Select value={cc} onValueChange={(v) => v && setCc(v)}>
-            <SelectTrigger className="h-10 w-[7.5rem] shrink-0" aria-label="Country code">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {COUNTRIES.map((c) => (
-                <SelectItem key={c.cc} value={c.cc}>
-                  {c.flag} +{c.cc}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Input
-            id="phone"
-            type="tel"
-            inputMode="tel"
-            autoComplete="tel-national"
-            value={national}
-            onChange={(e) => setNational(e.target.value)}
-            placeholder={activeCountry.example}
-            className="flex-1"
-          />
-        </div>
+        <PhoneField id="phone" value={phone} onChange={setPhone} className="mt-1.5" />
         <p className="mt-1.5 text-xs text-muted-foreground">
-          {activeCountry.label} (+{cc}). We&apos;ll text a 6-digit code to{" "}
-          <span className="tabular-nums">{e164}</span>.
+          We&apos;ll text a 6-digit code to{" "}
+          {phone ? <span className="tabular-nums">{phone}</span> : "your mobile"}.
         </p>
       </div>
       <Button type="submit" disabled={loading} className="h-11 w-full rounded-full">
