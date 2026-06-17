@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
+import { isValidEmail } from "@/lib/validation/email";
 import { track } from "@/lib/analytics/events";
 
 export function LoginForm() {
@@ -89,12 +90,6 @@ function GoogleLogin({ next }: { next: string }) {
 }
 
 const RESEND_COOLDOWN_SECONDS = 30;
-
-// Lightweight client-side guard. Supabase rejects malformed addresses anyway;
-// this just avoids spending a send on an obvious typo (e.g. a missing "@").
-function isValidEmail(value: string): boolean {
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value.trim());
-}
 
 function EmailLogin({ next }: { next: string }) {
   const [phase, setPhase] = useState<"email" | "otp">("email");

@@ -4,6 +4,9 @@ import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 
+// provisionSessionMeet -> lib/google/calendar.ts uses @vercel/oidc (Node only).
+export const runtime = "nodejs";
+
 // Maximum number of sessions to process per cron invocation.
 // Keeps each run short and avoids Google Calendar rate-limit bursts.
 const BATCH_SIZE = 50;

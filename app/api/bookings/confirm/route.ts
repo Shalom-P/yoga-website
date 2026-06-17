@@ -7,6 +7,10 @@ import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
 
+// Reaches lib/google/calendar.ts (Vercel OIDC / @vercel/oidc) via
+// provisionSessionMeet — that dependency is Node-runtime only.
+export const runtime = "nodejs";
+
 const schema = z.object({
   teacherId: z.string().uuid(),
   startAt: z.string().datetime({ offset: true }),
@@ -20,11 +24,27 @@ function teacherDayOfWeek(startUtc: Date, tz: string): number {
   return iso === 7 ? 0 : iso;
 }
 
+// Postgres `time` columns can serialize as "06:00", "06:00:00", or "06:00:00.000".
+// Normalize to "HH:mm:ss" so the lexical string comparison below is sound — the
+// client slot picker pads identically (TeacherSlotPicker.padHms).
+function padHms(hms: string): string {
+  const [h = "00", m = "00", s = "00"] = hms.split(":");
+  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}:${s.slice(0, 2).padStart(2, "0")}`;
+}
+
+type AvailabilityWindow = {
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  slot_duration_minutes: number;
+};
+
 function slotInsideAvailability(
   start: Date,
   end: Date,
+  durationMinutes: number,
   tz: string,
-  windows: { day_of_week: number; start_time: string; end_time: string }[],
+  windows: AvailabilityWindow[],
 ): boolean {
   const dow = teacherDayOfWeek(start, tz);
   const endDow = teacherDayOfWeek(end, tz);
@@ -35,8 +55,11 @@ function slotInsideAvailability(
   return windows.some(
     (w) =>
       w.day_of_week === dow &&
-      startHms >= w.start_time &&
-      endHms <= w.end_time,
+      // The requested duration must match the window's slot granularity — a
+      // client can't book a longer-than-offered slot that merely fits the end.
+      durationMinutes === (w.slot_duration_minutes || 60) &&
+      startHms >= padHms(w.start_time) &&
+      endHms <= padHms(w.end_time),
   );
 }
 
@@ -84,89 +107,59 @@ export async function POST(req: Request) {
 
   const { data: availability } = await svc
     .from("teacher_availability")
-    .select("day_of_week, start_time, end_time")
+    .select("day_of_week, start_time, end_time, slot_duration_minutes")
     .eq("teacher_id", teacher.id);
   if (!availability || availability.length === 0) {
     return NextResponse.json({ error: "slot_unavailable" }, { status: 409 });
   }
-  if (!slotInsideAvailability(start, end, teacherTz, availability)) {
+  if (!slotInsideAvailability(start, end, parsed.data.durationMinutes, teacherTz, availability)) {
     return NextResponse.json({ error: "slot_unavailable" }, { status: 409 });
   }
 
-  // Reject double-booking on the teacher's calendar.
-  const { data: overlap } = await svc
-    .from("sessions")
-    .select("id")
+  // Honor one-off date overrides: a blocked date is never bookable, even when it
+  // matches the recurring weekly availability above.
+  const teacherDate = formatInTimeZone(start, teacherTz, "yyyy-MM-dd");
+  const { data: overrides } = await svc
+    .from("teacher_slot_overrides")
+    .select("is_blocked")
     .eq("teacher_id", teacher.id)
-    .neq("status", "cancelled")
-    .lt("start_at", end.toISOString())
-    .gt("end_at", start.toISOString())
-    .limit(1);
-  if (overlap && overlap.length > 0) {
-    return NextResponse.json({ error: "slot_taken" }, { status: 409 });
+    .eq("date", teacherDate);
+  if (overrides?.some((o) => o.is_blocked)) {
+    return NextResponse.json({ error: "slot_unavailable" }, { status: 409 });
   }
 
-  // Paid booking: reserve one session-credit now that the slot is free. Atomic
-  // (UPDATE ... WHERE balance > 0), so two concurrent bookings can't both spend
-  // the last credit. Refunded below if the session/booking insert fails.
-  if (!parsed.data.isFreeTrial) {
-    const { data: spent, error: spendErr } = await svc.rpc("spend_session_credit", {
+  // Atomic booking: spend a credit (paid only) + insert the session + insert the
+  // booking + link the credit ledger, all in ONE transaction (book_session RPC).
+  //  - The `sessions_no_overlap` EXCLUDE constraint (23P01) makes double-booking
+  //    impossible — no SELECT-then-INSERT TOCTOU window.
+  //  - `bookings_one_free_trial_per_customer` (23505) blocks a duplicate trial.
+  //  - If any step fails, the credit spend rolls back too — no orphaned debit.
+  const { data: booked, error: bookErr } = await svc
+    .rpc("book_session", {
       p_customer: user.id,
-    });
-    if (spendErr) {
-      return NextResponse.json({ error: "credit_error" }, { status: 500 });
-    }
-    if (!spent) {
-      return NextResponse.json({ error: "insufficient_credits" }, { status: 402 });
-    }
-  }
-
-  // Create the session — meet_status='pending' marks it for a Meet-link retry sweep
-  // if the Google call below fails.
-  const { data: session, error: sessionErr } = await svc
-    .from("sessions")
-    .insert({
-      teacher_id: teacher.id,
-      start_at: start.toISOString(),
-      end_at: end.toISOString(),
-      capacity: 1,
-      status: "scheduled",
-      is_free_trial: parsed.data.isFreeTrial,
-      meet_status: "pending",
+      p_teacher: teacher.id,
+      p_start: start.toISOString(),
+      p_end: end.toISOString(),
+      p_is_free_trial: parsed.data.isFreeTrial,
     })
-    .select("id")
     .single();
-  if (sessionErr || !session) {
-    if (!parsed.data.isFreeTrial) {
-      await svc.rpc("grant_session_credits", { p_customer: user.id, p_delta: 1, p_reason: "refund" });
+  if (bookErr || !booked) {
+    const code = (bookErr as { code?: string } | null)?.code;
+    const message = (bookErr as { message?: string } | null)?.message ?? "";
+    if (code === "23P01") {
+      return NextResponse.json({ error: "slot_taken" }, { status: 409 });
     }
-    return NextResponse.json({ error: "session_create_failed" }, { status: 500 });
-  }
-
-  // Create booking. The partial unique index `bookings_one_free_trial_per_customer`
-  // makes a duplicate trial claim raise 23505.
-  const { data: booking, error: bookingErr } = await svc
-    .from("bookings")
-    .insert({
-      session_id: session.id,
-      customer_id: user.id,
-      is_free_trial: parsed.data.isFreeTrial,
-      status: "confirmed",
-    })
-    .select("id")
-    .single();
-  if (bookingErr || !booking) {
-    // Roll back the session so the slot isn't orphaned, and refund the credit.
-    await svc.from("sessions").delete().eq("id", session.id);
-    if (!parsed.data.isFreeTrial) {
-      await svc.rpc("grant_session_credits", { p_customer: user.id, p_delta: 1, p_reason: "refund" });
-    }
-    const code = (bookingErr as { code?: string } | null)?.code;
     if (code === "23505") {
       return NextResponse.json({ error: "trial_already_claimed" }, { status: 409 });
     }
-    return NextResponse.json({ error: bookingErr?.message ?? "booking_failed" }, { status: 500 });
+    if (message.includes("insufficient_credits")) {
+      return NextResponse.json({ error: "insufficient_credits" }, { status: 402 });
+    }
+    console.error("[bookings/confirm] book_session failed:", bookErr?.message);
+    return NextResponse.json({ error: "booking_failed" }, { status: 500 });
   }
+  const session = { id: booked.session_id };
+  const booking = { id: booked.booking_id };
 
   // Awaited Meet provisioning. On failure we keep the booking; meet_status is set
   // to 'failed' so the cron sweeper / manual "Generate link" button can retry,

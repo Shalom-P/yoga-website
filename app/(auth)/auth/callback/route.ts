@@ -1,15 +1,45 @@
 import { NextResponse } from "next/server";
+import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
+
+// Two ways a session can be established here:
+//   * OAuth / PKCE          → ?code=...                  (Google, and the PKCE
+//                             magic link variant)
+//   * Email magic-link click → ?token_hash=...&type=...  (what Supabase emails
+//                             when the Magic Link template renders a link rather
+//                             than a {{ .Token }} 6-digit code)
+// The inline 6-digit code is verified client-side in LoginForm; this route is
+// the fallback for users who click the link in the email instead.
+const EMAIL_OTP_TYPES = new Set<EmailOtpType>([
+  "email",
+  "magiclink",
+  "signup",
+  "invite",
+  "recovery",
+  "email_change",
+]);
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
   const code = url.searchParams.get("code");
+  const tokenHash = url.searchParams.get("token_hash");
+  const typeParam = url.searchParams.get("type");
   const next = safeNext(url.searchParams.get("next"));
 
-  if (code) {
+  const hasMagicLink =
+    tokenHash && typeParam && EMAIL_OTP_TYPES.has(typeParam as EmailOtpType);
+
+  if (code || hasMagicLink) {
     const supabase = await createSupabaseServerClient();
-    const { error } = await supabase.auth.exchangeCodeForSession(code);
+
+    const { error } = code
+      ? await supabase.auth.exchangeCodeForSession(code)
+      : await supabase.auth.verifyOtp({
+          type: typeParam as EmailOtpType,
+          token_hash: tokenHash as string,
+        });
+
     if (error) {
       return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin));
     }

@@ -9,6 +9,9 @@ import { isRazorpayConfigured } from "@/lib/razorpay/client";
 import { fulfillRazorpayPayment } from "@/lib/razorpay/fulfillment";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 
+// node:crypto + the Razorpay SDK require the Node runtime.
+export const runtime = "nodejs";
+
 /**
  * POST /api/razorpay/verify-payment
  *
@@ -71,10 +74,17 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ verified: false, error: "Signature verification failed" }, { status: 400 });
   }
 
-  // 2. Confirm capture + grant credits server-side (idempotent).
+  // 2. Confirm capture + grant credits server-side (idempotent). Bind the order
+  //    to the signed-in caller so one user can't fulfil/inspect another's order.
   try {
-    const result = await fulfillRazorpayPayment(razorpay_order_id, razorpay_payment_id);
+    const result = await fulfillRazorpayPayment(razorpay_order_id, razorpay_payment_id, {
+      expectedCustomerId: user.id,
+    });
     if (!result.ok) {
+      if (result.reason === "customer_mismatch") {
+        return Response.json({ verified: false, error: "Not your order" }, { status: 403 });
+      }
+      Sentry.captureMessage(`razorpay verify fulfil failed: ${result.reason}`, "warning");
       return Response.json(
         { verified: false, error: "Payment not confirmed", reason: result.reason },
         { status: 400 },

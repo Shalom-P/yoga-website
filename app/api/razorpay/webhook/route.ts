@@ -5,8 +5,11 @@ import crypto from "node:crypto";
 import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 
-import { fulfillRazorpayPayment } from "@/lib/razorpay/fulfillment";
+import { fulfillRazorpayPayment, reverseRazorpayPayment } from "@/lib/razorpay/fulfillment";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+
+// node:crypto + the Razorpay SDK require the Node runtime.
+export const runtime = "nodejs";
 
 /**
  * POST /api/razorpay/webhook
@@ -23,7 +26,10 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
  */
 type RazorpayWebhook = {
   event?: string;
-  payload?: { payment?: { entity?: { id?: string; order_id?: string } } };
+  payload?: {
+    payment?: { entity?: { id?: string; order_id?: string } };
+    refund?: { entity?: { id?: string; payment_id?: string } };
+  };
 };
 
 export async function POST(req: Request) {
@@ -74,6 +80,34 @@ export async function POST(req: Request) {
     } catch (err) {
       Sentry.captureException(err, { tags: { route: "razorpay/webhook" } });
       return NextResponse.json({ error: "fulfill_failed" }, { status: 500 });
+    }
+  }
+
+  // Refund: claw back the granted credits (idempotent on the refund id). A full
+  // refund is auto-reconciled; a partial refund is acked + flagged for manual
+  // review (which credits to reclaim is a product decision).
+  const refund = event.payload?.refund?.entity;
+  if (
+    (eventType === "refund.created" || eventType === "payment.refunded") &&
+    refund?.id &&
+    refund.payment_id
+  ) {
+    try {
+      const result = await reverseRazorpayPayment(refund.payment_id, refund.id);
+      if (!result.ok && result.reason === "partial_refund_manual") {
+        Sentry.captureMessage(
+          `razorpay partial refund needs manual credit review: payment=${refund.payment_id}`,
+          "warning",
+        );
+        return NextResponse.json({ ok: true, skipped: result.reason });
+      }
+      if (!result.ok) {
+        Sentry.captureMessage(`razorpay refund clawback failed: ${result.reason}`, "warning");
+        return NextResponse.json({ error: result.reason }, { status: 500 });
+      }
+    } catch (err) {
+      Sentry.captureException(err, { tags: { route: "razorpay/webhook" } });
+      return NextResponse.json({ error: "refund_failed" }, { status: 500 });
     }
   }
 

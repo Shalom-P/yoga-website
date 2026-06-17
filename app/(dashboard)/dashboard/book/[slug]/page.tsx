@@ -26,6 +26,17 @@ export default async function TeacherBookingPage({
     .select("day_of_week, start_time, end_time, slot_duration_minutes")
     .eq("teacher_id", teacher.id);
 
+  // One-off blocked dates (teacher TZ "yyyy-MM-dd") so the picker doesn't offer
+  // slots the confirm route would reject. Only future dates are relevant.
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const { data: overrides } = await supabase
+    .from("teacher_slot_overrides")
+    .select("date, is_blocked")
+    .eq("teacher_id", teacher.id)
+    .eq("is_blocked", true)
+    .gte("date", todayIso);
+  const blockedDates = (overrides ?? []).map((o) => o.date);
+
   // Explicit id filter + maybeSingle — RLS alone would also scope to the user,
   // but .single() throws PGRST116 on the transient zero-row case (e.g. profile
   // row hasn't been created by the auth trigger yet).
@@ -83,6 +94,7 @@ export default async function TeacherBookingPage({
         availability={availability ?? []}
         freeTrialAvailable={freeTrialAvailable}
         creditBalance={creditBalance}
+        blockedDates={blockedDates}
       />
     </div>
   );

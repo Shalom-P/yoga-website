@@ -94,9 +94,23 @@ export async function POST(req: Request): Promise<Response> {
         : booking.sessions;
       if (!session) continue;
 
-      // Idempotency claim: stamp this (booking, window) before any send work.
-      // The conditional UPDATE (... WHERE stamp IS NULL) is atomic, so an
-      // overlapping band or a re-fire can't double-send. Skips if already sent.
+      // Fetch the customer's email + timezone FIRST. No recipient means nothing
+      // to send, so we must not burn the idempotency claim on it — otherwise a
+      // reminder added after the email is populated would be permanently
+      // suppressed for this window.
+      const { data: profile } = await svc
+        .from("profiles")
+        .select("email, timezone")
+        .eq("id", booking.customer_id)
+        .maybeSingle();
+
+      if (!profile?.email) continue;
+
+      // Idempotency claim, now that we know there's a recipient. The conditional
+      // UPDATE (... WHERE stamp IS NULL) is atomic, so an overlapping band or a
+      // re-fire can't double-send. On a claim error (e.g. migration 0016 not
+      // applied) SKIP rather than send unguarded — a duplicate storm is worse
+      // than a missed reminder.
       const nowIso = new Date().toISOString();
       const claimQuery =
         window.label === "24 hours"
@@ -107,21 +121,13 @@ export async function POST(req: Request): Promise<Response> {
         .select("id")
         .maybeSingle();
       if (claimErr) {
-        // Idempotency unavailable (e.g. migration 0016 not yet applied) — fall
-        // back to a best-effort send rather than silently dropping the reminder.
-        console.error(`[cron/reminders] claim failed for booking ${booking.id}:`, claimErr.message);
-      } else if (!claimed) {
-        continue; // already reminded for this window
+        console.error(
+          `[cron/reminders] claim failed for booking ${booking.id}; skipping to avoid duplicates:`,
+          claimErr.message,
+        );
+        continue;
       }
-
-      // Fetch customer profile for email + timezone.
-      const { data: profile } = await svc
-        .from("profiles")
-        .select("email, timezone")
-        .eq("id", booking.customer_id)
-        .maybeSingle();
-
-      if (!profile?.email) continue;
+      if (!claimed) continue; // already reminded for this window
 
       // Fetch teacher name.
       const { data: teacher } = await svc

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { track } from "@/lib/analytics/events";
+import { isValidEmail } from "@/lib/validation/email";
 
 export function NewsletterForm() {
   const [email, setEmail] = useState("");
@@ -12,7 +13,7 @@ export function NewsletterForm() {
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    if (!isValidEmail(email)) {
       toast.error("Please enter a valid email.");
       return;
     }

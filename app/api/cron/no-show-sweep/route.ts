@@ -36,33 +36,38 @@ export async function POST(req: Request): Promise<Response> {
 
   const svc = createSupabaseServiceClient();
 
-  // Sessions that ended more than GRACE_PERIOD_MS ago and are not cancelled.
+  // Bookings still 'confirmed' whose session ended more than GRACE_PERIOD_MS ago.
   const cutoff = new Date(Date.now() - GRACE_PERIOD_MS).toISOString();
 
-  // Find overdue sessions in a single query, then batch-update the bookings.
-  // We use a join via select so this stays within the svc (service-role) client.
-  const { data: eligibleSessions, error: sessionErr } = await svc
-    .from("sessions")
-    .select("id")
-    .lt("end_at", cutoff)
-    .neq("status", "cancelled")
+  // Select the bookings to flip directly (not the sessions): this way an
+  // already-swept session whose bookings are all non-confirmed doesn't consume a
+  // slot in the BATCH_SIZE cap, so a backlog always makes forward progress.
+  // Ordered oldest-first for a deterministic, fair selection.
+  const { data: dueBookings, error: queryErr } = await svc
+    .from("bookings")
+    .select("id, sessions!inner(end_at, status)")
+    .eq("status", "confirmed")
+    .lt("sessions.end_at", cutoff)
+    .neq("sessions.status", "cancelled")
+    .order("created_at", { ascending: true })
     .limit(BATCH_SIZE);
 
-  if (sessionErr) {
-    return Response.json({ ok: false, error: sessionErr.message }, { status: 500 });
+  if (queryErr) {
+    return Response.json({ ok: false, error: queryErr.message }, { status: 500 });
   }
 
-  if (!eligibleSessions || eligibleSessions.length === 0) {
+  if (!dueBookings || dueBookings.length === 0) {
     return Response.json({ ok: true, processed: 0 });
   }
 
-  const sessionIds = eligibleSessions.map((s) => s.id);
+  const bookingIds = dueBookings.map((b) => b.id);
 
-  // Update only bookings that are still 'confirmed' — leave attended/cancelled/no_show alone.
+  // Re-assert status='confirmed' on the update to avoid racing a concurrent
+  // attendance mark between the read and the write.
   const { data: updated, error: updateErr } = await svc
     .from("bookings")
     .update({ status: "no_show" })
-    .in("session_id", sessionIds)
+    .in("id", bookingIds)
     .eq("status", "confirmed")
     .select("id");
 

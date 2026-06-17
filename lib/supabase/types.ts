@@ -332,6 +332,25 @@ export type Database = {
         Args: { p_customer: string; p_booking_id?: string | null };
         Returns: boolean;
       };
+      book_session: {
+        Args: {
+          p_customer: string;
+          p_teacher: string;
+          p_start: string;
+          p_end: string;
+          p_is_free_trial: boolean;
+        };
+        Returns: { booking_id: string; session_id: string }[];
+      };
+      clawback_session_credits: {
+        Args: {
+          p_customer: string;
+          p_amount: number;
+          p_external_ref: string;
+          p_payment_id?: string | null;
+        };
+        Returns: null;
+      };
     };
     Enums: {
       user_role: UserRole;

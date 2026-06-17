@@ -1,5 +1,7 @@
 import "server-only";
 
+import crypto from "node:crypto";
+
 /**
  * Shared cron authentication helper.
  *
@@ -30,7 +32,13 @@ export function assertCron(req: Request): Response | null {
 
   const authHeader = req.headers.get("Authorization") ?? "";
   const [scheme, token] = authHeader.split(" ");
-  if (scheme !== "Bearer" || token !== secret) {
+  // Constant-time compare (length-guarded; timingSafeEqual throws on mismatch),
+  // matching the Razorpay signature checks.
+  const tokenBuf = Buffer.from(token ?? "", "utf8");
+  const secretBuf = Buffer.from(secret, "utf8");
+  const tokenValid =
+    tokenBuf.length === secretBuf.length && crypto.timingSafeEqual(tokenBuf, secretBuf);
+  if (scheme !== "Bearer" || !tokenValid) {
     return new Response(
       JSON.stringify({ error: "unauthorized" }),
       { status: 401, headers: { "Content-Type": "application/json" } },
