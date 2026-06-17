@@ -90,6 +90,10 @@ function GoogleLogin({ next }: { next: string }) {
 }
 
 const RESEND_COOLDOWN_SECONDS = 30;
+// Supabase's email OTP length is configurable in the dashboard (Auth → Email OTP
+// length, range 6–10). Don't hardcode 6 here or the input truncates a longer
+// code; accept up to Supabase's max and let verifyOtp do the real validation.
+const OTP_MAX_LENGTH = 10;
 
 function EmailLogin({ next }: { next: string }) {
   const [phase, setPhase] = useState<"email" | "otp">("email");
@@ -174,15 +178,15 @@ function EmailLogin({ next }: { next: string }) {
     return (
       <form onSubmit={verifyOtp} className="space-y-4">
         <div>
-          <Label htmlFor="otp">6-digit code</Label>
+          <Label htmlFor="otp">Verification code</Label>
           <Input
             id="otp"
             inputMode="numeric"
             autoComplete="one-time-code"
             value={otp}
-            onChange={(e) => setOtp(e.target.value)}
-            placeholder="123456"
-            maxLength={6}
+            onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
+            placeholder="Enter the code from your email"
+            maxLength={OTP_MAX_LENGTH}
             className="mt-1.5 text-center tracking-[0.4em] text-lg"
           />
           <p className="mt-1.5 text-xs text-muted-foreground">Sent to {email}.</p>
@@ -225,7 +229,7 @@ function EmailLogin({ next }: { next: string }) {
           className="mt-1.5"
         />
         <p className="mt-1.5 text-xs text-muted-foreground">
-          We&apos;ll email a 6-digit code to{" "}
+          We&apos;ll email a verification code to{" "}
           {email ? <span>{email}</span> : "your inbox"}.
         </p>
       </div>
