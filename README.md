@@ -51,7 +51,8 @@ npm run dev
    - Apply migrations in `supabase/migrations/0001…0006` (Supabase SQL editor or `psql`).
    - Run `supabase/seed.sql` for demo content.
    - Auth → Providers → enable **Google** (paste your GCP OAuth client/secret).
-   - Auth → Providers → enable **Email**; for the inline 6-digit code flow, edit the **Magic Link** email template to include `{{ .Token }}` (otherwise Supabase sends a magic link instead of a code).
+   - Auth → Providers → enable **Email**; for the inline code flow, edit the **Magic Link** email template to include `{{ .Token }}` (otherwise Supabase sends a magic link instead of a code). The code length is set at Auth → **Email OTP length** (6–10; the client input accepts up to 10).
+   - **Custom SMTP (required for production).** Supabase's *built-in* email sender is throttled to a few messages/hour and is for testing only — relying on it surfaces `email rate limit exceeded` at login. Point Auth at Resend: Authentication → **Emails → SMTP Settings** → enable custom SMTP with host `smtp.resend.com`, port `465`, username `resend`, password = your `RESEND_API_KEY`, sender = a **verified** address (e.g. `hello@myyogaclasses.fit`). Then raise Auth → **Rate Limits → "Rate limit for sending emails"** to a production value. This is a hard prerequisite of step 4 (the sender domain must be verified in Resend first).
    - Storage → create buckets `teacher-avatars`, `promotional-media`, `session-recordings`.
    - Promote yourself to admin: `UPDATE profiles SET role='admin' WHERE id='<your-uuid>';`
 2. **Razorpay**
@@ -77,7 +78,7 @@ npm run dev
 
    - **Per-teacher calendars (optional):** to host a teacher's sessions on their *own* calendar, share it with the impersonated mailbox ("Make changes to events"), then paste its calendar ID into **Google Calendar ID** on the teacher in `/admin/teachers`. Blank → falls back to `GOOGLE_SYSTEM_CALENDAR_ID`.
    - **Schedule the Meet-retry sweep:** set `CRON_SECRET` (`openssl rand -hex 32`) and wire the `/api/cron/*` endpoints — see `supabase/migrations/0015_cron_schedule.sql` for the pg_cron + pg_net setup, or POST from any scheduler with `Authorization: Bearer $CRON_SECRET`. Until wired, a failed Meet link is recoverable via the dashboard's "Get link" button.
-4. **Resend**: domain verification → `RESEND_API_KEY`, `RESEND_FROM_EMAIL`.
+4. **Resend**: verify the sending domain, then set `RESEND_API_KEY` / `RESEND_FROM_EMAIL`. Resend powers **both** transactional app email (booking confirmations, reminders via [`lib/email/client.ts`](lib/email/client.ts)) **and** Supabase auth email — but auth email only routes through Resend once you wire it as Supabase custom SMTP (see step 1). Domain verification gates both.
 5. **PostHog**: project → `NEXT_PUBLIC_POSTHOG_KEY`. Create the trial + paid funnels (see plan).
 6. **Sentry**: project → `NEXT_PUBLIC_SENTRY_DSN`, `SENTRY_AUTH_TOKEN`.
 7. **Hosting**: connect the repo to your host of choice, paste the env vars, and use **Node 20+**. Installs need `--legacy-peer-deps` (already set in `.npmrc`).
