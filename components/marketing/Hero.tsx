@@ -105,7 +105,9 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
               </div>
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 {trustRating && (
-                  <span className="tracking-[1px] text-accent">★★★★★</span>
+                  <span className="tracking-[1px] text-accent" aria-hidden="true">
+                    ★★★★★
+                  </span>
                 )}
                 <span>
                   {trustRating && (

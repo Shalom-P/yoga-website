@@ -39,6 +39,7 @@ export function NewsletterForm() {
     <form onSubmit={onSubmit} className="flex gap-2">
       <Input
         type="email"
+        aria-label="Email address for the newsletter"
         placeholder="you@email.com"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
