@@ -42,35 +42,32 @@ select t.id, dow, '06:00'::time, '12:00'::time, 60
 from public.teachers t cross join generate_series(1,6) as dow
 on conflict do nothing;
 
--- Plans (AUD)
-insert into public.plans (slug, name, description, price_aud_cents, billing_interval, included_sessions_per_month, included_session_types, is_active, is_featured, sort_order) values
-  ('starter',   'Starter',   'Unlimited group classes — the gentle on-ramp.',                4900,  'monthly', null, '{hatha,vinyasa,yin,restorative}',                            true, false, 1),
-  ('unlimited', 'Unlimited', 'Unlimited group + 4 private 1:1 sessions per month.',          12900, 'monthly', null, '{hatha,vinyasa,yin,restorative,prenatal,therapy}',           true, true,  2),
-  ('therapy',   'Therapy',   'Weekly 1:1 therapy yoga for pain relief and rehabilitation.',  19900, 'monthly', null, '{therapy,restorative,prenatal,hatha}',                       true, false, 3)
+-- Session-credit packs (AUD, one-time). A pack = a price + N session-credits;
+-- buying it grants credits, a paid booking spends one. The free 1:1 trial never
+-- touches credits. (See supabase/migrations/0011 + 0020.)
+insert into public.plans (slug, name, description, price_aud_cents, billing_interval, session_credits, included_sessions_per_month, included_session_types, is_active, is_featured, sort_order) values
+  ('pack-5',  '5-Session Pack',  'Five private 1:1 sessions — your flexible way in.',       18000, 'one_time', 5,  null, '{}', true, false, 1),
+  ('pack-10', '10-Session Pack', 'Ten private 1:1 sessions — our best price per session.', 34000, 'one_time', 10, null, '{}', true, true,  2)
 on conflict (slug) do nothing;
 
--- Plan features
+-- Plan features (only true capabilities — credits never expire; cancel refunds the credit)
 do $$
 declare
-  starter_id   uuid := (select id from public.plans where slug='starter');
-  unlimited_id uuid := (select id from public.plans where slug='unlimited');
-  therapy_id   uuid := (select id from public.plans where slug='therapy');
+  p5  uuid := (select id from public.plans where slug='pack-5');
+  p10 uuid := (select id from public.plans where slug='pack-10');
 begin
   insert into public.plan_features (plan_id, feature_text, is_included, sort_order) values
-    (starter_id,   'Unlimited live group classes',           true, 1),
-    (starter_id,   'All class types except therapy',         true, 2),
-    (starter_id,   'Cancel anytime',                          true, 3),
-    (starter_id,   '1:1 private sessions',                    false, 4),
+    (p5,  '5 private 1:1 sessions',          true, 1),
+    (p5,  'Book any teacher, any style',     true, 2),
+    (p5,  '60-min sessions on Google Meet',  true, 3),
+    (p5,  'Credits never expire',            true, 4),
+    (p5,  'Cancel before the session — credit refunded', true, 5),
 
-    (unlimited_id, 'Everything in Starter',                   true, 1),
-    (unlimited_id, '4 private 1:1 sessions / month',          true, 2),
-    (unlimited_id, 'Personalised practice plan',              true, 3),
-    (unlimited_id, 'Priority booking on popular slots',       true, 4),
-
-    (therapy_id,   'Weekly 1:1 therapy yoga (~4/month)',      true, 1),
-    (therapy_id,   'Unlimited group classes',                 true, 2),
-    (therapy_id,   'Custom rehabilitation plan',              true, 3),
-    (therapy_id,   'HSA/FSA-style invoicing for AU rebates',  true, 4)
+    (p10, '10 private 1:1 sessions',         true, 1),
+    (p10, 'Book any teacher, any style',     true, 2),
+    (p10, 'Lowest price per session',        true, 3),
+    (p10, 'Credits never expire',            true, 4),
+    (p10, 'Cancel before the session — credit refunded', true, 5)
   on conflict do nothing;
 end $$;
 

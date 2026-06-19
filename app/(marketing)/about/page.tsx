@@ -24,7 +24,7 @@ export default function AboutPage() {
           </p>
           <p>
             Our bet: bring those teachers to your home — live, on Google Meet — for less
-            than the price of one in-person class per month.
+            than the price of a single in-person studio class.
           </p>
           <p>
             We are not an app of pre-recorded videos. We are a small studio with real

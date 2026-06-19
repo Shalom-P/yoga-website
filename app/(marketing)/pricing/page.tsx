@@ -7,7 +7,7 @@ import { getPlansWithFeatures } from "@/lib/data/landing";
 export const revalidate = 60;
 export const metadata = {
   title: "Pricing",
-  description: "Honest yoga pricing in AUD. Free 1:1 trial — no credit card. Cancel anytime.",
+  description: "Honest yoga pricing in AUD. Free 1:1 trial — no credit card. One-time session packs, no subscription.",
 };
 
 export default async function PricingPage() {

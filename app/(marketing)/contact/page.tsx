@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/marketing/PageHeader";
 
 export const metadata = {
   title: "Contact",
-  description: "Get in touch with My Yoga Classes. Questions about teachers, classes, or your subscription? We reply within 1 business day.",
+  description: "Get in touch with My Yoga Classes. Questions about teachers, classes, or your bookings? We reply within 1 business day.",
 };
 
 export default function ContactPage() {
@@ -12,7 +12,7 @@ export default function ContactPage() {
       <PageHeader
         eyebrow="Get in touch"
         title={<>We answer <em>every email.</em></>}
-        subhead="Questions about a teacher, a class, or your subscription? We typically reply within 1 business day (Australian time)."
+        subhead="Questions about a teacher, a class, or your bookings? We typically reply within 1 business day (Australian time)."
       />
       <div className="px-7 pb-24 text-center">
         <a

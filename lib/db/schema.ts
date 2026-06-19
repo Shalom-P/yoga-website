@@ -42,6 +42,7 @@ export const billingIntervalEnum = pgEnum("billing_interval", [
   "monthly",
   "quarterly",
   "yearly",
+  "one_time",
 ]);
 export const discountTypeEnum = pgEnum("discount_type", [
   "percentage",

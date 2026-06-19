@@ -8,7 +8,7 @@ export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
 export type IntensityLevel = "gentle" | "moderate" | "intense";
 export type SessionStatus = "scheduled" | "live" | "completed" | "cancelled";
 export type BookingStatus = "confirmed" | "cancelled" | "attended" | "no_show";
-export type BillingInterval = "monthly" | "quarterly" | "yearly";
+export type BillingInterval = "monthly" | "quarterly" | "yearly" | "one_time";
 export type DiscountType = "percentage" | "fixed_aud_cents";
 export type SubscriptionStatus =
   | "pending" | "active" | "suspended" | "cancelled" | "expired";

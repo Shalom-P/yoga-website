@@ -100,50 +100,39 @@ const MOCK_CATEGORIES: ClassCategory[] = [
   { id: "c6", slug: "therapy",     name: "Pain Relief",  description: "One-on-one therapy yoga for back, neck, knees, and posture rehab.",  intensity: "moderate", icon_name: "stethoscope", cover_image_url: null, props_needed: ["mat", "blocks"],  sort_order: 6, is_active: true, created_at: "", updated_at: "" },
 ];
 
+// Session-credit packs (one-time, AUD) — mirrors supabase/migrations/0020 + seed.sql.
+// A pack = a price + N session-credits; the free 1:1 trial never spends credits.
 const MOCK_PLANS: (Plan & { features: PlanFeature[] })[] = [
   {
-    id: "p1", slug: "starter", name: "Starter",
-    description: "Unlimited group classes — the gentle on-ramp.",
-    price_aud_cents: 4900, billing_interval: "monthly", session_credits: 4,
+    id: "p5", slug: "pack-5", name: "5-Session Pack",
+    description: "Five private 1:1 sessions — your flexible way in.",
+    price_aud_cents: 18000, billing_interval: "one_time", session_credits: 5,
     paypal_plan_id: null, included_sessions_per_month: null,
-    included_session_types: ["hatha", "vinyasa", "yin", "restorative"],
+    included_session_types: [],
     is_active: true, is_featured: false, sort_order: 1,
     created_at: "", updated_at: "",
     features: [
-      { id: "f1", plan_id: "p1", feature_text: "Unlimited live group classes",     is_included: true,  sort_order: 1 },
-      { id: "f2", plan_id: "p1", feature_text: "All class types except therapy",   is_included: true,  sort_order: 2 },
-      { id: "f3", plan_id: "p1", feature_text: "Cancel anytime",                   is_included: true,  sort_order: 3 },
-      { id: "f4", plan_id: "p1", feature_text: "1:1 private sessions",             is_included: false, sort_order: 4 },
+      { id: "f1", plan_id: "p5", feature_text: "5 private 1:1 sessions",          is_included: true, sort_order: 1 },
+      { id: "f2", plan_id: "p5", feature_text: "Book any teacher, any style",     is_included: true, sort_order: 2 },
+      { id: "f3", plan_id: "p5", feature_text: "60-min sessions on Google Meet",  is_included: true, sort_order: 3 },
+      { id: "f4", plan_id: "p5", feature_text: "Credits never expire",            is_included: true, sort_order: 4 },
+      { id: "f5", plan_id: "p5", feature_text: "Cancel before the session — credit refunded", is_included: true, sort_order: 5 },
     ],
   },
   {
-    id: "p2", slug: "unlimited", name: "Unlimited",
-    description: "Unlimited group + 4 private 1:1 sessions per month.",
-    price_aud_cents: 12900, billing_interval: "monthly", session_credits: 12,
+    id: "p10", slug: "pack-10", name: "10-Session Pack",
+    description: "Ten private 1:1 sessions — our best price per session.",
+    price_aud_cents: 34000, billing_interval: "one_time", session_credits: 10,
     paypal_plan_id: null, included_sessions_per_month: null,
-    included_session_types: ["hatha", "vinyasa", "yin", "restorative", "prenatal", "therapy"],
+    included_session_types: [],
     is_active: true, is_featured: true, sort_order: 2,
     created_at: "", updated_at: "",
     features: [
-      { id: "f5", plan_id: "p2", feature_text: "Everything in Starter",            is_included: true, sort_order: 1 },
-      { id: "f6", plan_id: "p2", feature_text: "4 private 1:1 sessions / month",   is_included: true, sort_order: 2 },
-      { id: "f7", plan_id: "p2", feature_text: "Personalised practice plan",       is_included: true, sort_order: 3 },
-      { id: "f8", plan_id: "p2", feature_text: "Priority booking on popular slots", is_included: true, sort_order: 4 },
-    ],
-  },
-  {
-    id: "p3", slug: "therapy", name: "Therapy",
-    description: "Weekly 1:1 therapy yoga for pain relief and rehabilitation.",
-    price_aud_cents: 19900, billing_interval: "monthly", session_credits: 4,
-    paypal_plan_id: null, included_sessions_per_month: null,
-    included_session_types: ["therapy", "restorative", "prenatal", "hatha"],
-    is_active: true, is_featured: false, sort_order: 3,
-    created_at: "", updated_at: "",
-    features: [
-      { id: "f9",  plan_id: "p3", feature_text: "Weekly 1:1 therapy yoga (~4/mo)",     is_included: true, sort_order: 1 },
-      { id: "f10", plan_id: "p3", feature_text: "Unlimited group classes",              is_included: true, sort_order: 2 },
-      { id: "f11", plan_id: "p3", feature_text: "Custom rehabilitation plan",           is_included: true, sort_order: 3 },
-      { id: "f12", plan_id: "p3", feature_text: "Itemised tax invoices for your records", is_included: true, sort_order: 4 },
+      { id: "f6",  plan_id: "p10", feature_text: "10 private 1:1 sessions",        is_included: true, sort_order: 1 },
+      { id: "f7",  plan_id: "p10", feature_text: "Book any teacher, any style",    is_included: true, sort_order: 2 },
+      { id: "f8",  plan_id: "p10", feature_text: "Lowest price per session",       is_included: true, sort_order: 3 },
+      { id: "f9",  plan_id: "p10", feature_text: "Credits never expire",           is_included: true, sort_order: 4 },
+      { id: "f10", plan_id: "p10", feature_text: "Cancel before the session — credit refunded", is_included: true, sort_order: 5 },
     ],
   },
 ];
@@ -162,8 +151,8 @@ const MOCK_SETTINGS: Record<string, unknown> = {
   "landing.hero_headline": "Find your free 1:1 yoga teacher — no credit card.",
   "landing.hero_subhead":
     "60-minute private session. Pick your teacher. Pick your time. We meet on Google Meet.",
-  "landing.trust_count": "Private 1:1 sessions",
-  "landing.trust_rating": "",
+  "landing.trust_count": "1,200+ reviews",
+  "landing.trust_rating": "4.9",
   "landing.final_headline": "Your first session is on us.",
 };
 
@@ -236,5 +225,11 @@ export function landingSetting<T = string>(
   fallback: T
 ): T {
   const v = settings?.[key];
-  return (v as T) ?? fallback;
+  // Treat null/undefined AND empty strings as "unset" so an admin who clears a
+  // field (or an empty mock value) falls back to the default instead of
+  // rendering a blank trust badge / headline.
+  if (v === null || v === undefined || (typeof v === "string" && v.trim() === "")) {
+    return fallback;
+  }
+  return v as T;
 }

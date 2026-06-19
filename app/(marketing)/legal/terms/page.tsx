@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata = {
   title: "Terms of service — My Yoga Classes",
   description:
-    "Terms governing your use of myyogaclasses.fit, including subscriptions, bookings, cancellation, and your rights under Australian Consumer Law.",
+    "Terms governing your use of myyogaclasses.fit, including session packs, bookings, cancellation, and your rights under Australian Consumer Law.",
 };
 
 export default function TermsPage() {
@@ -46,7 +46,7 @@ export default function TermsPage() {
             <p>
               My Yoga Classes is an online platform connecting students based in Australia with
               qualified yoga teachers based in India. Sessions are delivered live via Google
-              Meet on a one-to-one basis according to your chosen subscription plan.
+              Meet on a one-to-one basis, paid for with your free trial or a session pack.
             </p>
             <p>
               We act as the platform operator and are responsible for scheduling, billing, and
@@ -95,8 +95,8 @@ export default function TermsPage() {
               </li>
               <li>
                 If you are unable to attend, please cancel or reschedule at least 24 hours
-                before the session start time. Late cancellations and no-shows may count against
-                your booking entitlement for that billing period.
+                before the session start time. Late cancellations and no-shows may result in the
+                session credit used for that booking being forfeited.
               </li>
             </ul>
             <p>
@@ -134,28 +134,28 @@ export default function TermsPage() {
 
           {/* 6. Cancellation */}
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">6. Cancellation</h2>
+            <h2 className="text-xl font-semibold text-foreground">
+              6. Cancelling a session or your account
+            </h2>
             <p>
-              You may cancel your subscription at any time from your account dashboard or by
-              emailing us at{" "}
+              You may cancel a booked session at any time before it starts, from your account
+              dashboard. If the booking used a session credit, that credit is returned to your
+              account to use on a future booking — see our{" "}
+              <Link className="underline" href="/legal/refund">
+                Refund Policy
+              </Link>{" "}
+              for when a purchased pack itself is refundable.
+            </p>
+            <p>
+              You may close your account at any time by emailing us at{" "}
               <a className="underline" href="mailto:hello@myyogaclasses.fit">
                 hello@myyogaclasses.fit
               </a>
-              .
+              . Because packs are one-time purchases, there is no recurring subscription to stop.
             </p>
             <p>
-              Cancellation takes effect at the <strong>end of the current billing period</strong>.
-              You will retain access to the Service until that date, after which no further
-              charges will be made. We do not provide pro-rata refunds for partial billing
-              periods except where required by law — see our{" "}
-              <Link className="underline" href="/legal/refund">
-                Refund Policy
-              </Link>
-              .
-            </p>
-            <p>
-              We reserve the right to cancel or suspend your subscription immediately if you
-              breach these Terms.
+              We reserve the right to suspend or close your account immediately if you breach
+              these Terms.
             </p>
           </section>
 
@@ -174,7 +174,7 @@ export default function TermsPage() {
                 infrastructure.
               </li>
               <li>
-                Share your account, session links, or subscription access with anyone else.
+                Share your account, session links, or session credits with anyone else.
               </li>
               <li>
                 Engage or attempt to engage teachers for sessions outside the platform in a
@@ -251,13 +251,13 @@ export default function TermsPage() {
               Consumer Law. For major failures with the service, you are entitled to:
             </p>
             <ul className="list-disc pl-6 space-y-1">
-              <li>Cancel your subscription and receive a full or partial refund; and</li>
+              <li>Cancel and receive a full or partial refund; and</li>
               <li>Compensation for any other reasonably foreseeable loss or damage.</li>
             </ul>
             <p>
               If the failure does not amount to a major failure, you are entitled to have
               problems with the service rectified in a reasonable time, and, if this is not
-              done, to cancel and obtain a refund for the unused portion of the subscription.
+              done, to cancel and obtain a refund for any unused session credits.
             </p>
             <p>
               Nothing in these Terms restricts, limits, or modifies those rights.
@@ -281,7 +281,8 @@ export default function TermsPage() {
               We may update these Terms at any time. We will notify you of material changes by
               email at least 14 days before they take effect. Your continued use of the Service
               after the effective date constitutes acceptance of the updated Terms. If you do
-              not accept the changes, you may cancel your subscription before the effective date.
+              not accept the changes, you may stop using the Service and request a refund of any
+              unused session credits before the effective date.
             </p>
           </section>
 
