@@ -4,6 +4,7 @@ import { FinalCTA } from "@/components/marketing/FinalCTA";
 export const metadata = {
   title: "About",
   description: "Why My Yoga Classes exists, and how we work.",
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {

@@ -4,6 +4,7 @@ import { PageHeader } from "@/components/marketing/PageHeader";
 export const metadata = {
   title: "Contact",
   description: "Get in touch with My Yoga Classes. Questions about teachers, classes, or your bookings? We reply within 1 business day.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {

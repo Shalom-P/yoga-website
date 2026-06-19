@@ -3,7 +3,8 @@
 export const metadata = {
   title: "Refund policy — My Yoga Classes",
   description:
-    "My Yoga Classes refund and cancellation policy, including the free trial, subscription billing cycles, and your rights under the Australian Consumer Law.",
+    "My Yoga Classes refund and cancellation policy, including the free trial, one-time session packs, and your rights under the Australian Consumer Law.",
+  alternates: { canonical: "/legal/refund" },
 };
 
 export default function RefundPage() {

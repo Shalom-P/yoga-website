@@ -9,6 +9,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Teachers",
   description: "Meet our certified yoga teachers from India, teaching live to Australia.",
+  alternates: { canonical: "/teachers" },
 };
 
 export default async function TeachersPage() {

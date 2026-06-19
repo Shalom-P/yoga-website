@@ -85,8 +85,17 @@ const orgJsonLd: WithContext<Organization> = {
   "@type": "Organization",
   name: "My Yoga Classes",
   url: siteUrl,
+  logo: `${siteUrl}/icon.svg`,
   description:
     "Live online 1:1 yoga with expert teachers from India for students across Australia. Book a free private session — no credit card required.",
+  areaServed: { "@type": "Country", name: "Australia" },
+  knowsLanguage: ["en-AU"],
+  contactPoint: {
+    "@type": "ContactPoint",
+    contactType: "customer support",
+    email: "hello@myyogaclasses.fit",
+    availableLanguage: ["English"],
+  },
 };
 
 export default function RootLayout({

@@ -6,6 +6,7 @@ export const metadata = {
   title: "Terms of service — My Yoga Classes",
   description:
     "Terms governing your use of myyogaclasses.fit, including session packs, bookings, cancellation, and your rights under Australian Consumer Law.",
+  alternates: { canonical: "/legal/terms" },
 };
 
 export default function TermsPage() {

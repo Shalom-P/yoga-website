@@ -10,6 +10,9 @@ import { FAQ } from "@/components/marketing/FAQ";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
 import { StickyMobileCTA } from "@/components/marketing/StickyMobileCTA";
 import { LandingPageView } from "@/components/marketing/LandingPageView";
+import { JsonLd } from "@/components/shared/JsonLd";
+import { faqPageJsonLd } from "@/lib/seo/structuredData";
+import { FAQS } from "@/lib/data/faqs";
 import {
   getFeaturedTeachers,
   getClassCategories,
@@ -45,6 +48,7 @@ export default async function LandingPage() {
 
   return (
     <>
+      <JsonLd data={faqPageJsonLd(FAQS)} />
       <LandingPageView />
       <Hero
         headline={headline}

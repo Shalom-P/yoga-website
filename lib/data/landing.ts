@@ -203,7 +203,9 @@ export const getTeacherBySlug = cache(async (slug: string): Promise<Teacher | nu
   return data ?? null;
 });
 
-export async function getClassCategories(): Promise<ClassCategory[]> {
+// Wrapped in React cache so a page that calls it in both generateMetadata and the
+// component body (e.g. classes/[slug]) issues one query per request.
+export const getClassCategories = cache(async (): Promise<ClassCategory[]> => {
   if (!isSupabaseConfigured) return MOCK_CATEGORIES;
   const supabase = await createSupabaseServerClient();
   const { data } = await supabase
@@ -212,7 +214,7 @@ export async function getClassCategories(): Promise<ClassCategory[]> {
     .eq("is_active", true)
     .order("sort_order");
   return data && data.length ? data : MOCK_CATEGORIES;
-}
+});
 
 export async function getPlansWithFeatures(): Promise<(Plan & { features: PlanFeature[] })[]> {
   if (!isSupabaseConfigured) return MOCK_PLANS;

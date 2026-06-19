@@ -4,7 +4,11 @@ import { FinalCTA } from "@/components/marketing/FinalCTA";
 import { getFeaturedReviews } from "@/lib/data/landing";
 
 export const revalidate = 60;
-export const metadata = { title: "Reviews", description: "What Australian students say about practising with us." };
+export const metadata = {
+  title: "Reviews",
+  description: "What Australian students say about practising with us.",
+  alternates: { canonical: "/reviews" },
+};
 
 export default async function ReviewsPage() {
   const reviews = await getFeaturedReviews();
