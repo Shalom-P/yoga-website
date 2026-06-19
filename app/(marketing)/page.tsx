@@ -41,7 +41,7 @@ export default async function LandingPage() {
   ]);
 
   const headline = landingSetting(settings, "landing.hero_headline", "Find your free 1:1 yoga teacher — no credit card.");
-  const subhead = landingSetting(settings, "landing.hero_subhead", "60-minute private session. Pick your teacher. Pick your time. We meet on Google Meet.");
+  const subhead = landingSetting(settings, "landing.hero_subhead", "A 60-minute private session, live on Google Meet — shown in your local Australian time. Pick your teacher, pick your time.");
   const trustRating = landingSetting(settings, "landing.trust_rating", "4.9");
   const trustCount = landingSetting(settings, "landing.trust_count", "1,200+ reviews");
   const finalHeadline = landingSetting(settings, "landing.final_headline", "Your first session is on us.");
@@ -57,7 +57,7 @@ export default async function LandingPage() {
         trustCount={trustCount}
       />
       <Marquee />
-      <OutcomeStats />
+      <OutcomeStats rating={trustRating} />
       <HowItWorks />
       <TeacherCarousel teachers={teachers} />
       <PracticeSection categories={categories} />

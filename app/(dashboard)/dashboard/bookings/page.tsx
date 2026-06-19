@@ -20,7 +20,12 @@ type Row = {
   } | null;
 };
 
-export default async function BookingsPage() {
+export default async function BookingsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ booked?: string }>;
+}) {
+  const { booked } = await searchParams;
   const { user, supabase } = await requireUser("/dashboard/bookings");
   const [{ data: bookings }, { data: profile }] = await Promise.all([
     supabase
@@ -63,6 +68,16 @@ export default async function BookingsPage() {
           <Link href="/dashboard/book">Book a session</Link>
         </Button>
       </div>
+
+      {booked === "1" && (
+        <div
+          role="status"
+          className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4 text-sm text-foreground"
+        >
+          <strong className="font-medium">Session booked.</strong> Your Google Meet link will
+          appear on the booking below shortly — we&apos;ll also email it to you.
+        </div>
+      )}
 
       <BookingsList rows={rows} customerTimezone={timezone} />
     </div>
