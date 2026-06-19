@@ -332,6 +332,10 @@ export type Database = {
         Args: { p_customer: string; p_booking_id?: string | null };
         Returns: boolean;
       };
+      refund_session_credit: {
+        Args: { p_customer: string; p_booking_id: string };
+        Returns: boolean;
+      };
       book_session: {
         Args: {
           p_customer: string;
