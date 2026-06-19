@@ -6,6 +6,7 @@ import { z } from "zod";
 import { getRazorpayClient, isRazorpayConfigured } from "@/lib/razorpay/client";
 import { resolvePackBySlug } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { canTransactFromTimezone, OUTSIDE_AUSTRALIA_ERROR } from "@/lib/geo/australia";
 
 // The Razorpay SDK requires the Node runtime.
 export const runtime = "nodejs";
@@ -25,6 +26,9 @@ export const runtime = "nodejs";
 
 const bodySchema = z.object({
   planSlug: z.string().trim().min(1).max(64),
+  // The visitor's live browser timezone (IANA id). Used only for the
+  // Australia-only purchase gate below — the price is never client-supplied.
+  clientTimezone: z.string().trim().min(1).max(64),
 });
 
 export async function POST(req: Request): Promise<Response> {
@@ -53,6 +57,29 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json(
       { error: "Invalid request", issues: parsed.error.flatten().fieldErrors },
       { status: 400 },
+    );
+  }
+
+  // Australia-only purchase gate. Non-admin customers must be in an Australian
+  // timezone to buy a pack; admins may operate from anywhere. This is the single
+  // choke point for purchases — no order means no Checkout and no fulfilment.
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (
+    !canTransactFromTimezone({
+      isAdmin: profile?.role === "admin",
+      timezone: parsed.data.clientTimezone,
+    })
+  ) {
+    return Response.json(
+      {
+        error: OUTSIDE_AUSTRALIA_ERROR,
+        message: "Session packs can only be purchased from within Australia.",
+      },
+      { status: 403 },
     );
   }
 

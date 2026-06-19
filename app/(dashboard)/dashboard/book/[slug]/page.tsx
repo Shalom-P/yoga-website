@@ -42,7 +42,7 @@ export default async function TeacherBookingPage({
   // row hasn't been created by the auth trigger yet).
   const { data: profile } = await supabase
     .from("profiles")
-    .select("timezone")
+    .select("timezone, role")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -95,6 +95,7 @@ export default async function TeacherBookingPage({
         freeTrialAvailable={freeTrialAvailable}
         creditBalance={creditBalance}
         blockedDates={blockedDates}
+        isAdmin={profile?.role === "admin"}
       />
     </div>
   );
