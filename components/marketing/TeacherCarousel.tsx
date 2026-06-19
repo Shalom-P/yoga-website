@@ -65,6 +65,9 @@ export function TeacherCarousel({ teachers }: { teachers: Teacher[] }) {
                       src={t.avatar_url}
                       alt={t.display_name}
                       fill
+                      // The first card's photo is the homepage LCP on most
+                      // viewports — prioritise it so it isn't lazy-loaded.
+                      priority={i === 0}
                       className="object-cover"
                       sizes="(max-width: 640px) 260px, 300px"
                     />

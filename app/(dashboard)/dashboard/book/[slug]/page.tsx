@@ -13,56 +13,51 @@ export default async function TeacherBookingPage({
   const { slug } = await params;
 
   const supabase = await createSupabaseServerClient();
-  const { data: teacher } = await supabase
-    .from("teachers")
-    .select("id, slug, display_name, headline, bio, timezone, rating_avg, is_active, intro_video_url, avatar_url")
-    .eq("slug", slug)
-    .eq("is_active", true)
-    .maybeSingle();
+
+  // Teacher lookup and the user's profile are independent — run them together.
+  // (Explicit id filter + maybeSingle on profile — RLS also scopes to the user,
+  // but .single() throws PGRST116 on the transient zero-row case, e.g. the
+  // profile row hasn't been created by the auth trigger yet.)
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [{ data: teacher }, { data: profile }] = await Promise.all([
+    supabase
+      .from("teachers")
+      .select("id, slug, display_name, headline, bio, timezone, rating_avg, is_active, intro_video_url, avatar_url")
+      .eq("slug", slug)
+      .eq("is_active", true)
+      .maybeSingle(),
+    supabase.from("profiles").select("timezone, role").eq("id", user.id).maybeSingle(),
+  ]);
   if (!teacher) notFound();
 
-  const { data: availability } = await supabase
-    .from("teacher_availability")
-    .select("day_of_week, start_time, end_time, slot_duration_minutes")
-    .eq("teacher_id", teacher.id);
-
-  // One-off blocked dates (teacher TZ "yyyy-MM-dd") so the picker doesn't offer
-  // slots the confirm route would reject. Only future dates are relevant.
-  const todayIso = new Date().toISOString().slice(0, 10);
-  const { data: overrides } = await supabase
-    .from("teacher_slot_overrides")
-    .select("date, is_blocked")
-    .eq("teacher_id", teacher.id)
-    .eq("is_blocked", true)
-    .gte("date", todayIso);
+  // Everything else depends only on teacher.id / user.id — fetch in parallel:
+  //  - availability windows
+  //  - one-off blocked dates (teacher TZ "yyyy-MM-dd"), future-only
+  //  - whether the free 1:1 trial is still available
+  //  - the customer's session-credit balance (drives the paid-booking path)
+  const [{ data: availability }, { data: overrides }, { data: trialBooking }, { data: credits }] =
+    await Promise.all([
+      supabase
+        .from("teacher_availability")
+        .select("day_of_week, start_time, end_time, slot_duration_minutes")
+        .eq("teacher_id", teacher.id),
+      supabase
+        .from("teacher_slot_overrides")
+        .select("date, is_blocked")
+        .eq("teacher_id", teacher.id)
+        .eq("is_blocked", true)
+        .gte("date", todayIso),
+      supabase
+        .from("bookings")
+        .select("id")
+        .eq("customer_id", user.id)
+        .eq("is_free_trial", true)
+        .neq("status", "cancelled")
+        .limit(1)
+        .maybeSingle(),
+      supabase.from("customer_credits").select("balance").eq("customer_id", user.id).maybeSingle(),
+    ]);
   const blockedDates = (overrides ?? []).map((o) => o.date);
-
-  // Explicit id filter + maybeSingle — RLS alone would also scope to the user,
-  // but .single() throws PGRST116 on the transient zero-row case (e.g. profile
-  // row hasn't been created by the auth trigger yet).
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("timezone, role")
-    .eq("id", user.id)
-    .maybeSingle();
-
-  // The free 1:1 trial is available until the customer has used it; after that,
-  // booking a paid session spends a session-credit. These drive the picker.
-  const [{ data: trialBooking }, { data: credits }] = await Promise.all([
-    supabase
-      .from("bookings")
-      .select("id")
-      .eq("customer_id", user.id)
-      .eq("is_free_trial", true)
-      .neq("status", "cancelled")
-      .limit(1)
-      .maybeSingle(),
-    supabase
-      .from("customer_credits")
-      .select("balance")
-      .eq("customer_id", user.id)
-      .maybeSingle(),
-  ]);
   const freeTrialAvailable = !trialBooking;
   const creditBalance = credits?.balance ?? 0;
 

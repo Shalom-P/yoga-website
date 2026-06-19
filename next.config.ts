@@ -37,6 +37,10 @@ const nextConfig: NextConfig = {
   // Hide the Next.js dev-tools indicator (the floating "N" badge) in `next dev`.
   // It never renders in production builds; this just removes it from the dev view.
   devIndicators: false,
+  // Tree-shake large barrel packages so unused exports don't ship to the client.
+  experimental: {
+    optimizePackageImports: ["motion", "lucide-react", "date-fns", "date-fns-tz"],
+  },
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },

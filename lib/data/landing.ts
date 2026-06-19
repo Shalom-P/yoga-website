@@ -2,6 +2,7 @@
 // Reads from Supabase if NEXT_PUBLIC_SUPABASE_URL is configured.
 // Otherwise returns realistic mock data so the site renders cleanly during local dev / preview deploys.
 
+import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { Teacher, Plan, PlanFeature, ClassCategory, Review } from "@/lib/supabase/types";
 
@@ -159,6 +160,9 @@ const MOCK_SETTINGS: Record<string, unknown> = {
 // --------------------------------------------------------------------------
 // Public data accessors
 // --------------------------------------------------------------------------
+// Homepage carousel only — capped at 8. Use getAllActiveTeachers for the full
+// /teachers grid and getTeacherBySlug for detail pages (a capped list would 404
+// the 9th+ teacher's detail page and over-fetch for a slug filter).
 export async function getFeaturedTeachers(): Promise<Teacher[]> {
   if (!isSupabaseConfigured) return MOCK_TEACHERS;
   const supabase = await createSupabaseServerClient();
@@ -170,6 +174,34 @@ export async function getFeaturedTeachers(): Promise<Teacher[]> {
     .limit(8);
   return data && data.length ? data : MOCK_TEACHERS;
 }
+
+// Uncapped active-teacher list for the public /teachers grid and the dashboard
+// booking grid.
+export async function getAllActiveTeachers(): Promise<Teacher[]> {
+  if (!isSupabaseConfigured) return MOCK_TEACHERS;
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("teachers")
+    .select("*")
+    .eq("is_active", true)
+    .order("sort_order");
+  return data && data.length ? data : MOCK_TEACHERS;
+}
+
+// Single teacher by slug for detail pages. Wrapped in React cache so the page and
+// its generateMetadata share ONE query per request (supabase-js isn't
+// request-deduped). Returns null when not found / inactive.
+export const getTeacherBySlug = cache(async (slug: string): Promise<Teacher | null> => {
+  if (!isSupabaseConfigured) return MOCK_TEACHERS.find((t) => t.slug === slug) ?? null;
+  const supabase = await createSupabaseServerClient();
+  const { data } = await supabase
+    .from("teachers")
+    .select("*")
+    .eq("slug", slug)
+    .eq("is_active", true)
+    .maybeSingle();
+  return data ?? null;
+});
 
 export async function getClassCategories(): Promise<ClassCategory[]> {
   if (!isSupabaseConfigured) return MOCK_CATEGORIES;

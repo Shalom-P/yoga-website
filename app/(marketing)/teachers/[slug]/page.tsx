@@ -4,14 +4,13 @@ import { notFound } from "next/navigation";
 import { Star, ArrowRight, Globe, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TeacherIntroVideo } from "@/components/shared/TeacherIntroVideo";
-import { getFeaturedTeachers } from "@/lib/data/landing";
+import { getTeacherBySlug } from "@/lib/data/landing";
 
 export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const teachers = await getFeaturedTeachers();
-  const t = teachers.find((x) => x.slug === slug);
+  const t = await getTeacherBySlug(slug);
   return {
     title: t ? `${t.display_name} — Yoga Teacher` : "Teacher",
     description: t?.headline ?? undefined,
@@ -20,8 +19,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function TeacherPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const teachers = await getFeaturedTeachers();
-  const t = teachers.find((x) => x.slug === slug);
+  const t = await getTeacherBySlug(slug);
   if (!t) notFound();
 
   return (
