@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AU_TIMEZONES, detectBrowserTimezone, DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
+import { friendlyFormError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
 
 const GOALS = [
@@ -84,7 +85,7 @@ export function OnboardingForm({
       })
       .select("id");
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyFormError(error.message));
     if (!updated?.length) {
       return toast.error("We couldn't save your profile. Please try again or contact support.");
     }
@@ -95,7 +96,8 @@ export function OnboardingForm({
 
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-7">
-      {/* Full name field — required for phone-OTP users who have no name */}
+      {/* Full name field — email-OTP sign-ups arrive with a blank name, so we
+          collect it here during onboarding. */}
       <div>
         <Label htmlFor="full-name" className="mb-2 block">
           Full name <span aria-hidden="true" className="text-destructive">*</span>

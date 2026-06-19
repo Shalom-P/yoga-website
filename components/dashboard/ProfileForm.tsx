@@ -11,6 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AU_TIMEZONES } from "@/lib/timezone";
 import { toE164, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
+import { friendlyFormError } from "@/lib/ui/errors";
 import { toast } from "sonner";
 
 type Initial = {
@@ -58,7 +59,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       .eq("id", user.id)
       .select("id");
     setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyFormError(error.message));
     if (!updated?.length) {
       return toast.error("We couldn't save your changes. Please try again or contact support.");
     }

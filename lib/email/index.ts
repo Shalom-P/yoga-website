@@ -61,6 +61,45 @@ export async function sendBookingReminder(
 }
 
 // ---------------------------------------------------------------------------
+// Contact form
+// ---------------------------------------------------------------------------
+
+const SUPPORT_EMAIL = "hello@myyogaclasses.fit";
+
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+export interface SendContactMessageArgs {
+  name: string;
+  email: string;
+  message: string;
+}
+
+/** Forwards a contact-form submission to the support inbox, reply-to the sender. */
+export async function sendContactMessage(
+  args: SendContactMessageArgs
+): Promise<SendEmailResult> {
+  const html = `
+    <p><strong>Name:</strong> ${escapeHtml(args.name)}</p>
+    <p><strong>Email:</strong> ${escapeHtml(args.email)}</p>
+    <p><strong>Message:</strong></p>
+    <p style="white-space:pre-wrap">${escapeHtml(args.message)}</p>
+  `;
+  return sendEmail({
+    to: SUPPORT_EMAIL,
+    replyTo: args.email,
+    subject: `Contact form — ${args.name}`,
+    html,
+    text: `Name: ${args.name}\nEmail: ${args.email}\n\n${args.message}`,
+  });
+}
+
+// ---------------------------------------------------------------------------
 // Subscription activated
 // ---------------------------------------------------------------------------
 
