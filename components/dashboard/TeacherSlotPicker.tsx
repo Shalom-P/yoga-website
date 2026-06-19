@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { addDays, addMinutes } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { Button } from "@/components/ui/button";
-import { useBrowserTz } from "@/components/dashboard/local-time";
+import { useBrowserTz, useHasMounted } from "@/components/dashboard/local-time";
+import { isAustralianTimezone, OUTSIDE_AUSTRALIA_ERROR } from "@/lib/geo/australia";
 
 type Availability = {
   day_of_week: number; // 0 = Sun..6 = Sat
@@ -30,6 +31,8 @@ type Props = {
   creditBalance: number;
   /** Teacher-TZ "yyyy-MM-dd" dates the teacher has blocked off (no bookings). */
   blockedDates?: string[];
+  /** Admins may book from any location; customers must be in Australia. */
+  isAdmin: boolean;
 };
 
 function padHms(hms: string): string {
@@ -87,12 +90,23 @@ export function TeacherSlotPicker({
   freeTrialAvailable,
   creditBalance,
   blockedDates,
+  isAdmin,
 }: Props) {
   const router = useRouter();
   // Show slot times in the timezone the customer is actually in right now.
   const customerTz = useBrowserTz(customerTimezone);
+  // The SSR/first-paint customerTz is the stored (always-AU) fallback, so the
+  // real location isn't known until the client resolves it. Gate trial-eligible
+  // rendering on this to avoid flashing a bookable grid at out-of-AU users.
+  const tzResolved = useHasMounted();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+
+  // Australia-only gate for the free 1:1 trial. Non-admins outside Australia
+  // can't claim it (the server enforces this too). Paid bookings that spend
+  // already-purchased credits are unaffected.
+  const outsideAustralia = !isAdmin && !isAustralianTimezone(customerTz);
+  const trialBlocked = outsideAustralia && freeTrialAvailable;
 
   const grouped = useMemo(() => {
     const now = new Date();
@@ -111,6 +125,10 @@ export function TeacherSlotPicker({
   const isPaid = !freeTrialAvailable;
 
   function onSlotClick(slot: Slot) {
+    if (trialBlocked) {
+      setError(OUTSIDE_AUSTRALIA_ERROR);
+      return;
+    }
     if (isPaid && creditBalance <= 0) {
       setError("insufficient_credits");
       return;
@@ -129,6 +147,7 @@ export function TeacherSlotPicker({
         startAt: slot.at.toISOString(),
         durationMinutes: slot.durationMinutes,
         isFreeTrial: freeTrialAvailable,
+        clientTimezone: customerTz,
       }),
     });
     setBusy(null);
@@ -139,6 +158,34 @@ export function TeacherSlotPicker({
     }
     const body = (await res.json().catch(() => ({}))) as { error?: string };
     setError(body.error ?? "booking_failed");
+  }
+
+  // For a trial-eligible non-admin, hold off on the slot grid until the real
+  // browser timezone resolves — otherwise an out-of-AU user sees a flash of
+  // bookable slots before the banner. Admins and paid bookings are unaffected.
+  if (!isAdmin && freeTrialAvailable && !tzResolved) {
+    return (
+      <div className="mt-10 rounded-2xl border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+        Checking your location…
+      </div>
+    );
+  }
+
+  // Outside Australia + free trial still unclaimed → nothing is bookable here.
+  // Show why instead of a slot grid the booking API would reject anyway.
+  if (trialBlocked) {
+    return (
+      <div className="mt-10 rounded-2xl border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
+        <p className="font-medium text-foreground">
+          The free 1:1 trial is available to customers in Australia.
+        </p>
+        <p className="mt-1.5">
+          We detected your timezone as {customerTz}, which is outside Australia, so
+          we can&apos;t book a trial class for you right now. If this looks wrong,
+          check your device&apos;s time &amp; timezone settings.
+        </p>
+      </div>
+    );
   }
 
   if (grouped.length === 0) {
@@ -175,6 +222,8 @@ export function TeacherSlotPicker({
             "That time has just passed — pick a slot at least 15 minutes from now."
           ) : error === "slot_unavailable" ? (
             "The teacher isn't available then anymore — pick another time."
+          ) : error === OUTSIDE_AUSTRALIA_ERROR ? (
+            "The free 1:1 trial is available to customers in Australia only."
           ) : (
             "Couldn't book that slot. Please try again."
           )}

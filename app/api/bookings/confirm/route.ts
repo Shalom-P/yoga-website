@@ -6,6 +6,7 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
+import { canTransactFromTimezone, OUTSIDE_AUSTRALIA_ERROR } from "@/lib/geo/australia";
 
 // Reaches lib/google/calendar.ts (Vercel OIDC / @vercel/oidc) via
 // provisionSessionMeet — that dependency is Node-runtime only.
@@ -16,6 +17,9 @@ const schema = z.object({
   startAt: z.string().datetime({ offset: true }),
   durationMinutes: z.number().int().min(15).max(180).default(60),
   isFreeTrial: z.boolean().default(true),
+  // The booker's live browser timezone (IANA id), for the Australia-only
+  // free-trial gate below.
+  clientTimezone: z.string().trim().min(1).max(64),
 });
 
 // Postgres day_of_week is 0=Sun..6=Sat; date-fns "i" returns 1=Mon..7=Sun.
@@ -71,12 +75,25 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "bad request" }, { status: 400 });
 
-  // Load the booker's timezone for the confirmation email below.
+  // Load the booker's timezone (confirmation email) and role (trial gate below).
   const { data: bookerProfile } = await supabase
     .from("profiles")
-    .select("timezone")
+    .select("timezone, role")
     .eq("id", user.id)
     .maybeSingle();
+
+  // Australia-only free-trial gate. Non-admin customers must be in an Australian
+  // timezone to claim the free 1:1; admins may book from anywhere. Paid bookings
+  // (spending already-purchased credits) are intentionally not gated here.
+  if (
+    parsed.data.isFreeTrial &&
+    !canTransactFromTimezone({
+      isAdmin: bookerProfile?.role === "admin",
+      timezone: parsed.data.clientTimezone,
+    })
+  ) {
+    return NextResponse.json({ error: OUTSIDE_AUSTRALIA_ERROR }, { status: 403 });
+  }
 
   // Paid (non-trial) sessions spend one session-credit, reserved after the slot
   // is confirmed available (see below). The free 1:1 trial never spends credits.

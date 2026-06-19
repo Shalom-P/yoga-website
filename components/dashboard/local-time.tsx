@@ -21,6 +21,19 @@ export function useBrowserTz(fallback: string): string {
   );
 }
 
+/**
+ * False during SSR and the first client (hydration) render, true afterwards.
+ * Lets a component wait for the *real* browser timezone before deciding
+ * location-dependent UI — without a hydration mismatch.
+ */
+export function useHasMounted(): boolean {
+  return useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
+}
+
 /** A UTC timestamp formatted in the viewer's local (browser) timezone. */
 export function LocalTime({
   iso,

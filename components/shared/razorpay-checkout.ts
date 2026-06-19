@@ -11,6 +11,9 @@
  * Outcomes are delivered via callbacks so each caller controls its own UI.
  */
 
+import { detectBrowserTimezone } from "@/lib/timezone";
+import { OUTSIDE_AUSTRALIA_ERROR } from "@/lib/geo/australia";
+
 const CHECKOUT_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 const SCRIPT_TIMEOUT_MS = 10_000;
 
@@ -99,7 +102,11 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     orderRes = await fetch("/api/razorpay/create-order", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ planSlug: args.planSlug }),
+      // Send the live browser timezone for the Australia-only purchase gate.
+      body: JSON.stringify({
+        planSlug: args.planSlug,
+        clientTimezone: detectBrowserTimezone(),
+      }),
     });
   } catch {
     args.onError("Network error — please try again.");
@@ -117,6 +124,10 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     // to login; PlanAutoStart on /dashboard/plan?planSlug=… resumes checkout.
     const next = encodeURIComponent(`/dashboard/plan?planSlug=${encodeURIComponent(args.planSlug)}`);
     window.location.href = `/login?next=${next}`;
+    return;
+  }
+  if (orderRes.status === 403 && order.error === OUTSIDE_AUSTRALIA_ERROR) {
+    args.onError("Session packs can only be purchased from within Australia.");
     return;
   }
   if (!orderRes.ok || !order.orderId || order.amount == null || !order.currency) {
