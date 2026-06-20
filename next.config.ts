@@ -2,18 +2,28 @@ import type { NextConfig } from "next";
 
 // Content-Security-Policy scoped to the third-party origins this app actually
 // loads: Razorpay Checkout, Supabase (REST + realtime websockets), PostHog,
-// Sentry ingest, and Google OAuth. 'unsafe-inline'/'unsafe-eval' are required
-// because Next's bootstrap (and HMR in dev) inject inline/eval'd scripts and we
-// don't yet emit per-request nonces — moving to a nonce-based CSP is the next
-// hardening step. The value still constrains script/connect/frame HOSTS and
-// blocks framing + object/base hijacks, which is the bulk of the protection.
+// Sentry ingest, and Google OAuth.
+//
+// 'unsafe-inline' stays for scripts because Next emits an inline bootstrap and we
+// keep static/ISR rendering (a per-request nonce would force every page dynamic).
+// 'unsafe-eval' is needed only by the dev HMR runtime, so it's dropped in
+// production. The value also constrains script/connect/frame HOSTS and blocks
+// framing + object/base hijacks.
+const isDev = process.env.NODE_ENV !== "production";
+const scriptSrc = [
+  "script-src 'self' 'unsafe-inline'",
+  isDev ? "'unsafe-eval'" : "",
+  "https://checkout.razorpay.com https://*.posthog.com",
+]
+  .filter(Boolean)
+  .join(" ");
 const csp = [
   "default-src 'self'",
   "base-uri 'self'",
   "object-src 'none'",
   "frame-ancestors 'none'",
   "form-action 'self' https://*.razorpay.com",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://checkout.razorpay.com https://*.posthog.com",
+  scriptSrc,
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://*.razorpay.com",
   "font-src 'self' data:",
