@@ -38,8 +38,9 @@ export default async function DashboardHome() {
   // so filter to future sessions and pick the earliest in JS. A customer never
   // has enough confirmed bookings for this to matter perf-wise.
   const nowMs = new Date().getTime();
+  const rows: NextBooking[] = bookingRows ?? [];
   const nextBooking =
-    ((bookingRows as unknown as NextBooking[]) ?? [])
+    rows
       .filter((b) => b.session && new Date(b.session.start_at).getTime() > nowMs)
       .sort(
         (a, b) =>

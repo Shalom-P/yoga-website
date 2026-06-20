@@ -240,7 +240,7 @@ export async function getFeaturedReviews(): Promise<(Review & { teacher_name?: s
     .eq("is_approved", true)
     .limit(9);
   if (!data || data.length === 0) return MOCK_REVIEWS;
-  return (data as unknown as Array<Review & { teacher?: { display_name: string } | null }>).map((r) => ({
+  return data.map((r) => ({
     ...r,
     teacher_name: r.teacher?.display_name,
   }));

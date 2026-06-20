@@ -72,21 +72,13 @@ export default async function AdminDashboard() {
   ]);
 
   const kpis: Kpis | null =
-    kpiRes.status === "fulfilled" && kpiRes.value.data
-      ? (kpiRes.value.data as unknown as Kpis)
-      : null;
+    kpiRes.status === "fulfilled" && kpiRes.value.data ? kpiRes.value.data : null;
   const upcoming: UpcomingSession[] =
-    sessionsRes.status === "fulfilled"
-      ? ((sessionsRes.value.data as unknown as UpcomingSession[]) ?? [])
-      : [];
+    sessionsRes.status === "fulfilled" ? (sessionsRes.value.data ?? []) : [];
   const activity: ActivityRow[] =
-    activityRes.status === "fulfilled"
-      ? ((activityRes.value.data as unknown as ActivityRow[]) ?? [])
-      : [];
+    activityRes.status === "fulfilled" ? (activityRes.value.data ?? []) : [];
   const recentBookings: RecentBooking[] =
-    bookingsRes.status === "fulfilled"
-      ? ((bookingsRes.value.data as unknown as RecentBooking[]) ?? [])
-      : [];
+    bookingsRes.status === "fulfilled" ? (bookingsRes.value.data ?? []) : [];
 
   const stats = [
     {

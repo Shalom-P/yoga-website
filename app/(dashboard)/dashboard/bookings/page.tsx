@@ -42,7 +42,7 @@ export default async function BookingsPage({
     supabase.from("profiles").select("timezone").eq("id", user.id).single(),
   ]);
 
-  const rows = (bookings as unknown as Row[]) ?? [];
+  const rows: Row[] = bookings ?? [];
   const timezone = profile?.timezone ?? "Australia/Sydney";
   const now = new Date().getTime();
   const upcomingCount = rows.filter(

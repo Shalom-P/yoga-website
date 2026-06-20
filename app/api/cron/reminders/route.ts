@@ -18,22 +18,6 @@ import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 /** Half-width of the reminder time window in milliseconds. */
 const WINDOW_MS = 10 * 60 * 1000; // ±10 minutes
 
-// The Database type carries empty Relationships, so embedded selects resolve to
-// an error type at compile time (they work fine at runtime). Cast to this shape.
-type SessionLite = {
-  start_at: string;
-  end_at: string;
-  meet_link: string | null;
-  status: string;
-  teacher_id: string;
-};
-type ReminderBooking = {
-  id: string;
-  customer_id: string;
-  session_id: string;
-  sessions: SessionLite | SessionLite[] | null;
-};
-
 /**
  * POST /api/cron/reminders
  *
@@ -69,8 +53,7 @@ export async function POST(req: Request): Promise<Response> {
     const { data: bookings, error: bookingsErr } = await svc
       .from("bookings")
       .select(
-        "id, customer_id, session_id, " +
-        "sessions!inner(start_at, end_at, meet_link, status, teacher_id)"
+        "id, customer_id, session_id, sessions!inner(start_at, end_at, meet_link, status, teacher_id)"
       )
       .eq("status", "confirmed")
       .filter("sessions.status", "neq", "cancelled")
@@ -83,15 +66,12 @@ export async function POST(req: Request): Promise<Response> {
       continue;
     }
 
-    const list = (bookings ?? []) as unknown as ReminderBooking[];
+    const list = bookings ?? [];
     if (list.length === 0) continue;
 
     for (const booking of list) {
-      // Narrow the join result — Supabase returns the related row as an object
-      // or array depending on the relationship; sessions!inner returns a single object.
-      const session = Array.isArray(booking.sessions)
-        ? booking.sessions[0]
-        : booking.sessions;
+      // `sessions!inner` resolves to a single related row.
+      const session = booking.sessions;
       if (!session) continue;
 
       // Fetch the customer's email + timezone FIRST. No recipient means nothing
