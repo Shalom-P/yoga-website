@@ -2,14 +2,17 @@
 
 import { motion } from "motion/react";
 
-const STATS = [
-  { value: "1:1", label: "Every class is private" },
-  { value: "4.9★", label: "Average teacher rating" },
-  { value: "60min", label: "Every live session" },
-  { value: "7 days", label: "A week of slots to pick" },
-];
-
-export function OutcomeStats() {
+// `rating` is the site-level trust rating from admin settings (same source as the
+// hero badge). When unset we drop the rating stat rather than fabricate one.
+export function OutcomeStats({ rating }: { rating?: string }) {
+  const STATS = [
+    { value: "1:1", label: "Every class is private" },
+    rating
+      ? { value: `${rating}★`, label: "Average teacher rating" }
+      : { value: "200hr+", label: "Certified teachers" },
+    { value: "60min", label: "Every live session" },
+    { value: "7 days", label: "A week of slots to pick" },
+  ];
   return (
     <section className="py-16 md:py-20">
       <div className="mx-auto max-w-[1240px] px-7">

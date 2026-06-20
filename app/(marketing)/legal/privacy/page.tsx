@@ -4,6 +4,7 @@ export const metadata = {
   title: "Privacy policy — My Yoga Classes",
   description:
     "How My Yoga Classes collects, uses, and protects your personal information, in accordance with the Australian Privacy Act 1988 (Cth) and the Australian Privacy Principles.",
+  alternates: { canonical: "/legal/privacy" },
 };
 
 export default function PrivacyPage() {

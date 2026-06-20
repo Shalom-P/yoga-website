@@ -41,3 +41,36 @@ export function canTransactFromTimezone({
 }): boolean {
   return isAdmin || isAustralianTimezone(timezone);
 }
+
+/**
+ * The edge-provided ISO country for the request, if any. On Vercel this is the
+ * `x-vercel-ip-country` header (a GeoIP lookup the client cannot forge). Returns
+ * null off-platform (local dev, self-hosted), where we fall back to timezone.
+ */
+export function countryFromHeaders(headers: Headers): string | null {
+  const c = headers.get("x-vercel-ip-country");
+  return c ? c.trim().toUpperCase() : null;
+}
+
+/**
+ * Authoritative server-side gate. Prefers the edge GeoIP country (which a caller
+ * cannot spoof by POSTing a fake timezone); only falls back to the self-reported
+ * browser timezone when no GeoIP header is present (local/off-platform). This
+ * closes the "POST Australia/Sydney from anywhere" bypass on the purchase and
+ * free-trial routes.
+ */
+export function canTransactFromRequest({
+  isAdmin,
+  country,
+  timezone,
+}: {
+  isAdmin: boolean;
+  country: string | null | undefined;
+  timezone: string | null | undefined;
+}): boolean {
+  if (isAdmin) return true;
+  // GeoIP present → it is the source of truth (ignore the client timezone).
+  if (country) return country === "AU";
+  // No GeoIP (local dev / non-Vercel host) → fall back to browser timezone.
+  return isAustralianTimezone(timezone);
+}

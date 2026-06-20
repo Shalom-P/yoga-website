@@ -85,6 +85,8 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
           className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted md:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
+          aria-expanded={open}
+          aria-controls="mobile-nav-menu"
         >
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
@@ -92,6 +94,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
 
       {open && (
         <motion.div
+          id="mobile-nav-menu"
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           className="border-t border-border bg-background md:hidden"

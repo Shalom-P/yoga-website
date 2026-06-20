@@ -42,10 +42,11 @@ export default async function AdminBookingsPage({
     .range(from, to);
 
   const totalPages = count ? Math.ceil(count / PAGE_SIZE) : 1;
+  const rows: Row[] = data ?? [];
 
   return (
     <div className="p-8 max-w-7xl">
-      <BookingsAdmin rows={(data as unknown as Row[]) ?? []} />
+      <BookingsAdmin rows={rows} />
       {totalPages > 1 && (
         <div className="mt-6 flex items-center gap-3">
           {page > 1 && (

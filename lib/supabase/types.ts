@@ -1,14 +1,21 @@
-// Hand-written Database type for v1 — replace with `supabase gen types typescript --project-id …`
-// output once a Supabase project is provisioned. The shape below matches what supabase-js 2.46+
-// expects: per-table { Row, Insert, Update, Relationships } and top-level
-// { Tables, Views, Functions, Enums, CompositeTypes }.
+// Hand-maintained Database type, mirroring supabase/migrations/* (the authoritative
+// schema — see CLAUDE.md "Schema ownership"). Kept hand-written rather than re-running
+// `supabase gen types` because (a) the live DB currently lags the migrations (0020's
+// `one_time` interval, 0021's `refund_session_credit`), so a live regen would be stale,
+// and (b) the app imports many named aliases + hand-written RPC signatures a raw regen
+// wouldn't emit. The shape matches what supabase-js 2.46+ expects: per-table
+// { Row, Insert, Update, Relationships } and top-level { Tables, Views, Functions, Enums,
+// CompositeTypes }. The per-table Relationships (outgoing foreign keys, with literal
+// `referencedRelation` names) are what let supabase-js resolve embedded selects
+// (e.g. `bookings.select("session:sessions(...)")`) to a real row type instead of an
+// error type — keep them in sync with the migrations.
 
 export type UserRole = "customer" | "admin";
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
 export type IntensityLevel = "gentle" | "moderate" | "intense";
 export type SessionStatus = "scheduled" | "live" | "completed" | "cancelled";
 export type BookingStatus = "confirmed" | "cancelled" | "attended" | "no_show";
-export type BillingInterval = "monthly" | "quarterly" | "yearly";
+export type BillingInterval = "monthly" | "quarterly" | "yearly" | "one_time";
 export type DiscountType = "percentage" | "fixed_aud_cents";
 export type SubscriptionStatus =
   | "pending" | "active" | "suspended" | "cancelled" | "expired";
@@ -264,11 +271,20 @@ export type RazorpayWebhookEvent = {
   payload: unknown;
 }
 
-type Table<R, I = Partial<R>, U = Partial<R>> = {
+// One entry per outgoing foreign key, mirroring `supabase gen types` output.
+type Relationship = {
+  foreignKeyName: string;
+  columns: string[];
+  isOneToOne: boolean;
+  referencedRelation: string;
+  referencedColumns: string[];
+};
+
+type Table<R, I = Partial<R>, U = Partial<R>, Rel extends readonly Relationship[] = []> = {
   Row: R;
   Insert: I;
   Update: U;
-  Relationships: [];
+  Relationships: Rel;
 };
 
 export type Database = {
@@ -276,26 +292,64 @@ export type Database = {
   __InternalSupabase: { PostgrestVersion: "12" };
   public: {
     Tables: {
-      profiles: Table<Profile, Partial<Profile> & { id: string }>;
-      teachers: Table<Teacher, Partial<Teacher> & { slug: string; display_name: string }>;
-      teacher_availability: Table<TeacherAvailability, Partial<TeacherAvailability> & { teacher_id: string; day_of_week: number; start_time: string; end_time: string }>;
-      teacher_slot_overrides: Table<TeacherSlotOverride, Partial<TeacherSlotOverride> & { teacher_id: string; date: string }>;
+      profiles: Table<Profile, Partial<Profile> & { id: string }, Partial<Profile>, [
+        { foreignKeyName: "profiles_id_fkey"; columns: ["id"]; isOneToOne: true; referencedRelation: "users"; referencedColumns: ["id"] },
+      ]>;
+      teachers: Table<Teacher, Partial<Teacher> & { slug: string; display_name: string }, Partial<Teacher>, [
+        { foreignKeyName: "teachers_profile_id_fkey"; columns: ["profile_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+      ]>;
+      teacher_availability: Table<TeacherAvailability, Partial<TeacherAvailability> & { teacher_id: string; day_of_week: number; start_time: string; end_time: string }, Partial<TeacherAvailability>, [
+        { foreignKeyName: "teacher_availability_teacher_id_fkey"; columns: ["teacher_id"]; isOneToOne: false; referencedRelation: "teachers"; referencedColumns: ["id"] },
+      ]>;
+      teacher_slot_overrides: Table<TeacherSlotOverride, Partial<TeacherSlotOverride> & { teacher_id: string; date: string }, Partial<TeacherSlotOverride>, [
+        { foreignKeyName: "teacher_slot_overrides_teacher_id_fkey"; columns: ["teacher_id"]; isOneToOne: false; referencedRelation: "teachers"; referencedColumns: ["id"] },
+      ]>;
       class_categories: Table<ClassCategory, Partial<ClassCategory> & { slug: string; name: string }>;
-      sessions: Table<Session, Partial<Session> & { teacher_id: string; start_at: string; end_at: string }>;
-      bookings: Table<Booking, Partial<Booking> & { session_id: string; customer_id: string }>;
+      sessions: Table<Session, Partial<Session> & { teacher_id: string; start_at: string; end_at: string }, Partial<Session>, [
+        { foreignKeyName: "sessions_teacher_id_fkey"; columns: ["teacher_id"]; isOneToOne: false; referencedRelation: "teachers"; referencedColumns: ["id"] },
+        { foreignKeyName: "sessions_class_category_id_fkey"; columns: ["class_category_id"]; isOneToOne: false; referencedRelation: "class_categories"; referencedColumns: ["id"] },
+      ]>;
+      bookings: Table<Booking, Partial<Booking> & { session_id: string; customer_id: string }, Partial<Booking>, [
+        { foreignKeyName: "bookings_session_id_fkey"; columns: ["session_id"]; isOneToOne: false; referencedRelation: "sessions"; referencedColumns: ["id"] },
+        { foreignKeyName: "bookings_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        { foreignKeyName: "bookings_payment_fk"; columns: ["payment_id"]; isOneToOne: false; referencedRelation: "payments"; referencedColumns: ["id"] },
+      ]>;
       plans: Table<Plan, Partial<Plan> & { slug: string; name: string; price_aud_cents: number }>;
-      plan_features: Table<PlanFeature, Partial<PlanFeature> & { plan_id: string; feature_text: string }>;
+      plan_features: Table<PlanFeature, Partial<PlanFeature> & { plan_id: string; feature_text: string }, Partial<PlanFeature>, [
+        { foreignKeyName: "plan_features_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
+      ]>;
       discount_codes: Table<DiscountCode, Partial<DiscountCode> & { code: string; discount_type: DiscountType; discount_value: number }>;
-      subscriptions: Table<Subscription, Partial<Subscription> & { customer_id: string; plan_id: string; paypal_subscription_id: string }>;
-      payments: Table<Payment, Partial<Payment> & { customer_id: string; amount_aud_cents: number }>;
-      reviews: Table<Review, Partial<Review> & { customer_id: string; rating: number }>;
+      subscriptions: Table<Subscription, Partial<Subscription> & { customer_id: string; plan_id: string; paypal_subscription_id: string }, Partial<Subscription>, [
+        { foreignKeyName: "subscriptions_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        { foreignKeyName: "subscriptions_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
+        { foreignKeyName: "subscriptions_discount_code_id_fkey"; columns: ["discount_code_id"]; isOneToOne: false; referencedRelation: "discount_codes"; referencedColumns: ["id"] },
+      ]>;
+      payments: Table<Payment, Partial<Payment> & { customer_id: string; amount_aud_cents: number }, Partial<Payment>, [
+        { foreignKeyName: "payments_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        { foreignKeyName: "payments_subscription_id_fkey"; columns: ["subscription_id"]; isOneToOne: false; referencedRelation: "subscriptions"; referencedColumns: ["id"] },
+      ]>;
+      reviews: Table<Review, Partial<Review> & { customer_id: string; rating: number }, Partial<Review>, [
+        { foreignKeyName: "reviews_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        { foreignKeyName: "reviews_teacher_id_fkey"; columns: ["teacher_id"]; isOneToOne: false; referencedRelation: "teachers"; referencedColumns: ["id"] },
+        { foreignKeyName: "reviews_session_id_fkey"; columns: ["session_id"]; isOneToOne: false; referencedRelation: "sessions"; referencedColumns: ["id"] },
+      ]>;
       promotional_media: Table<PromotionalMedia, Partial<PromotionalMedia> & { kind: MediaKind; url: string }>;
-      admin_settings: Table<AdminSettings, { key: string; value: unknown; updated_by?: string | null }>;
+      admin_settings: Table<AdminSettings, { key: string; value: unknown; updated_by?: string | null }, Partial<AdminSettings>, [
+        { foreignKeyName: "admin_settings_updated_by_fkey"; columns: ["updated_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+      ]>;
       newsletter_signups: Table<NewsletterSignup, { email: string; source?: string | null }>;
-      audit_log: Table<AuditLog, { action: string; entity_type: string; entity_id?: string | null; actor_id?: string | null; payload?: unknown }>;
+      audit_log: Table<AuditLog, { action: string; entity_type: string; entity_id?: string | null; actor_id?: string | null; payload?: unknown }, Partial<AuditLog>, [
+        { foreignKeyName: "audit_log_actor_id_fkey"; columns: ["actor_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+      ]>;
       paypal_webhook_events: Table<PaypalWebhookEvent, { event_id: string; event_type: string; payload?: unknown }>;
-      customer_credits: Table<CustomerCredits, Partial<CustomerCredits> & { customer_id: string }>;
-      credit_ledger: Table<CreditLedger, Partial<CreditLedger> & { customer_id: string; delta: number; reason: CreditReason }>;
+      customer_credits: Table<CustomerCredits, Partial<CustomerCredits> & { customer_id: string }, Partial<CustomerCredits>, [
+        { foreignKeyName: "customer_credits_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: true; referencedRelation: "profiles"; referencedColumns: ["id"] },
+      ]>;
+      credit_ledger: Table<CreditLedger, Partial<CreditLedger> & { customer_id: string; delta: number; reason: CreditReason }, Partial<CreditLedger>, [
+        { foreignKeyName: "credit_ledger_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        { foreignKeyName: "credit_ledger_payment_id_fkey"; columns: ["payment_id"]; isOneToOne: false; referencedRelation: "payments"; referencedColumns: ["id"] },
+        { foreignKeyName: "credit_ledger_booking_id_fkey"; columns: ["booking_id"]; isOneToOne: false; referencedRelation: "bookings"; referencedColumns: ["id"] },
+      ]>;
       razorpay_webhook_events: Table<RazorpayWebhookEvent, { event_id: string; event_type?: string | null; payload?: unknown }>;
     };
     Views: { [_ in never]: never };
@@ -330,6 +384,10 @@ export type Database = {
       };
       spend_session_credit: {
         Args: { p_customer: string; p_booking_id?: string | null };
+        Returns: boolean;
+      };
+      refund_session_credit: {
+        Args: { p_customer: string; p_booking_id: string };
         Returns: boolean;
       };
       book_session: {

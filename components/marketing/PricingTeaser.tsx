@@ -156,7 +156,8 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
         </motion.div>
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
-          All prices in AUD inc. GST. One-time payment — no subscription.{" "}
+          All prices in AUD inc. GST. One-time payment — no subscription. Available to customers
+          in Australia.{" "}
           <Link href="/faq" className="text-primary hover:underline">
             Read the FAQ →
           </Link>

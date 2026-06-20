@@ -54,7 +54,7 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 
 ### Schema ownership
 
-- **Authoritative migrations live in `supabase/migrations/0001…0010`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates. (Newest: `0009` raises per-bucket upload size limits; `0010` adds the `demote_from_admin` RPC.)
+- **Authoritative migrations live in `supabase/migrations/0001…0021`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates. (Highlights: `0011` Razorpay credit-pack billing; `0016` booking-reminder idempotency; `0017` booking-integrity (`book_session` RPC + overlap EXCLUDE); `0018` RLS/grants hardening; `0019` refund reconciliation; `0020` retires the legacy subscription plans for one-time credit packs + a `one_time` billing interval; `0021` refund-once idempotency (`refund_session_credit`) + blocklist check inside `book_session`.)
 - `drizzle.config.ts` points `out` at `supabase/migrations`, but `db:generate` is for *introspection and ad-hoc work*. When you change schema, write the SQL by hand to keep RLS / RPCs intact and bump the migration number. `0007_security_fixes.sql` is the canonical example of how add-on migrations are structured.
 - **Writing the migration file is not enough — apply it to the live DB** (`psql`/SQL editor). Features break until their object exists: e.g. the `/admin/customers` Demote button 500s until `0010`'s RPC is applied.
 
@@ -93,8 +93,8 @@ Flow: `POST /api/razorpay/create-order` resolves the price server-side from the 
 ### Scheduled jobs (handlers exist; scheduler is BYO)
 
 Three cron handlers live under `app/api/cron/`, each gated by `assertCron` (Bearer `CRON_SECRET` — see auth paths above) and running on the service-role client:
-- **`reminders`** (~hourly) — emails a ±10-min band around now+24h and now+1h. **Not yet DB-idempotent** (no `reminded_at` column): a double-fire in the same band sends duplicate reminders. Read the TODO at the top of the file before relying on it.
-- **`no-show-sweep`** (~hourly) — flips still-`confirmed` bookings to `no_show` 2h after the session ended (`booking_status` enum from `0003`).
+- **`reminders`** (~hourly) — emails a ±10-min band around now+24h and now+1h. Idempotent since `0016` (a `booking_reminders` ledger keyed on booking + kind dedupes a double-fire in the same band).
+- **`no-show-sweep`** (~hourly) — flips still-`confirmed` bookings to `no_show` 2h after the session ended (`booking_status` enum from `0003`). Skips sessions whose Meet link never provisioned (`meet_status <> 'created'`) so a customer isn't penalised for an operational failure.
 - **`meet-retry`** (~15–30 min) — retries `createMeetEvent` for not-yet-started sessions stuck at `meet_status='pending'|'failed'`, batched (50/run) to avoid Calendar rate limits.
 
 There is **no scheduler in the repo** (no `vercel.json` / host config). Wire each endpoint to your host's cron, an external scheduler, or Supabase `pg_cron` + `pg_net`, POSTing with `Authorization: Bearer $CRON_SECRET`.

@@ -86,7 +86,8 @@ export async function POST(req: Request) {
     .select("id")
     .single();
   if (sessionErr || !session) {
-    return NextResponse.json({ error: "create_failed", details: sessionErr?.message }, { status: 500 });
+    console.error("[admin/sessions] create failed:", sessionErr?.message);
+    return NextResponse.json({ error: "create_failed" }, { status: 500 });
   }
 
   // Best-effort Meet provisioning. Failure leaves meet_status='failed' for the
@@ -133,7 +134,8 @@ export async function DELETE(req: Request) {
     .update({ status: "cancelled" })
     .eq("id", session.id);
   if (sessionErr) {
-    return NextResponse.json({ error: "db_error", details: sessionErr.message }, { status: 500 });
+    console.error("[admin/sessions] cancel failed:", sessionErr.message);
+    return NextResponse.json({ error: "db_error" }, { status: 500 });
   }
   await svc
     .from("bookings")

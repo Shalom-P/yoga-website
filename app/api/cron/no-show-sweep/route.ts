@@ -45,10 +45,15 @@ export async function POST(req: Request): Promise<Response> {
   // Ordered oldest-first for a deterministic, fair selection.
   const { data: dueBookings, error: queryErr } = await svc
     .from("bookings")
-    .select("id, sessions!inner(end_at, status)")
+    .select("id, sessions!inner(end_at, status, meet_status)")
     .eq("status", "confirmed")
     .lt("sessions.end_at", cutoff)
     .neq("sessions.status", "cancelled")
+    // Only sweep sessions we actually provisioned a Meet link for. If meet_status
+    // never reached 'created' (stuck pending/failed), the customer couldn't join
+    // through us — don't auto-mark them no_show for our operational failure; leave
+    // them for manual ops review instead.
+    .eq("sessions.meet_status", "created")
     .order("created_at", { ascending: true })
     .limit(BATCH_SIZE);
 

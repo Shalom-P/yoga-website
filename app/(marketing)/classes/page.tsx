@@ -7,6 +7,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Class types",
   description: "Hatha, Vinyasa, Yin, Restorative, Prenatal, Therapy — find your style.",
+  alternates: { canonical: "/classes" },
 };
 
 export default async function ClassesPage() {

@@ -12,6 +12,8 @@ export default async function AdminReviewsPage() {
     .order("created_at", { ascending: false })
     .limit(500);
 
+  const rows: ReviewRow[] = reviews ?? [];
+
   return (
     <div className="p-8 max-w-7xl">
       <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
@@ -21,7 +23,7 @@ export default async function AdminReviewsPage() {
         Approve, feature, or remove customer reviews.
       </p>
       <div className="mt-6">
-        <ReviewsAdmin rows={(reviews ?? []) as unknown as ReviewRow[]} />
+        <ReviewsAdmin rows={rows} />
       </div>
     </div>
   );

@@ -6,7 +6,11 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
-import { canTransactFromTimezone, OUTSIDE_AUSTRALIA_ERROR } from "@/lib/geo/australia";
+import {
+  canTransactFromRequest,
+  countryFromHeaders,
+  OUTSIDE_AUSTRALIA_ERROR,
+} from "@/lib/geo/australia";
 
 // Reaches lib/google/calendar.ts (Vercel OIDC / @vercel/oidc) via
 // provisionSessionMeet — that dependency is Node-runtime only.
@@ -87,8 +91,9 @@ export async function POST(req: Request) {
   // (spending already-purchased credits) are intentionally not gated here.
   if (
     parsed.data.isFreeTrial &&
-    !canTransactFromTimezone({
+    !canTransactFromRequest({
       isAdmin: bookerProfile?.role === "admin",
+      country: countryFromHeaders(req.headers),
       timezone: parsed.data.clientTimezone,
     })
   ) {
@@ -171,6 +176,9 @@ export async function POST(req: Request) {
     }
     if (message.includes("insufficient_credits")) {
       return NextResponse.json({ error: "insufficient_credits" }, { status: 402 });
+    }
+    if (message.includes("slot_blocked")) {
+      return NextResponse.json({ error: "slot_unavailable" }, { status: 409 });
     }
     console.error("[bookings/confirm] book_session failed:", bookErr?.message);
     return NextResponse.json({ error: "booking_failed" }, { status: 500 });

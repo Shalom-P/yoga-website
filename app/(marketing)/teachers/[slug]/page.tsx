@@ -4,28 +4,40 @@ import { notFound } from "next/navigation";
 import { Star, ArrowRight, Globe, Award } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { TeacherIntroVideo } from "@/components/shared/TeacherIntroVideo";
-import { getFeaturedTeachers } from "@/lib/data/landing";
+import { JsonLd } from "@/components/shared/JsonLd";
+import { personJsonLd, breadcrumbJsonLd } from "@/lib/seo/structuredData";
+import { getTeacherBySlug } from "@/lib/data/landing";
+
+const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
 
 export const revalidate = 300;
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const teachers = await getFeaturedTeachers();
-  const t = teachers.find((x) => x.slug === slug);
+  const t = await getTeacherBySlug(slug);
   return {
     title: t ? `${t.display_name} — Yoga Teacher` : "Teacher",
     description: t?.headline ?? undefined,
+    alternates: { canonical: `/teachers/${slug}` },
   };
 }
 
 export default async function TeacherPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
-  const teachers = await getFeaturedTeachers();
-  const t = teachers.find((x) => x.slug === slug);
+  const t = await getTeacherBySlug(slug);
   if (!t) notFound();
+
+  const teacherUrl = `${siteUrl}/teachers/${t.slug}`;
 
   return (
     <article className="px-7 pt-32 pb-24">
+      <JsonLd data={personJsonLd(t, teacherUrl)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Teachers", url: `${siteUrl}/teachers` },
+          { name: t.display_name, url: teacherUrl },
+        ])}
+      />
       <div className="mx-auto grid max-w-5xl gap-10 lg:grid-cols-12">
         <div className="lg:col-span-5">
           {t.intro_video_url ? (

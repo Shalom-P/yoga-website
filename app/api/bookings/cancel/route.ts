@@ -55,13 +55,12 @@ export async function POST(req: Request) {
   }
 
   // Refund the session-credit for a paid booking (the free trial never spent one).
-  // This claims THIS cancel transition (the .eq("status","confirmed") guard above
-  // ensures only one request gets here), so it can't double-refund.
+  // refund_session_credit is idempotent (credit_ledger_refund_once on booking_id),
+  // so even if this path is somehow reached twice the credit is granted once.
   if (!booking.is_free_trial) {
-    const { error: refundErr } = await svc.rpc("grant_session_credits", {
+    const { error: refundErr } = await svc.rpc("refund_session_credit", {
       p_customer: user.id,
-      p_delta: 1,
-      p_reason: "refund",
+      p_booking_id: booking.id,
     });
     if (refundErr) {
       // The booking is already cancelled; surface the refund failure so it can be

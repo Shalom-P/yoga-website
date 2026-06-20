@@ -54,9 +54,9 @@ const EMPTY: Draft = {
   slug: "",
   name: "",
   description: "",
-  price_aud_cents: 4900,
-  billing_interval: "monthly",
-  session_credits: 4,
+  price_aud_cents: 18000,
+  billing_interval: "one_time",
+  session_credits: 5,
   included_sessions_per_month: null,
   included_session_types: "",
   sort_order: 0,
@@ -222,7 +222,11 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
             </div>
             <div className="mt-3 text-2xl font-[family-name:var(--font-heading)]">
               {formatAud(p.price_aud_cents)}
-              <span className="text-sm text-muted-foreground">/{p.billing_interval}</span>
+              <span className="text-sm text-muted-foreground">
+                {p.billing_interval === "one_time"
+                  ? ` · ${p.session_credits} credit${p.session_credits === 1 ? "" : "s"}`
+                  : `/${p.billing_interval}`}
+              </span>
             </div>
             <ul className="mt-5 space-y-1.5 text-sm">
               {p.features?.map((f) => (
@@ -330,7 +334,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
                 />
               </div>
               <div>
-                <LabelWithHint hint="How often customers are billed. Quarterly = every 3 months. Yearly = once a year.">
+                <LabelWithHint hint="Session packs are a one-time purchase. The recurring options are legacy and only apply to old subscription plans.">
                   Billing interval
                 </LabelWithHint>
                 <Select
@@ -343,6 +347,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value="one_time">One-time (pack)</SelectItem>
                     <SelectItem value="monthly">Monthly</SelectItem>
                     <SelectItem value="quarterly">Quarterly</SelectItem>
                     <SelectItem value="yearly">Yearly</SelectItem>

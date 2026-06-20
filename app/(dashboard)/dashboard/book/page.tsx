@@ -2,10 +2,10 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { getFeaturedTeachers } from "@/lib/data/landing";
+import { getAllActiveTeachers } from "@/lib/data/landing";
 
 export default async function BookPage() {
-  const teachers = await getFeaturedTeachers();
+  const teachers = await getAllActiveTeachers();
 
   return (
     <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">

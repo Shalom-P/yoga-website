@@ -1,9 +1,11 @@
 import { Mail } from "lucide-react";
 import { PageHeader } from "@/components/marketing/PageHeader";
+import { ContactForm } from "@/components/marketing/ContactForm";
 
 export const metadata = {
   title: "Contact",
-  description: "Get in touch with My Yoga Classes. Questions about teachers, classes, or your subscription? We reply within 1 business day.",
+  description: "Get in touch with My Yoga Classes. Questions about teachers, classes, or your bookings? We reply within 1 business day.",
+  alternates: { canonical: "/contact" },
 };
 
 export default function ContactPage() {
@@ -12,16 +14,22 @@ export default function ContactPage() {
       <PageHeader
         eyebrow="Get in touch"
         title={<>We answer <em>every email.</em></>}
-        subhead="Questions about a teacher, a class, or your subscription? We typically reply within 1 business day (Australian time)."
+        subhead="Questions about a teacher, a class, or your bookings? We typically reply within 1 business day (Australian time)."
       />
-      <div className="px-7 pb-24 text-center">
-        <a
-          href="mailto:hello@myyogaclasses.fit"
-          className="inline-flex h-12 items-center gap-2 rounded-full bg-accent px-6 font-semibold text-white shadow-[var(--myc-shadow-soft)] transition-opacity hover:opacity-90"
-        >
-          <Mail className="size-4" />
-          hello@myyogaclasses.fit
-        </a>
+      <div className="px-7 pb-24">
+        <div className="mx-auto max-w-md">
+          <ContactForm />
+          <p className="mt-6 text-center text-sm text-muted-foreground">
+            Prefer email? Reach us directly at{" "}
+            <a
+              href="mailto:hello@myyogaclasses.fit"
+              className="inline-flex items-center gap-1 font-medium text-primary hover:underline"
+            >
+              <Mail className="size-3.5" />
+              hello@myyogaclasses.fit
+            </a>
+          </p>
+        </div>
       </div>
     </>
   );

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Star } from "lucide-react";
-import { getFeaturedTeachers } from "@/lib/data/landing";
+import { getAllActiveTeachers } from "@/lib/data/landing";
 import { PageHeader } from "@/components/marketing/PageHeader";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
 
@@ -9,10 +9,11 @@ export const revalidate = 300;
 export const metadata = {
   title: "Teachers",
   description: "Meet our certified yoga teachers from India, teaching live to Australia.",
+  alternates: { canonical: "/teachers" },
 };
 
 export default async function TeachersPage() {
-  const teachers = await getFeaturedTeachers();
+  const teachers = await getAllActiveTeachers();
   return (
     <>
       <PageHeader

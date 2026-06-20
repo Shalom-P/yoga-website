@@ -58,10 +58,12 @@ export default async function AdminSessionsPage({
       .order("sort_order"),
   ]);
 
+  const sessionRows: SessionWithJoins[] = sessions ?? [];
+
   return (
     <div className="p-8 max-w-7xl">
       <SessionsAdmin
-        sessions={(sessions as unknown as SessionWithJoins[]) ?? []}
+        sessions={sessionRows}
         teachers={teachers ?? []}
         categories={categories ?? []}
         showPast={showPast}

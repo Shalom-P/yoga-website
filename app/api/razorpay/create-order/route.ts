@@ -6,7 +6,11 @@ import { z } from "zod";
 import { getRazorpayClient, isRazorpayConfigured } from "@/lib/razorpay/client";
 import { resolvePackBySlug } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { canTransactFromTimezone, OUTSIDE_AUSTRALIA_ERROR } from "@/lib/geo/australia";
+import {
+  canTransactFromRequest,
+  countryFromHeaders,
+  OUTSIDE_AUSTRALIA_ERROR,
+} from "@/lib/geo/australia";
 
 // The Razorpay SDK requires the Node runtime.
 export const runtime = "nodejs";
@@ -69,8 +73,9 @@ export async function POST(req: Request): Promise<Response> {
     .eq("id", user.id)
     .maybeSingle();
   if (
-    !canTransactFromTimezone({
+    !canTransactFromRequest({
       isAdmin: profile?.role === "admin",
+      country: countryFromHeaders(req.headers),
       timezone: parsed.data.clientTimezone,
     })
   ) {

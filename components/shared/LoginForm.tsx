@@ -11,6 +11,7 @@ import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import { isValidEmail } from "@/lib/validation/email";
+import { friendlyAuthError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
 
 export function LoginForm() {
@@ -64,7 +65,7 @@ function GoogleLogin({ next }: { next: string }) {
       },
     });
     if (error) {
-      toast.error(error.message);
+      toast.error(friendlyAuthError(error.message));
       setLoading(false);
     }
   }
@@ -125,7 +126,7 @@ function EmailLogin({ next }: { next: string }) {
       options: { shouldCreateUser: true },
     });
     setLoading(false);
-    if (error) { toast.error(error.message); return false; }
+    if (error) { toast.error(friendlyAuthError(error.message)); return false; }
     return true;
   }
 
@@ -149,15 +150,21 @@ function EmailLogin({ next }: { next: string }) {
 
   async function verifyOtp(e: React.FormEvent) {
     e.preventDefault();
+    // Guard incomplete input client-side rather than round-tripping an empty/short
+    // code to Supabase and surfacing its raw "Token has expired or is invalid".
+    const code = otp.replace(/\D/g, "");
+    if (code.length < 6) {
+      return toast.error("Enter the full code from your email.");
+    }
     setLoading(true);
     const { data, error } = await supabase.auth.verifyOtp({
       email: email.trim(),
-      token: otp.replace(/\D/g, ""),
+      token: code,
       type: "email",
     });
     if (error) {
       setLoading(false);
-      return toast.error(error.message);
+      return toast.error(friendlyAuthError(error.message));
     }
     // Route through onboarding if it isn't complete yet (email-OTP users skip
     // the OAuth callback, so the check has to happen here too).

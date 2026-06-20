@@ -60,6 +60,22 @@ export async function POST(req: Request) {
   const eventType = event.event;
   const entity = event.payload?.payment?.entity;
 
+  // Replay short-circuit. A row in razorpay_webhook_events is written only AFTER
+  // an event is fully processed below (failures return 5xx before the insert), so
+  // a known event id means "already handled" — ack immediately and skip the
+  // redundant Razorpay API round-trips. Fulfilment stays idempotent regardless,
+  // so this is an optimization, not the safety guarantee.
+  const eventId = req.headers.get("x-razorpay-event-id");
+  const svc = createSupabaseServiceClient();
+  if (eventId) {
+    const { data: seen } = await svc
+      .from("razorpay_webhook_events")
+      .select("event_id")
+      .eq("event_id", eventId)
+      .maybeSingle();
+    if (seen) return NextResponse.json({ ok: true, deduped: true });
+  }
+
   // Fulfil first (idempotent). Return 5xx on a real failure so Razorpay retries.
   if (
     (eventType === "payment.captured" || eventType === "order.paid") &&
@@ -111,12 +127,11 @@ export async function POST(req: Request) {
     }
   }
 
-  // Best-effort audit/dedupe record — never blocks the 200. A duplicate event id
-  // (replay) lands in `error` and is ignored; supabase-js doesn't throw on it.
-  const eventId = req.headers.get("x-razorpay-event-id");
+  // Record the processed event for audit + the replay short-circuit above. A
+  // duplicate event id (race) lands in `error` and is ignored; supabase-js
+  // doesn't throw on it.
   if (eventId) {
     try {
-      const svc = createSupabaseServiceClient();
       await svc
         .from("razorpay_webhook_events")
         .insert({ event_id: eventId, event_type: eventType ?? null, payload: event as unknown });

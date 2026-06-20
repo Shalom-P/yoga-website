@@ -38,8 +38,9 @@ export default async function DashboardHome() {
   // so filter to future sessions and pick the earliest in JS. A customer never
   // has enough confirmed bookings for this to matter perf-wise.
   const nowMs = new Date().getTime();
+  const rows: NextBooking[] = bookingRows ?? [];
   const nextBooking =
-    ((bookingRows as unknown as NextBooking[]) ?? [])
+    rows
       .filter((b) => b.session && new Date(b.session.start_at).getTime() > nowMs)
       .sort(
         (a, b) =>
@@ -68,9 +69,9 @@ export default async function DashboardHome() {
           className="rounded-2xl border border-border bg-card p-6 hover:shadow-md hover:-translate-y-0.5 transition-all"
         >
           <Calendar className="size-6 text-primary mb-3" />
-          <div className="font-medium">Book a class</div>
+          <div className="font-medium">Book a session</div>
           <div className="text-sm text-muted-foreground mt-1">
-            Find the next 1:1 or group class that fits your day.
+            Find a private 1:1 with the teacher and time that fit your day.
           </div>
         </Link>
         <Link
@@ -78,9 +79,9 @@ export default async function DashboardHome() {
           className="rounded-2xl border border-border bg-card p-6 hover:shadow-md hover:-translate-y-0.5 transition-all"
         >
           <Sparkles className="size-6 text-primary mb-3" />
-          <div className="font-medium">Upgrade your plan</div>
+          <div className="font-medium">Buy a session pack</div>
           <div className="text-sm text-muted-foreground mt-1">
-            Move from free trial to unlimited classes.
+            Top up with a 5- or 10-session pack when you&apos;re ready.
           </div>
         </Link>
       </div>
