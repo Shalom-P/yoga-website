@@ -17,7 +17,12 @@
 -- Apply: psql "$SUPABASE_DB_URL" -f supabase/migrations/0021_refund_idempotency_and_blocklist.sql
 
 -- 1. Refund-once: at most one 'refund' ledger row per booking.
-create unique index if not exists credit_ledger_refund_once
+--    NOTE: the name `credit_ledger_refund_once` is already taken by 0019 (payment
+--    clawback, deduped on external_ref) — a DIFFERENT 'refund' mechanism that must
+--    keep its index. This per-booking refund therefore needs its own distinct name.
+--    The ON CONFLICT below infers the arbiter by (booking_id) + predicate, not by
+--    index name, so the name only has to be unique, not match anything.
+create unique index if not exists credit_ledger_booking_refund_once
   on public.credit_ledger(booking_id)
   where reason = 'refund';
 
