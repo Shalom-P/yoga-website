@@ -16,18 +16,39 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-const ITEMS = [
-  { href: "/admin",            label: "Overview",  icon: LayoutDashboard },
-  { href: "/admin/teachers",   label: "Teachers",  icon: Briefcase },
-  { href: "/admin/sessions",   label: "Sessions",  icon: CalendarClock },
-  { href: "/admin/classes",    label: "Classes",   icon: BookOpen },
-  { href: "/admin/plans",      label: "Plans",     icon: Wallet },
-  { href: "/admin/discounts",  label: "Discounts", icon: BadgePercent },
-  { href: "/admin/media",      label: "Media",     icon: ImageIcon },
-  { href: "/admin/bookings",   label: "Bookings",  icon: Calendar },
-  { href: "/admin/customers",  label: "Customers", icon: UserRound },
-  { href: "/admin/reviews",    label: "Reviews",   icon: Star },
-  { href: "/admin/settings",   label: "Settings",  icon: Settings },
+// Grouped so the 11 destinations stay scannable: a top Overview, then
+// Catalog (things you publish), Operations (day-to-day) and Settings.
+const NAV_GROUPS: {
+  label: string | null;
+  items: { href: string; label: string; icon: typeof LayoutDashboard }[];
+}[] = [
+  {
+    label: null,
+    items: [{ href: "/admin", label: "Overview", icon: LayoutDashboard }],
+  },
+  {
+    label: "Catalog",
+    items: [
+      { href: "/admin/teachers",  label: "Teachers",  icon: Briefcase },
+      { href: "/admin/classes",   label: "Classes",   icon: BookOpen },
+      { href: "/admin/plans",     label: "Plans",     icon: Wallet },
+      { href: "/admin/discounts", label: "Discounts", icon: BadgePercent },
+      { href: "/admin/media",     label: "Media",     icon: ImageIcon },
+    ],
+  },
+  {
+    label: "Operations",
+    items: [
+      { href: "/admin/sessions",  label: "Sessions",  icon: CalendarClock },
+      { href: "/admin/bookings",  label: "Bookings",  icon: Calendar },
+      { href: "/admin/customers", label: "Customers", icon: UserRound },
+      { href: "/admin/reviews",   label: "Reviews",   icon: Star },
+    ],
+  },
+  {
+    label: "Settings",
+    items: [{ href: "/admin/settings", label: "Settings", icon: Settings }],
+  },
 ];
 
 function BrandHeader({ onNavigate }: { onNavigate?: () => void }) {
@@ -52,27 +73,36 @@ function NavLinks({
   onNavigate?: () => void;
 }) {
   return (
-    <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
-      {ITEMS.map(({ href, label, icon: Icon }) => {
-        const active =
-          href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
-        return (
-          <Link
-            key={href}
-            href={href}
-            onClick={onNavigate}
-            className={cn(
-              "flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors",
-              active
-                ? "bg-primary/10 text-primary font-medium"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted"
-            )}
-          >
-            <Icon className="size-4" />
-            {label}
-          </Link>
-        );
-      })}
+    <nav className="p-3 space-y-4 flex-1 overflow-y-auto">
+      {NAV_GROUPS.map((group, gi) => (
+        <div key={group.label ?? gi} className="space-y-1">
+          {group.label && (
+            <div className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground/70">
+              {group.label}
+            </div>
+          )}
+          {group.items.map(({ href, label, icon: Icon }) => {
+            const active =
+              href === "/admin" ? pathname === "/admin" : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                onClick={onNavigate}
+                className={cn(
+                  "flex items-center gap-2.5 px-3 py-2 text-sm rounded-lg transition-colors",
+                  active
+                    ? "bg-primary/10 text-primary font-medium"
+                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                )}
+              >
+                <Icon className="size-4" />
+                {label}
+              </Link>
+            );
+          })}
+        </div>
+      ))}
     </nav>
   );
 }

@@ -48,70 +48,45 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Brand palette — warm cream + sage green + terracotta accent.
-   Minimal/calm aesthetic per brief; differentiates from cluttered competitors. */
+/* Brand palette — single source of truth: teal & coral on warm cream.
+   .myc-theme / .myc-app layer on brand fonts, radius and extra tokens only.
+   The site is intentionally light-only (see ThemeProvider forcedTheme="light"
+   in app/layout.tsx), so there is no .dark token set — a dark skin would need
+   `.dark .myc-theme` / `.dark .myc-app` overrides plus a real toggle. */
 :root {
-  --background:               oklch(0.99 0.008 82);     /* warm cream */
-  --foreground:               oklch(0.22 0.012 145);    /* deep forest text */
-  --card:                     oklch(1 0 0);
-  --card-foreground:          oklch(0.22 0.012 145);
-  --popover:                  oklch(1 0 0);
-  --popover-foreground:       oklch(0.22 0.012 145);
-  --primary:                  oklch(0.45 0.07 150);     /* sage green */
-  --primary-foreground:       oklch(0.99 0.005 80);
-  --secondary:                oklch(0.95 0.015 85);     /* sand */
-  --secondary-foreground:     oklch(0.32 0.015 150);
-  --muted:                    oklch(0.96 0.012 85);
-  --muted-foreground:         oklch(0.5 0.012 150);
-  --accent:                   oklch(0.65 0.14 38);      /* terracotta */
-  --accent-foreground:        oklch(0.99 0.005 80);
+  --background:               #fbf7ef;   /* warm cream paper */
+  --foreground:               #16352e;   /* deep pine text */
+  --card:                     #ffffff;
+  --card-foreground:          #16352e;
+  --popover:                  #ffffff;
+  --popover-foreground:       #16352e;
+  --primary:                  #0f5c4e;   /* deep teal */
+  --primary-foreground:       #fbf7ef;
+  --secondary:                #f2ecdd;   /* deeper cream */
+  --secondary-foreground:     #16352e;
+  --muted:                    #f2ecdd;
+  --muted-foreground:         #4c645b;   /* muted green-grey */
+  --accent:                   #cf3a1f;   /* deep coral — AA on cream/white (~4.9:1 vs #fff) */
+  --accent-foreground:        #ffffff;
+  --accent-bright:            #ff6a4d;   /* bright coral — DECORATIVE + on-dark only (fails AA on light) */
   --destructive:              oklch(0.55 0.21 25);
-  --border:                   oklch(0.9 0.013 85);
-  --input:                    oklch(0.92 0.012 85);
-  --ring:                     oklch(0.55 0.1 150);
+  --border:                   #e6dfce;   /* warm hairline */
+  --input:                    #e6dfce;
+  --ring:                     #0f5c4e;
   --chart-1:                  oklch(0.55 0.1 150);
   --chart-2:                  oklch(0.65 0.14 38);
   --chart-3:                  oklch(0.5 0.08 200);
   --chart-4:                  oklch(0.7 0.1 80);
   --chart-5:                  oklch(0.4 0.05 280);
   --radius:                   0.75rem;
-  --sidebar:                  oklch(0.985 0.008 82);
-  --sidebar-foreground:       oklch(0.22 0.012 145);
-  --sidebar-primary:          oklch(0.45 0.07 150);
-  --sidebar-primary-foreground: oklch(0.99 0.005 80);
-  --sidebar-accent:           oklch(0.95 0.015 85);
-  --sidebar-accent-foreground: oklch(0.32 0.015 150);
-  --sidebar-border:           oklch(0.9 0.013 85);
-  --sidebar-ring:             oklch(0.55 0.1 150);
-}
-
-.dark {
-  --background:               oklch(0.18 0.012 145);
-  --foreground:               oklch(0.97 0.008 82);
-  --card:                     oklch(0.22 0.013 145);
-  --card-foreground:          oklch(0.97 0.008 82);
-  --popover:                  oklch(0.22 0.013 145);
-  --popover-foreground:       oklch(0.97 0.008 82);
-  --primary:                  oklch(0.7 0.08 150);
-  --primary-foreground:       oklch(0.18 0.012 145);
-  --secondary:                oklch(0.27 0.015 145);
-  --secondary-foreground:     oklch(0.97 0.008 82);
-  --muted:                    oklch(0.27 0.012 145);
-  --muted-foreground:         oklch(0.7 0.012 82);
-  --accent:                   oklch(0.7 0.14 38);
-  --accent-foreground:        oklch(0.18 0.012 145);
-  --destructive:              oklch(0.65 0.2 25);
-  --border:                   oklch(1 0 0 / 8%);
-  --input:                    oklch(1 0 0 / 12%);
-  --ring:                     oklch(0.6 0.1 150);
-  --sidebar:                  oklch(0.22 0.013 145);
-  --sidebar-foreground:       oklch(0.97 0.008 82);
-  --sidebar-primary:          oklch(0.7 0.08 150);
-  --sidebar-primary-foreground: oklch(0.18 0.012 145);
-  --sidebar-accent:           oklch(0.27 0.015 145);
-  --sidebar-accent-foreground: oklch(0.97 0.008 82);
-  --sidebar-border:           oklch(1 0 0 / 8%);
-  --sidebar-ring:             oklch(0.6 0.1 150);
+  --sidebar:                  #fbf7ef;
+  --sidebar-foreground:       #16352e;
+  --sidebar-primary:          #0f5c4e;
+  --sidebar-primary-foreground: #fbf7ef;
+  --sidebar-accent:           #f2ecdd;
+  --sidebar-accent-foreground: #16352e;
+  --sidebar-border:           #e6dfce;
+  --sidebar-ring:             #0f5c4e;
 }
 
 @layer base {
@@ -190,36 +165,9 @@ html.lenis body {
    ============================================================ */
 .myc-theme,
 .myc-app {
-  /* semantic token overrides — teal & coral on warm cream */
-  --background: #fbf7ef;        /* warm cream paper */
-  --foreground: #16352e;        /* deep pine */
-  --card: #ffffff;
-  --card-foreground: #16352e;
-  --popover: #ffffff;
-  --popover-foreground: #16352e;
-  --primary: #0f5c4e;           /* deep teal */
-  --primary-foreground: #fbf7ef;
-  --secondary: #f2ecdd;         /* deeper cream */
-  --secondary-foreground: #16352e;
-  --muted: #f2ecdd;
-  --muted-foreground: #4c645b;  /* muted green-grey */
-  --accent: #ff6a4d;            /* bright coral */
-  --accent-foreground: #ffffff;
-  --border: #e6dfce;            /* warm hairline */
-  --input: #e6dfce;
-  --ring: #0f5c4e;
-
-  /* sidebar tokens (admin shell) tracked to the skin */
-  --sidebar: #fbf7ef;
-  --sidebar-foreground: #16352e;
-  --sidebar-primary: #0f5c4e;
-  --sidebar-primary-foreground: #fbf7ef;
-  --sidebar-accent: #f2ecdd;
-  --sidebar-accent-foreground: #16352e;
-  --sidebar-border: #e6dfce;
-  --sidebar-ring: #0f5c4e;
-
-  /* brand fonts — remap heading/sans so both <h1>–<h4> and
+  /* Core palette now lives in :root (single source of truth). This layer only
+     adds brand fonts, the marketing radius and the extra --myc-* design tokens.
+     Brand fonts — remap heading/sans so both <h1>–<h4> and
      font-[family-name:var(--font-heading)] utilities pick up the
      brand serif/grotesk. */
   --font-heading: var(--font-cormorant), Georgia, serif;
@@ -287,7 +235,7 @@ html.lenis body {
   width: 7px;
   height: 7px;
   border-radius: 999px;
-  background: var(--accent);
+  background: var(--accent-bright);
 }
 
 /* Status pills — booking/session state in dashboard + admin tables.
@@ -333,7 +281,7 @@ html.lenis body {
 }
 .myc-marquee__track span::after {
   content: "✦";
-  color: var(--accent);
+  color: var(--accent-bright);
   font-style: normal;
   font-size: 0.9rem;
 }
@@ -354,7 +302,7 @@ html.lenis body {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--accent);
+  background: var(--accent-bright);
   animation: myc-pulse 1.8s infinite;
 }
 

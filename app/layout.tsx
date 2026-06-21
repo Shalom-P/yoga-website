@@ -48,11 +48,11 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
+// The site is intentionally light-only (warm cream brand skin). Advertise a
+// single light theme-colour so the browser chrome matches the forced-light UI;
+// a dark variant here would clash with the light page under OS dark mode.
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FBFAF4" },
-    { media: "(prefers-color-scheme: dark)", color: "#1E2622" },
-  ],
+  themeColor: "#fbf7ef",
 };
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
@@ -115,7 +115,12 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+        {/* Force light: the brand skin is light-only (no .dark token set in
+            globals.css), so enabling system dark would force-light the page
+            tokens while shadcn's dark: variants still fired on form controls —
+            a broken half-dark state. Re-enable system/toggle only once a real
+            `.dark .myc-theme` / `.dark .myc-app` skin exists. */}
+        <ThemeProvider attribute="class" forcedTheme="light">
           {/* Lenis smooth-scroll is scoped to the marketing layout — the app,
               admin and auth surfaces use native scrolling (see (marketing)/layout). */}
           <AnalyticsProvider>{children}</AnalyticsProvider>
