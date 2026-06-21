@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Gentle Yoga for Older Adults · My Yoga Classes</title>
+<meta name="description" content="Slow, supportive 1:1 yoga for older adults — gentle movement, balance, and chair-supported options to help with everyday mobility and confidence. First session free." />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --cream:#fbf7ef;
+    --cream-deep:#f3ecdf;
+    --card:#fffdf8;
+    --ink:#2c2a24;
+    --ink-soft:#5f594c;
+    --sage:#3f5848;
+    --sage-mid:#6a8472;
+    --sage-soft:#e7efe7;
+    --clay:#b1644a;
+    --clay-soft:#f3e3d9;
+    --line:rgba(44,42,36,.12);
+    --line-soft:rgba(44,42,36,.07);
+    --radius:16px;
+    --radius-sm:11px;
+    --display:'Fraunces',Georgia,serif;
+    --body:'Inter',system-ui,sans-serif;
+    --wrap:1080px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;background:var(--cream);color:var(--ink);
+    font-family:var(--body);font-size:17px;line-height:1.7;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:var(--wrap);margin:0 auto;padding:0 24px}
+  a{color:inherit}
+  h1,h2,h3{font-family:var(--display);font-weight:500;letter-spacing:-.01em;line-height:1.12;margin:0}
+  h2{font-size:clamp(28px,4vw,40px)}
+  h3{font-size:21px;line-height:1.2}
+  .eyebrow{font-family:var(--body);font-size:13px;font-weight:600;letter-spacing:.14em;
+    text-transform:uppercase;color:var(--sage-mid)}
+  p{margin:0 0 1rem}
+
+  /* buttons */
+  .btn{display:inline-flex;align-items:center;gap:.5em;font-family:var(--body);
+    font-weight:600;font-size:16px;text-decoration:none;border-radius:999px;
+    padding:15px 28px;transition:transform .15s ease,background .2s ease;cursor:pointer;border:none}
+  .btn-primary{background:var(--sage);color:#fdfcf8}
+  .btn-primary:hover{background:#33493b;transform:translateY(-1px)}
+  .btn-ghost{background:transparent;color:var(--sage);border:1.5px solid var(--sage)}
+  .btn-ghost:hover{background:var(--sage-soft)}
+  .trust{font-size:14px;color:var(--ink-soft);margin-top:18px}
+
+  /* nav */
+  header.site{position:sticky;top:0;z-index:30;background:rgba(251,247,239,.86);
+    backdrop-filter:blur(10px);border-bottom:1px solid var(--line-soft)}
+  .nav{display:flex;align-items:center;justify-content:space-between;height:66px}
+  .brand{font-family:var(--display);font-weight:600;font-size:20px;text-decoration:none;letter-spacing:-.02em}
+  .nav-links{display:flex;gap:26px;font-size:15px}
+  .nav-links a{text-decoration:none;color:var(--ink-soft);transition:color .15s}
+  .nav-links a:hover{color:var(--ink)}
+  .nav-cta{display:flex;gap:14px;align-items:center;font-size:15px}
+  .nav-cta a.login{text-decoration:none;color:var(--ink-soft)}
+  .nav-cta .btn{padding:9px 18px;font-size:14.5px}
+  @media(max-width:880px){.nav-links{display:none}.nav-cta a.login{display:none}}
+
+  /* section rhythm */
+  section{padding:74px 0}
+  .section-head{max-width:680px;margin-bottom:40px}
+  .section-head p{color:var(--ink-soft);margin-top:14px;font-size:18px}
+
+  /* hero */
+  .hero{padding:74px 0 60px;position:relative;overflow:hidden}
+  .hero .wrap{position:relative;z-index:2;max-width:760px}
+  .hero h1{font-size:clamp(40px,6.4vw,68px);margin:20px 0 22px}
+  .hero h1 em{font-style:italic;color:var(--sage)}
+  .hero .lead{font-size:20px;color:var(--ink-soft);max-width:600px}
+  .hero-actions{display:flex;gap:14px;flex-wrap:wrap;margin-top:30px}
+  .leaf{position:absolute;right:-60px;top:-40px;width:460px;height:460px;border-radius:50%;
+    background:radial-gradient(circle at 35% 35%,var(--sage-soft),transparent 70%);
+    opacity:.7;z-index:1;pointer-events:none}
+
+  /* empathy strip */
+  .empathy{background:var(--sage);color:#f2f0e7}
+  .empathy .wrap{max-width:820px}
+  .empathy p{font-family:var(--display);font-size:clamp(22px,3vw,30px);line-height:1.4;
+    font-weight:400;margin:0}
+  .empathy .mini{font-family:var(--body);font-size:14px;letter-spacing:.12em;
+    text-transform:uppercase;color:var(--sage-mid);margin-bottom:18px;font-weight:600}
+
+  /* mechanism cards */
+  .grid{display:grid;gap:18px}
+  .grid-4{grid-template-columns:repeat(4,1fr)}
+  .grid-2{grid-template-columns:repeat(2,1fr)}
+  @media(max-width:900px){.grid-4{grid-template-columns:repeat(2,1fr)}}
+  @media(max-width:620px){.grid-4,.grid-2{grid-template-columns:1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+    padding:26px 24px}
+  .card .num{font-family:var(--display);font-size:15px;color:var(--clay);font-weight:600}
+  .card h3{margin:14px 0 9px}
+  .card p{font-size:15.5px;color:var(--ink-soft);margin:0}
+
+  /* asana section (signature) */
+  .asanas{background:var(--cream-deep)}
+  .asana-group{margin-top:42px}
+  .asana-group:first-of-type{margin-top:36px}
+  .group-label{display:flex;align-items:baseline;gap:14px;margin-bottom:20px;
+    padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .group-label .tag{font-family:var(--display);font-size:23px;font-weight:500}
+  .group-label .why{font-size:15px;color:var(--ink-soft)}
+  .pose-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(248px,1fr));gap:16px}
+  .pose{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-sm);
+    padding:20px 20px 22px}
+  .pose .sa{font-family:var(--display);font-size:18px;font-weight:500}
+  .pose .en{font-size:13px;letter-spacing:.04em;text-transform:uppercase;color:var(--sage-mid);
+    font-weight:600;margin:3px 0 11px}
+  .pose .desc{font-size:14.5px;color:var(--ink-soft);margin:0;line-height:1.6}
+  .pose-note{font-size:14px;color:var(--ink-soft);margin-top:18px;font-style:italic}
+  .selection-note{margin-top:36px;font-family:var(--display);font-size:20px;
+    color:var(--ink);max-width:640px;line-height:1.45}
+
+  /* process / how we work */
+  .steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;counter-reset:step;
+    border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:var(--card)}
+  .step{padding:30px 24px;border-right:1px solid var(--line);position:relative}
+  .step:last-child{border-right:none}
+  .step .dot{width:34px;height:34px;border-radius:50%;background:var(--sage-soft);color:var(--sage);
+    font-family:var(--display);font-weight:600;display:flex;align-items:center;justify-content:center;
+    font-size:16px;margin-bottom:16px}
+  .step h3{font-size:18px;margin-bottom:9px}
+  .step p{font-size:14.5px;color:var(--ink-soft);margin:0}
+  @media(max-width:900px){.steps{grid-template-columns:repeat(2,1fr)}
+    .step:nth-child(2){border-right:none}.step:nth-child(1),.step:nth-child(2){border-bottom:1px solid var(--line)}}
+  @media(max-width:560px){.steps{grid-template-columns:1fr}.step{border-right:none;border-bottom:1px solid var(--line)}.step:last-child{border-bottom:none}}
+
+  /* session + who-for split */
+  .split{display:grid;grid-template-columns:1.1fr .9fr;gap:22px}
+  @media(max-width:820px){.split{grid-template-columns:1fr}}
+  .panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:32px 30px}
+  .panel.sage{background:var(--sage-soft);border-color:transparent}
+  .panel h3{margin-bottom:18px}
+  .checklist{list-style:none;padding:0;margin:0}
+  .checklist li{position:relative;padding-left:30px;margin-bottom:13px;font-size:15.5px;color:var(--ink-soft)}
+  .checklist li::before{content:"";position:absolute;left:0;top:9px;width:9px;height:9px;
+    border-radius:50%;background:var(--sage-mid)}
+  .meta-row{display:flex;gap:10px;flex-wrap:wrap;margin-top:6px}
+  .chip{background:var(--cream-deep);border:1px solid var(--line);border-radius:999px;
+    padding:7px 16px;font-size:14px;font-weight:500}
+
+  /* testimonial */
+  .quote{max-width:780px;margin:0 auto;text-align:center}
+  .quote blockquote{font-family:var(--display);font-size:clamp(24px,3.4vw,32px);
+    line-height:1.4;font-weight:400;margin:0 0 22px;font-style:italic}
+  .quote .who{font-size:15px;color:var(--ink-soft)}
+  .quote .who strong{color:var(--ink);font-weight:600;font-style:normal}
+
+  /* faq */
+  .faq{max-width:780px}
+  details{border-bottom:1px solid var(--line);padding:6px 0}
+  summary{font-family:var(--display);font-size:19px;font-weight:500;cursor:pointer;
+    list-style:none;padding:18px 40px 18px 0;position:relative;color:var(--ink)}
+  summary::-webkit-details-marker{display:none}
+  summary::after{content:"+";position:absolute;right:4px;top:16px;font-size:24px;
+    color:var(--sage-mid);transition:transform .2s;font-family:var(--body)}
+  details[open] summary::after{transform:rotate(45deg)}
+  details p{color:var(--ink-soft);font-size:16px;padding:0 30px 18px 0;margin:0}
+
+  /* safety */
+  .safety{background:var(--clay-soft)}
+  .safety .wrap{max-width:820px;display:flex;gap:22px;align-items:flex-start}
+  .safety .mark{flex:none;width:42px;height:42px;border-radius:50%;background:var(--clay);
+    color:#fff;display:flex;align-items:center;justify-content:center;font-weight:600;font-size:20px}
+  .safety h3{color:#6f3621;margin-bottom:8px;font-size:20px}
+  .safety p{color:#7a4632;margin:0;font-size:15.5px}
+
+  /* final cta */
+  .final{background:var(--sage);color:#f3f1e8;text-align:center}
+  .final .wrap{max-width:680px}
+  .final h2{color:#fdfcf6;margin-bottom:16px}
+  .final p{color:var(--sage-soft);font-size:18px;margin-bottom:30px}
+  .final .btn-primary{background:#fdfcf6;color:var(--sage)}
+  .final .btn-primary:hover{background:#fff}
+  .final .trust{color:var(--sage-mid)}
+
+  /* footer */
+  footer.site{background:var(--cream-deep);border-top:1px solid var(--line);padding:56px 0 34px}
+  .foot-grid{display:grid;grid-template-columns:1.6fr 1fr 1fr 1fr;gap:30px}
+  @media(max-width:760px){.foot-grid{grid-template-columns:1fr 1fr}}
+  .foot-grid h4{font-size:13px;letter-spacing:.1em;text-transform:uppercase;color:var(--sage-mid);
+    margin:0 0 16px;font-weight:600}
+  .foot-grid ul{list-style:none;padding:0;margin:0}
+  .foot-grid li{margin-bottom:10px}
+  .foot-grid a{color:var(--ink-soft);text-decoration:none;font-size:15px}
+  .foot-grid a:hover{color:var(--ink)}
+  .foot-brand p{font-size:15px;color:var(--ink-soft);max-width:280px;margin-top:12px}
+  .foot-base{margin-top:42px;padding-top:22px;border-top:1px solid var(--line);
+    font-size:13.5px;color:var(--ink-soft);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px}
+
+  /* reveal */
+  .reveal{opacity:0;transform:translateY(16px);transition:opacity .7s ease,transform .7s ease}
+  .reveal.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    .reveal{opacity:1;transform:none;transition:none}
+    html{scroll-behavior:auto}
+  }
+  a:focus-visible,summary:focus-visible,.btn:focus-visible{outline:2.5px solid var(--clay);outline-offset:3px;border-radius:4px}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<header class="site">
+  <div class="wrap nav">
+    <a class="brand" href="https://www.myyogaclasses.fit/">My Yoga Classes</a>
+    <nav class="nav-links">
+      <a href="https://www.myyogaclasses.fit/teachers">Teachers</a>
+      <a href="https://www.myyogaclasses.fit/classes">Classes</a>
+      <a href="https://www.myyogaclasses.fit/pricing">Pricing</a>
+      <a href="https://www.myyogaclasses.fit/reviews">Reviews</a>
+      <a href="https://www.myyogaclasses.fit/faq">FAQ</a>
+      <a href="https://www.myyogaclasses.fit/about">About</a>
+    </nav>
+    <div class="nav-cta">
+      <a class="login" href="https://www.myyogaclasses.fit/login">Log in</a>
+      <a class="btn btn-primary" href="https://www.myyogaclasses.fit/login?next=/dashboard/book">Book free session</a>
+    </div>
+  </div>
+</header>
+
+<main id="main-content">
+
+<!-- 1 · HERO -->
+<section class="hero">
+  <div class="leaf" aria-hidden="true"></div>
+  <div class="wrap">
+    <span class="eyebrow">Gentle intensity · for older adults</span>
+    <h1>Gentle yoga for <em>older adults</em>, shaped around you.</h1>
+    <p class="lead">Slow, supportive 1:1 sessions of gentle movement and balance work — with seated and chair-supported options, built around your body and your pace. Practised alongside the care your doctor provides.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="https://www.myyogaclasses.fit/login?next=/dashboard/book">Book my free 1:1 session</a>
+      <a class="btn btn-ghost" href="#how-it-helps">How it helps</a>
+    </div>
+    <p class="trust">Free 1:1 trial · No credit card · 60 min, live on Google Meet</p>
+  </div>
+</section>
+
+<!-- 2 · EMPATHY -->
+<section class="empathy">
+  <div class="wrap reveal">
+    <p class="mini">You don't have to do this alone</p>
+    <p>Staying steady on your feet matters. Yoga can be a gentle, supportive part of your week — building everyday mobility and confidence at a pace that suits you.</p>
+  </div>
+</section>
+
+<!-- 3 · HOW YOGA HELPS -->
+<section id="how-it-helps">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Why it works</span>
+      <h2>How yoga can support older adults.</h2>
+      <p>Four gentle levers, working together — and the first one does most of the lifting.</p>
+    </div>
+    <div class="grid grid-4">
+      <div class="card reveal">
+        <span class="num">01</span>
+        <h3>Everyday mobility</h3>
+        <p>Gentle movement helps joints feel easier for daily tasks.</p>
+      </div>
+      <div class="card reveal">
+        <span class="num">02</span>
+        <h3>Better balance</h3>
+        <p>Supported balance work helps you feel steadier and more confident.</p>
+      </div>
+      <div class="card reveal">
+        <span class="num">03</span>
+        <h3>Strength for daily life</h3>
+        <p>Gentle strengthening supports getting up, walking, and reaching.</p>
+      </div>
+      <div class="card reveal">
+        <span class="num">04</span>
+        <h3>Calm and connection</h3>
+        <p>Breathing and relaxation for restful, settled days.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 4 · POSES (SIGNATURE) -->
+<section class="asanas">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">What you'll actually do</span>
+      <h2>The poses we focus on, and why.</h2>
+      <p>Grouped by what they do for the body. Your teacher draws from these — they won't ask you to do all of them.</p>
+    </div>
+
+    <div class="asana-group reveal">
+      <div class="group-label">
+        <span class="tag">Seated & chair</span>
+        <span class="why">Safe, accessible movement from a chair.</span>
+      </div>
+      <div class="pose-row">
+        <div class="pose"><div class="sa">Seated Cat–Cow</div><div class="en">Gentle spinal mobility</div><p class="desc">Gentle spinal mobility, eased from a chair to keep the back moving comfortably.</p></div>
+        <div class="pose"><div class="sa">Seated gentle twist</div><div class="en">Easing the back</div><p class="desc">Easing the back with a soft, supported twist through the midsection.</p></div>
+        <div class="pose"><div class="sa">Seated ankle & leg mobility</div><div class="en">Keeping the legs working</div><p class="desc">Keeping the legs working with gentle circles and lifts from a seated position.</p></div>
+        <div class="pose"><div class="sa">Sukhasana</div><div class="en">Seated breathing</div><p class="desc">Calm and centring — a comfortable seat for soft, even breathing.</p></div>
+      </div>
+    </div>
+
+    <div class="asana-group reveal">
+      <div class="group-label">
+        <span class="tag">Standing with support</span>
+        <span class="why">Balance and strength, always near a chair or wall.</span>
+      </div>
+      <div class="pose-row">
+        <div class="pose"><div class="sa">Tadasana</div><div class="en">Mountain pose at a chair</div><p class="desc">Grounding and posture, with a chair within reach for steadiness.</p></div>
+        <div class="pose"><div class="sa">Vrksasana</div><div class="en">Tree pose</div><p class="desc">Fingertips on a chair for support as you build gentle, steady balance.</p></div>
+        <div class="pose"><div class="sa">Gentle standing leg lifts</div><div class="en">Steady strength</div><p class="desc">Steady strength for the legs, holding a chair or wall for support.</p></div>
+        <div class="pose"><div class="sa">Chair-supported gentle squat</div><div class="en">Strength for getting up</div><p class="desc">Strength for getting up, practised slowly with the chair right behind you.</p></div>
+      </div>
+      <p class="pose-note">Standing balance work is always within reach of a chair or wall, and we move slowly between positions to avoid dizziness.</p>
+    </div>
+
+    <div class="asana-group reveal">
+      <div class="group-label">
+        <span class="tag">Gentle mobility & joints</span>
+        <span class="why">Keeping joints comfortable and easy.</span>
+      </div>
+      <div class="pose-row">
+        <div class="pose"><div class="sa">Shoulder rolls & arm circles</div><div class="en">Loosening the upper body</div><p class="desc">Loosening the upper body with slow, comfortable rolls and circles.</p></div>
+        <div class="pose"><div class="sa">Gentle wrist & ankle circles</div><div class="en">Everyday joint care</div><p class="desc">Everyday joint care to keep wrists and ankles moving with ease.</p></div>
+        <div class="pose"><div class="sa">Supported gentle backbend</div><div class="en">Opening the chest</div><p class="desc">Opening the chest with a small, supported lift — no strain.</p></div>
+      </div>
+      <p class="pose-note">If you have osteoporosis or low bone density, we avoid deep forward bends and strong twists — please tell your teacher.</p>
+    </div>
+
+    <div class="asana-group reveal">
+      <div class="group-label">
+        <span class="tag">Breathwork & rest</span>
+        <span class="why">Restful, settled days.</span>
+      </div>
+      <div class="pose-row">
+        <div class="pose"><div class="sa">Gentle natural breathing</div><div class="en">Soft and even</div><p class="desc">Soft and even breathing to settle the body and quiet the mind.</p></div>
+        <div class="pose"><div class="sa">Bhramari</div><div class="en">Humming breath</div><p class="desc">A soothing, low exhale that helps unwind tension.</p></div>
+        <div class="pose"><div class="sa">Shavasana</div><div class="en">Final relaxation</div><p class="desc">On a chair or floor, as comfortable — a still close to every session.</p></div>
+      </div>
+    </div>
+
+    <p class="selection-note reveal">Your teacher won't hand you all of these. They'll choose the right few for your body, your level, and how you're feeling that day.</p>
+  </div>
+</section>
+
+<!-- 5 · HOW WE WORK WITH YOU -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Working together</span>
+      <h2>How we work with you to get there.</h2>
+      <p>One teacher who knows your name and your goals — not a different face every week.</p>
+    </div>
+    <div class="steps reveal">
+      <div class="step">
+        <div class="dot">1</div>
+        <h3>We get to know you</h3>
+        <p>A relaxed first session: your mobility, balance, any conditions, and what your doctor advises.</p>
+      </div>
+      <div class="step">
+        <div class="dot">2</div>
+        <h3>A plan shaped to you</h3>
+        <p>Your teacher chooses seated, supported, or standing options to suit you.</p>
+      </div>
+      <div class="step">
+        <div class="dot">3</div>
+        <h3>Guided live 1:1s</h3>
+        <p>The same teacher every time, on Google Meet, moving slowly and clearly.</p>
+      </div>
+      <div class="step">
+        <div class="dot">4</div>
+        <h3>We grow it gently</h3>
+        <p>Small, steady progress toward easier, more confident movement.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 6 + 7 · SESSION + WHO FOR -->
+<section style="padding-top:0">
+  <div class="wrap">
+    <div class="split">
+      <div class="panel reveal">
+        <h3>What a session looks like</h3>
+        <ul class="checklist">
+          <li>Seated, chair-supported, and standing options as needed</li>
+          <li>Standing balance work always within reach of a chair or wall</li>
+          <li>Gentle movement to support mobility and balance</li>
+          <li>We move slowly between positions to avoid dizziness, with steady breathing throughout</li>
+          <li>Plenty of time, clear guidance, and a relaxing close</li>
+        </ul>
+      </div>
+      <div class="panel sage reveal">
+        <h3>Who it's for</h3>
+        <p style="color:var(--ink-soft);font-size:15.5px">Older adults who want a safe, gentle, supportive practice for everyday movement and confidence.</p>
+        <h3 style="margin-top:26px;font-size:18px">What you'll need</h3>
+        <div class="meta-row">
+          <span class="chip">A sturdy chair</span>
+          <span class="chip">A yoga mat</span>
+          <span class="chip">A quiet corner</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 8 · TESTIMONIAL -->
+<section class="asanas" style="padding:64px 0">
+  <div class="wrap">
+    <div class="quote reveal">
+      <blockquote>“At 72 I was nervous about starting. My teacher kept a chair beside me the whole time and went at my pace. I feel steadier on my feet and far more confident.”</blockquote>
+      <p class="who"><strong>Placeholder — swap for a real review.</strong> Member · practising for 6 months</p>
+    </div>
+  </div>
+</section>
+
+<!-- 9 · FAQ -->
+<section>
+  <div class="wrap">
+    <div class="section-head reveal">
+      <span class="eyebrow">Good to know</span>
+      <h2>Questions people ask first.</h2>
+    </div>
+    <div class="faq reveal">
+      <details>
+        <summary>I haven't exercised in years, or I use a chair — can I still do this?</summary>
+        <p>Yes. Sessions can be done seated or with chair support, and we start very gently and slowly.</p>
+      </details>
+      <details>
+        <summary>I get dizzy or have trouble with balance — is it safe?</summary>
+        <p>We move slowly, keep support within reach, and adapt to you. Please tell your teacher and check with your doctor first.</p>
+      </details>
+      <details>
+        <summary>I have arthritis, or a knee or hip replacement — can I join?</summary>
+        <p>Often yes, gently and adapted. Tell your teacher and check with your doctor first so we can plan around it.</p>
+      </details>
+      <details>
+        <summary>What about osteoporosis?</summary>
+        <p>We avoid deep forward bends and strong twists and keep movement safe and gentle. Please let your teacher know.</p>
+      </details>
+      <details>
+        <summary>How soon might I notice anything?</summary>
+        <p>Everyone is different. Many people feel a little steadier and more confident within a few weeks of gentle, regular practice.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- 10 · SAFETY -->
+<section class="safety">
+  <div class="wrap reveal">
+    <div class="mark" aria-hidden="true">+</div>
+    <div>
+      <h3>Yoga supports your care — it doesn't replace it</h3>
+      <p>These sessions support your overall wellbeing and are practised alongside professional medical care. They are not a substitute for diagnosis, treatment, or medication. Please tell your teacher about any conditions or symptoms so they can adapt your session safely, and keep your doctor in the loop.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 11 · FINAL CTA -->
+<section class="final">
+  <div class="wrap">
+    <h2>Your first session is on us.</h2>
+    <p>No card, no commitment. Book a private 1:1 today and meet a teacher who'll know your name — and your goals.</p>
+    <a class="btn btn-primary" href="https://www.myyogaclasses.fit/login?next=/dashboard/book">Book my free 1:1 session</a>
+    <p class="trust">Free 1:1 trial · No credit card · 60 min, live on Google Meet</p>
+  </div>
+</section>
+
+</main>
+
+<!-- FOOTER -->
+<footer class="site">
+  <div class="wrap">
+    <div class="foot-grid">
+      <div class="foot-brand">
+        <a class="brand" href="https://www.myyogaclasses.fit/">My Yoga Classes</a>
+        <p>Live, private 1:1 yoga with expert teachers from India. Book a free session in your local time — no credit card required.</p>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul>
+          <li><a href="https://www.myyogaclasses.fit/teachers">Teachers</a></li>
+          <li><a href="https://www.myyogaclasses.fit/classes">Class types</a></li>
+          <li><a href="https://www.myyogaclasses.fit/pricing">Pricing</a></li>
+          <li><a href="https://www.myyogaclasses.fit/faq">FAQ</a></li>
+          <li><a href="https://www.myyogaclasses.fit/reviews">Reviews</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Company</h4>
+        <ul>
+          <li><a href="https://www.myyogaclasses.fit/about">About</a></li>
+          <li><a href="https://www.myyogaclasses.fit/contact">Contact</a></li>
+          <li><a href="mailto:hello@myyogaclasses.fit">Email us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Legal</h4>
+        <ul>
+          <li><a href="https://www.myyogaclasses.fit/legal/terms">Terms</a></li>
+          <li><a href="https://www.myyogaclasses.fit/legal/privacy">Privacy</a></li>
+          <li><a href="https://www.myyogaclasses.fit/legal/refund">Refund policy</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="foot-base">
+      <span>© 2026 My Yoga Classes.</span>
+      <span>Crafted with care · Teachers in India</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  (function(){
+    if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){ if(e.isIntersecting){ e.target.classList.add('in'); io.unobserve(e.target); } });
+    }, {threshold:0.12, rootMargin:'0px 0px -40px 0px'});
+    document.querySelectorAll('.reveal').forEach(function(el){ io.observe(el); });
+  })();
+</script>
+</body>
+</html>
