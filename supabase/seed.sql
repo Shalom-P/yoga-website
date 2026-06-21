@@ -10,7 +10,7 @@ insert into public.admin_settings (key, value) values
   ('brand.accent_color',      '"#C66B4E"'),
   ('support.email',           '"hello@myyogaclasses.fit"'),
   ('landing.hero_headline',   '"Find your free 1:1 yoga teacher — no credit card."'),
-  ('landing.hero_subhead',    '"A 60-minute private session, live on Google Meet — shown in your local Australian time. Pick your teacher, pick your time."'),
+  ('landing.hero_subhead',    '"A 60-minute private session, live on Google Meet — shown in your local time. Pick your teacher, pick your time."'),
   ('landing.trust_count',     '"1,200+ reviews"'),
   ('landing.trust_rating',    '"4.9"'),
   ('landing.final_headline',  '"Your first session is on us."')
@@ -42,13 +42,27 @@ select t.id, dow, '06:00'::time, '12:00'::time, 60
 from public.teachers t cross join generate_series(1,6) as dow
 on conflict do nothing;
 
--- Session-credit packs (AUD, one-time). A pack = a price + N session-credits;
+-- Session-credit packs (one-time). A pack = per-currency prices + N session-credits;
 -- buying it grants credits, a paid booking spends one. The free 1:1 trial never
--- touches credits. (See supabase/migrations/0011 + 0020.)
-insert into public.plans (slug, name, description, price_aud_cents, billing_interval, session_credits, included_sessions_per_month, included_session_types, is_active, is_featured, sort_order) values
-  ('pack-5',  '5-Session Pack',  'Five private 1:1 sessions — your flexible way in.',       18000, 'one_time', 5,  null, '{}', true, false, 1),
-  ('pack-10', '10-Session Pack', 'Ten private 1:1 sessions — our best price per session.', 34000, 'one_time', 10, null, '{}', true, true,  2)
+-- touches credits. (See supabase/migrations/0011 + 0020 + 0022.)
+-- price_base_cents is the currency-neutral fallback; per-currency amounts below.
+insert into public.plans (slug, name, description, price_base_cents, billing_interval, session_credits, included_sessions_per_month, included_session_types, is_active, is_featured, sort_order) values
+  ('pack-5',  '5-Session Pack',  'Five private 1:1 sessions — your flexible way in.',       750000,  'one_time', 5,  null, '{}', true, false, 1),
+  ('pack-10', '10-Session Pack', 'Ten private 1:1 sessions — our best price per session.', 1300000, 'one_time', 10, null, '{}', true, true,  2)
 on conflict (slug) do nothing;
+
+-- Per-currency prices for the packs (UAE → AED, India → INR). See migration 0022.
+-- TODO(pricing): placeholder amounts — confirm final prices with the business.
+insert into public.plan_prices (plan_id, currency, amount_cents)
+select p.id, v.currency, v.amount_cents
+from public.plans p
+join (values
+  ('pack-5',  'INR',  750000),
+  ('pack-5',  'AED',   35000),
+  ('pack-10', 'INR', 1300000),
+  ('pack-10', 'AED',   60000)
+) as v(slug, currency, amount_cents) on v.slug = p.slug
+on conflict (plan_id, currency) do nothing;
 
 -- Plan features (only true capabilities — credits never expire; cancel refunds the credit)
 do $$
@@ -78,5 +92,5 @@ select
   (select id from public.teachers where slug='aarti-deshmukh'),
   5,
   'After three weeks with Aarti my chronic back pain is gone. The 1:1 attention made all the difference.',
-  true, true, 'Sarah M.', 'Sydney, AU'
+  true, true, 'Sara M.', 'Dubai, AE'
 where exists (select 1 from public.profiles);

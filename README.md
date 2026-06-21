@@ -1,6 +1,6 @@
 # MYYOGACLASSES
 
-Conversion-first multi-teacher yoga studio web app. **Australian customers, Indian teachers**, live on Google Meet.
+Conversion-first multi-teacher yoga studio web app. **UAE + India customers, Indian teachers**, live on Google Meet. Multi-currency billing (UAE→AED, India→INR).
 
 Built on Next.js 16 (App Router) + Supabase + Razorpay + Google Calendar API.
 
@@ -17,7 +17,7 @@ Built on Next.js 16 (App Router) + Supabase + Razorpay + Google Calendar API.
 | Backend | Supabase (Postgres + Auth + Storage + Realtime) |
 | ORM | Drizzle (typed complex queries) alongside `supabase-js` (auth + simple CRUD) |
 | Auth | Supabase: Google OAuth + passwordless Email OTP (handles AU customers and IN teachers) |
-| Payments | Razorpay one-time Checkout (AUD, session-pack credits) |
+| Payments | Razorpay one-time Checkout (AED/INR by region, session-pack credits) |
 | Conferencing | Google Calendar API → Meet links (service account) |
 | Email | Resend + React Email |
 | Analytics | PostHog (events + replay + flags) |
@@ -58,7 +58,7 @@ npm run dev
 2. **Razorpay**
    - Create API keys in the Razorpay dashboard (start with **test** keys, `rzp_test_…`).
    - Set `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, and `NEXT_PUBLIC_RAZORPAY_KEY_ID` (must equal the key id).
-   - Enable **International / foreign-currency** acceptance so AUD orders are accepted (Indian accounts settle INR by default).
+   - INR settles natively on an Indian account; enable **International / foreign-currency** acceptance so **AED** orders (UAE customers) are accepted.
    - In `/admin/plans`, set each pack's **price** and **session credits**.
    - Create a webhook in the Razorpay dashboard pointing to `https://<yourdomain>/api/razorpay/webhook` for the `payment.captured` event. Copy its signing secret → `RAZORPAY_WEBHOOK_SECRET`.
 3. **Google Meet (keyless — Vercel OIDC → GCP Workload Identity Federation → domain-wide delegation)**
@@ -109,7 +109,7 @@ lib/
   auth/                   # requireUser / requireAdmin guards
   db/                     # Drizzle schema + client
   utils/                  # cn, date, money helpers
-  i18n/                   # money + locale helpers (AUD primary)
+  i18n/                   # money + locale helpers (AED/INR)
   timezone/               # date-fns-tz helpers (AU ↔ IN)
   data/                   # Server-side landing data (Supabase or mock fallback)
 supabase/

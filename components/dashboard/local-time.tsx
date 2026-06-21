@@ -8,8 +8,8 @@ const subscribe = () => () => {};
 
 /**
  * Times should display in the timezone where the customer actually opens the
- * site — Australia spans several zones, so a single stored/default zone is
- * wrong for many people. useSyncExternalStore renders the server-provided
+ * site — customers span several zones (UAE, India, and travellers), so a single
+ * stored/default zone is wrong for many people. useSyncExternalStore renders the server-provided
  * `fallback` during SSR/hydration, then resolves to the real browser timezone
  * on the client — without a hydration-mismatch warning.
  */
@@ -54,7 +54,7 @@ export function LocalTzLabel({ fallbackTz }: { fallbackTz: string }) {
   return <>{tzShort(tz)}</>;
 }
 
-/** The viewer's local timezone name, e.g. "Australia/Perth". */
+/** The viewer's local timezone name, e.g. "Asia/Dubai". */
 export function LocalTzName({ fallbackTz }: { fallbackTz: string }) {
   const tz = useBrowserTz(fallbackTz);
   return <>{tz}</>;

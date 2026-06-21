@@ -26,20 +26,27 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { formatAud } from "@/lib/i18n/money";
+import { formatMoney } from "@/lib/i18n/money";
 import { toast } from "sonner";
-import type { Plan, PlanFeature, BillingInterval } from "@/lib/supabase/types";
+import type { Plan, PlanFeature, PlanPrice, BillingInterval } from "@/lib/supabase/types";
 
-type PlanWithFeatures = Plan & { features: PlanFeature[] };
+type PlanWithFeatures = Plan & { features: PlanFeature[]; prices: PlanPrice[] };
 
 type FeatureDraft = { id?: string; feature_text: string; is_included: boolean };
+
+// Helper: read a plan's price in a currency (minor units) from its price rows.
+function priceFor(prices: PlanPrice[], currency: string, fallback: number): number {
+  return prices.find((p) => p.currency === currency)?.amount_cents ?? fallback;
+}
 
 type Draft = {
   id?: string;
   slug: string;
   name: string;
   description: string;
-  price_aud_cents: number;
+  // Per-currency prices in minor units (paise / fils). India INR, UAE AED.
+  price_inr_cents: number;
+  price_aed_cents: number;
   billing_interval: BillingInterval;
   session_credits: number;
   included_sessions_per_month: number | null;
@@ -54,7 +61,8 @@ const EMPTY: Draft = {
   slug: "",
   name: "",
   description: "",
-  price_aud_cents: 18000,
+  price_inr_cents: 750000,
+  price_aed_cents: 35000,
   billing_interval: "one_time",
   session_credits: 5,
   included_sessions_per_month: null,
@@ -83,7 +91,8 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
       slug: p.slug,
       name: p.name,
       description: p.description ?? "",
-      price_aud_cents: p.price_aud_cents,
+      price_inr_cents: priceFor(p.prices, "INR", p.price_base_cents),
+      price_aed_cents: priceFor(p.prices, "AED", 0),
       billing_interval: p.billing_interval,
       session_credits: p.session_credits,
       included_sessions_per_month: p.included_sessions_per_month,
@@ -107,8 +116,8 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
       toast.error("Slug and name are required.");
       return;
     }
-    if (draft.price_aud_cents < 0) {
-      toast.error("Price can't be negative.");
+    if (draft.price_inr_cents < 0 || draft.price_aed_cents < 0) {
+      toast.error("Prices can't be negative.");
       return;
     }
     setSaving(true);
@@ -117,7 +126,8 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
       slug: draft.slug,
       name: draft.name,
       description: draft.description || null,
-      price_aud_cents: draft.price_aud_cents,
+      // Base/fallback price (used when a currency row is missing) tracks INR.
+      price_base_cents: draft.price_inr_cents,
       billing_interval: draft.billing_interval,
       session_credits: draft.session_credits,
       included_sessions_per_month: draft.included_sessions_per_month,
@@ -150,6 +160,20 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
         return;
       }
       planId = data.id;
+    }
+
+    // Upsert per-currency prices (INR + AED) for this plan.
+    const { error: priceErr } = await supabase.from("plan_prices").upsert(
+      [
+        { plan_id: planId!, currency: "INR", amount_cents: draft.price_inr_cents },
+        { plan_id: planId!, currency: "AED", amount_cents: draft.price_aed_cents },
+      ],
+      { onConflict: "plan_id,currency" },
+    );
+    if (priceErr) {
+      setSaving(false);
+      toast.error(`Saved plan but prices failed: ${priceErr.message}`);
+      return;
     }
 
     const trimmedFeatures = draft.features
@@ -221,7 +245,11 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
               </div>
             </div>
             <div className="mt-3 text-2xl font-[family-name:var(--font-heading)]">
-              {formatAud(p.price_aud_cents)}
+              {formatMoney(priceFor(p.prices, "INR", p.price_base_cents), "INR")}
+              <span className="text-base text-muted-foreground">
+                {" · "}
+                {formatMoney(priceFor(p.prices, "AED", 0), "AED")}
+              </span>
               <span className="text-sm text-muted-foreground">
                 {p.billing_interval === "one_time"
                   ? ` · ${p.session_credits} credit${p.session_credits === 1 ? "" : "s"}`
@@ -310,24 +338,46 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div>
                 <LabelWithHint
-                  htmlFor="price"
-                  hint="One-time price of this pack in AUD. Stored as integer cents."
+                  htmlFor="price_inr"
+                  hint="One-time price for India customers, in ₹ (INR). Stored as integer paise."
                 >
-                  Price (AUD)
+                  Price (INR ₹)
                 </LabelWithHint>
                 <Input
-                  id="price"
+                  id="price_inr"
                   type="number"
                   min={0}
                   step={0.01}
-                  value={(draft.price_aud_cents / 100).toFixed(2)}
+                  value={(draft.price_inr_cents / 100).toFixed(2)}
                   onChange={(e) =>
                     setDraft({
                       ...draft,
-                      price_aud_cents: Math.round((Number(e.target.value) || 0) * 100),
+                      price_inr_cents: Math.round((Number(e.target.value) || 0) * 100),
+                    })
+                  }
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <LabelWithHint
+                  htmlFor="price_aed"
+                  hint="One-time price for UAE customers, in AED. Stored as integer fils."
+                >
+                  Price (AED)
+                </LabelWithHint>
+                <Input
+                  id="price_aed"
+                  type="number"
+                  min={0}
+                  step={0.01}
+                  value={(draft.price_aed_cents / 100).toFixed(2)}
+                  onChange={(e) =>
+                    setDraft({
+                      ...draft,
+                      price_aed_cents: Math.round((Number(e.target.value) || 0) * 100),
                     })
                   }
                   className="mt-1.5"

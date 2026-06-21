@@ -64,13 +64,13 @@ export const metadata: Metadata = {
     template: "%s · My Yoga Classes",
   },
   description:
-    "Live online yoga with expert teachers from India. Book a free 60-minute private session — no credit card required. Times in your local AEST/AEDT.",
+    "Live online yoga with expert teachers from India. Book a free 60-minute private session — no credit card required. Times shown in your local time.",
   applicationName: "My Yoga Classes",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: "My Yoga Classes",
-    locale: "en_AU",
+    locale: "en",
     title: "My Yoga Classes — Free 1:1 yoga teacher · Online",
     description:
       "Find your free 1:1 yoga teacher. 60-minute private session. Pick your teacher. Pick your time. Meets on Google Meet.",
@@ -87,9 +87,12 @@ const orgJsonLd: WithContext<Organization> = {
   url: siteUrl,
   logo: `${siteUrl}/icon.svg`,
   description:
-    "Live online 1:1 yoga with expert teachers from India for students across Australia. Book a free private session — no credit card required.",
-  areaServed: { "@type": "Country", name: "Australia" },
-  knowsLanguage: ["en-AU"],
+    "Live online 1:1 yoga with expert teachers from India for students across the UAE and India. Book a free private session — no credit card required.",
+  areaServed: [
+    { "@type": "Country", name: "United Arab Emirates" },
+    { "@type": "Country", name: "India" },
+  ],
+  knowsLanguage: ["en"],
   contactPoint: {
     "@type": "ContactPoint",
     contactType: "customer support",
@@ -103,7 +106,7 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
-      lang="en-AU"
+      lang="en"
       suppressHydrationWarning
       className={`${inter.variable} ${fraunces.variable} ${geistMono.variable} ${cormorant.variable} ${hanken.variable} h-full antialiased`}
     >

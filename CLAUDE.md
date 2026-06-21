@@ -24,7 +24,7 @@ Node ≥20 is required (`package.json` engines).
 
 ## Big-picture architecture
 
-This is a **conversion-first marketing site + customer dashboard + admin shell + booking backend** for a yoga studio: **Australian customers, Indian teachers, sessions on Google Meet, Razorpay one-time session-pack payments for billing**. The cross-timezone story (AU ↔ IN) is load-bearing — see the Timezones section.
+This is a **conversion-first marketing site + customer dashboard + admin shell + booking backend** for a yoga studio: **UAE + India customers, Indian teachers, sessions on Google Meet, Razorpay one-time session-pack payments for billing (multi-currency: UAE→AED, India→INR)**. The cross-timezone story (customer ↔ IN teacher) is load-bearing — see the Timezones section. The served countries are an allow-list `{IN, AE}` (see `lib/geo/region.ts`).
 
 ### Route groups in `app/`
 
@@ -54,7 +54,7 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 
 ### Schema ownership
 
-- **Authoritative migrations live in `supabase/migrations/0001…0021`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates. (Highlights: `0011` Razorpay credit-pack billing; `0016` booking-reminder idempotency; `0017` booking-integrity (`book_session` RPC + overlap EXCLUDE); `0018` RLS/grants hardening; `0019` refund reconciliation; `0020` retires the legacy subscription plans for one-time credit packs + a `one_time` billing interval; `0021` refund-once idempotency (`refund_session_credit`) + blocklist check inside `book_session`.)
+- **Authoritative migrations live in `supabase/migrations/0001…0022`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates. (Highlights: `0011` Razorpay credit-pack billing; `0016` booking-reminder idempotency; `0017` booking-integrity (`book_session` RPC + overlap EXCLUDE); `0018` RLS/grants hardening; `0019` refund reconciliation; `0020` retires the legacy subscription plans for one-time credit packs + a `one_time` billing interval; `0021` refund-once idempotency (`refund_session_credit`) + blocklist check inside `book_session`; `0022` multi-currency: `plan_prices` (AED/INR) child table, `price_aud_cents`→`price_base_cents` / `amount_aud_cents`→`amount_cents` renames, currency-neutral `fixed_amount_cents` discount enum, `admin_kpis` per-currency revenue.)
 - `drizzle.config.ts` points `out` at `supabase/migrations`, but `db:generate` is for *introspection and ad-hoc work*. When you change schema, write the SQL by hand to keep RLS / RPCs intact and bump the migration number. `0007_security_fixes.sql` is the canonical example of how add-on migrations are structured.
 - **Writing the migration file is not enough — apply it to the live DB** (`psql`/SQL editor). Features break until their object exists: e.g. the `/admin/customers` Demote button 500s until `0010`'s RPC is applied.
 
@@ -71,7 +71,7 @@ Marketing pages render these images via `next/image`, so the bucket host (`**.su
 ### Timezones — critical, easy to get wrong
 
 - All DB timestamps are `timestamptz` (UTC). Never store wall-clock times.
-- `lib/timezone/index.ts` is the only place that formats: `formatCustomerTime` (default `Australia/Sydney`), `formatTeacherTime` (always `Asia/Kolkata`, suffixed "IST"). Use these instead of `date-fns` `format` directly so DST is handled.
+- `lib/timezone/index.ts` is the only place that formats: `formatCustomerTime` (default `DEFAULT_CUSTOMER_TZ` = `Asia/Kolkata`), `formatTeacherTime` (always `Asia/Kolkata`, suffixed "IST"). Use these instead of `date-fns` `format` directly so DST is handled. Customers store their real device-detected IANA zone (global picker in `components/ui/timezone-select.tsx`).
 - Booking-availability checks compare strings — see `slotInsideAvailability` in `app/api/bookings/confirm/route.ts`. Postgres `day_of_week` is 0=Sun..6=Sat, date-fns `i` is 1=Mon..7=Sun — the helper normalises. Slots crossing midnight in the teacher TZ are currently rejected.
 
 ### Bookings + Meet flow
@@ -82,13 +82,13 @@ After the booking commits, the handler calls `createMeetEvent` (`lib/google/cale
 
 ### Razorpay one-time payments (session-pack credits)
 
-Billing is **Razorpay one-time Checkout in AUD**. A plan = a pack: a price + N `session_credits`. Buying a pack grants credits; booking a *paid* session spends one (the free 1:1 trial never touches credits). No subscriptions, no "sync" step — order amounts are set at create time.
+Billing is **Razorpay one-time Checkout, multi-currency (UAE→AED, India→INR)**. A plan = a pack: per-currency prices (`plan_prices`, fallback `plans.price_base_cents`) + N `session_credits`. Buying a pack grants credits; booking a *paid* session spends one (the free 1:1 trial never touches credits). No subscriptions, no "sync" step — order amounts are set at create time.
 
-Flow: `POST /api/razorpay/create-order` resolves the price server-side from the `plans` table by `planSlug` (the client never sends an amount) and stamps the order `notes` with `{customerId, planId}`. The browser opens Checkout, then **either** path fulfils:
+Flow: `POST /api/razorpay/create-order` resolves the customer's currency from `resolveRegion()` (GeoIP country first, browser timezone fallback — see `lib/geo/region.ts`), then resolves the price server-side from `plan_prices` by `planSlug` + currency (the client never sends an amount) and stamps the order `notes` with `{customerId, planId, currency}`. The browser opens Checkout, then **either** path fulfils:
 1. `POST /api/razorpay/verify-payment` — constant-time HMAC-SHA256 signature check, then `fulfillRazorpayPayment`.
 2. `POST /api/razorpay/webhook` — `X-Razorpay-Signature`-verified (uses `RAZORPAY_WEBHOOK_SECRET`); the authoritative path for when the browser never returns.
 
-**`lib/razorpay/fulfillment.ts` is the single fulfilment point and is idempotent**: it re-checks capture against the Razorpay API, upserts `payments` keyed on a UNIQUE `razorpay_payment_id`, then grants credits via the `grant_session_credits` RPC (purchase-once via a partial unique index on `credit_ledger`). **Never grant value from the client `onPaid` callback** — call fulfilment server-side. Booking spends a credit atomically via `spend_session_credit` (refunded if the insert fails). `lib/razorpay/client.ts` is the server-only SDK singleton: `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` server-side, `NEXT_PUBLIC_RAZORPAY_KEY_ID` for Checkout. AUD orders need Razorpay **International** enabled on the account (Indian accounts settle INR by default).
+**`lib/razorpay/fulfillment.ts` is the single fulfilment point and is idempotent**: it re-checks capture against the Razorpay API, upserts `payments` keyed on a UNIQUE `razorpay_payment_id`, then grants credits via the `grant_session_credits` RPC (purchase-once via a partial unique index on `credit_ledger`). **Never grant value from the client `onPaid` callback** — call fulfilment server-side. Booking spends a credit atomically via `spend_session_credit` (refunded if the insert fails). `lib/razorpay/client.ts` is the server-only SDK singleton: `RAZORPAY_KEY_ID`/`RAZORPAY_KEY_SECRET` server-side, `NEXT_PUBLIC_RAZORPAY_KEY_ID` for Checkout. INR settles natively on an Indian account; **AED orders need Razorpay International enabled** on the account.
 
 ### Scheduled jobs (handlers exist; scheduler is BYO)
 
@@ -105,7 +105,7 @@ There is **no scheduler in the repo** (no `vercel.json` / host config). Wire eac
 - **UI:** shadcn/ui with the `base-nova` preset (`components.json`). Tailwind 4 via `@tailwindcss/postcss`. Add components with `npx shadcn@latest add <name>` — they land in `components/ui/`.
 - **Forms:** `react-hook-form` + `zod` + `@hookform/resolvers`. Mirror the zod schema on both client and the route handler.
 - **Animation:** Motion (the rebrand of Framer Motion) + Lenis smooth scroll (provider in `app/layout.tsx`) + GSAP ScrollTrigger when timeline scrubbing is needed.
-- **Locale:** `en-AU`. Money helpers in `lib/i18n/money.ts`. Internal money is `*_aud_cents` (integer); never store floats. Default currency code "AUD".
+- **Locale:** `en` (per-currency `en-IN` / `en-AE` for money). Money helper is `formatMoney(cents, currency)` in `lib/i18n/money.ts`. Internal money is integer minor units (`plans.price_base_cents`, `plan_prices.amount_cents`, `payments.amount_cents`); never store floats. Currencies: AED + INR.
 - **Analytics:** `lib/analytics/events.ts` — call `track(name, props)` with a name from the typed `EventName` allow-list (extend the union, don't pass free-form strings). `track()` / `initPosthog()` are silent no-ops when `NEXT_PUBLIC_POSTHOG_KEY` is unset, matching the zero-env preview story.
 - **`cn` helper:** lives in `lib/utils.ts`; `lib/utils/cn.ts` just re-exports it. shadcn's `components.json` aliases `utils → @/lib/utils`, so import `cn` from `@/lib/utils`.
 - **`server-only` import:** `lib/db/client.ts`, `lib/google/calendar.ts`, and `lib/razorpay/{client,fulfillment,catalog}.ts` use the `server-only` package — importing them from a client component will hard-fail the build. Keep that boundary.

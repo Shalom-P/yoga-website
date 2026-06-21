@@ -3,7 +3,7 @@
 export const metadata = {
   title: "Privacy policy — My Yoga Classes",
   description:
-    "How My Yoga Classes collects, uses, and protects your personal information, in accordance with the Australian Privacy Act 1988 (Cth) and the Australian Privacy Principles.",
+    "How My Yoga Classes collects, uses, and protects your personal information, aligned with the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021), India's Digital Personal Data Protection Act 2023, and international data-protection standards.",
   alternates: { canonical: "/legal/privacy" },
 };
 
@@ -14,7 +14,13 @@ export default function PrivacyPage() {
         <h1 className="text-[clamp(2.25rem,4vw,3rem)] leading-[1.1] tracking-tight">
           Privacy policy
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 13 June 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 21 June 2026</p>
+
+        <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
+          <strong>Pending legal review.</strong> This policy is a good-faith draft written for
+          a service operating across the UAE and India. It has not yet been reviewed by a
+          qualified lawyer in either jurisdiction and must be verified before launch.
+        </div>
 
         <div className="mt-10 space-y-10 text-foreground/85 text-pretty">
 
@@ -22,16 +28,19 @@ export default function PrivacyPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">1. About this policy</h2>
             <p>
-              My Yoga Classes (ABN to be inserted) (“<strong>we</strong>”, “<strong>us</strong>”,
-              “<strong>our</strong>”) operates <strong>myyogaclasses.fit</strong>, an online
-              platform that connects Australian students with yoga teachers based in India for
-              live 1:1 sessions conducted over Google Meet.
+              My Yoga Classes (registration / trade-licence details to be inserted)
+              (“<strong>we</strong>”, “<strong>us</strong>”, “<strong>our</strong>”) operates{" "}
+              <strong>myyogaclasses.fit</strong>, an online platform that connects students in the
+              United Arab Emirates and India with yoga teachers based in India for live 1:1
+              sessions conducted over Google Meet.
             </p>
             <p>
-              We are bound by the <em>Privacy Act 1988</em> (Cth) and the thirteen Australian
-              Privacy Principles (APPs). This policy explains what personal information we
-              collect, why we collect it, how we use and disclose it, and your rights under
-              Australian privacy law.
+              We aim to handle your personal data in line with the{" "}
+              <em>UAE Personal Data Protection Law</em> (Federal Decree-Law No. 45 of 2021) and
+              its implementing regulations, India&apos;s <em>Digital Personal Data Protection Act
+              2023</em> (DPDP Act), and recognised international data-protection standards. This
+              policy explains what personal information we collect, why we collect it, how we use
+              and disclose it, and the rights available to you under those laws.
             </p>
             <p>
               By creating an account or booking a session you consent to the practices described
@@ -89,7 +98,7 @@ export default function PrivacyPage() {
               <li>Create and manage your account and authenticate you securely.</li>
               <li>Match you with an available teacher and schedule sessions across timezones.</li>
               <li>Generate and send Google Meet links for your sessions.</li>
-              <li>Process one-time session-pack payments in AUD via Razorpay.</li>
+              <li>Process one-time session-pack payments in AED or INR via Razorpay.</li>
               <li>Send booking confirmations, reminders, and account notifications by email.</li>
               <li>Provide customer support.</li>
               <li>Improve our platform and personalise your experience.</li>
@@ -168,20 +177,21 @@ export default function PrivacyPage() {
             </p>
           </section>
 
-          {/* 5. Overseas disclosure */}
+          {/* 5. Cross-border transfers */}
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">5. Overseas disclosure</h2>
+            <h2 className="text-xl font-semibold text-foreground">5. Cross-border data transfers</h2>
             <p>
-              Your personal information is disclosed to recipients located outside Australia,
-              primarily in the United States and India (see the table above). Before doing so,
-              we take reasonable steps to ensure those recipients handle your information in a
-              manner consistent with the Australian Privacy Principles, including by relying on
-              contractual protections and, where applicable, the recipient country&apos;s
-              privacy laws.
+              Because our teachers are based in India and our technology providers operate
+              globally, your personal information is transferred to and processed in countries
+              other than your country of residence — primarily India and the United States (see
+              the table above). Where we transfer data internationally, we take reasonable steps
+              to ensure an adequate level of protection, including standard contractual
+              protections in our data-processing agreements and, where required, the safeguards
+              for cross-border transfers under the UAE PDPL and India&apos;s DPDP Act.
             </p>
             <p>
-              By using our service you acknowledge that overseas disclosure is necessary for
-              service delivery and consent to that disclosure under APP 8.
+              By using our service you acknowledge that these international transfers are
+              necessary to deliver the service to you.
             </p>
           </section>
 
@@ -205,10 +215,11 @@ export default function PrivacyPage() {
             <p>
               We retain personal information for as long as your account is active and for a
               reasonable period afterwards to fulfil legal obligations, resolve disputes, and
-              enforce our agreements. Booking and payment records are typically retained for
-              seven years to satisfy Australian financial record-keeping requirements. You may
-              request deletion of your account at any time (see Section 9); note that some
-              information may be retained where we are required by law.
+              enforce our agreements. Booking and payment records are typically retained for the
+              period required by applicable financial record-keeping and tax law in the
+              jurisdictions where we operate. You may request deletion of your account at any time
+              (see Section 9); note that some information may be retained where we are required by
+              law.
             </p>
           </section>
 
@@ -229,12 +240,15 @@ export default function PrivacyPage() {
               9. Your access, correction, and deletion rights
             </h2>
             <p>
-              Under the Australian Privacy Principles (APP 12 and APP 13) you have the right to:
+              Subject to applicable law (including the UAE PDPL and India&apos;s DPDP Act), you
+              have the right to:
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>Request access to the personal information we hold about you.</li>
               <li>Request correction of information that is inaccurate, out of date, or incomplete.</li>
               <li>Request deletion of your account and associated personal data.</li>
+              <li>Withdraw consent you have previously given, and object to or restrict certain processing.</li>
+              <li>Request a copy of your data in a portable format, where applicable.</li>
             </ul>
             <p>
               To exercise these rights, contact us at{" "}
@@ -250,25 +264,24 @@ export default function PrivacyPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">10. Privacy complaints</h2>
             <p>
-              If you believe we have breached your privacy rights, please contact us first so
-              we can try to resolve the issue (see Section 11). If you are not satisfied with
-              our response you may lodge a complaint with the Office of the Australian
-              Information Commissioner (OAIC):
+              If you believe we have mishandled your personal data, please contact us first so we
+              can try to resolve the issue (see Section 11). If you are not satisfied with our
+              response, you may lodge a complaint with the data-protection authority in your
+              jurisdiction, for example:
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                Website:{" "}
-                <a
-                  className="underline"
-                  href="https://www.oaic.gov.au"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  www.oaic.gov.au
-                </a>
+                <strong>UAE:</strong> the UAE Data Office (federal), or — for entities in a
+                financial free zone — the relevant free-zone data-protection commissioner (e.g.
+                the DIFC or ADGM Commissioner of Data Protection).
               </li>
-              <li>Phone: 1300 363 992</li>
-              <li>Post: GPO Box 5218, Sydney NSW 2001</li>
+              <li>
+                <strong>India:</strong> the Data Protection Board of India established under the
+                DPDP Act 2023.
+              </li>
+              <li>
+                Elsewhere: your local data-protection or privacy regulator.
+              </li>
             </ul>
           </section>
 

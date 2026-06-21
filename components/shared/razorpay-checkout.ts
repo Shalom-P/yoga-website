@@ -12,7 +12,7 @@
  */
 
 import { detectBrowserTimezone } from "@/lib/timezone";
-import { OUTSIDE_AUSTRALIA_ERROR } from "@/lib/geo/australia";
+import { OUTSIDE_SERVICE_AREA } from "@/lib/geo/region";
 
 const CHECKOUT_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 const SCRIPT_TIMEOUT_MS = 10_000;
@@ -102,7 +102,7 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     orderRes = await fetch("/api/razorpay/create-order", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      // Send the live browser timezone for the Australia-only purchase gate.
+      // Send the live browser timezone for the service-area gate + currency fallback.
       body: JSON.stringify({
         planSlug: args.planSlug,
         clientTimezone: detectBrowserTimezone(),
@@ -126,8 +126,8 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     window.location.href = `/login?next=${next}`;
     return;
   }
-  if (orderRes.status === 403 && order.error === OUTSIDE_AUSTRALIA_ERROR) {
-    args.onError("Session packs can only be purchased from within Australia.");
+  if (orderRes.status === 403 && order.error === OUTSIDE_SERVICE_AREA) {
+    args.onError("Session packs can only be purchased from within the UAE or India.");
     return;
   }
   if (!orderRes.ok || !order.orderId || order.amount == null || !order.currency) {

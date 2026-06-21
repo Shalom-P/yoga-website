@@ -16,7 +16,7 @@ export type IntensityLevel = "gentle" | "moderate" | "intense";
 export type SessionStatus = "scheduled" | "live" | "completed" | "cancelled";
 export type BookingStatus = "confirmed" | "cancelled" | "attended" | "no_show";
 export type BillingInterval = "monthly" | "quarterly" | "yearly" | "one_time";
-export type DiscountType = "percentage" | "fixed_aud_cents";
+export type DiscountType = "percentage" | "fixed_aud_cents" | "fixed_amount_cents";
 export type SubscriptionStatus =
   | "pending" | "active" | "suspended" | "cancelled" | "expired";
 export type PaymentStatus = "pending" | "completed" | "refunded" | "failed";
@@ -134,7 +134,7 @@ export type Plan = {
   slug: string;
   name: string;
   description: string | null;
-  price_aud_cents: number;
+  price_base_cents: number;
   billing_interval: BillingInterval;
   session_credits: number;
   paypal_plan_id: string | null;
@@ -152,6 +152,14 @@ export type PlanFeature = {
   feature_text: string;
   is_included: boolean;
   sort_order: number;
+}
+export type PlanPrice = {
+  id: string;
+  plan_id: string;
+  currency: string; // 'INR' | 'AED'
+  amount_cents: number;
+  created_at: string;
+  updated_at: string;
 }
 export type DiscountCode = {
   id: string;
@@ -190,7 +198,7 @@ export type Payment = {
   paypal_capture_id: string | null;
   razorpay_order_id: string | null;
   razorpay_payment_id: string | null;
-  amount_aud_cents: number;
+  amount_cents: number;
   currency: string;
   status: PaymentStatus;
   paid_at: string | null;
@@ -314,9 +322,12 @@ export type Database = {
         { foreignKeyName: "bookings_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         { foreignKeyName: "bookings_payment_fk"; columns: ["payment_id"]; isOneToOne: false; referencedRelation: "payments"; referencedColumns: ["id"] },
       ]>;
-      plans: Table<Plan, Partial<Plan> & { slug: string; name: string; price_aud_cents: number }>;
+      plans: Table<Plan, Partial<Plan> & { slug: string; name: string; price_base_cents: number }>;
       plan_features: Table<PlanFeature, Partial<PlanFeature> & { plan_id: string; feature_text: string }, Partial<PlanFeature>, [
         { foreignKeyName: "plan_features_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
+      ]>;
+      plan_prices: Table<PlanPrice, Partial<PlanPrice> & { plan_id: string; currency: string; amount_cents: number }, Partial<PlanPrice>, [
+        { foreignKeyName: "plan_prices_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
       ]>;
       discount_codes: Table<DiscountCode, Partial<DiscountCode> & { code: string; discount_type: DiscountType; discount_value: number }>;
       subscriptions: Table<Subscription, Partial<Subscription> & { customer_id: string; plan_id: string; paypal_subscription_id: string }, Partial<Subscription>, [
@@ -324,7 +335,7 @@ export type Database = {
         { foreignKeyName: "subscriptions_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
         { foreignKeyName: "subscriptions_discount_code_id_fkey"; columns: ["discount_code_id"]; isOneToOne: false; referencedRelation: "discount_codes"; referencedColumns: ["id"] },
       ]>;
-      payments: Table<Payment, Partial<Payment> & { customer_id: string; amount_aud_cents: number }, Partial<Payment>, [
+      payments: Table<Payment, Partial<Payment> & { customer_id: string; amount_cents: number }, Partial<Payment>, [
         { foreignKeyName: "payments_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         { foreignKeyName: "payments_subscription_id_fkey"; columns: ["subscription_id"]; isOneToOne: false; referencedRelation: "subscriptions"; referencedColumns: ["id"] },
       ]>;
@@ -369,8 +380,9 @@ export type Database = {
         Returns: {
           signups_today: number;
           trials_today: number;
-          paid_active_subs: number;
-          mrr_aud_cents: number;
+          // Month-to-date completed revenue, keyed by currency (e.g. { INR, AED }).
+          // Never summed across currencies.
+          revenue_mtd_by_currency: Record<string, number>;
         };
       };
       promote_to_admin: { Args: { target_user_id: string }; Returns: null };

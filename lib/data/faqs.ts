@@ -19,7 +19,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How does the time-zone thing work?",
-    a: "All times you see are in your local Australian time. Your teacher's calendar handles the conversion to IST automatically.",
+    a: "All times you see are in your local time. Your teacher's calendar handles the conversion to IST automatically.",
   },
   {
     q: "What if I have a back or knee injury?",

@@ -4,7 +4,10 @@
 
 import { cache } from "react";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { Teacher, Plan, PlanFeature, ClassCategory, Review } from "@/lib/supabase/types";
+import type { Teacher, Plan, PlanFeature, PlanPrice, ClassCategory, Review } from "@/lib/supabase/types";
+
+/** A plan plus its features and per-currency prices (AED/INR), for pricing UIs. */
+export type PlanWithFeatures = Plan & { features: PlanFeature[]; prices: PlanPrice[] };
 
 const isSupabaseConfigured = !!process.env.NEXT_PUBLIC_SUPABASE_URL && !!process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -101,17 +104,22 @@ const MOCK_CATEGORIES: ClassCategory[] = [
   { id: "c6", slug: "therapy",     name: "Pain Relief",  description: "One-on-one therapy yoga for back, neck, knees, and posture rehab.",  intensity: "moderate", icon_name: "stethoscope", cover_image_url: null, props_needed: ["mat", "blocks"],  sort_order: 6, is_active: true, created_at: "", updated_at: "" },
 ];
 
-// Session-credit packs (one-time, AUD) — mirrors supabase/migrations/0020 + seed.sql.
-// A pack = a price + N session-credits; the free 1:1 trial never spends credits.
-const MOCK_PLANS: (Plan & { features: PlanFeature[] })[] = [
+// Session-credit packs (one-time) — mirrors supabase/migrations/0020 + 0022 + seed.sql.
+// A pack = per-currency prices (AED/INR) + N session-credits; the free 1:1 trial
+// never spends credits. TODO(pricing): placeholder amounts — confirm with business.
+const MOCK_PLANS: PlanWithFeatures[] = [
   {
     id: "p5", slug: "pack-5", name: "5-Session Pack",
     description: "Five private 1:1 sessions — your flexible way in.",
-    price_aud_cents: 18000, billing_interval: "one_time", session_credits: 5,
+    price_base_cents: 750000, billing_interval: "one_time", session_credits: 5,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
     is_active: true, is_featured: false, sort_order: 1,
     created_at: "", updated_at: "",
+    prices: [
+      { id: "pp5-inr", plan_id: "p5", currency: "INR", amount_cents: 750000, created_at: "", updated_at: "" },
+      { id: "pp5-aed", plan_id: "p5", currency: "AED", amount_cents: 35000,  created_at: "", updated_at: "" },
+    ],
     features: [
       { id: "f1", plan_id: "p5", feature_text: "5 private 1:1 sessions",          is_included: true, sort_order: 1 },
       { id: "f2", plan_id: "p5", feature_text: "Book any teacher, any style",     is_included: true, sort_order: 2 },
@@ -123,11 +131,15 @@ const MOCK_PLANS: (Plan & { features: PlanFeature[] })[] = [
   {
     id: "p10", slug: "pack-10", name: "10-Session Pack",
     description: "Ten private 1:1 sessions — our best price per session.",
-    price_aud_cents: 34000, billing_interval: "one_time", session_credits: 10,
+    price_base_cents: 1300000, billing_interval: "one_time", session_credits: 10,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
     is_active: true, is_featured: true, sort_order: 2,
     created_at: "", updated_at: "",
+    prices: [
+      { id: "pp10-inr", plan_id: "p10", currency: "INR", amount_cents: 1300000, created_at: "", updated_at: "" },
+      { id: "pp10-aed", plan_id: "p10", currency: "AED", amount_cents: 60000,   created_at: "", updated_at: "" },
+    ],
     features: [
       { id: "f6",  plan_id: "p10", feature_text: "10 private 1:1 sessions",        is_included: true, sort_order: 1 },
       { id: "f7",  plan_id: "p10", feature_text: "Book any teacher, any style",    is_included: true, sort_order: 2 },
@@ -139,19 +151,19 @@ const MOCK_PLANS: (Plan & { features: PlanFeature[] })[] = [
 ];
 
 const MOCK_REVIEWS: (Review & { teacher_name?: string })[] = [
-  { id: "r1", customer_id: "", teacher_id: "t1", session_id: null, rating: 5, body: "After three weeks with Aarti my chronic back pain is gone. The 1:1 attention made all the difference.", is_featured: true, is_approved: true, display_name_override: "Sarah M.", display_location: "Sydney, AU", created_at: "", updated_at: "", teacher_name: "Aarti Deshmukh" },
-  { id: "r2", customer_id: "", teacher_id: "t2", session_id: null, rating: 5, body: "Rohan's flow classes are exactly the strength + mobility combo I needed. I look forward to every 7am session.", is_featured: true, is_approved: true, display_name_override: "James K.", display_location: "Melbourne, AU", created_at: "", updated_at: "", teacher_name: "Rohan Patel" },
-  { id: "r3", customer_id: "", teacher_id: "t3", session_id: null, rating: 5, body: "Meera made me feel safe during a difficult pregnancy. She actually understands the body.", is_featured: true, is_approved: true, display_name_override: "Priya N.", display_location: "Brisbane, AU", created_at: "", updated_at: "", teacher_name: "Meera Iyer" },
-  { id: "r4", customer_id: "", teacher_id: "t4", session_id: null, rating: 5, body: "Vikram's yin classes are the only thing that turns my brain off after long days. Worth every cent.", is_featured: true, is_approved: true, display_name_override: "Ethan B.", display_location: "Perth, AU", created_at: "", updated_at: "", teacher_name: "Vikram Singh" },
-  { id: "r5", customer_id: "", teacher_id: "t5", session_id: null, rating: 5, body: "I'm 64 and I haven't moved this well in 20 years. Priya is patient and brilliant.", is_featured: true, is_approved: true, display_name_override: "Margaret R.", display_location: "Adelaide, AU", created_at: "", updated_at: "", teacher_name: "Priya Nair" },
-  { id: "r6", customer_id: "", teacher_id: "t6", session_id: null, rating: 5, body: "Arjun made it possible for a total beginner like me to actually start. No judgment, lots of laughs.", is_featured: true, is_approved: true, display_name_override: "Chloe W.", display_location: "Hobart, AU", created_at: "", updated_at: "", teacher_name: "Arjun Rao" },
+  { id: "r1", customer_id: "", teacher_id: "t1", session_id: null, rating: 5, body: "After three weeks with Aarti my chronic back pain is gone. The 1:1 attention made all the difference.", is_featured: true, is_approved: true, display_name_override: "Sara M.", display_location: "Dubai, AE", created_at: "", updated_at: "", teacher_name: "Aarti Deshmukh" },
+  { id: "r2", customer_id: "", teacher_id: "t2", session_id: null, rating: 5, body: "Rohan's flow classes are exactly the strength + mobility combo I needed. I look forward to every 7am session.", is_featured: true, is_approved: true, display_name_override: "Karan K.", display_location: "Abu Dhabi, AE", created_at: "", updated_at: "", teacher_name: "Rohan Patel" },
+  { id: "r3", customer_id: "", teacher_id: "t3", session_id: null, rating: 5, body: "Meera made me feel safe during a difficult pregnancy. She actually understands the body.", is_featured: true, is_approved: true, display_name_override: "Priya N.", display_location: "Mumbai, IN", created_at: "", updated_at: "", teacher_name: "Meera Iyer" },
+  { id: "r4", customer_id: "", teacher_id: "t4", session_id: null, rating: 5, body: "Vikram's yin classes are the only thing that turns my brain off after long days. Worth every cent.", is_featured: true, is_approved: true, display_name_override: "Aisha B.", display_location: "Sharjah, AE", created_at: "", updated_at: "", teacher_name: "Vikram Singh" },
+  { id: "r5", customer_id: "", teacher_id: "t5", session_id: null, rating: 5, body: "I'm 64 and I haven't moved this well in 20 years. Priya is patient and brilliant.", is_featured: true, is_approved: true, display_name_override: "Lakshmi R.", display_location: "Bengaluru, IN", created_at: "", updated_at: "", teacher_name: "Priya Nair" },
+  { id: "r6", customer_id: "", teacher_id: "t6", session_id: null, rating: 5, body: "Arjun made it possible for a total beginner like me to actually start. No judgment, lots of laughs.", is_featured: true, is_approved: true, display_name_override: "Zara W.", display_location: "Delhi, IN", created_at: "", updated_at: "", teacher_name: "Arjun Rao" },
 ];
 
 const MOCK_SETTINGS: Record<string, unknown> = {
   "brand.name": "My Yoga Classes",
   "landing.hero_headline": "Find your free 1:1 yoga teacher — no credit card.",
   "landing.hero_subhead":
-    "A 60-minute private session, live on Google Meet — shown in your local Australian time. Pick your teacher, pick your time.",
+    "A 60-minute private session, live on Google Meet — shown in your local time. Pick your teacher, pick your time.",
   "landing.trust_count": "1,200+ reviews",
   "landing.trust_rating": "4.9",
   "landing.final_headline": "Your first session is on us.",
@@ -216,17 +228,20 @@ export const getClassCategories = cache(async (): Promise<ClassCategory[]> => {
   return data && data.length ? data : MOCK_CATEGORIES;
 });
 
-export async function getPlansWithFeatures(): Promise<(Plan & { features: PlanFeature[] })[]> {
+export async function getPlansWithFeatures(): Promise<PlanWithFeatures[]> {
   if (!isSupabaseConfigured) return MOCK_PLANS;
   const supabase = await createSupabaseServerClient();
   const { data: plans } = await supabase
     .from("plans").select("*").eq("is_active", true).order("sort_order");
   if (!plans || plans.length === 0) return MOCK_PLANS;
-  const { data: features } = await supabase
-    .from("plan_features").select("*").order("sort_order");
+  const [{ data: features }, { data: prices }] = await Promise.all([
+    supabase.from("plan_features").select("*").order("sort_order"),
+    supabase.from("plan_prices").select("*"),
+  ]);
   return plans.map((p) => ({
     ...p,
     features: features?.filter((f) => f.plan_id === p.id) ?? [],
+    prices: prices?.filter((pp) => pp.plan_id === p.id) ?? [],
   }));
 }
 

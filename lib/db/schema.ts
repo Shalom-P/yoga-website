@@ -46,7 +46,8 @@ export const billingIntervalEnum = pgEnum("billing_interval", [
 ]);
 export const discountTypeEnum = pgEnum("discount_type", [
   "percentage",
-  "fixed_aud_cents",
+  "fixed_aud_cents", // deprecated: kept because Postgres can't drop an enum value
+  "fixed_amount_cents",
 ]);
 export const subscriptionStatusEnum = pgEnum("subscription_status", [
   "pending",
@@ -62,7 +63,7 @@ export const profiles = pgTable("profiles", {
   email: text("email"),
   phone: text("phone"),
   avatar_url: text("avatar_url"),
-  timezone: text("timezone").notNull().default("Australia/Sydney"),
+  timezone: text("timezone").notNull().default("Asia/Kolkata"),
   role: userRoleEnum("role").notNull().default("customer"),
   experience_level: experienceLevelEnum("experience_level"),
   goals: text("goals").array(),
@@ -169,7 +170,9 @@ export const plans = pgTable("plans", {
   slug: text("slug").notNull().unique(),
   name: text("name").notNull(),
   description: text("description"),
-  price_aud_cents: integer("price_aud_cents").notNull(),
+  // Currency-neutral fallback price (smallest unit). Per-currency amounts live
+  // in plan_prices; this is the default when a currency row is missing.
+  price_base_cents: integer("price_base_cents").notNull(),
   billing_interval: billingIntervalEnum("billing_interval").notNull().default("monthly"),
   paypal_plan_id: text("paypal_plan_id"),
   included_sessions_per_month: integer("included_sessions_per_month"),
@@ -180,6 +183,21 @@ export const plans = pgTable("plans", {
   created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+export const planPrices = pgTable(
+  "plan_prices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    plan_id: uuid("plan_id").notNull(),
+    currency: text("currency").notNull(), // 'INR' | 'AED'
+    amount_cents: integer("amount_cents").notNull(),
+    created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => ({
+    planCurrency: uniqueIndex("plan_prices_plan_currency_uq").on(t.plan_id, t.currency),
+  })
+);
 
 export const planFeatures = pgTable("plan_features", {
   id: uuid("id").primaryKey().defaultRandom(),

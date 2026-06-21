@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth/guards";
 import { ProfileForm } from "@/components/dashboard/ProfileForm";
+import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 
 export default async function ProfilePage() {
   const { user, supabase } = await requireUser();
@@ -22,7 +23,7 @@ export default async function ProfilePage() {
           full_name: profile?.full_name ?? "",
           email: profile?.email ?? user.email ?? "",
           phone: profile?.phone ?? "",
-          timezone: profile?.timezone ?? "Australia/Sydney",
+          timezone: profile?.timezone ?? DEFAULT_CUSTOMER_TZ,
           experience_level: profile?.experience_level ?? "beginner",
           marketing_opt_in: profile?.marketing_opt_in ?? false,
         }}

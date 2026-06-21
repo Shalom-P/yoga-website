@@ -89,7 +89,7 @@ function EmailWrapper({ preview, children }: { preview: string; children: React.
           <Hr style={{ borderColor: brand.border, margin: 0 }} />
           <Section style={{ padding: "20px 40px" }}>
             <Text style={{ color: brand.muted, fontSize: "12px", margin: 0, textAlign: "center" }}>
-              {brand.name} · Yoga for every body, anywhere in Australia
+              {brand.name} · Yoga for every body, wherever you are
             </Text>
           </Section>
         </Container>

@@ -51,7 +51,7 @@ export function ContactForm() {
       >
         <p className="font-medium">Message sent.</p>
         <p className="mt-1 text-sm text-muted-foreground">
-          We typically reply within 1 business day (Australian time).
+          We typically reply within 1 business day (your local time).
         </p>
       </div>
     );

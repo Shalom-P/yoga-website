@@ -7,10 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { AU_TIMEZONES, detectBrowserTimezone, DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
+import { detectBrowserTimezone } from "@/lib/timezone";
 import { friendlyFormError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
 
@@ -24,11 +25,6 @@ const GOALS = [
   "Meditation / focus",
 ] as const;
 
-// clamp a detected timezone to the AU list, falling back to Sydney.
-function clampToAuTz(detected: string): string {
-  return AU_TIMEZONES.some((z) => z.id === detected) ? detected : DEFAULT_CUSTOMER_TZ;
-}
-
 export function OnboardingForm({
   initialFullName = "",
   next = "/dashboard/book",
@@ -40,8 +36,8 @@ export function OnboardingForm({
   // full name field state — prefilled from the profile (Google logins
   // already carry a name; email-OTP users start blank).
   const [fullName, setFullName] = useState(initialFullName);
-  // clamp detected timezone to the AU list
-  const [tz, setTz] = useState(() => clampToAuTz(detectBrowserTimezone()));
+  // default to the user's real detected timezone; they can change it below.
+  const [tz, setTz] = useState(() => detectBrowserTimezone());
   const [level, setLevel] = useState("beginner");
   const [goals, setGoals] = useState<string[]>([]);
   const [marketing, setMarketing] = useState(true);
@@ -134,20 +130,11 @@ export function OnboardingForm({
       <div>
         <LabelWithHint
           className="mb-2"
-          hint="Your local timezone — used to show class times in hours that make sense to you (not the teacher's IST)."
+          hint="Auto-detected from your device — used to show class times in hours that make sense to you (not the teacher's IST). Change it if it's wrong."
         >
           Your timezone
         </LabelWithHint>
-        <Select value={tz} onValueChange={(v) => v && setTz(v)}>
-          <SelectTrigger className="h-11 w-full"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {AU_TIMEZONES.map((z) => (
-              <SelectItem key={z.id} value={z.id}>
-                {z.label} ({z.id.split("/")[1]})
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <TimezoneSelect value={tz} onValueChange={setTz} />
       </div>
 
       <div>

@@ -147,7 +147,7 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
                   </span>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {new Date(c.created_at).toLocaleDateString("en-AU")}
+                  {new Date(c.created_at).toLocaleDateString("en-GB")}
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap">
                   <Button size="sm" variant="ghost" onClick={() => setCreditTarget(c)}>
