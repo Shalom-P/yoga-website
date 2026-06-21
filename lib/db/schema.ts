@@ -19,7 +19,7 @@ import {
   index,
 } from "drizzle-orm/pg-core";
 
-export const userRoleEnum = pgEnum("user_role", ["customer", "admin"]);
+export const userRoleEnum = pgEnum("user_role", ["customer", "admin", "teacher"]);
 export const experienceLevelEnum = pgEnum("experience_level", [
   "beginner",
   "intermediate",

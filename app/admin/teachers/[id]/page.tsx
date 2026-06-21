@@ -19,6 +19,17 @@ export default async function AdminTeacherDetail({
     .single();
   if (!teacher) notFound();
 
+  // If a login is linked, surface its email so the panel can show account status.
+  let linkedAccount: { email: string | null } | null = null;
+  if (teacher.profile_id) {
+    const { data: linked } = await supabase
+      .from("profiles")
+      .select("email")
+      .eq("id", teacher.profile_id)
+      .maybeSingle();
+    linkedAccount = { email: linked?.email ?? null };
+  }
+
   return (
     <div className="p-8 max-w-4xl">
       <Link
@@ -34,7 +45,7 @@ export default async function AdminTeacherDetail({
       <p className="mt-1 text-sm text-muted-foreground">ID: {teacher.id}</p>
 
       <div className="mt-6">
-        <TeacherEditPanel teacher={teacher} />
+        <TeacherEditPanel teacher={teacher} linkedAccount={linkedAccount} />
       </div>
 
       <div className="mt-6">
