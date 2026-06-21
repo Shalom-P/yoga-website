@@ -87,6 +87,12 @@ export type ClassCategory = {
   slug: string;
   name: string;
   description: string | null;
+  // Richer detail-page content (added in migration 0023). `helps_with` chips
+  // surface the problems a category supports; the rest fill out the detail page.
+  helps_with: string[];
+  long_description: string | null;
+  what_to_expect: string[];
+  who_for: string | null;
   intensity: IntensityLevel;
   icon_name: string | null;
   cover_image_url: string | null;

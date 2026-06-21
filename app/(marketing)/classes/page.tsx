@@ -6,7 +6,8 @@ import { getClassCategories } from "@/lib/data/landing";
 export const revalidate = 300;
 export const metadata = {
   title: "Class types",
-  description: "Hatha, Vinyasa, Yin, Restorative, Prenatal, Therapy — find your style.",
+  description:
+    "Diabetes, hypertension, prenatal, hormonal health, pain relief, mental health, weight loss, geriatric, kids — find the 1:1 yoga that fits what your body is working on.",
   alternates: { canonical: "/classes" },
 };
 
@@ -16,7 +17,7 @@ export default async function ClassesPage() {
     <>
       <PageHeader
         eyebrow="Classes"
-        title={<>Six paths to a <em>calmer, stronger</em> you.</>}
+        title={<>Yoga for whatever your <em>body is working on</em>.</>}
       />
       <ClassGrid categories={categories} />
       <FinalCTA headline="Try any class type — first one free." />

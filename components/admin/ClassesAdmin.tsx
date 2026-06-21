@@ -36,6 +36,10 @@ type Draft = {
   slug: string;
   name: string;
   description: string;
+  long_description: string;
+  helps_with: string;
+  what_to_expect: string;
+  who_for: string;
   intensity: IntensityLevel;
   icon_name: string;
   cover_image_url: string | null;
@@ -48,6 +52,10 @@ const EMPTY: Draft = {
   slug: "",
   name: "",
   description: "",
+  long_description: "",
+  helps_with: "",
+  what_to_expect: "",
+  who_for: "",
   intensity: "moderate",
   icon_name: "",
   cover_image_url: null,
@@ -58,6 +66,16 @@ const EMPTY: Draft = {
 
 function slugify(s: string) {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+}
+
+// helps_with / what_to_expect are stored as text[]. The textarea accepts one
+// item per line, or a comma-separated list on a single line. We split on
+// newlines when present so that what_to_expect bullets (which themselves
+// contain commas, e.g. "A short check-in, including any signs of a low") stay
+// intact; only a single-line entry is split on commas.
+function parseList(input: string): string[] {
+  const parts = input.includes("\n") ? input.split("\n") : input.split(",");
+  return parts.map((s) => s.trim()).filter(Boolean);
 }
 
 export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
@@ -78,6 +96,11 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
       slug: c.slug,
       name: c.name,
       description: c.description ?? "",
+      long_description: c.long_description ?? "",
+      // One item per line — keeps commas inside what_to_expect bullets intact.
+      helps_with: c.helps_with.join("\n"),
+      what_to_expect: c.what_to_expect.join("\n"),
+      who_for: c.who_for ?? "",
       intensity: c.intensity,
       icon_name: c.icon_name ?? "",
       cover_image_url: c.cover_image_url ?? null,
@@ -103,6 +126,10 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
       slug,
       name: draft.name,
       description: draft.description || null,
+      long_description: draft.long_description || null,
+      helps_with: parseList(draft.helps_with),
+      what_to_expect: parseList(draft.what_to_expect),
+      who_for: draft.who_for || null,
       intensity: draft.intensity,
       icon_name: draft.icon_name || null,
       cover_image_url: draft.cover_image_url,
@@ -207,7 +234,7 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             <div>
               <LabelWithHint
                 htmlFor="description"
-                hint="One-paragraph blurb shown on the class card and detail page."
+                hint="One-paragraph blurb shown on the class card and at the top of the detail page."
               >
                 Description
               </LabelWithHint>
@@ -215,6 +242,72 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
                 id="description"
                 value={draft.description}
                 onChange={(e) => setDraft({ ...draft, description: e.target.value })}
+                rows={2}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <LabelWithHint
+                htmlFor="long_description"
+                hint="Longer intro paragraph on the /classes/<slug> detail page. Keep claims safe: this practice supports/complements wellbeing alongside medical care — never say it cures, treats, or lowers a condition."
+              >
+                Long description (detail page)
+              </LabelWithHint>
+              <Textarea
+                id="long_description"
+                value={draft.long_description}
+                onChange={(e) => setDraft({ ...draft, long_description: e.target.value })}
+                rows={4}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <LabelWithHint
+                htmlFor="helps_with"
+                hint="Shown as 'What it can help with' chips on the detail page. One per line (or comma-separated on a single line). Frame as what the practice supports (e.g. 'Stress management', 'Better sleep') — avoid disease-claim wording."
+              >
+                Helps with (one per line)
+              </LabelWithHint>
+              <Textarea
+                id="helps_with"
+                value={draft.helps_with}
+                onChange={(e) => setDraft({ ...draft, helps_with: e.target.value })}
+                rows={4}
+                placeholder={"Relaxation\nBetter sleep\nStress management"}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <LabelWithHint
+                htmlFor="what_to_expect"
+                hint="Bullets under 'What to expect in a session' on the detail page. One per line — bullets may contain commas. Use these to encode safety guardrails (e.g. no breath-holding, no deep twists in pregnancy)."
+              >
+                What to expect (one per line)
+              </LabelWithHint>
+              <Textarea
+                id="what_to_expect"
+                value={draft.what_to_expect}
+                onChange={(e) => setDraft({ ...draft, what_to_expect: e.target.value })}
+                rows={5}
+                placeholder={"A short check-in on how you feel\nGentle, low-impact movement at your pace\nA calm wind-down to finish"}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div>
+              <LabelWithHint
+                htmlFor="who_for"
+                hint="Shown in the 'Who it's for' card on the detail page. Describe the audience and reinforce that this complements — and is not a substitute for — medical care."
+              >
+                Who it&apos;s for
+              </LabelWithHint>
+              <Textarea
+                id="who_for"
+                value={draft.who_for}
+                onChange={(e) => setDraft({ ...draft, who_for: e.target.value })}
                 rows={2}
                 className="mt-1.5"
               />

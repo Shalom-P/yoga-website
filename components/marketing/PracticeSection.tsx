@@ -5,28 +5,27 @@ import { HeartPulse, Flower2, type LucideIcon } from "lucide-react";
 import { StyleCards } from "@/components/marketing/ClassGrid";
 import type { ClassCategory } from "@/lib/supabase/types";
 
-// Conditions + life-stages our therapy-trained teachers work with. Plain strings
-// keep this easy to edit; the two groups become the two cards below.
+// The cards above are the broad areas (Diabetes, Hypertension, Prenatal,
+// Geriatric, Kids…). These two lists are the more SPECIFIC conditions a
+// yoga-therapy–trained teacher can shape a 1:1 around — deliberately chosen NOT
+// to repeat the card titles, so the panel adds depth instead of echoing them.
+// Plain strings keep this easy to edit; the two groups become the two cards below.
 const THERAPEUTIC = [
-  "Diabetes",
-  "Hypertension",
-  "PCOD",
+  "PCOD & PCOS",
   "Thyroid disorders",
   "Dyslipidemia",
   "Obesity",
   "Bronchial asthma",
   "Migraine & headaches",
-  "Stress",
-  "Anxiety, depression & PTSD",
-  "Pain relief",
+  "Sleep & insomnia",
   "Gut health — gastritis, IBS, IBD, constipation, indigestion",
 ];
 
 const LIFE_STAGE = [
-  "Peri-menopausal yoga",
-  "Prenatal yoga",
-  "Geriatric yoga",
-  "Kids yoga",
+  "Peri-menopausal & menopause",
+  "Teens & students",
+  "Desk & posture care",
+  "Workplace wellness",
 ];
 
 function ConditionCard({
@@ -89,13 +88,13 @@ export function PracticeSection({ categories }: { categories: ClassCategory[] })
           className="mx-auto mb-12 max-w-2xl text-center"
         >
           <div className="mb-3 text-xs font-medium uppercase tracking-[0.2em] text-primary">
-            What you can practise
+            What you can work on
           </div>
           <h2 className="text-3xl tracking-tight text-balance md:text-5xl">
-            Six styles. One mat. Whatever your body needs.
+            Yoga shaped around whatever your body needs.
           </h2>
           <p className="mt-4 text-muted-foreground text-pretty">
-            Pick a style for today — or let a yoga-therapy–trained teacher shape your
+            Pick an area for today — or let a yoga-therapy–trained teacher shape your
             private 1:1 around exactly what your body is working through.
           </p>
         </motion.div>
