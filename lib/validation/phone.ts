@@ -4,14 +4,14 @@ import {
   type CountryCode,
 } from "libphonenumber-js";
 
-// Numbers we issue/accept: +61 AU customers and +91 IN teachers. Used to scope
-// the country dropdown in <PhoneField> and to default new entries to Australia.
-export const PHONE_COUNTRIES: CountryCode[] = ["AU", "IN"];
-export const DEFAULT_PHONE_COUNTRY: CountryCode = "AU";
+// Numbers we issue/accept: +971 UAE customers and +91 India customers/teachers.
+// Used to scope the country dropdown in <PhoneField> and to default new entries.
+export const PHONE_COUNTRIES: CountryCode[] = ["AE", "IN"];
+export const DEFAULT_PHONE_COUNTRY: CountryCode = "AE";
 
 // One shared message so login, booking, and profile all say the same thing.
 export const PHONE_ERROR_MESSAGE =
-  "Enter a valid mobile number with country code, e.g. +61 4XX XXX XXX.";
+  "Enter a valid mobile number with country code, e.g. +971 5X XXX XXXX.";
 
 /**
  * True when `value` is a valid phone number. Accepts E.164 ("+61402281827") or a

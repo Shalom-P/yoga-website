@@ -7,7 +7,7 @@ import { addDays, addMinutes } from "date-fns";
 import { formatInTimeZone, fromZonedTime } from "date-fns-tz";
 import { Button } from "@/components/ui/button";
 import { useBrowserTz, useHasMounted } from "@/components/dashboard/local-time";
-import { isAustralianTimezone, OUTSIDE_AUSTRALIA_ERROR } from "@/lib/geo/australia";
+import { isServiceTimezone, OUTSIDE_SERVICE_AREA } from "@/lib/geo/region";
 
 type Availability = {
   day_of_week: number; // 0 = Sun..6 = Sat
@@ -31,7 +31,7 @@ type Props = {
   creditBalance: number;
   /** Teacher-TZ "yyyy-MM-dd" dates the teacher has blocked off (no bookings). */
   blockedDates?: string[];
-  /** Admins may book from any location; customers must be in Australia. */
+  /** Admins may book from any location; customers must be in the UAE or India. */
   isAdmin: boolean;
 };
 
@@ -95,18 +95,18 @@ export function TeacherSlotPicker({
   const router = useRouter();
   // Show slot times in the timezone the customer is actually in right now.
   const customerTz = useBrowserTz(customerTimezone);
-  // The SSR/first-paint customerTz is the stored (always-AU) fallback, so the
-  // real location isn't known until the client resolves it. Gate trial-eligible
-  // rendering on this to avoid flashing a bookable grid at out-of-AU users.
+  // The SSR/first-paint customerTz is the stored profile fallback, so the real
+  // location isn't known until the client resolves it. Gate trial-eligible
+  // rendering on this to avoid flashing a bookable grid at out-of-area users.
   const tzResolved = useHasMounted();
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
-  // Australia-only gate for the free 1:1 trial. Non-admins outside Australia
+  // Service-area gate for the free 1:1 trial. Non-admins outside the UAE/India
   // can't claim it (the server enforces this too). Paid bookings that spend
   // already-purchased credits are unaffected.
-  const outsideAustralia = !isAdmin && !isAustralianTimezone(customerTz);
-  const trialBlocked = outsideAustralia && freeTrialAvailable;
+  const outsideServiceArea = !isAdmin && !isServiceTimezone(customerTz);
+  const trialBlocked = outsideServiceArea && freeTrialAvailable;
 
   const grouped = useMemo(() => {
     const now = new Date();
@@ -126,7 +126,7 @@ export function TeacherSlotPicker({
 
   function onSlotClick(slot: Slot) {
     if (trialBlocked) {
-      setError(OUTSIDE_AUSTRALIA_ERROR);
+      setError(OUTSIDE_SERVICE_AREA);
       return;
     }
     if (isPaid && creditBalance <= 0) {
@@ -161,7 +161,7 @@ export function TeacherSlotPicker({
   }
 
   // For a trial-eligible non-admin, hold off on the slot grid until the real
-  // browser timezone resolves — otherwise an out-of-AU user sees a flash of
+  // browser timezone resolves — otherwise an out-of-area user sees a flash of
   // bookable slots before the banner. Admins and paid bookings are unaffected.
   if (!isAdmin && freeTrialAvailable && !tzResolved) {
     return (
@@ -171,18 +171,18 @@ export function TeacherSlotPicker({
     );
   }
 
-  // Outside Australia + free trial still unclaimed → nothing is bookable here.
-  // Show why instead of a slot grid the booking API would reject anyway.
+  // Outside the service area + free trial still unclaimed → nothing is bookable
+  // here. Show why instead of a slot grid the booking API would reject anyway.
   if (trialBlocked) {
     return (
       <div className="mt-10 rounded-2xl border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
         <p className="font-medium text-foreground">
-          The free 1:1 trial is available to customers in Australia.
+          The free 1:1 trial is available to customers in the UAE and India.
         </p>
         <p className="mt-1.5">
-          We detected your timezone as {customerTz}, which is outside Australia, so
-          we can&apos;t book a trial class for you right now. If this looks wrong,
-          check your device&apos;s time &amp; timezone settings.
+          We detected your timezone as {customerTz}, which is outside our service
+          area, so we can&apos;t book a trial class for you right now. If this looks
+          wrong, check your device&apos;s time &amp; timezone settings.
         </p>
       </div>
     );
@@ -222,8 +222,8 @@ export function TeacherSlotPicker({
             "That time has just passed — pick a slot at least 15 minutes from now."
           ) : error === "slot_unavailable" ? (
             "The teacher isn't available then anymore — pick another time."
-          ) : error === OUTSIDE_AUSTRALIA_ERROR ? (
-            "The free 1:1 trial is available to customers in Australia only."
+          ) : error === OUTSIDE_SERVICE_AREA ? (
+            "The free 1:1 trial is available to customers in the UAE and India only."
           ) : (
             "Couldn't book that slot. Please try again."
           )}

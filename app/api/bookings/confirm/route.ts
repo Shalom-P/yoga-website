@@ -6,11 +6,12 @@ import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
+import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import {
   canTransactFromRequest,
   countryFromHeaders,
-  OUTSIDE_AUSTRALIA_ERROR,
-} from "@/lib/geo/australia";
+  OUTSIDE_SERVICE_AREA,
+} from "@/lib/geo/region";
 
 // Reaches lib/google/calendar.ts (Vercel OIDC / @vercel/oidc) via
 // provisionSessionMeet — that dependency is Node-runtime only.
@@ -21,7 +22,7 @@ const schema = z.object({
   startAt: z.string().datetime({ offset: true }),
   durationMinutes: z.number().int().min(15).max(180).default(60),
   isFreeTrial: z.boolean().default(true),
-  // The booker's live browser timezone (IANA id), for the Australia-only
+  // The booker's live browser timezone (IANA id), for the service-area
   // free-trial gate below.
   clientTimezone: z.string().trim().min(1).max(64),
 });
@@ -86,9 +87,9 @@ export async function POST(req: Request) {
     .eq("id", user.id)
     .maybeSingle();
 
-  // Australia-only free-trial gate. Non-admin customers must be in an Australian
-  // timezone to claim the free 1:1; admins may book from anywhere. Paid bookings
-  // (spending already-purchased credits) are intentionally not gated here.
+  // Service-area free-trial gate. Non-admin customers must be in a served country
+  // (UAE or India) to claim the free 1:1; admins may book from anywhere. Paid
+  // bookings (spending already-purchased credits) are intentionally not gated here.
   if (
     parsed.data.isFreeTrial &&
     !canTransactFromRequest({
@@ -97,7 +98,7 @@ export async function POST(req: Request) {
       timezone: parsed.data.clientTimezone,
     })
   ) {
-    return NextResponse.json({ error: OUTSIDE_AUSTRALIA_ERROR }, { status: 403 });
+    return NextResponse.json({ error: OUTSIDE_SERVICE_AREA }, { status: 403 });
   }
 
   // Paid (non-trial) sessions spend one session-credit, reserved after the slot
@@ -210,7 +211,7 @@ export async function POST(req: Request) {
       to: user.email,
       teacherName: teacher.display_name,
       startUtc: start.toISOString(),
-      customerTz: bookerProfile?.timezone ?? "Australia/Sydney",
+      customerTz: bookerProfile?.timezone ?? DEFAULT_CUSTOMER_TZ,
       meetLink,
     });
   }

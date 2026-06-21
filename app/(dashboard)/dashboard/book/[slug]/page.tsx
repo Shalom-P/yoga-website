@@ -3,6 +3,7 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/guards";
 import { TeacherSlotPicker } from "@/components/dashboard/TeacherSlotPicker";
 import { TeacherIntroVideo } from "@/components/shared/TeacherIntroVideo";
+import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 
 export default async function TeacherBookingPage({
   params,
@@ -85,7 +86,7 @@ export default async function TeacherBookingPage({
       <TeacherSlotPicker
         teacherId={teacher.id}
         teacherTimezone={teacher.timezone ?? "Asia/Kolkata"}
-        customerTimezone={profile?.timezone ?? "Australia/Sydney"}
+        customerTimezone={profile?.timezone ?? DEFAULT_CUSTOMER_TZ}
         availability={availability ?? []}
         freeTrialAvailable={freeTrialAvailable}
         creditBalance={creditBalance}

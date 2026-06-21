@@ -1,16 +1,9 @@
 import { format, formatInTimeZone, toDate } from "date-fns-tz";
 
-export const AU_TIMEZONES = [
-  { id: "Australia/Sydney",    label: "Sydney" },
-  { id: "Australia/Melbourne", label: "Melbourne" },
-  { id: "Australia/Brisbane",  label: "Brisbane" },
-  { id: "Australia/Perth",     label: "Perth" },
-  { id: "Australia/Adelaide",  label: "Adelaide" },
-  { id: "Australia/Hobart",    label: "Hobart" },
-  { id: "Australia/Darwin",    label: "Darwin" },
-] as const;
-
-export const DEFAULT_CUSTOMER_TZ = "Australia/Sydney";
+// Default fallback only — the onboarding/profile picker stores the customer's
+// real device-detected IANA zone. India is the larger of the two served markets
+// (UAE + India) and shares this zone with the teachers, so it's a safe default.
+export const DEFAULT_CUSTOMER_TZ = "Asia/Kolkata";
 export const TEACHER_TZ = "Asia/Kolkata";
 
 /**
@@ -30,12 +23,10 @@ export function getTimezoneOptions(): { value: string; label: string }[] {
   if (!ids.length) {
     ids = Array.from(
       new Set([
-        ...AU_TIMEZONES.map((z) => z.id),
-        TEACHER_TZ,
-        "UTC",
-        "Pacific/Auckland",
-        "Asia/Singapore",
+        "Asia/Kolkata",
         "Asia/Dubai",
+        "UTC",
+        "Asia/Singapore",
         "Europe/London",
         "America/New_York",
         "America/Los_Angeles",

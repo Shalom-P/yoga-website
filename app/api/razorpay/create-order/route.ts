@@ -9,8 +9,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import {
   canTransactFromRequest,
   countryFromHeaders,
-  OUTSIDE_AUSTRALIA_ERROR,
-} from "@/lib/geo/australia";
+  resolveRegion,
+  OUTSIDE_SERVICE_AREA,
+} from "@/lib/geo/region";
 
 // The Razorpay SDK requires the Node runtime.
 export const runtime = "nodejs";
@@ -30,8 +31,8 @@ export const runtime = "nodejs";
 
 const bodySchema = z.object({
   planSlug: z.string().trim().min(1).max(64),
-  // The visitor's live browser timezone (IANA id). Used only for the
-  // Australia-only purchase gate below — the price is never client-supplied.
+  // The visitor's live browser timezone (IANA id). Used for the service-area
+  // purchase gate and as a currency fallback — the price is never client-supplied.
   clientTimezone: z.string().trim().min(1).max(64),
 });
 
@@ -64,32 +65,37 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
-  // Australia-only purchase gate. Non-admin customers must be in an Australian
-  // timezone to buy a pack; admins may operate from anywhere. This is the single
-  // choke point for purchases — no order means no Checkout and no fulfilment.
+  // Service-area purchase gate. Non-admin customers must be in a served country
+  // (UAE or India) to buy a pack; admins may operate from anywhere. This is the
+  // single choke point for purchases — no order means no Checkout and no fulfilment.
   const { data: profile } = await supabase
     .from("profiles")
     .select("role")
     .eq("id", user.id)
     .maybeSingle();
+  const country = countryFromHeaders(req.headers);
   if (
     !canTransactFromRequest({
       isAdmin: profile?.role === "admin",
-      country: countryFromHeaders(req.headers),
+      country,
       timezone: parsed.data.clientTimezone,
     })
   ) {
     return Response.json(
       {
-        error: OUTSIDE_AUSTRALIA_ERROR,
-        message: "Session packs can only be purchased from within Australia.",
+        error: OUTSIDE_SERVICE_AREA,
+        message: "Session packs can only be purchased from within the UAE or India.",
       },
       { status: 403 },
     );
   }
 
+  // Resolve the billing currency from the same trusted signal as the gate
+  // (GeoIP country wins; browser timezone is the local/off-platform fallback).
+  const { currency } = resolveRegion({ country, timezone: parsed.data.clientTimezone });
+
   // Trusted price lookup — reject anything that isn't an active plan.
-  const pack = await resolvePackBySlug(parsed.data.planSlug);
+  const pack = await resolvePackBySlug(parsed.data.planSlug, currency);
   if (!pack) {
     return Response.json({ error: "Unknown plan" }, { status: 400 });
   }
@@ -100,7 +106,12 @@ export async function POST(req: Request): Promise<Response> {
       currency: pack.currency,
       // Razorpay caps receipt at 40 chars.
       receipt: `plan_${pack.slug}_${Date.now()}`.slice(0, 40),
-      notes: { customerId: user.id, planSlug: pack.slug, planId: pack.planId },
+      notes: {
+        customerId: user.id,
+        planSlug: pack.slug,
+        planId: pack.planId,
+        currency: pack.currency,
+      },
     });
 
     return Response.json({

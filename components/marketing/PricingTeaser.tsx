@@ -8,18 +8,32 @@ import { Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
-import { formatAud } from "@/lib/i18n/money";
+import { formatMoney } from "@/lib/i18n/money";
+import { currencyForTimezone, DEFAULT_CURRENCY, type Currency } from "@/lib/geo/region";
+import { detectBrowserTimezone } from "@/lib/timezone";
+import { useHasMounted } from "@/components/dashboard/local-time";
 import { track } from "@/lib/analytics/events";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { startRazorpayCheckout } from "@/components/shared/razorpay-checkout";
 import { toast } from "sonner";
-import type { Plan, PlanFeature } from "@/lib/supabase/types";
-
-type PlanWithFeatures = Plan & { features: PlanFeature[] };
+import type { PlanWithFeatures } from "@/lib/data/landing";
 
 export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  // The charged currency is resolved server-side at create-order (GeoIP-first).
+  // For *display* we best-effort detect from the browser timezone. Computed
+  // during render after mount so SSR + first client render both use the default
+  // (INR) — no hydration mismatch — then it re-renders with the detected currency.
+  const mounted = useHasMounted();
+  const currency: Currency = mounted
+    ? currencyForTimezone(detectBrowserTimezone()) ?? DEFAULT_CURRENCY
+    : DEFAULT_CURRENCY;
+
+  // Pick a plan's price in the active currency, falling back to its base price.
+  function planAmount(p: PlanWithFeatures): number {
+    return p.prices.find((pp) => pp.currency === currency)?.amount_cents ?? p.price_base_cents;
+  }
 
   async function startBuy(planSlug: string) {
     setPending(planSlug);
@@ -74,7 +88,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
             Session packs
           </div>
           <h2 className="text-3xl md:text-5xl tracking-tight text-balance max-w-2xl mx-auto">
-            Pay as you go. No lock-ins. AUD.
+            Pay as you go. No lock-ins.
           </h2>
           <p className="mt-4 text-muted-foreground">
             Your free 1:1 trial comes first — buy a pack of sessions when you&apos;re ready.
@@ -113,7 +127,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
               </div>
               <div className="mt-6">
                 <div className="text-4xl font-[family-name:var(--font-heading)]">
-                  {formatAud(p.price_aud_cents)}
+                  {formatMoney(planAmount(p), currency)}
                 </div>
                 <div className="mt-1 text-sm text-muted-foreground">
                   {p.session_credits} session{p.session_credits === 1 ? "" : "s"} included
@@ -156,8 +170,8 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
         </motion.div>
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
-          All prices in AUD inc. GST. One-time payment — no subscription. Available to customers
-          in Australia.{" "}
+          Prices shown in {currency}. One-time payment — no subscription. Available to customers
+          in the UAE and India.{" "}
           <Link href="/faq" className="text-primary hover:underline">
             Read the FAQ →
           </Link>

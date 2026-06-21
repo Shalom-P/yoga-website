@@ -25,7 +25,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { formatAud } from "@/lib/i18n/money";
 import { toast } from "sonner";
 import type { DiscountCode, DiscountType, Plan } from "@/lib/supabase/types";
 
@@ -33,7 +32,7 @@ type Draft = {
   id?: string;
   code: string;
   discount_type: DiscountType;
-  // Value as displayed: percent (0–100) or AUD dollars (decimals)
+  // Value as displayed: percent (0–100) or a fixed amount in major units (decimals)
   discount_value_display: string;
   applies_to_all: boolean;
   applies_to_plan_ids: string[];
@@ -76,7 +75,7 @@ function toDraft(c: DiscountCode): Draft {
 function renderValue(c: DiscountCode) {
   return c.discount_type === "percentage"
     ? `${c.discount_value}% off`
-    : `${formatAud(c.discount_value)} off`;
+    : `${(c.discount_value / 100).toFixed(2)} off`;
 }
 
 export function DiscountsAdmin({
@@ -192,7 +191,7 @@ export function DiscountsAdmin({
                     {c.max_uses !== null && ` / ${c.max_uses}`}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {c.valid_until ? new Date(c.valid_until).toLocaleDateString("en-AU") : "—"}
+                    {c.valid_until ? new Date(c.valid_until).toLocaleDateString("en-GB") : "—"}
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={c.is_active ? "secondary" : "outline"}>
@@ -238,7 +237,7 @@ export function DiscountsAdmin({
                 />
               </div>
               <div>
-                <LabelWithHint hint="Percentage subtracts from the plan price; Fixed subtracts an AUD amount.">
+                <LabelWithHint hint="Percentage subtracts from the plan price; Fixed subtracts a flat amount.">
                   Type
                 </LabelWithHint>
                 <Select
@@ -252,7 +251,7 @@ export function DiscountsAdmin({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="percentage">Percentage</SelectItem>
-                    <SelectItem value="fixed_aud_cents">Fixed AUD amount</SelectItem>
+                    <SelectItem value="fixed_amount_cents">Fixed amount</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -265,10 +264,10 @@ export function DiscountsAdmin({
                   hint={
                     draft.discount_type === "percentage"
                       ? "Percent off the purchase amount. Not yet applied to one-time checkout."
-                      : "Dollar amount off the first billing cycle, in AUD. Final price is floored at AUD 1.00."
+                      : "Flat amount off, in the purchase currency's major units. Not yet applied to one-time checkout."
                   }
                 >
-                  Value {draft.discount_type === "percentage" ? "(0–100 %)" : "(AUD)"}
+                  Value {draft.discount_type === "percentage" ? "(0–100 %)" : "(amount)"}
                 </LabelWithHint>
                 <Input
                   id="value"

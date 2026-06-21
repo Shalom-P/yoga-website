@@ -2,7 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/guards";
 import { Users, Calendar, TrendingUp, Video, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatAud } from "@/lib/i18n/money";
+import { formatMoney } from "@/lib/i18n/money";
 import { formatCustomerTime, formatInTz, tzShort, DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 import type { BookingStatus } from "@/lib/supabase/types";
@@ -10,8 +10,8 @@ import type { BookingStatus } from "@/lib/supabase/types";
 type Kpis = {
   signups_today: number;
   trials_today: number;
-  paid_active_subs: number;
-  mrr_aud_cents: number;
+  // Month-to-date completed revenue keyed by currency, e.g. { INR: 750000, AED: 35000 }.
+  revenue_mtd_by_currency: Record<string, number>;
 };
 
 type UpcomingSession = {
@@ -96,18 +96,18 @@ export default async function AdminDashboard() {
       note: "free 1:1s booked",
     },
     {
-      label: "Active subscriptions",
-      value: kpis ? String(kpis.paid_active_subs) : "—",
+      label: "Revenue MTD (INR)",
+      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.INR ?? 0, "INR") : "—",
       icon: TrendingUp,
-      highlight: false,
-      note: "paying members",
+      highlight: true,
+      note: "India, this month",
     },
     {
-      label: "MRR (AUD)",
-      value: kpis ? formatAud(kpis.mrr_aud_cents) : "—",
+      label: "Revenue MTD (AED)",
+      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.AED ?? 0, "AED") : "—",
       icon: Video,
       highlight: true,
-      note: "recurring revenue",
+      note: "UAE, this month",
     },
   ];
 

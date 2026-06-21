@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ArrowRight, Video, Calendar, Sparkles } from "lucide-react";
+import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/guards";
 import { LocalTime, LocalTzName } from "@/components/dashboard/local-time";
@@ -32,7 +33,7 @@ export default async function DashboardHome() {
   ]);
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
-  const timezone = profile?.timezone ?? "Australia/Sydney";
+  const timezone = profile?.timezone ?? DEFAULT_CUSTOMER_TZ;
 
   // Ordering by a joined column isn't reliable in PostgREST for to-one embeds,
   // so filter to future sessions and pick the earliest in JS. A customer never

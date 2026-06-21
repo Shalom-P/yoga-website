@@ -70,8 +70,10 @@ export async function fulfillRazorpayPayment(
         razorpay_payment_id: paymentId,
         razorpay_order_id: orderId,
         customer_id: customerId,
-        amount_aud_cents: Number(payment.amount),
-        currency: payment.currency ?? "AUD",
+        amount_cents: Number(payment.amount),
+        // Razorpay reports the captured currency (AED/INR); the column has no
+        // default, so always stamp it. INR fallback is defensive only.
+        currency: payment.currency ?? "INR",
         status: "completed",
         paid_at: new Date().toISOString(),
       },

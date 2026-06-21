@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
+import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { Button } from "@/components/ui/button";
 import { BookingsList } from "@/components/dashboard/BookingsList";
 import { LocalTzLabel } from "@/components/dashboard/local-time";
@@ -43,7 +44,7 @@ export default async function BookingsPage({
   ]);
 
   const rows: Row[] = bookings ?? [];
-  const timezone = profile?.timezone ?? "Australia/Sydney";
+  const timezone = profile?.timezone ?? DEFAULT_CUSTOMER_TZ;
   const now = new Date().getTime();
   const upcomingCount = rows.filter(
     (r) => r.session && new Date(r.session.start_at).getTime() > now && r.status !== "cancelled"
