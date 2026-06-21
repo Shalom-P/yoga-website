@@ -48,7 +48,8 @@ export async function updateSession(req: NextRequest) {
   const path = req.nextUrl.pathname;
   const isAdminArea = path.startsWith("/admin");
   const isTeacherArea = path.startsWith("/teacher");
-  const isAuthArea = path.startsWith("/dashboard") || isAdminArea || isTeacherArea;
+  const isDashboardArea = path.startsWith("/dashboard");
+  const isAuthArea = isDashboardArea || isAdminArea || isTeacherArea;
 
   if (isAuthArea && !user) {
     const url = req.nextUrl.clone();
@@ -81,7 +82,7 @@ export async function updateSession(req: NextRequest) {
     );
   }
 
-  if ((isAdminArea || isTeacherArea) && user) {
+  if ((isAdminArea || isTeacherArea || isDashboardArea) && user) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
@@ -94,6 +95,11 @@ export async function updateSession(req: NextRequest) {
     if (isTeacherArea && role !== "teacher") {
       // Admins manage teachers from /admin; everyone else is a customer.
       return makeRedirect(new URL(role === "admin" ? "/admin" : "/dashboard", req.url));
+    }
+    if (isDashboardArea && role === "teacher") {
+      // The customer dashboard isn't a teacher's home — keep them out of the
+      // booking flow and on their own surface.
+      return makeRedirect(new URL("/teacher", req.url));
     }
   }
 

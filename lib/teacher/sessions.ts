@@ -6,10 +6,10 @@ import type { MeetStatus, SessionStatus } from "@/lib/supabase/types";
 // service-role client (gated by requireTeacher + an explicit teacher_id filter):
 // a teacher's own token can read their sessions/bookings via the 0025 RLS, but
 // NOT the customer's profile row (profiles is self/admin-only), and the teacher
-// needs the student's name + timezone to run the class.
+// needs the student's name + timezone to run the class. We deliberately do NOT
+// pull the student's email — name + timezone is all the schedule UI needs.
 export type TeacherSessionStudent = {
   full_name: string | null;
-  email: string | null;
   timezone: string;
 };
 
@@ -32,7 +32,7 @@ export async function getTeacherSessions(teacherId: string): Promise<TeacherSess
     .select(
       `id, start_at, end_at, status, meet_link, meet_status, is_free_trial,
        class_category:class_categories(name),
-       bookings(status, customer:profiles(full_name, email, timezone))`
+       bookings(status, customer:profiles(full_name, timezone))`
     )
     .eq("teacher_id", teacherId)
     .neq("status", "cancelled")
@@ -55,12 +55,16 @@ export async function getTeacherSessions(teacherId: string): Promise<TeacherSess
   }));
 }
 
-/** Split into upcoming (now or later) and past, newest-first for past. */
+/**
+ * Split into upcoming and past, newest-first for past. The boundary is the
+ * session's END time, so a session that's currently in progress (started, not yet
+ * ended) stays in "upcoming" and keeps its Join button instead of dropping to past.
+ */
 export function splitByTime(rows: TeacherSessionRow[], nowMs: number) {
   const upcoming: TeacherSessionRow[] = [];
   const past: TeacherSessionRow[] = [];
   for (const r of rows) {
-    if (new Date(r.start_at).getTime() >= nowMs) upcoming.push(r);
+    if (new Date(r.end_at).getTime() >= nowMs) upcoming.push(r);
     else past.push(r);
   }
   past.reverse();
