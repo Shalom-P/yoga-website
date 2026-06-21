@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import type { UserRole } from "@/lib/supabase/types";
 
 type Row = {
   id: string;
@@ -22,7 +23,7 @@ type Row = {
   email: string | null;
   phone: string | null;
   timezone: string;
-  role: "customer" | "admin";
+  role: UserRole;
   created_at: string;
   experience_level: "beginner" | "intermediate" | "advanced" | null;
   goals: string[] | null;

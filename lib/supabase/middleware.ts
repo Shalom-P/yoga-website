@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
+import { isOnboardingPath, postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import type { Database } from "@/lib/supabase/types";
 
 export async function updateSession(req: NextRequest) {
@@ -46,8 +46,9 @@ export async function updateSession(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = req.nextUrl.pathname;
-  const isAuthArea = path.startsWith("/dashboard") || path.startsWith("/admin");
   const isAdminArea = path.startsWith("/admin");
+  const isTeacherArea = path.startsWith("/teacher");
+  const isAuthArea = path.startsWith("/dashboard") || isAdminArea || isTeacherArea;
 
   if (isAuthArea && !user) {
     const url = req.nextUrl.clone();
@@ -56,29 +57,43 @@ export async function updateSession(req: NextRequest) {
     return makeRedirect(url);
   }
 
+  // Where a teacher should land when they hit a default destination (no useful
+  // ?next=). Their home is /teacher, not the customer /dashboard or /onboarding.
+  const teacherTarget = (next: string) =>
+    next === "/dashboard" || isOnboardingPath(next) ? "/teacher" : next;
+
   // Signed-in users have no business on /login: send them to their destination,
-  // routing half-onboarded ones through /onboarding first. Living here (not in
-  // the page) keeps /login statically prerenderable for the logged-out majority.
+  // routing half-onboarded customers through /onboarding first and teachers to
+  // their own area. Living here (not in the page) keeps /login statically
+  // prerenderable for the logged-out majority.
   if (path === "/login" && user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("experience_level")
+      .select("role, experience_level")
       .eq("id", user.id)
       .maybeSingle();
     const next = safeNext(req.nextUrl.searchParams.get("next"));
+    if (profile?.role === "teacher") {
+      return makeRedirect(new URL(teacherTarget(next), req.url));
+    }
     return makeRedirect(
       new URL(postAuthTarget(next, Boolean(profile?.experience_level)), req.url)
     );
   }
 
-  if (isAdminArea && user) {
+  if ((isAdminArea || isTeacherArea) && user) {
     const { data: profile } = await supabase
       .from("profiles")
       .select("role")
       .eq("id", user.id)
       .single();
-    if (profile?.role !== "admin") {
-      return makeRedirect(new URL("/", req.url));
+    const role = profile?.role;
+    if (isAdminArea && role !== "admin") {
+      return makeRedirect(new URL(role === "teacher" ? "/teacher" : "/", req.url));
+    }
+    if (isTeacherArea && role !== "teacher") {
+      // Admins manage teachers from /admin; everyone else is a customer.
+      return makeRedirect(new URL(role === "admin" ? "/admin" : "/dashboard", req.url));
     }
   }
 

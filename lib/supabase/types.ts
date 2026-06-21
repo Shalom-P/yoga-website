@@ -10,7 +10,7 @@
 // (e.g. `bookings.select("session:sessions(...)")`) to a real row type instead of an
 // error type — keep them in sync with the migrations.
 
-export type UserRole = "customer" | "admin";
+export type UserRole = "customer" | "admin" | "teacher";
 export type ExperienceLevel = "beginner" | "intermediate" | "advanced";
 export type IntensityLevel = "gentle" | "moderate" | "intense";
 export type SessionStatus = "scheduled" | "live" | "completed" | "cancelled";
@@ -393,6 +393,15 @@ export type Database = {
       };
       promote_to_admin: { Args: { target_user_id: string }; Returns: null };
       demote_from_admin: { Args: { target_user_id: string }; Returns: null };
+      promote_to_teacher: {
+        Args: {
+          target_user_id: string;
+          target_teacher_id: string;
+          acting_admin_id?: string | null;
+        };
+        Returns: null;
+      };
+      demote_from_teacher: { Args: { target_user_id: string }; Returns: null };
       is_admin: { Args: { uid: string }; Returns: boolean };
       apply_discount_to_subscription: { Args: { p_subscription_id: string }; Returns: null };
       subscribe_newsletter: { Args: { p_email: string; p_source: string }; Returns: null };
