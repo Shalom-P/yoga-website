@@ -8,8 +8,8 @@ import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { AU_TIMEZONES } from "@/lib/timezone";
 import { toE164, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
 import { friendlyFormError } from "@/lib/ui/errors";
 import { toast } from "sonner";
@@ -104,14 +104,9 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         <LabelWithHint hint="Your local timezone. Drives the times shown on bookings, reminders, and the slot picker.">
           Timezone
         </LabelWithHint>
-        <Select value={state.timezone} onValueChange={(v) => v && set("timezone", v)}>
-          <SelectTrigger className="mt-1.5 h-11 w-full"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {AU_TIMEZONES.map((z) => (
-              <SelectItem key={z.id} value={z.id}>{z.label}</SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="mt-1.5">
+          <TimezoneSelect value={state.timezone} onValueChange={(v) => set("timezone", v)} />
+        </div>
       </div>
       <div>
         <LabelWithHint hint="Helps teachers tailor cues. You can change this any time.">

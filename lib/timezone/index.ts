@@ -13,6 +13,38 @@ export const AU_TIMEZONES = [
 export const DEFAULT_CUSTOMER_TZ = "Australia/Sydney";
 export const TEACHER_TZ = "Asia/Kolkata";
 
+/**
+ * Full IANA timezone list for the picker, as `{ value, label }` (the shape
+ * base-ui's Combobox auto-handles). `value` is the IANA id; `label` spaces the
+ * underscores for readability and still contains the id so search matches it.
+ * Falls back to a curated worldwide set on the rare runtime without
+ * `Intl.supportedValuesOf`, so the picker is never empty.
+ */
+export function getTimezoneOptions(): { value: string; label: string }[] {
+  let ids: string[] = [];
+  try {
+    ids = Intl.supportedValuesOf?.("timeZone") ?? [];
+  } catch {
+    ids = [];
+  }
+  if (!ids.length) {
+    ids = Array.from(
+      new Set([
+        ...AU_TIMEZONES.map((z) => z.id),
+        TEACHER_TZ,
+        "UTC",
+        "Pacific/Auckland",
+        "Asia/Singapore",
+        "Asia/Dubai",
+        "Europe/London",
+        "America/New_York",
+        "America/Los_Angeles",
+      ])
+    );
+  }
+  return ids.map((id) => ({ value: id, label: id.replace(/_/g, " ") }));
+}
+
 /** Format a UTC timestamp in a given IANA timezone. */
 export function formatInTz(
   isoOrDate: string | Date,
