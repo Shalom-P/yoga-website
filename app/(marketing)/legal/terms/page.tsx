@@ -5,7 +5,7 @@ import Link from "next/link";
 export const metadata = {
   title: "Terms of service — My Yoga Classes",
   description:
-    "Terms governing your use of myyogaclasses.fit, including session packs, bookings, cancellation, and your rights under Australian Consumer Law.",
+    "Terms governing your use of myyogaclasses.fit, including session packs, bookings, cancellation, and your consumer rights under UAE and Indian law.",
   alternates: { canonical: "/legal/terms" },
 };
 
@@ -16,7 +16,13 @@ export default function TermsPage() {
         <h1 className="text-[clamp(2.25rem,4vw,3rem)] leading-[1.1] tracking-tight">
           Terms of service
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 7 June 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 21 June 2026</p>
+
+        <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
+          <strong>Pending legal review.</strong> This is a good-faith draft for a service
+          operating across the UAE and India. It has not yet been reviewed by a qualified lawyer
+          in either jurisdiction and must be verified before launch.
+        </div>
 
         <div className="mt-10 space-y-10 text-foreground/85 text-pretty">
 
@@ -27,17 +33,18 @@ export default function TermsPage() {
               These Terms of Service (“<strong>Terms</strong>”) govern your access to and use
               of <strong>myyogaclasses.fit</strong> and any related services
               (collectively, the “<strong>Service</strong>”) operated by My Yoga Classes
-              (ABN to be inserted, “<strong>we</strong>”, “<strong>us</strong>”,
-              “<strong>our</strong>”).
+              (registration / trade-licence details to be inserted, “<strong>we</strong>”,
+              “<strong>us</strong>”, “<strong>our</strong>”).
             </p>
             <p>
               By creating an account or using the Service you agree to be bound by these Terms.
               If you do not agree, please do not use the Service.
             </p>
             <p>
-              <strong>Nothing in these Terms limits or excludes any rights you have under the{" "}
-              Australian Consumer Law (Schedule 2 of the Competition and Consumer Act 2010
-              (Cth)) or other applicable Australian law that cannot be excluded by agreement.</strong>
+              <strong>Nothing in these Terms limits or excludes any rights you have under
+              mandatory consumer-protection law in your country of residence — including the UAE
+              Consumer Protection Law (Federal Law No. 15 of 2020) and India&apos;s Consumer
+              Protection Act 2019 — that cannot be excluded by agreement.</strong>
             </p>
           </section>
 
@@ -45,9 +52,10 @@ export default function TermsPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">2. Service description</h2>
             <p>
-              My Yoga Classes is an online platform connecting students based in Australia with
-              qualified yoga teachers based in India. Sessions are delivered live via Google
-              Meet on a one-to-one basis, paid for with your free trial or a session pack.
+              My Yoga Classes is an online platform connecting students in the United Arab
+              Emirates and India with qualified yoga teachers based in India. Sessions are
+              delivered live via Google Meet on a one-to-one basis, paid for with your free trial
+              or a session pack.
             </p>
             <p>
               We act as the platform operator and are responsible for scheduling, billing, and
@@ -114,8 +122,8 @@ export default function TermsPage() {
             </h2>
             <p>
               Paid access is sold as <strong>one-time session packs</strong>, priced in{" "}
-              <strong>Australian Dollars (AUD)</strong> and paid via Razorpay. There is no
-              subscription and no automatic recurring charge.
+              <strong>UAE Dirhams (AED) or Indian Rupees (INR) depending on your region</strong>{" "}
+              and paid via Razorpay. There is no subscription and no automatic recurring charge.
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
@@ -123,8 +131,8 @@ export default function TermsPage() {
                 class you book uses one credit. You are charged once, at the time of purchase.
               </li>
               <li>
-                Prices are displayed inclusive of any applicable GST. We will notify you before
-                any change to pack pricing takes effect.
+                Prices are displayed inclusive of any applicable taxes (such as UAE VAT or India
+                GST). We will notify you before any change to pack pricing takes effect.
               </li>
               <li>
                 Credits are personal to you, may not be transferred to another person, and do
@@ -193,8 +201,8 @@ export default function TermsPage() {
             <h2 className="text-xl font-semibold text-foreground">8. Intellectual property</h2>
             <p>
               All content on myyogaclasses.fit — including text, graphics, logos, teacher
-              profiles, and software — is owned by or licensed to us and is protected by
-              Australian and international intellectual property laws. You may not reproduce,
+              profiles, and software — is owned by or licensed to us and is protected by UAE,
+              Indian, and international intellectual property laws. You may not reproduce,
               distribute, or create derivative works without our prior written consent.
             </p>
             <p>
@@ -236,32 +244,37 @@ export default function TermsPage() {
             <p>
               <strong>
                 Nothing in this clause excludes or limits any liability that cannot be excluded
-                or limited under the Australian Consumer Law or any other applicable law,
-                including the consumer guarantees set out in the Australian Consumer Law.
+                or limited under mandatory consumer-protection law in your country of residence,
+                including the UAE Consumer Protection Law and India&apos;s Consumer Protection
+                Act 2019.
               </strong>
             </p>
           </section>
 
-          {/* 11. ACL rights */}
+          {/* 11. Consumer rights */}
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">
-              11. Australian Consumer Law rights
+              11. Your consumer rights
             </h2>
             <p>
-              Our services come with guarantees that cannot be excluded under the Australian
-              Consumer Law. For major failures with the service, you are entitled to:
+              Our services come with consumer guarantees that cannot be excluded under the
+              mandatory consumer-protection law that applies to you — including the{" "}
+              <strong>UAE Consumer Protection Law (Federal Law No. 15 of 2020)</strong> and its
+              implementing regulations for customers in the UAE, and the{" "}
+              <strong>Consumer Protection Act 2019</strong> for customers in India. Where a
+              service is not provided with reasonable care and skill, or otherwise fails to meet
+              those standards, you may be entitled to:
             </p>
             <ul className="list-disc pl-6 space-y-1">
-              <li>Cancel and receive a full or partial refund; and</li>
-              <li>Compensation for any other reasonably foreseeable loss or damage.</li>
+              <li>Have the problem remedied within a reasonable time; and</li>
+              <li>
+                Where it cannot be remedied, cancel and obtain a refund for any unused session
+                credits, plus any other remedy available under applicable law.
+              </li>
             </ul>
             <p>
-              If the failure does not amount to a major failure, you are entitled to have
-              problems with the service rectified in a reasonable time, and, if this is not
-              done, to cancel and obtain a refund for any unused session credits.
-            </p>
-            <p>
-              Nothing in these Terms restricts, limits, or modifies those rights.
+              Nothing in these Terms restricts, limits, or modifies any right you have under
+              mandatory consumer-protection law.
             </p>
           </section>
 
@@ -269,9 +282,12 @@ export default function TermsPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">12. Governing law</h2>
             <p>
-              These Terms are governed by the laws of <strong>New South Wales, Australia</strong>.
-              Any disputes arising under these Terms are subject to the non-exclusive
-              jurisdiction of the courts of New South Wales, Australia.
+              These Terms are governed by the laws of the{" "}
+              <strong>United Arab Emirates (Emirate of Dubai)</strong>, and disputes arising under
+              them are subject to the non-exclusive jurisdiction of the courts of Dubai. This does
+              not deprive you of the protection of mandatory consumer-protection law in your
+              country of residence: customers in India retain the right to pursue remedies under
+              Indian consumer law before the appropriate Indian forum.
             </p>
           </section>
 

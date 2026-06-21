@@ -3,7 +3,7 @@
 export const metadata = {
   title: "Refund policy — My Yoga Classes",
   description:
-    "My Yoga Classes refund and cancellation policy, including the free trial, one-time session packs, and your rights under the Australian Consumer Law.",
+    "My Yoga Classes refund and cancellation policy, including the free trial, one-time session packs, and your statutory rights under UAE and Indian consumer law.",
   alternates: { canonical: "/legal/refund" },
 };
 
@@ -14,7 +14,13 @@ export default function RefundPage() {
         <h1 className="text-[clamp(2.25rem,4vw,3rem)] leading-[1.1] tracking-tight">
           Refund policy
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 7 June 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 21 June 2026</p>
+
+        <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
+          <strong>Pending legal review.</strong> This is a good-faith draft for a service
+          operating across the UAE and India. It has not yet been reviewed by a qualified lawyer
+          in either jurisdiction and must be verified before launch.
+        </div>
 
         <div className="mt-10 space-y-10 text-foreground/85 text-pretty">
 
@@ -32,9 +38,10 @@ export default function RefundPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">2. Session pack payments</h2>
             <p>
-              Paid access is sold as <strong>one-time session packs in AUD via Razorpay</strong>.
-              You are charged once when you buy a pack — there is no subscription and no
-              automatic recurring charge.
+              Paid access is sold as{" "}
+              <strong>one-time session packs in AED or INR (by region) via Razorpay</strong>. You
+              are charged once when you buy a pack — there is no subscription and no automatic
+              recurring charge.
             </p>
             <p>
               You will receive an email receipt each time a payment is processed. If you believe
@@ -81,30 +88,31 @@ export default function RefundPage() {
             </p>
           </section>
 
-          {/* 5. Australian Consumer Law */}
+          {/* 5. Statutory consumer rights */}
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">
-              5. Australian Consumer Law — your statutory rights
+              5. Your statutory consumer rights
             </h2>
             <p>
-              Nothing in this Refund Policy limits or excludes any rights you have under the{" "}
-              <strong>Australian Consumer Law (Schedule 2, Competition and Consumer Act 2010
-              (Cth))</strong> that cannot be excluded by agreement.
+              Nothing in this Refund Policy limits or excludes any rights you have under the
+              mandatory consumer-protection law that applies to you — including the{" "}
+              <strong>UAE Consumer Protection Law (Federal Law No. 15 of 2020)</strong> for
+              customers in the UAE and the <strong>Consumer Protection Act 2019</strong> for
+              customers in India — that cannot be excluded by agreement.
             </p>
             <p>
-              Our services come with guarantees that cannot be excluded under the Australian
-              Consumer Law. If the services we provide are not delivered with due care and
-              skill, are not fit for the purpose we agreed to, or are not delivered within a
-              reasonable time, you may be entitled to a remedy including:
+              If the services we provide are not delivered with due care and skill, are not fit
+              for the purpose we agreed to, or are not delivered within a reasonable time, you may
+              be entitled to a remedy including:
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                A full or partial refund, including a refund of unused credits, in the case
-                of a major failure; or
+                A full or partial refund, including a refund of unused credits, where the failure
+                is serious or cannot be put right; or
               </li>
               <li>
                 Rectification within a reasonable time, and a refund if rectification is not
-                provided, in the case of a minor failure.
+                provided, for a less serious failure.
               </li>
             </ul>
             <p>
