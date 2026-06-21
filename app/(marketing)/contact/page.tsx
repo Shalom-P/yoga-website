@@ -14,7 +14,7 @@ export default function ContactPage() {
       <PageHeader
         eyebrow="Get in touch"
         title={<>We answer <em>every email.</em></>}
-        subhead="Questions about a teacher, a class, or your bookings? We typically reply within 1 business day (Australian time)."
+        subhead="Questions about a teacher, a class, or your bookings? We typically reply within 1 business day (your local time)."
       />
       <div className="px-7 pb-24">
         <div className="mx-auto max-w-md">

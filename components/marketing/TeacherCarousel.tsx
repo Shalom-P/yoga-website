@@ -34,7 +34,7 @@ export function TeacherCarousel({ teachers }: { teachers: Teacher[] }) {
             </h2>
             <p className="mt-4 text-muted-foreground max-w-xl text-pretty">
               Every teacher is a 200-hr Yoga Alliance certified professional based in India,
-              teaching live to your home in Australia.
+              teaching live to your home in the UAE and India.
             </p>
           </motion.div>
           <Link

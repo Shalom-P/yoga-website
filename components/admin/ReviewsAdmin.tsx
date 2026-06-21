@@ -150,7 +150,7 @@ export function ReviewsAdmin({ rows }: { rows: ReviewRow[] }) {
                     </div>
                   </td>
                   <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                    {new Date(r.created_at).toLocaleDateString("en-AU")}
+                    {new Date(r.created_at).toLocaleDateString("en-GB")}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1 justify-end flex-wrap">

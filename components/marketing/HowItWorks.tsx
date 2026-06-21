@@ -14,7 +14,7 @@ const STEPS = [
   {
     n: "02",
     title: "Book a time that suits you",
-    body: "Choose a slot from live availability, shown in your local Australian time. Your first 1:1 is free — no card needed to start.",
+    body: "Choose a slot from live availability, shown in your local time. Your first 1:1 is free — no card needed to start.",
     href: "/pricing",
     cta: "See pricing →",
   },

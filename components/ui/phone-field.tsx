@@ -27,7 +27,7 @@ const PhoneTextInput = React.forwardRef<HTMLInputElement, React.ComponentProps<"
 );
 
 type PhoneFieldProps = {
-  /** E.164 string (e.g. "+61402281827"), or "" when empty. */
+  /** E.164 string (e.g. "+971501234567"), or "" when empty. */
   value: string;
   /** Receives E.164 while the number is parseable, "" otherwise. */
   onChange: (value: string) => void;

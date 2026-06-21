@@ -71,7 +71,7 @@ export function teacherLocalToUtc(date: string, time: string): Date {
   return toDate(`${date}T${time}:00`, { timeZone: TEACHER_TZ });
 }
 
-/** Short ISO marker e.g. "AEST" for a timezone, useful in slot pickers. */
+/** Short ISO marker e.g. "GST" / "IST" for a timezone, useful in slot pickers. */
 export function tzShort(timeZone: string, at: Date = new Date()) {
   return format(at, "zzz", { timeZone });
 }

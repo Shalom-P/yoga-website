@@ -19,7 +19,7 @@ export default function AboutPage() {
       <article className="px-7 pb-16">
         <div className="mx-auto max-w-3xl space-y-5 text-lg text-foreground/85 text-pretty">
           <p>
-            We started My Yoga Classes because too many Australians were paying $30/class for
+            We started My Yoga Classes because too many people were paying premium prices for
             a 1-hour studio session they ended up skipping half the time. Meanwhile,
             brilliant 200-hr+ certified yoga teachers in India were teaching empty rooms.
           </p>
@@ -35,8 +35,8 @@ export default function AboutPage() {
           <h2 className="pt-6 text-3xl">How we work</h2>
           <p>
             Every teacher is a 200-hr Yoga Alliance certified professional. Most have
-            500+ hours and years of in-studio teaching. We pay them at Australian
-            private-tutor rates — not Indian gig-worker rates — because that&apos;s how you
+            500+ hours and years of in-studio teaching. We pay them fair, professional
+            private-tutor rates — not gig-worker rates — because that&apos;s how you
             keep brilliant teachers brilliant.
           </p>
         </div>

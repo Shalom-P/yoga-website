@@ -6,7 +6,7 @@ import { getFeaturedReviews } from "@/lib/data/landing";
 export const revalidate = 60;
 export const metadata = {
   title: "Reviews",
-  description: "What Australian students say about practising with us.",
+  description: "What our students say about practising with us.",
   alternates: { canonical: "/reviews" },
 };
 

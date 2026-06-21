@@ -19,7 +19,7 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="en-AU">
+    <html lang="en">
       <body
         style={{
           minHeight: "100dvh",
