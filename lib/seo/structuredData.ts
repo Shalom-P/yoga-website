@@ -47,7 +47,7 @@ export function courseJsonLd(cat: ClassCategory, url: string): WithContext<Cours
   return {
     "@context": "https://schema.org",
     "@type": "Course",
-    name: `${cat.name} Yoga`,
+    name: cat.name.toLowerCase().includes("yoga") ? `1:1 ${cat.name}` : `1:1 Yoga — ${cat.name} focus`,
     description: cat.description ?? undefined,
     url,
     provider: { "@type": "Organization", name: ORG_NAME, sameAs: url },
