@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, CalendarCheck, CalendarRange, UserRound, Menu, ArrowLeft,
+  LayoutDashboard, CalendarCheck, CalendarRange, FileText, UserRound, Menu, ArrowLeft,
 } from "lucide-react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 const ITEMS = [
   { href: "/teacher",              label: "Overview",        icon: LayoutDashboard },
   { href: "/teacher/sessions",     label: "My schedule",     icon: CalendarCheck },
+  { href: "/teacher/documents",    label: "Student documents", icon: FileText },
   { href: "/teacher/availability", label: "My availability", icon: CalendarRange },
   { href: "/teacher/profile",      label: "My profile",      icon: UserRound },
 ];

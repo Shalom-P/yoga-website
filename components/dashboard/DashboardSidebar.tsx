@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
-  LayoutDashboard, CalendarPlus, CalendarCheck, Wallet, UserRound, Menu, ArrowLeft,
+  LayoutDashboard, CalendarPlus, CalendarCheck, FileText, Wallet, UserRound, Menu, ArrowLeft,
 } from "lucide-react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
@@ -18,6 +18,7 @@ const ITEMS = [
   { href: "/dashboard",          label: "Overview",          icon: LayoutDashboard },
   { href: "/dashboard/book",     label: "Book a session",    icon: CalendarPlus },
   { href: "/dashboard/bookings", label: "My bookings",       icon: CalendarCheck },
+  { href: "/dashboard/documents", label: "Health documents", icon: FileText },
   { href: "/dashboard/plan",     label: "My plan & credits", icon: Wallet },
   { href: "/dashboard/profile",  label: "Profile",           icon: UserRound },
 ];
