@@ -11,10 +11,7 @@ import {
   boolean,
   jsonb,
   pgEnum,
-  date,
-  time,
   numeric,
-  primaryKey,
   uniqueIndex,
   index,
 } from "drizzle-orm/pg-core";

@@ -78,6 +78,18 @@ export async function POST(
         { status: 409 }
       );
     }
+    if (existing.role === "teacher") {
+      // Already a teacher login — linking them to a SECOND teacher record would
+      // give one profile two teachers rows, which breaks the teacher dashboard's
+      // `.eq("profile_id", …).single()` lookups. Revoke the other link first.
+      return NextResponse.json(
+        {
+          error:
+            "That email is already a teacher login linked to another profile. Revoke that link first.",
+        },
+        { status: 409 }
+      );
+    }
     targetUserId = existing.id;
   } else {
     const origin = process.env.NEXT_PUBLIC_SITE_URL ?? new URL(req.url).origin;

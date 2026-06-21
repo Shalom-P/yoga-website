@@ -27,7 +27,7 @@ export type TeacherSessionRow = {
 
 export async function getTeacherSessions(teacherId: string): Promise<TeacherSessionRow[]> {
   const service = createSupabaseServiceClient();
-  const { data } = await service
+  const { data, error } = await service
     .from("sessions")
     .select(
       `id, start_at, end_at, status, meet_link, meet_status, is_free_trial,
@@ -38,6 +38,13 @@ export async function getTeacherSessions(teacherId: string): Promise<TeacherSess
     .neq("status", "cancelled")
     .order("start_at", { ascending: true })
     .limit(300);
+
+  // Don't silently render an empty schedule on a query failure (e.g. a broken
+  // embed or a transient DB error) — log it so the teacher's missing sessions
+  // are diagnosable rather than looking like "you have no sessions".
+  if (error) {
+    console.error("getTeacherSessions failed", { teacherId, error: error.message });
+  }
 
   return (data ?? []).map((s) => ({
     id: s.id,
