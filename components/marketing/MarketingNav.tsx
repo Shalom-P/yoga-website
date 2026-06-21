@@ -12,6 +12,7 @@ const NAV_LINKS = [
   { href: "/teachers", label: "Teachers" },
   { href: "/classes", label: "Classes" },
   { href: "/pricing", label: "Pricing" },
+  { href: "/reviews", label: "Reviews" },
   { href: "/faq", label: "FAQ" },
   { href: "/about", label: "About" },
 ] as const;
@@ -82,7 +83,7 @@ export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: bo
         </div>
 
         <button
-          className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted md:hidden"
+          className="inline-flex size-11 items-center justify-center rounded-md hover:bg-muted md:hidden"
           onClick={() => setOpen((v) => !v)}
           aria-label="Toggle menu"
           aria-expanded={open}

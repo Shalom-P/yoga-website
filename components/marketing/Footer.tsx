@@ -4,8 +4,10 @@ import { BrandMark } from "@/components/shared/BrandMark";
 import { YogaFigure } from "@/components/shared/YogaFigure";
 
 export function Footer() {
+  // On the dark pine background the deep-coral --accent fails contrast on hover,
+  // so swap in the bright coral (AA on dark) for this surface only via [--accent:…].
   return (
-    <footer className="relative overflow-hidden bg-foreground text-background">
+    <footer className="relative overflow-hidden bg-foreground text-background [--accent:var(--accent-bright)]">
       {/* decorative figure motif */}
       <YogaFigure
         pose="tree"

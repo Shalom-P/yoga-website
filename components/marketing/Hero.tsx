@@ -75,7 +75,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                 asChild
                 variant="ghost"
                 size="lg"
-                className="h-12 px-4 rounded-full text-base hover:text-accent hover:bg-transparent"
+                className="h-12 px-4 rounded-full text-base underline underline-offset-[6px] decoration-1 decoration-muted-foreground/40 hover:text-accent hover:decoration-accent hover:bg-transparent"
               >
                 <Link href="/teachers">See today&apos;s teachers</Link>
               </Button>
@@ -103,7 +103,10 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                   />
                 ))}
               </div>
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Link
+                href="/reviews"
+                className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              >
                 {trustRating && (
                   <span className="tracking-[1px] text-accent" aria-hidden="true">
                     ★★★★★
@@ -115,7 +118,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                   )}
                   {trustCount}
                 </span>
-              </div>
+              </Link>
             </motion.div>
           </div>
 
