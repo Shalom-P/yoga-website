@@ -111,14 +111,14 @@ const MOCK_PLANS: PlanWithFeatures[] = [
   {
     id: "p5", slug: "pack-5", name: "5-Session Pack",
     description: "Five private 1:1 sessions — your flexible way in.",
-    price_base_cents: 750000, billing_interval: "one_time", session_credits: 5,
+    price_base_cents: 1000000, billing_interval: "one_time", session_credits: 5,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
     is_active: true, is_featured: false, sort_order: 1,
     created_at: "", updated_at: "",
     prices: [
-      { id: "pp5-inr", plan_id: "p5", currency: "INR", amount_cents: 750000, created_at: "", updated_at: "" },
-      { id: "pp5-aed", plan_id: "p5", currency: "AED", amount_cents: 35000,  created_at: "", updated_at: "" },
+      { id: "pp5-inr", plan_id: "p5", currency: "INR", amount_cents: 1000000, created_at: "", updated_at: "" },
+      { id: "pp5-aed", plan_id: "p5", currency: "AED", amount_cents: 43500,   created_at: "", updated_at: "" },
     ],
     features: [
       { id: "f1", plan_id: "p5", feature_text: "5 private 1:1 sessions",          is_included: true, sort_order: 1 },
@@ -131,14 +131,14 @@ const MOCK_PLANS: PlanWithFeatures[] = [
   {
     id: "p10", slug: "pack-10", name: "10-Session Pack",
     description: "Ten private 1:1 sessions — our best price per session.",
-    price_base_cents: 1300000, billing_interval: "one_time", session_credits: 10,
+    price_base_cents: 1900000, billing_interval: "one_time", session_credits: 10,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
     is_active: true, is_featured: true, sort_order: 2,
     created_at: "", updated_at: "",
     prices: [
-      { id: "pp10-inr", plan_id: "p10", currency: "INR", amount_cents: 1300000, created_at: "", updated_at: "" },
-      { id: "pp10-aed", plan_id: "p10", currency: "AED", amount_cents: 60000,   created_at: "", updated_at: "" },
+      { id: "pp10-inr", plan_id: "p10", currency: "INR", amount_cents: 1900000, created_at: "", updated_at: "" },
+      { id: "pp10-aed", plan_id: "p10", currency: "AED", amount_cents: 82500,   created_at: "", updated_at: "" },
     ],
     features: [
       { id: "f6",  plan_id: "p10", feature_text: "10 private 1:1 sessions",        is_included: true, sort_order: 1 },

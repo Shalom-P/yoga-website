@@ -52,21 +52,27 @@ create policy "plan_prices_public_read" on public.plan_prices for select
 create policy "plan_prices_admin_all" on public.plan_prices for all
   using (public.is_admin(auth.uid())) with check (public.is_admin(auth.uid()));
 
--- 4. Backfill per-currency prices for the live packs.
---    TODO(pricing): PLACEHOLDER amounts — confirm final INR/AED prices with the
---    business before applying to the live DB. Smallest unit (paise / fils).
---      pack-5  : INR 7,500  (750000) | AED 350 (35000)
---      pack-10 : INR 13,000 (1300000)| AED 600 (60000)
+-- 4. Backfill per-currency prices for the live packs. Converted from the prior
+--    AUD pack prices (A$180 / A$340) at ~1 AUD = 2.42 AED = INR 55. Sensible
+--    defaults — admins reconfigure them in /admin/plans (writes plan_prices).
+--    Smallest unit (paise / fils).
+--      pack-5  : INR 10,000 (1000000) | AED 435 (43500)
+--      pack-10 : INR 19,000 (1900000) | AED 825 (82500)
 insert into public.plan_prices (plan_id, currency, amount_cents)
 select p.id, v.currency, v.amount_cents
 from public.plans p
 join (values
-  ('pack-5',  'INR',  750000),
-  ('pack-5',  'AED',   35000),
-  ('pack-10', 'INR', 1300000),
-  ('pack-10', 'AED',   60000)
+  ('pack-5',  'INR', 1000000),
+  ('pack-5',  'AED',   43500),
+  ('pack-10', 'INR', 1900000),
+  ('pack-10', 'AED',   82500)
 ) as v(slug, currency, amount_cents) on v.slug = p.slug
 on conflict (plan_id, currency) do update set amount_cents = excluded.amount_cents;
+
+-- Keep the currency-neutral fallback (price_base_cents) in step with the default
+-- currency (INR) for the active packs, so it's sane if a future currency lacks a row.
+update public.plans set price_base_cents = 1000000 where slug = 'pack-5';
+update public.plans set price_base_cents = 1900000 where slug = 'pack-10';
 
 -- 5. Migrate any existing discount rows off the deprecated enum value.
 update public.discount_codes set discount_type = 'fixed_amount_cents'
