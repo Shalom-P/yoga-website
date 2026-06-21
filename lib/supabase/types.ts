@@ -284,6 +284,33 @@ export type RazorpayWebhookEvent = {
   received_at: string;
   payload: unknown;
 }
+export type MedicalDocument = {
+  id: string;
+  customer_id: string;
+  storage_path: string;
+  file_name: string;
+  mime_type: string | null;
+  size_bytes: number | null;
+  note: string | null;
+  created_at: string;
+  deleted_at: string | null;
+}
+export type MedicalDocumentShare = {
+  id: string;
+  document_id: string;
+  teacher_id: string;
+  shared_by: string;
+  created_at: string;
+  revoked_at: string | null;
+}
+export type MedicalDocumentAccessLog = {
+  id: string;
+  document_id: string;
+  accessed_by: string | null;
+  accessor_role: UserRole | null;
+  action: string;
+  created_at: string;
+}
 
 // One entry per outgoing foreign key, mirroring `supabase gen types` output.
 type Relationship = {
@@ -368,6 +395,18 @@ export type Database = {
         { foreignKeyName: "credit_ledger_booking_id_fkey"; columns: ["booking_id"]; isOneToOne: false; referencedRelation: "bookings"; referencedColumns: ["id"] },
       ]>;
       razorpay_webhook_events: Table<RazorpayWebhookEvent, { event_id: string; event_type?: string | null; payload?: unknown }>;
+      medical_documents: Table<MedicalDocument, Partial<MedicalDocument> & { customer_id: string; storage_path: string; file_name: string }, Partial<MedicalDocument>, [
+        { foreignKeyName: "medical_documents_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+      ]>;
+      medical_document_shares: Table<MedicalDocumentShare, Partial<MedicalDocumentShare> & { document_id: string; teacher_id: string; shared_by: string }, Partial<MedicalDocumentShare>, [
+        { foreignKeyName: "medical_document_shares_document_id_fkey"; columns: ["document_id"]; isOneToOne: false; referencedRelation: "medical_documents"; referencedColumns: ["id"] },
+        { foreignKeyName: "medical_document_shares_teacher_id_fkey"; columns: ["teacher_id"]; isOneToOne: false; referencedRelation: "teachers"; referencedColumns: ["id"] },
+        { foreignKeyName: "medical_document_shares_shared_by_fkey"; columns: ["shared_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+      ]>;
+      medical_document_access_log: Table<MedicalDocumentAccessLog, Partial<MedicalDocumentAccessLog> & { document_id: string; action: string }, Partial<MedicalDocumentAccessLog>, [
+        { foreignKeyName: "medical_document_access_log_document_id_fkey"; columns: ["document_id"]; isOneToOne: false; referencedRelation: "medical_documents"; referencedColumns: ["id"] },
+        { foreignKeyName: "medical_document_access_log_accessed_by_fkey"; columns: ["accessed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+      ]>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -434,6 +473,14 @@ export type Database = {
           p_external_ref: string;
           p_payment_id?: string | null;
         };
+        Returns: null;
+      };
+      share_medical_document: {
+        Args: { p_document_id: string; p_teacher_id: string };
+        Returns: string;
+      };
+      revoke_medical_document_share: {
+        Args: { p_document_id: string; p_teacher_id: string };
         Returns: null;
       };
     };

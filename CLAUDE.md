@@ -64,6 +64,14 @@ Migration `0008` provisions two **public-read, admin-write** Storage buckets: `p
 
 Marketing pages render these images via `next/image`, so the bucket host (`**.supabase.co/storage/v1/object/public/**`) is allow-listed in `next.config.ts` → `images.remotePatterns`; add any new image host there or optimization throws. Teacher edits are a client-side Supabase write (which can only `router.refresh()` the admin route), so after a save the admin client calls `POST /api/admin/revalidate` to bust the ISR cache on `/`, `/teachers`, `/teachers/[slug]` (the teacher listing/detail pages set `revalidate = 300`).
 
+Migration `0027` adds a **third, deliberately different** bucket: `medical-documents` is **PRIVATE** (`public = false`) with a 25 MB cap and a mime allow-list (pdf/jpeg/png/webp/heic/heif). It holds customer-uploaded health records — sensitive personal data (UAE PDPL / India DPDP), so the rules invert the media buckets:
+- **No public URLs ever.** Bytes are reachable only via short-lived (60s) signed URLs minted server-side in `POST /api/medical-documents/[id]/download`, which authorizes + writes an append-only `medical_document_access_log` row first.
+- **Storage RLS is owner-folder-only**: a customer reads/writes/deletes only inside `{auth.uid()}/…`. Teachers and admins get **no direct Storage access** — teachers reach files exclusively through the download route. The customer uploads bytes direct-to-bucket, then `POST /api/medical-documents` records the metadata row (path-prefix re-validated, true size stat'd).
+- **Sharing is explicit + revocable**: a customer shares a single document with a teacher *they have booked* via the `share_medical_document` RPC (gated by `customer_booked_teacher`); `revoke_medical_document_share` reverses it. A teacher sees a doc only while an un-revoked share exists (`teacher_has_document_share`).
+- **Admins get NO read access to PHI** (no admin RLS policy on these tables — by design). The owner can read their own access log (transparency).
+- Server data access lives in `lib/medical/documents.ts` (customer queries on the RLS client; teacher queries on the **service-role** client like `lib/teacher/sessions.ts`, since a teacher can't read `profiles`). Shared client/UI constants (bucket id, limits) are in `lib/medical/constants.ts`. UI: `/dashboard/documents` (customer) and `/teacher/documents` (teacher).
+- This bucket's host is **not** in `next.config.ts` remotePatterns and must not be — these files are never rendered via `next/image`; they download through signed URLs only.
+
 ### Mock fallback for the marketing site
 
 `lib/data/landing.ts` checks `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY` and returns hand-written mock data (`MOCK_TEACHERS`, `MOCK_PLANS`, etc.) when Supabase isn't wired up. The marketing pages render cleanly with zero env vars, which is the desired preview/dev story. Keep this pattern when adding new public data — fall back to a sensible mock, don't crash. The mocks roughly mirror `supabase/seed.sql`.
@@ -96,6 +104,7 @@ Three cron handlers live under `app/api/cron/`, each gated by `assertCron` (Bear
 - **`reminders`** (~hourly) — emails a ±10-min band around now+24h and now+1h. Idempotent since `0016` (a `booking_reminders` ledger keyed on booking + kind dedupes a double-fire in the same band).
 - **`no-show-sweep`** (~hourly) — flips still-`confirmed` bookings to `no_show` 2h after the session ended (`booking_status` enum from `0003`). Skips sessions whose Meet link never provisioned (`meet_status <> 'created'`) so a customer isn't penalised for an operational failure.
 - **`meet-retry`** (~15–30 min) — retries `createMeetEvent` for not-yet-started sessions stuck at `meet_status='pending'|'failed'`, batched (50/run) to avoid Calendar rate limits.
+- **`medical-orphan-sweep`** (~daily) — backstop cleanup for the private `medical-documents` bucket: removes stored objects >1h old with no live `medical_documents` row (failed metadata POST, or bytes left after a failed soft-delete removal). Bounded per run; reports `truncated` flags instead of silently capping.
 
 There is **no scheduler in the repo** (no `vercel.json` / host config). Wire each endpoint to your host's cron, an external scheduler, or Supabase `pg_cron` + `pg_net`, POSTing with `Authorization: Bearer $CRON_SECRET`.
 
