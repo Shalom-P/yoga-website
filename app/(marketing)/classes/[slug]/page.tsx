@@ -5,8 +5,12 @@ import { Button } from "@/components/ui/button";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { courseJsonLd } from "@/lib/seo/structuredData";
 import { getClassCategories } from "@/lib/data/landing";
+import { getConditionPage } from "@/lib/data/condition-pages";
+import { ConditionLanding } from "@/components/marketing/condition/ConditionLanding";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
+
+type Category = Awaited<ReturnType<typeof getClassCategories>>[number];
 
 export const revalidate = 300;
 
@@ -14,19 +18,12 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const categories = await getClassCategories();
   const c = categories.find((x) => x.slug === slug);
+  const rich = getConditionPage(slug);
   return {
     title: c?.name ?? "Class",
-    description: c?.long_description ?? c?.description ?? undefined,
+    description: rich?.metaDescription ?? c?.long_description ?? c?.description ?? undefined,
     alternates: { canonical: `/classes/${slug}` },
   };
-}
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <h2 className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-primary">
-      {children}
-    </h2>
-  );
 }
 
 export default async function ClassDetailPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -35,6 +32,22 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
   const c = categories.find((x) => x.slug === slug);
   if (!c) notFound();
 
+  const rich = getConditionPage(slug);
+
+  return (
+    <>
+      <JsonLd data={courseJsonLd(c, `${siteUrl}/classes/${c.slug}`)} />
+      {rich ? <ConditionLanding data={rich} /> : <SimpleDetail c={c} />}
+    </>
+  );
+}
+
+/**
+ * Fallback layout for any class category that has no rich landing content yet
+ * (renders straight from the class_categories DB row). The 9 condition pages all
+ * have rich content via lib/data/condition-pages.
+ */
+function SimpleDetail({ c }: { c: Category }) {
   const cta = (
     <Button asChild size="lg" className="h-12 rounded-full px-6">
       <Link href="/login?next=/dashboard/book">
@@ -46,9 +59,7 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
 
   return (
     <article className="px-7 pt-32 pb-24">
-      <JsonLd data={courseJsonLd(c, `${siteUrl}/classes/${c.slug}`)} />
       <div className="mx-auto max-w-3xl">
-        {/* Hero */}
         <div className="text-center">
           <div className="myc-eyebrow mb-4 justify-center capitalize">
             <span className="myc-dot" aria-hidden="true" />
@@ -61,7 +72,6 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
           <div className="mt-9">{cta}</div>
         </div>
 
-        {/* Detail */}
         <div className="mt-16 space-y-14">
           {c.long_description && (
             <p className="text-lg leading-relaxed text-foreground/80 text-pretty">
@@ -71,7 +81,9 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
 
           {c.helps_with.length > 0 && (
             <section>
-              <SectionLabel>What it can help with</SectionLabel>
+              <h2 className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-primary">
+                What it can help with
+              </h2>
               <ul className="flex flex-wrap gap-2">
                 {c.helps_with.map((h) => (
                   <li
@@ -87,7 +99,9 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
 
           {c.what_to_expect.length > 0 && (
             <section>
-              <SectionLabel>What to expect in a session</SectionLabel>
+              <h2 className="mb-4 text-xs font-medium uppercase tracking-[0.2em] text-primary">
+                What to expect in a session
+              </h2>
               <ul className="space-y-3">
                 {c.what_to_expect.map((w) => (
                   <li key={w} className="flex gap-3">
@@ -120,14 +134,12 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
             </section>
           )}
 
-          {/* Health-claim-safe disclaimer — required for the condition categories. */}
           <p className="rounded-2xl bg-secondary/40 px-5 py-4 text-sm text-muted-foreground text-pretty">
             Yoga supports your overall wellbeing and is practised alongside professional medical
             care — it is not a substitute for diagnosis, treatment, or medication. Tell your teacher
             about any conditions so they can adapt your session safely.
           </p>
 
-          {/* Closing CTA */}
           <div className="pt-2 text-center">
             {cta}
             <p className="mt-3 text-xs text-muted-foreground">

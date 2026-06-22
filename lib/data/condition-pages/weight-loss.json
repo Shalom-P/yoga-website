@@ -1,0 +1,184 @@
+{
+  "slug": "weight-loss",
+  "eyebrow": "Gentle to moderate · for an active routine",
+  "h1Before": "Yoga for an ",
+  "h1Em": "active routine",
+  "h1After": ", shaped around you.",
+  "heroLead": "Energising 1:1 sessions of flowing movement, scaled to your fitness and built around your routine — sustainable habits you can actually keep. Practised alongside your doctor's guidance.",
+  "empathyLabel": "You don't have to do this alone",
+  "empathyText": "Crash plans don't last. Yoga can be an enjoyable, sustainable part of your week — building an active routine and habits you can actually keep, at your own pace.",
+  "helpsH2": "How yoga can support an active routine.",
+  "helpsSubhead": "Four steady levers, working together — and the first one does most of the lifting.",
+  "levers": [
+    {
+      "title": "Movement that adds up",
+      "body": "Flowing, full-body sequences keep you active and using energy."
+    },
+    {
+      "title": "Build strength & stamina",
+      "body": "Gradual progression makes everyday movement easier over time."
+    },
+    {
+      "title": "Habits you can keep",
+      "body": "Sustainable, enjoyable sessions beat all-or-nothing plans."
+    },
+    {
+      "title": "Calmer, steadier days",
+      "body": "Less stress and better sleep support a healthier routine."
+    }
+  ],
+  "posesH2": "The poses we focus on, and why.",
+  "posesSubhead": "Grouped by what they do for the body. Your teacher draws from these — they won't ask you to do all of them.",
+  "poseGroups": [
+    {
+      "tag": "Warm-up & flow",
+      "why": "The engine — flowing movement that keeps you active.",
+      "poses": [
+        {
+          "sa": "Surya Namaskar",
+          "en": "Sun salutation",
+          "desc": "A flowing sequence, paced to you. A gentler version is always available."
+        },
+        {
+          "sa": "Tadasana",
+          "en": "Standing flow",
+          "desc": "A grounding warm-up to begin exactly where your body is today."
+        },
+        {
+          "sa": "Marjaryasana–Bitilasana",
+          "en": "Cat–Cow",
+          "desc": "A gentle spinal warm-up to loosen the back and ease into movement."
+        }
+      ]
+    },
+    {
+      "tag": "Strength & standing poses",
+      "why": "Build strength and stamina, scaled to you.",
+      "poses": [
+        {
+          "sa": "Virabhadrasana I & II",
+          "en": "Warrior I & II",
+          "desc": "Standing strength and stability through the legs and core."
+        },
+        {
+          "sa": "Utkatasana",
+          "en": "Chair pose",
+          "desc": "Builds the legs and adds a little heat to the flow."
+        },
+        {
+          "sa": "Phalakasana",
+          "en": "Plank",
+          "desc": "Whole-body strength. A knees-down option is always available."
+        }
+      ]
+    },
+    {
+      "tag": "Core & balance",
+      "why": "Steady, functional strength.",
+      "poses": [
+        {
+          "sa": "Vasisthasana",
+          "en": "Side plank, modified",
+          "desc": "Gentle core and balance work, adapted to your level."
+        },
+        {
+          "sa": "Navasana",
+          "en": "Boat pose, modified",
+          "desc": "Core strength at your level, with support as you build."
+        },
+        {
+          "sa": "Vrksasana",
+          "en": "Tree pose",
+          "desc": "Balance and focus to steady both body and mind."
+        }
+      ],
+      "note": "We build gradually with modifications so every level is achievable — forearm or knees-down options for sensitive wrists, and gentler routes during pregnancy — and we ease off if you feel dizzy, breathless, or any pain."
+    },
+    {
+      "tag": "Cool-down & rest",
+      "why": "Letting the work settle in.",
+      "poses": [
+        {
+          "sa": "Gentle stretches",
+          "en": "Calming wind-down",
+          "desc": "A soft sequence to release the muscles you've worked."
+        },
+        {
+          "sa": "Shavasana",
+          "en": "Final relaxation",
+          "desc": "A still close to every session, letting everything settle in."
+        },
+        {
+          "sa": "Yoga Nidra",
+          "en": "Guided deep relaxation",
+          "desc": "Restorative rest that releases tension and supports better sleep."
+        }
+      ]
+    }
+  ],
+  "selectionNote": "Your teacher won't hand you all of these. They'll choose the right few for your fitness, your level, and how you're feeling that day.",
+  "howH2": "How we work with you to get there.",
+  "howSubhead": "One teacher who knows your name and your goals — not a different face every week.",
+  "steps": [
+    {
+      "title": "We get to know you",
+      "body": "A short screening of your fitness, routine, goals, and anything your doctor has advised."
+    },
+    {
+      "title": "A plan shaped to you",
+      "body": "Your teacher matches the intensity and progression to your fitness, with modifications."
+    },
+    {
+      "title": "Guided live 1:1s",
+      "body": "The same teacher every time, on Google Meet, adjusting each session to how you feel."
+    },
+    {
+      "title": "We grow it gently",
+      "body": "Gradual, sustainable progress — habits you can actually keep."
+    }
+  ],
+  "sessionTitle": "What a session looks like",
+  "sessionChecklist": [
+    "A short screening, with a note to check with your doctor first if you're inactive or have heart, blood-pressure, or joint concerns",
+    "A warm-up matched to your current fitness",
+    "Flowing, energising sequences at a sustainable pace",
+    "Gradual progression with modifications so every level feels achievable",
+    "We ease off if you feel dizzy, breathless, or any pain, finishing with a cool-down and stretch"
+  ],
+  "whoForTitle": "Who it's for",
+  "whoForText": "Adults who want an enjoyable, sustainable flow practice to support an active, healthy routine.",
+  "propsTitle": "What you'll need",
+  "props": [
+    "A yoga mat",
+    "A water bottle",
+    "A quiet corner"
+  ],
+  "testimonialQuote": "I'd tried every intense plan and burned out. This actually fits my life — I'm stronger, more active, and for once it's something I look forward to.",
+  "testimonialWho": "<strong>Placeholder — swap for a real review.</strong> Member · practising for 5 months",
+  "faqH2": "Questions people ask first.",
+  "faqs": [
+    {
+      "q": "How much weight will I lose?",
+      "a": "We don't promise numbers. Yoga supports an active, sustainable routine, and steady habits are what make the difference over time."
+    },
+    {
+      "q": "Is yoga enough on its own?",
+      "a": "It's a great, sustainable part of the picture. Healthy eating and your doctor's guidance matter too."
+    },
+    {
+      "q": "I'm a beginner and not very fit — can I keep up?",
+      "a": "Yes. Intensity is matched to you with modifications, and we build gradually so every level feels achievable."
+    },
+    {
+      "q": "Should I check with a doctor first?",
+      "a": "Please do if you're inactive or have heart, blood-pressure, or joint concerns, and tell your teacher so we can plan around it."
+    },
+    {
+      "q": "How often should I practise?",
+      "a": "Consistency beats intensity. Your teacher will suggest a sustainable rhythm you can keep."
+    }
+  ],
+  "safetyTitle": "Yoga supports your care — it doesn't replace it",
+  "safetyText": "These sessions support your overall wellbeing and are practised alongside professional medical care. They are not a substitute for diagnosis, treatment, or medication. Please tell your teacher about any conditions or symptoms so they can adapt your session safely, and keep your doctor in the loop.",
+  "metaDescription": "Energising 1:1 yoga scaled to your fitness — sustainable flows and healthy habits that support an active routine and steady, lasting progress. First session free."
+}
