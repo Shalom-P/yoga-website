@@ -95,7 +95,7 @@ export function PracticeSection({ categories }: { categories: ClassCategory[] })
           </h2>
           <p className="mt-4 text-muted-foreground text-pretty">
             Pick an area for today — or let a yoga-therapy–trained teacher shape your
-            private 1:1 around exactly what your body is working through.
+            personalised 1:1 around exactly what your body is working through.
           </p>
         </motion.div>
 

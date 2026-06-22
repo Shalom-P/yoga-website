@@ -1,18 +1,17 @@
-const STYLES = [
-  "Hatha",
-  "Vinyasa flow",
-  "Yin",
-  "Power yoga",
-  "Restorative",
-  "Pranayama",
-  "Meditation",
+const CATEGORIES = [
+  "Diabetes",
+  "Hypertension",
   "Prenatal",
-  "Beginner basics",
-  "Ashtanga",
+  "Hormonal",
+  "Pain Relief",
+  "Mental Health",
+  "Weight Loss",
+  "Geriatric",
+  "Kids Yoga",
 ];
 
 /**
- * Infinite-scroll ribbon of class styles. Two identical track halves so the
+ * Infinite-scroll ribbon of class categories. Two identical track halves so the
  * -50% translate loop is seamless. Decorative — hidden from assistive tech.
  */
 export function Marquee() {
@@ -20,13 +19,13 @@ export function Marquee() {
     <div className="myc-marquee myc-sec-mint py-6" aria-hidden="true">
       <div className="myc-marquee__track">
         <span>
-          {STYLES.map((s) => (
-            <span key={`a-${s}`}>{s}</span>
+          {CATEGORIES.map((c) => (
+            <span key={`a-${c}`}>{c}</span>
           ))}
         </span>
         <span>
-          {STYLES.map((s) => (
-            <span key={`b-${s}`}>{s}</span>
+          {CATEGORIES.map((c) => (
+            <span key={`b-${c}`}>{c}</span>
           ))}
         </span>
       </div>

@@ -39,7 +39,7 @@ export function FinalCTA({ headline }: { headline: string }) {
             {headline}
           </h2>
           <p className="mx-auto mt-5 max-w-[540px] text-lg text-primary-foreground/80 text-pretty">
-            No card, no commitment. Book a private 1:1 today and meet a teacher who&apos;ll know
+            No card, no commitment. Book a personalised 1:1 today and meet a teacher who&apos;ll know
             your name — and your goals.
           </p>
           <Button
@@ -54,7 +54,7 @@ export function FinalCTA({ headline }: { headline: string }) {
             </Link>
           </Button>
           <div className="mt-6 text-sm text-primary-foreground/70">
-            100% private 1:1s · No subscription · No credit card for your trial
+            100% personalised 1:1s · No subscription · No credit card for your trial
           </div>
         </div>
       </motion.div>

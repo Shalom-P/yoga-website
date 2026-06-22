@@ -64,7 +64,7 @@ export const metadata: Metadata = {
     template: "%s · My Yoga Classes",
   },
   description:
-    "Live online yoga with expert teachers from India. Book a free 60-minute private session — no credit card required. Times shown in your local time.",
+    "Live online yoga with expert teachers from India. Book a free 60-minute personalised session — no credit card required. Times shown in your local time.",
   applicationName: "My Yoga Classes",
   alternates: { canonical: "/" },
   openGraph: {
@@ -73,7 +73,7 @@ export const metadata: Metadata = {
     locale: "en",
     title: "My Yoga Classes — Free 1:1 yoga teacher · Online",
     description:
-      "Find your free 1:1 yoga teacher. 60-minute private session. Pick your teacher. Pick your time. Meets on Google Meet.",
+      "Find your free 1:1 yoga teacher. 60-minute personalised session. Pick your teacher. Pick your time. Meets on Google Meet.",
   },
   twitter: { card: "summary_large_image" },
 };
@@ -87,7 +87,7 @@ const orgJsonLd: WithContext<Organization> = {
   url: siteUrl,
   logo: `${siteUrl}/icon.svg`,
   description:
-    "Live online 1:1 yoga with expert teachers from India for students across the UAE and India. Book a free private session — no credit card required.",
+    "Live online 1:1 yoga with expert teachers from India for students across the UAE and India. Book a free personalised session — no credit card required.",
   areaServed: [
     { "@type": "Country", name: "United Arab Emirates" },
     { "@type": "Country", name: "India" },

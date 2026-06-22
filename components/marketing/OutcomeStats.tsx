@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 // hero badge). When unset we drop the rating stat rather than fabricate one.
 export function OutcomeStats({ rating }: { rating?: string }) {
   const STATS = [
-    { value: "1:1", label: "Every class is private" },
+    { value: "1:1", label: "Every class is personalised" },
     rating
       ? { value: `${rating}★`, label: "Average teacher rating" }
       : { value: "200hr+", label: "Certified teachers" },

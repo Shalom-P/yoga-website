@@ -153,15 +153,15 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                 </g>
               </svg>
               <span className="absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-border bg-card px-3 py-1 text-[11px] text-muted-foreground">
-                Your private session
+                Your personalised session
               </span>
             </div>
 
-            {/* Floating "private" live card */}
+            {/* Floating "personalised" live card */}
             <div className="myc-float absolute left-[-14px] top-[18%] flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-[var(--myc-shadow-soft)]">
               <span className="myc-pulse-dot" aria-hidden="true" />
               <span>
-                <strong>100% private</strong> · just you &amp; your teacher
+                <strong>100% personalised</strong> · just you &amp; your teacher
               </span>
             </div>
 
