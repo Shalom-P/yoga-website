@@ -72,7 +72,7 @@ export default async function DashboardHome() {
           <Calendar className="size-6 text-primary mb-3" />
           <div className="font-medium">Book a session</div>
           <div className="text-sm text-muted-foreground mt-1">
-            Find a private 1:1 with the teacher and time that fit your day.
+            Find a personalised 1:1 with the teacher and time that fit your day.
           </div>
         </Link>
         <Link

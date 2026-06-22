@@ -262,7 +262,7 @@ html.lenis body {
 .myc-theme .myc-sec-peach { background: var(--myc-peach); }
 .myc-theme .myc-sec-cream { background: var(--myc-bg-2); }
 
-/* Marquee of class styles */
+/* Marquee of class categories */
 .myc-marquee { overflow: hidden; white-space: nowrap; }
 .myc-marquee__track {
   display: inline-flex;

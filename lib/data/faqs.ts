@@ -7,7 +7,7 @@ export type Faq = { q: string; a: string };
 export const FAQS: Faq[] = [
   {
     q: "Is the free 1:1 session really free?",
-    a: "Yes — one 60-minute private session with a teacher of your choice. No credit card. We never auto-charge you after.",
+    a: "Yes — one 60-minute personalised session with a teacher of your choice. No credit card. We never auto-charge you after.",
   },
   {
     q: "Do I need to be a beginner — or experienced?",

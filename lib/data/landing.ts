@@ -201,7 +201,7 @@ const MOCK_CATEGORIES: ClassCategory[] = [
 const MOCK_PLANS: PlanWithFeatures[] = [
   {
     id: "p5", slug: "pack-5", name: "5-Session Pack",
-    description: "Five private 1:1 sessions — your flexible way in.",
+    description: "Five personalised 1:1 sessions — your flexible way in.",
     price_base_cents: 1000000, billing_interval: "one_time", session_credits: 5,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
@@ -212,7 +212,7 @@ const MOCK_PLANS: PlanWithFeatures[] = [
       { id: "pp5-aed", plan_id: "p5", currency: "AED", amount_cents: 43500,   created_at: "", updated_at: "" },
     ],
     features: [
-      { id: "f1", plan_id: "p5", feature_text: "5 private 1:1 sessions",          is_included: true, sort_order: 1 },
+      { id: "f1", plan_id: "p5", feature_text: "5 personalised 1:1 sessions",     is_included: true, sort_order: 1 },
       { id: "f2", plan_id: "p5", feature_text: "Book any teacher, any style",     is_included: true, sort_order: 2 },
       { id: "f3", plan_id: "p5", feature_text: "60-min sessions on Google Meet",  is_included: true, sort_order: 3 },
       { id: "f4", plan_id: "p5", feature_text: "Credits never expire",            is_included: true, sort_order: 4 },
@@ -221,7 +221,7 @@ const MOCK_PLANS: PlanWithFeatures[] = [
   },
   {
     id: "p10", slug: "pack-10", name: "10-Session Pack",
-    description: "Ten private 1:1 sessions — our best price per session.",
+    description: "Ten personalised 1:1 sessions — our best price per session.",
     price_base_cents: 1900000, billing_interval: "one_time", session_credits: 10,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
@@ -232,7 +232,7 @@ const MOCK_PLANS: PlanWithFeatures[] = [
       { id: "pp10-aed", plan_id: "p10", currency: "AED", amount_cents: 82500,   created_at: "", updated_at: "" },
     ],
     features: [
-      { id: "f6",  plan_id: "p10", feature_text: "10 private 1:1 sessions",        is_included: true, sort_order: 1 },
+      { id: "f6",  plan_id: "p10", feature_text: "10 personalised 1:1 sessions",   is_included: true, sort_order: 1 },
       { id: "f7",  plan_id: "p10", feature_text: "Book any teacher, any style",    is_included: true, sort_order: 2 },
       { id: "f8",  plan_id: "p10", feature_text: "Lowest price per session",       is_included: true, sort_order: 3 },
       { id: "f9",  plan_id: "p10", feature_text: "Credits never expire",           is_included: true, sort_order: 4 },
@@ -254,7 +254,7 @@ const MOCK_SETTINGS: Record<string, unknown> = {
   "brand.name": "My Yoga Classes",
   "landing.hero_headline": "Find your free 1:1 yoga teacher — no credit card.",
   "landing.hero_subhead":
-    "A 60-minute private session, live on Google Meet — shown in your local time. Pick your teacher, pick your time.",
+    "A 60-minute personalised session, live on Google Meet — shown in your local time. Pick your teacher, pick your time.",
   "landing.trust_count": "1,200+ reviews",
   "landing.trust_rating": "4.9",
   "landing.final_headline": "Your first session is on us.",
