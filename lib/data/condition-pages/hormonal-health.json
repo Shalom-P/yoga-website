@@ -1,0 +1,180 @@
+{
+  "slug": "hormonal-health",
+  "eyebrow": "Gentle intensity · for hormonal health",
+  "h1Before": "Yoga for ",
+  "h1Em": "hormonal health",
+  "h1After": ", shaped around you.",
+  "heroLead": "Soothing, restorative 1:1 sessions of gentle movement, breathwork, and deep rest — built around your body and how you feel through changing life stages. Practised alongside the care your doctor provides.",
+  "empathyLabel": "You don't have to do this alone",
+  "empathyText": "Hormones shift through every life stage. Yoga can be a soothing, steadying part of your week — supporting rest and calm alongside the care your doctor provides.",
+  "helpsH2": "How yoga can support hormonal health.",
+  "helpsSubhead": "Four gentle levers, working together — and the first one does most of the lifting.",
+  "levers": [
+    {
+      "title": "Rest for real tiredness",
+      "body": "Broken sleep and deep tiredness come with many hormonal stages. Restorative postures and guided relaxation help you wind down and rest more deeply."
+    },
+    {
+      "title": "Calmer days, steadier moods",
+      "body": "When stress and mood swings run high, slow breathing and meditation help you feel more settled and even from one day to the next."
+    },
+    {
+      "title": "Comfort in the body",
+      "body": "Gentle mobility, hip- and abdomen-friendly poses, and a cooling breath — traditionally used to help you feel more comfortable through cramps, tension, and warm flushes."
+    },
+    {
+      "title": "A routine you can keep",
+      "body": "Gentle, consistent movement supports an active routine and a healthy weight — a steady habit that carries you through changing life stages."
+    }
+  ],
+  "posesH2": "The poses we focus on, and why.",
+  "posesSubhead": "Grouped by what they do for the body. Your teacher draws from these — they won't ask you to do all of them.",
+  "poseGroups": [
+    {
+      "tag": "Gentle movement",
+      "why": "Easy mobility, traditionally used to support the hips and abdomen.",
+      "poses": [
+        {
+          "sa": "Baddha Konasana",
+          "en": "Bound-angle pose",
+          "desc": "A gentle hip opening, easing into the body without strain."
+        },
+        {
+          "sa": "Supta Baddha Konasana",
+          "en": "Reclined bound-angle",
+          "desc": "Supported and restful, letting the hips soften and open."
+        },
+        {
+          "sa": "Setu Bandhasana",
+          "en": "Supported bridge",
+          "desc": "A gentle, supported lift that opens the front of the body."
+        }
+      ]
+    },
+    {
+      "tag": "Restorative & calming",
+      "why": "Rest and ease over intensity.",
+      "poses": [
+        {
+          "sa": "Balasana",
+          "en": "Child's pose",
+          "desc": "A soft, inward rest to settle the body and mind."
+        },
+        {
+          "sa": "Paschimottanasana",
+          "en": "Supported seated forward fold",
+          "desc": "Calming, with a bolster, to quiet a busy mind."
+        },
+        {
+          "sa": "Viparita Karani",
+          "en": "Legs-up-the-wall",
+          "desc": "Restful and soothing, a gentle way to wind down."
+        }
+      ],
+      "note": "During menstruation or pregnancy we adapt — often leaving out inversions like legs-up-the-wall — and keep everything to what feels comfortable for you."
+    },
+    {
+      "tag": "Breathwork",
+      "why": "Calming the nervous system.",
+      "poses": [
+        {
+          "sa": "Nadi Shodhana",
+          "en": "Alternate-nostril breathing",
+          "desc": "Slow and settling, easing the nervous system."
+        },
+        {
+          "sa": "Bhramari",
+          "en": "Humming breath",
+          "desc": "Soothing, a low hum that helps release tension."
+        },
+        {
+          "sa": "Sheetali",
+          "en": "Cooling breath",
+          "desc": "A slow, cooling breath that many find soothing during warm flushes."
+        }
+      ],
+      "note": "Breathing stays gentle and natural with no breath-holding, and your teacher checks for pregnancy or any conditions first."
+    },
+    {
+      "tag": "Deep rest",
+      "why": "Good rest supports calmer, steadier days.",
+      "poses": [
+        {
+          "sa": "Yoga Nidra",
+          "en": "Guided deep relaxation",
+          "desc": "Restorative rest that releases tension and supports better sleep."
+        },
+        {
+          "sa": "Shavasana",
+          "en": "Final relaxation",
+          "desc": "A still close to every session, letting everything you've done settle in."
+        }
+      ]
+    }
+  ],
+  "selectionNote": "Your teacher won't hand you all of these. They'll choose the right few for your body, your level, and how you're feeling that day.",
+  "howH2": "How we work with you to get there.",
+  "howSubhead": "One teacher who knows your name and your goals — not a different face every week.",
+  "steps": [
+    {
+      "title": "We get to know you",
+      "body": "A relaxed first session: your energy, rest, life stage, and anything to adapt for."
+    },
+    {
+      "title": "A plan shaped to you",
+      "body": "Your teacher chooses restorative poses, breathing, and pacing that suit how you feel."
+    },
+    {
+      "title": "Guided live 1:1s",
+      "body": "The same teacher every time, on Google Meet, adjusting to your energy that day."
+    },
+    {
+      "title": "We grow it gently",
+      "body": "Small, steady habits you can keep — always alongside your medical care."
+    }
+  ],
+  "sessionTitle": "What a session looks like",
+  "sessionChecklist": [
+    "A relaxed check-in on your energy, rest, and anything to adapt for",
+    "Slow, restorative movement and supported postures",
+    "Gentle, comfortable breathing with no breath-holding or forcing",
+    "Guided relaxation to help settle the mind",
+    "A calm, unhurried close to the session"
+  ],
+  "whoForTitle": "Who it's for",
+  "whoForText": "Anyone moving through changing hormonal stages — monthly cycles, pregnancy recovery, perimenopause, or menopause — who wants a gentle, restorative practice to support rest, sleep, and a sense of steadiness.",
+  "propsTitle": "What you'll need",
+  "props": [
+    "A yoga mat",
+    "A bolster or cushion",
+    "A quiet corner"
+  ],
+  "testimonialQuote": "Perimenopause knocked my sleep and my moods sideways. The restful, restorative pace was exactly right — I sleep better now and feel far more like myself.",
+  "testimonialWho": "<strong>Placeholder — swap for a real review.</strong> Member · practising for 5 months",
+  "faqH2": "Questions people ask first.",
+  "faqs": [
+    {
+      "q": "Can yoga balance my hormones or treat PCOS, thyroid, or menopause?",
+      "a": "No. Yoga supports rest, calm, and an active routine alongside the care your doctor provides — it isn't a treatment for any condition, and you shouldn't change medication without your doctor."
+    },
+    {
+      "q": "Can I practise during my period?",
+      "a": "Yes, gently. Tell your teacher and we'll adapt — often leaving out strong inversions if you prefer."
+    },
+    {
+      "q": "Is this suitable during menopause?",
+      "a": "Yes. Many people find the calming, restorative focus and cooling breath soothing, and we adapt to how you feel each session."
+    },
+    {
+      "q": "Could I be pregnant — does that change things?",
+      "a": "Tell your teacher and we'll switch to a pregnancy-safe approach, and ask for your doctor or midwife's clearance first."
+    },
+    {
+      "q": "How soon might I notice anything?",
+      "a": "Everyone is different. Many people first notice calmer stress and better sleep, and consistency helps the most."
+    }
+  ],
+  "safetyTitle": "Yoga supports your care — it doesn't replace it",
+  "safetyText": "These sessions support your overall wellbeing and are practised alongside professional medical care. They are not a substitute for diagnosis, treatment, or medication. Please tell your teacher about any conditions or symptoms so they can adapt your session safely, and keep your doctor in the loop.",
+  "metaDescription": "Gentle, restorative 1:1 yoga for hormonal health — soothing movement, breathwork, and deep rest that may support better sleep, steadier energy, and calmer days through changing life stages. First session free."
+}
