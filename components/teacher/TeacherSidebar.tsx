@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
+import { YogaAvatar } from "@/components/shared/YogaAvatar";
 import { Button } from "@/components/ui/button";
 import {
   Sheet, SheetContent, SheetTrigger, SheetTitle, SheetDescription,
@@ -74,7 +75,7 @@ function NavLinks({
 function UserCard({ userName, userEmail }: { userName: string; userEmail: string }) {
   return (
     <div className="flex items-center gap-2.5 border-t border-border p-4">
-      <span className="size-9 shrink-0 rounded-full bg-gradient-to-br from-accent/40 to-accent" />
+      <YogaAvatar seed={userEmail || userName} className="size-9" />
       <div className="min-w-0">
         <div className="truncate text-sm font-medium">{userName}</div>
         <div className="truncate text-xs text-muted-foreground">{userEmail}</div>
