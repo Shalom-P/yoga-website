@@ -2,6 +2,7 @@ import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/guards";
 import { Users, Calendar, TrendingUp, Video, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { YogaAvatar } from "@/components/shared/YogaAvatar";
 import { formatMoney } from "@/lib/i18n/money";
 import { formatCustomerTime, formatInTz, tzShort, DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
@@ -178,7 +179,7 @@ export default async function AdminDashboard() {
                   className="flex items-center justify-between gap-3 border-b border-border py-2.5 last:border-0"
                 >
                   <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="size-8 shrink-0 rounded-full bg-gradient-to-br from-accent/40 to-accent" />
+                    <YogaAvatar seed={s.teacher?.display_name ?? s.id} className="size-8" />
                     <div className="min-w-0">
                       <div className="truncate text-sm font-medium text-foreground">
                         {s.teacher?.display_name ?? "Teacher"}
