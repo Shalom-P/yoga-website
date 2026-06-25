@@ -46,9 +46,13 @@ export async function updateSession(req: NextRequest) {
   } = await supabase.auth.getUser();
 
   const path = req.nextUrl.pathname;
-  const isAdminArea = path.startsWith("/admin");
-  const isTeacherArea = path.startsWith("/teacher");
-  const isDashboardArea = path.startsWith("/dashboard");
+  // Match the route segment exactly or as a parent prefix — NOT a bare string
+  // prefix, or "/teacher" would also swallow the public "/teachers" marketing
+  // listing (and "/teachers/[slug]"), wrongly gating it as the teacher area.
+  const inArea = (base: string) => path === base || path.startsWith(`${base}/`);
+  const isAdminArea = inArea("/admin");
+  const isTeacherArea = inArea("/teacher");
+  const isDashboardArea = inArea("/dashboard");
   const isAuthArea = isDashboardArea || isAdminArea || isTeacherArea;
 
   if (isAuthArea && !user) {
