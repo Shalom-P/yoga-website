@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, BookOpen, CalendarClock, BadgePercent,
   Image as ImageIcon, Wallet, Calendar, UserRound, Settings, Briefcase,
-  Menu, ArrowLeft, Star,
+  Menu, ArrowLeft, Star, Banknote,
 } from "lucide-react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
@@ -16,7 +16,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 
-// Grouped so the 11 destinations stay scannable: a top Overview, then
+// Grouped so the destinations stay scannable: a top Overview, then
 // Catalog (things you publish), Operations (day-to-day) and Settings.
 const NAV_GROUPS: {
   label: string | null;
@@ -41,6 +41,7 @@ const NAV_GROUPS: {
     items: [
       { href: "/admin/sessions",  label: "Sessions",  icon: CalendarClock },
       { href: "/admin/bookings",  label: "Bookings",  icon: Calendar },
+      { href: "/admin/payments",  label: "Bank transfers", icon: Banknote },
       { href: "/admin/customers", label: "Customers", icon: UserRound },
       { href: "/admin/reviews",   label: "Reviews",   icon: Star },
     ],

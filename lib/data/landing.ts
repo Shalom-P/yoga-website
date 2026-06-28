@@ -200,6 +200,26 @@ const MOCK_CATEGORIES: ClassCategory[] = [
 // never spends credits. TODO(pricing): placeholder amounts — confirm with business.
 const MOCK_PLANS: PlanWithFeatures[] = [
   {
+    id: "p1", slug: "pack-1", name: "1-Session Pack",
+    description: "A single personalised 1:1 session — perfect for a one-off or a top-up.",
+    price_base_cents: 135000, billing_interval: "one_time", session_credits: 1,
+    paypal_plan_id: null, included_sessions_per_month: null,
+    included_session_types: [],
+    is_active: true, is_featured: false, sort_order: 0,
+    created_at: "", updated_at: "",
+    prices: [
+      { id: "pp1-inr", plan_id: "p1", currency: "INR", amount_cents: 135000, created_at: "", updated_at: "" },
+      { id: "pp1-aed", plan_id: "p1", currency: "AED", amount_cents: 5900,   created_at: "", updated_at: "" },
+    ],
+    features: [
+      { id: "f1a", plan_id: "p1", feature_text: "1 personalised 1:1 session",     is_included: true, sort_order: 1 },
+      { id: "f1b", plan_id: "p1", feature_text: "Book any teacher, any style",     is_included: true, sort_order: 2 },
+      { id: "f1c", plan_id: "p1", feature_text: "60-min session on Google Meet",   is_included: true, sort_order: 3 },
+      { id: "f1d", plan_id: "p1", feature_text: "Credit never expires",            is_included: true, sort_order: 4 },
+      { id: "f1e", plan_id: "p1", feature_text: "Cancel before the session — credit refunded", is_included: true, sort_order: 5 },
+    ],
+  },
+  {
     id: "p5", slug: "pack-5", name: "5-Session Pack",
     description: "Five personalised 1:1 sessions — your flexible way in.",
     price_base_cents: 1000000, billing_interval: "one_time", session_credits: 5,
@@ -209,7 +229,7 @@ const MOCK_PLANS: PlanWithFeatures[] = [
     created_at: "", updated_at: "",
     prices: [
       { id: "pp5-inr", plan_id: "p5", currency: "INR", amount_cents: 1000000, created_at: "", updated_at: "" },
-      { id: "pp5-aed", plan_id: "p5", currency: "AED", amount_cents: 43500,   created_at: "", updated_at: "" },
+      { id: "pp5-aed", plan_id: "p5", currency: "AED", amount_cents: 27500,   created_at: "", updated_at: "" },
     ],
     features: [
       { id: "f1", plan_id: "p5", feature_text: "5 personalised 1:1 sessions",     is_included: true, sort_order: 1 },
@@ -229,7 +249,7 @@ const MOCK_PLANS: PlanWithFeatures[] = [
     created_at: "", updated_at: "",
     prices: [
       { id: "pp10-inr", plan_id: "p10", currency: "INR", amount_cents: 1900000, created_at: "", updated_at: "" },
-      { id: "pp10-aed", plan_id: "p10", currency: "AED", amount_cents: 82500,   created_at: "", updated_at: "" },
+      { id: "pp10-aed", plan_id: "p10", currency: "AED", amount_cents: 49900,   created_at: "", updated_at: "" },
     ],
     features: [
       { id: "f6",  plan_id: "p10", feature_text: "10 personalised 1:1 sessions",   is_included: true, sort_order: 1 },
