@@ -54,30 +54,41 @@ on conflict do nothing;
 -- touches credits. (See supabase/migrations/0011 + 0020 + 0022.)
 -- price_base_cents is the currency-neutral fallback; per-currency amounts below.
 insert into public.plans (slug, name, description, price_base_cents, billing_interval, session_credits, included_sessions_per_month, included_session_types, is_active, is_featured, sort_order) values
+  ('pack-1',  '1-Session Pack',  'A single private 1:1 session — perfect for a one-off or a top-up.', 135000, 'one_time', 1,  null, '{}', true, false, 0),
   ('pack-5',  '5-Session Pack',  'Five private 1:1 sessions — your flexible way in.',       1000000, 'one_time', 5,  null, '{}', true, false, 1),
   ('pack-10', '10-Session Pack', 'Ten private 1:1 sessions — our best price per session.', 1900000, 'one_time', 10, null, '{}', true, true,  2)
 on conflict (slug) do nothing;
 
--- Per-currency prices (UAE → AED, India → INR). Converted from the prior AUD pack
--- prices (A$180 / A$340); admin-editable in /admin/plans. See migration 0022.
+-- Per-currency prices (UAE → AED, India → INR). AED figures set by the studio
+-- (see migration 0031); INR for pack-1 is a PLACEHOLDER until India pricing
+-- lands. Admin-editable in /admin/plans.
 insert into public.plan_prices (plan_id, currency, amount_cents)
 select p.id, v.currency, v.amount_cents
 from public.plans p
 join (values
+  ('pack-1',  'AED',   5900),
+  ('pack-1',  'INR', 135000),
   ('pack-5',  'INR', 1000000),
-  ('pack-5',  'AED',   43500),
+  ('pack-5',  'AED',   27500),
   ('pack-10', 'INR', 1900000),
-  ('pack-10', 'AED',   82500)
+  ('pack-10', 'AED',   49900)
 ) as v(slug, currency, amount_cents) on v.slug = p.slug
 on conflict (plan_id, currency) do nothing;
 
 -- Plan features (only true capabilities — credits never expire; cancel refunds the credit)
 do $$
 declare
+  p1  uuid := (select id from public.plans where slug='pack-1');
   p5  uuid := (select id from public.plans where slug='pack-5');
   p10 uuid := (select id from public.plans where slug='pack-10');
 begin
   insert into public.plan_features (plan_id, feature_text, is_included, sort_order) values
+    (p1,  '1 private 1:1 session',           true, 1),
+    (p1,  'Book any teacher, any style',     true, 2),
+    (p1,  '60-min session on Google Meet',   true, 3),
+    (p1,  'Credit never expires',            true, 4),
+    (p1,  'Cancel before the session — credit refunded', true, 5),
+
     (p5,  '5 private 1:1 sessions',          true, 1),
     (p5,  'Book any teacher, any style',     true, 2),
     (p5,  '60-min sessions on Google Meet',  true, 3),

@@ -197,6 +197,7 @@ export type Subscription = {
   created_at: string;
   updated_at: string;
 }
+export type PaymentMethod = "razorpay" | "bank_transfer" | "paypal";
 export type Payment = {
   id: string;
   customer_id: string;
@@ -207,6 +208,12 @@ export type Payment = {
   amount_cents: number;
   currency: string;
   status: PaymentStatus;
+  // 0030: manual UAE bank-transfer rail.
+  method: PaymentMethod;
+  plan_id: string | null;
+  reference: string | null;
+  verified_by: string | null;
+  verified_at: string | null;
   paid_at: string | null;
   created_at: string;
 }
@@ -371,6 +378,8 @@ export type Database = {
       payments: Table<Payment, Partial<Payment> & { customer_id: string; amount_cents: number }, Partial<Payment>, [
         { foreignKeyName: "payments_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         { foreignKeyName: "payments_subscription_id_fkey"; columns: ["subscription_id"]; isOneToOne: false; referencedRelation: "subscriptions"; referencedColumns: ["id"] },
+        { foreignKeyName: "payments_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
+        { foreignKeyName: "payments_verified_by_fkey"; columns: ["verified_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
       ]>;
       reviews: Table<Review, Partial<Review> & { customer_id: string; rating: number }, Partial<Review>, [
         { foreignKeyName: "reviews_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },

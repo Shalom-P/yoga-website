@@ -14,13 +14,15 @@ import { detectBrowserTimezone } from "@/lib/timezone";
 import { useHasMounted } from "@/components/dashboard/local-time";
 import { track } from "@/lib/analytics/events";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { startRazorpayCheckout } from "@/components/shared/razorpay-checkout";
+import { startCheckout, type BankTransferIntent } from "@/components/shared/checkout";
+import { BankTransferDialog } from "@/components/shared/BankTransferDialog";
 import { toast } from "sonner";
 import type { PlanWithFeatures } from "@/lib/data/landing";
 
 export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  const [bankIntent, setBankIntent] = useState<BankTransferIntent | null>(null);
   // The charged currency is resolved server-side at create-order (GeoIP-first).
   // For *display* we best-effort detect from the browser timezone. Computed
   // during render after mount so SSR + first client render both use the default
@@ -48,20 +50,18 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
       router.push(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
-    const keyId = process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID;
-    if (!keyId) {
-      toast.error("Checkout isn't configured yet.");
-      setPending(null);
-      return;
-    }
-    await startRazorpayCheckout({
+    await startCheckout({
       planSlug,
-      keyId,
+      keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
       prefill: { email: user.email ?? undefined },
       onPaid: () => {
         toast.success("Payment successful!");
         router.push("/dashboard/plan?purchased=1");
         router.refresh();
+      },
+      onBankTransfer: (intent) => {
+        setBankIntent(intent);
+        setPending(null);
       },
       onError: (message) => {
         toast.error(message);
@@ -177,6 +177,12 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
           </Link>
         </p>
       </div>
+
+      <BankTransferDialog
+        intent={bankIntent}
+        open={bankIntent !== null}
+        onOpenChange={(o) => !o && setBankIntent(null)}
+      />
     </section>
   );
 }
