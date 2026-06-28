@@ -9,7 +9,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "FAQ",
   description:
-    "Common questions about free 1:1 yoga sessions, pricing, scheduling, and how online classes on Google Meet work.",
+    "Common questions about 1:1 yoga sessions, pricing, scheduling, and how online classes on Google Meet work.",
   alternates: { canonical: "/faq" },
 };
 
@@ -23,7 +23,7 @@ export default function FaqPage() {
         subhead="Quick answers to the bits people usually ask before booking. Still stuck? Drop us a note on the contact page."
       />
       <FAQ />
-      <FinalCTA headline="Try your first 1:1 on us." />
+      <FinalCTA headline="Book your first 1:1 session." />
     </>
   );
 }

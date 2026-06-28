@@ -33,14 +33,14 @@ export function FinalCTA({ headline }: { headline: string }) {
               style={{ background: "var(--myc-accent-soft)" }}
               aria-hidden="true"
             />
-            Your first session is on us
+            Start your practice
           </div>
           <h2 className="text-[clamp(2.5rem,5.5vw,4.75rem)] tracking-tight text-balance text-primary-foreground">
             {headline}
           </h2>
           <p className="mx-auto mt-5 max-w-[540px] text-lg text-primary-foreground/80 text-pretty">
-            No card, no commitment. Book a personalised 1:1 today and meet a teacher who&apos;ll know
-            your name — and your goals.
+            Book a personalised 1:1 today and meet a teacher who&apos;ll know your name — and your
+            goals.
           </p>
           <Button
             asChild
@@ -49,12 +49,12 @@ export function FinalCTA({ headline }: { headline: string }) {
             onClick={() => track("cta_click", { position: "final" })}
           >
             <Link href="/login?next=/dashboard/book">
-              Book my free session
+              Book a session
               <ArrowRight className="ml-1 size-4" />
             </Link>
           </Button>
           <div className="mt-6 text-sm text-primary-foreground/70">
-            100% personalised 1:1s · No subscription · No credit card for your trial
+            100% personalised 1:1s · No subscription · Pay only for what you book
           </div>
         </div>
       </motion.div>

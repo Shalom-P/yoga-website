@@ -54,8 +54,7 @@ export default function TermsPage() {
             <p>
               My Yoga Classes is an online platform connecting students in the United Arab
               Emirates and India with qualified yoga teachers based in India. Sessions are
-              delivered live via Google Meet on a one-to-one basis, paid for with your free trial
-              or a session pack.
+              delivered live via Google Meet on a one-to-one basis, paid for with a session pack.
             </p>
             <p>
               We act as the platform operator and are responsible for scheduling, billing, and
@@ -80,18 +79,16 @@ export default function TermsPage() {
             </p>
           </section>
 
-          {/* 4. Bookings and the free trial */}
+          {/* 4. Bookings */}
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">
-              4. Bookings and the free 1:1 trial
+              4. Bookings
             </h2>
             <p>
-              Every new account is entitled to <strong>one free introductory 1:1 session</strong>{" "}
-              — no payment method required. The trial session is subject to teacher availability
-              and must be booked through the platform.
+              Sessions are booked through the platform and are subject to teacher availability.
             </p>
             <p>
-              When you book a session (free or paid):
+              When you book a session:
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>

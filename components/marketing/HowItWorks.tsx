@@ -14,7 +14,7 @@ const STEPS = [
   {
     n: "02",
     title: "Book a time that suits you",
-    body: "Choose a slot from live availability, shown in your local time. Your first 1:1 is free — no card needed to start.",
+    body: "Choose a slot from live availability, shown in your local time. Book in seconds — pay only for the sessions you book.",
     href: "/pricing",
     cta: "See pricing →",
   },
@@ -23,7 +23,7 @@ const STEPS = [
     title: "Meet live, one-on-one",
     body: "Roll out your mat — it's just you and your teacher on Google Meet. Real-time corrections, your pace, their full attention.",
     href: "/login?next=/dashboard/book",
-    cta: "Book free session →",
+    cta: "Book a session →",
   },
 ];
 

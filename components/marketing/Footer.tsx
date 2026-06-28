@@ -23,8 +23,8 @@ export function Footer() {
             </span>
           </Link>
           <p className="max-w-xs text-pretty text-sm text-background/75">
-            Live, personalised 1:1 yoga with expert teachers from India. Book a free session in your
-            local time — no credit card required.
+            Live, personalised 1:1 yoga with expert teachers from India. Book a session in your
+            local time.
           </p>
           <div className="mt-6 max-w-sm">
             <NewsletterForm />

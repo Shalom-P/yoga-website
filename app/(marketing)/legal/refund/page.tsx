@@ -3,7 +3,7 @@
 export const metadata = {
   title: "Refund policy — My Yoga Classes",
   description:
-    "My Yoga Classes refund and cancellation policy, including the free trial, one-time session packs, and your statutory rights under UAE and Indian consumer law.",
+    "My Yoga Classes refund and cancellation policy, including one-time session packs and your statutory rights under UAE and Indian consumer law.",
   alternates: { canonical: "/legal/refund" },
 };
 
@@ -24,13 +24,13 @@ export default function RefundPage() {
 
         <div className="mt-10 space-y-10 text-foreground/85 text-pretty">
 
-          {/* 1. Free trial */}
+          {/* 1. Booking and paying for sessions */}
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">1. Free introductory session</h2>
+            <h2 className="text-xl font-semibold text-foreground">1. Booking and paying for sessions</h2>
             <p>
-              Your <strong>first 1:1 session is completely free</strong> — no credit card or
-              payment is required to book it. If you choose not to continue after your
-              trial, simply do nothing; you will not be charged.
+              Sessions are booked through the platform and paid for using a{" "}
+              <strong>one-time session pack</strong>. You are only ever charged for the packs you
+              choose to buy — there is no subscription and no automatic recurring charge.
             </p>
           </section>
 

@@ -22,13 +22,13 @@ export default function LoginPage() {
         <div className="w-full max-w-md">
           <div className="myc-eyebrow mb-4 justify-center">
             <span className="myc-dot" aria-hidden="true" />
-            Free 1:1 · No card needed
+            Live 1:1 yoga · In your local time
           </div>
           <h1 className="text-4xl font-[family-name:var(--font-cormorant)] tracking-tight text-center">
             Continue with <span className="text-accent italic">My Yoga Classes</span>
           </h1>
           <p className="mt-2 text-center text-muted-foreground">
-            Your free 1:1 session is one click away.
+            Your next 1:1 session is one click away.
           </p>
           <Suspense fallback={<div className="mt-8 h-32 rounded-2xl bg-muted/40 animate-pulse" />}>
             <LoginForm />

@@ -51,7 +51,7 @@ function SimpleDetail({ c }: { c: Category }) {
   const cta = (
     <Button asChild size="lg" className="h-12 rounded-full px-6">
       <Link href="/login?next=/dashboard/book">
-        Book my free 1:1 session
+        Book a 1:1 session
         <ArrowRight className="ml-1 size-4" />
       </Link>
     </Button>
@@ -143,7 +143,7 @@ function SimpleDetail({ c }: { c: Category }) {
           <div className="pt-2 text-center">
             {cta}
             <p className="mt-3 text-xs text-muted-foreground">
-              Free 1:1 trial · No credit card · 60 min, live on Google Meet
+              60 min · 1:1 · live on Google Meet
             </p>
           </div>
         </div>

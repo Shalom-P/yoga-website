@@ -41,7 +41,7 @@ export default function AboutPage() {
           </p>
         </div>
       </article>
-      <FinalCTA headline="Meet a teacher. On us." />
+      <FinalCTA headline="Meet a teacher who learns your name." />
     </>
   );
 }

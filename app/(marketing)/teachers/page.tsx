@@ -88,7 +88,7 @@ export default async function TeachersPage() {
         </div>
       </section>
 
-      <FinalCTA headline="Book a free 1:1 with any teacher above." />
+      <FinalCTA headline="Book a 1:1 with any teacher above." />
     </>
   );
 }

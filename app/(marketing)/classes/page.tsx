@@ -20,7 +20,7 @@ export default async function ClassesPage() {
         title={<>Yoga for whatever your <em>body is working on</em>.</>}
       />
       <ClassGrid categories={categories} />
-      <FinalCTA headline="Try any class type — first one free." />
+      <FinalCTA headline="Find the class type that fits you." />
     </>
   );
 }

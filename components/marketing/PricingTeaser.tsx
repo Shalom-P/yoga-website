@@ -91,7 +91,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
             Pay as you go. No lock-ins.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Your free 1:1 trial comes first — buy a pack of sessions when you&apos;re ready.
+            Buy a one-time pack of sessions — no subscription, and your credits never expire.
           </p>
         </motion.div>
 

@@ -10,7 +10,7 @@ import { getPlansWithFeatures } from "@/lib/data/landing";
 export const revalidate = 60;
 export const metadata = {
   title: "Pricing",
-  description: "Honest yoga pricing in AED and INR. Free 1:1 trial — no credit card. One-time session packs, no subscription.",
+  description: "Honest yoga pricing in AED and INR. One-time session packs, no subscription.",
   alternates: { canonical: "/pricing" },
 };
 
@@ -22,11 +22,11 @@ export default async function PricingPage() {
       <PageHeader
         eyebrow="Pricing"
         title={<>Pay only when <em>you&apos;re ready.</em></>}
-        subhead="Every plan starts with a free 1:1 — buy a pack of sessions afterwards, or you don't."
+        subhead="Buy a one-time pack of sessions — no subscription, and your credits never expire."
       />
       <PricingTeaser plans={plans} />
       <FAQ />
-      <FinalCTA headline="Try your first 1:1 on us." />
+      <FinalCTA headline="Book your first 1:1 session." />
     </>
   );
 }
