@@ -5,15 +5,15 @@
 -- Admin settings (read by the landing page server-side)
 insert into public.admin_settings (key, value) values
   ('brand.name',              '"MYYOGACLASSES"'),
-  ('brand.tagline',           '"Find your free 1:1 yoga teacher — no credit card."'),
+  ('brand.tagline',           '"Find your 1:1 yoga teacher."'),
   ('brand.primary_color',     '"#5B7C5A"'),
   ('brand.accent_color',      '"#C66B4E"'),
   ('support.email',           '"hello@myyogaclasses.fit"'),
-  ('landing.hero_headline',   '"Find your free 1:1 yoga teacher — no credit card."'),
+  ('landing.hero_headline',   '"Find your 1:1 yoga teacher."'),
   ('landing.hero_subhead',    '"A 60-minute private session, live on Google Meet — shown in your local time. Pick your teacher, pick your time."'),
   ('landing.trust_count',     '"1,200+ reviews"'),
   ('landing.trust_rating',    '"4.9"'),
-  ('landing.final_headline',  '"Your first session is on us."')
+  ('landing.final_headline',  '"Book your 1:1 session today."')
 on conflict (key) do nothing;
 
 -- Class categories

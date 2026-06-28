@@ -6,8 +6,8 @@ export type Faq = { q: string; a: string };
 
 export const FAQS: Faq[] = [
   {
-    q: "Is the free 1:1 session really free?",
-    a: "Yes — one 60-minute personalised session with a teacher of your choice. No credit card. We never auto-charge you after.",
+    q: "How do the 1:1 sessions work?",
+    a: "Each session is a 60-minute personalised 1:1 with a teacher of your choice, live on Google Meet at a time shown in your local time.",
   },
   {
     q: "Do I need to be a beginner — or experienced?",
@@ -27,7 +27,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How does paying work — is there a subscription?",
-    a: "No subscription. After your free trial you buy a one-time pack of sessions (5 or 10). Each booking spends one credit, and your credits never expire.",
+    a: "No subscription. You buy a one-time pack of sessions (5 or 10). Each booking spends one credit, and your credits never expire.",
   },
   {
     q: "Can I cancel a booked session?",

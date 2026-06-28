@@ -82,7 +82,7 @@ export function ConditionLanding({ data: d }: { data: ConditionPage }) {
           <div className="mt-9 flex flex-wrap justify-center gap-3">
             <Button asChild size="lg" className="h-12 rounded-full px-6">
               <Link href={BOOK_HREF}>
-                Book my free 1:1 session
+                Book a 1:1 session
                 <ArrowRight className="ml-1 size-4" />
               </Link>
             </Button>
@@ -91,7 +91,7 @@ export function ConditionLanding({ data: d }: { data: ConditionPage }) {
             </Button>
           </div>
           <p className="mt-5 text-sm text-muted-foreground">
-            Free 1:1 trial · No credit card · 60 min, live on Google Meet
+60 min · 1:1 · live on Google Meet
           </p>
         </div>
       </section>
@@ -281,7 +281,7 @@ export function ConditionLanding({ data: d }: { data: ConditionPage }) {
       </section>
 
       {/* 11 · FINAL CTA (shared marketing component) */}
-      <FinalCTA headline="Your first session is on us." />
+      <FinalCTA headline="Book your 1:1 session today." />
     </>
   );
 }

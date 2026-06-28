@@ -2,7 +2,7 @@ import { ImageResponse } from "next/og";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
-export const alt = "My Yoga Classes — Live 1:1 online yoga · Book a free session";
+export const alt = "My Yoga Classes — Live 1:1 online yoga";
 
 export default async function Image() {
   return new ImageResponse(
@@ -56,7 +56,7 @@ export default async function Image() {
             maxWidth: "800px",
           }}
         >
-          Live 1:1 online yoga · Book a free session
+          Live 1:1 online yoga · In your local time
         </div>
 
         {/* Sub-tagline */}
@@ -69,7 +69,7 @@ export default async function Image() {
             marginTop: "8px",
           }}
         >
-          Expert teachers from India · No credit card required
+          Expert teachers from India · Live on Google Meet
         </div>
 
         {/* Decorative bottom accent */}

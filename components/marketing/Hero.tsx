@@ -27,7 +27,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
               className="myc-eyebrow mb-6"
             >
               <span className="myc-dot" aria-hidden="true" />
-              First session free · No card needed
+              Personalised 1:1 · Live on Google Meet
             </motion.div>
 
             <motion.h1
@@ -60,13 +60,13 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                 className="h-12 px-7 rounded-full text-base font-semibold bg-accent text-white shadow-[var(--myc-shadow-soft)] hover:bg-accent/90"
                 onClick={() =>
                   track("hero_cta_click", {
-                    cta_text: "Book my free session",
+                    cta_text: "Book a session",
                     position: "hero",
                   })
                 }
               >
                 <Link href="/login?next=/dashboard/book">
-                  Book my free 1:1 session
+                  Book a 1:1 session
                   <ArrowRight className="size-4 ml-1" />
                 </Link>
               </Button>

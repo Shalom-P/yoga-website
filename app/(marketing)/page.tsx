@@ -40,11 +40,11 @@ export default async function LandingPage() {
     ]),
   ]);
 
-  const headline = landingSetting(settings, "landing.hero_headline", "Find your free 1:1 yoga teacher — no credit card.");
+  const headline = landingSetting(settings, "landing.hero_headline", "Find your 1:1 yoga teacher.");
   const subhead = landingSetting(settings, "landing.hero_subhead", "A 60-minute personalised session, live on Google Meet — shown in your local time. Pick your teacher, pick your time.");
   const trustRating = landingSetting(settings, "landing.trust_rating", "4.9");
   const trustCount = landingSetting(settings, "landing.trust_count", "1,200+ reviews");
-  const finalHeadline = landingSetting(settings, "landing.final_headline", "Your first session is on us.");
+  const finalHeadline = landingSetting(settings, "landing.final_headline", "Book your 1:1 session today.");
 
   return (
     <>
