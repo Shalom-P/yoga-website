@@ -175,11 +175,32 @@ export type DiscountCode = {
   applies_to_plan_ids: string[] | null;
   max_uses: number | null;
   times_used: number;
+  // 0032: per-email usage cap (null = unlimited per email) + optional currency
+  // lock for fixed-amount codes ('INR' | 'AED' | null = any).
+  per_email_max: number | null;
+  currency: string | null;
   valid_from: string;
   valid_until: string | null;
   is_active: boolean;
   created_at: string;
   updated_at: string;
+}
+// 0032: one row per promo-code use, linking the redemption to the buyer's email.
+export type DiscountRedemptionStatus = "reserved" | "committed" | "released" | "reversed";
+export type DiscountRedemption = {
+  id: string;
+  discount_code_id: string;
+  customer_id: string;
+  email: string;
+  razorpay_order_id: string | null;
+  payment_id: string | null;
+  currency: string;
+  original_amount_cents: number;
+  discount_amount_cents: number;
+  final_amount_cents: number;
+  status: DiscountRedemptionStatus;
+  created_at: string;
+  committed_at: string | null;
 }
 export type Subscription = {
   id: string;
@@ -214,6 +235,9 @@ export type Payment = {
   reference: string | null;
   verified_by: string | null;
   verified_at: string | null;
+  // 0032: the promo code applied to this purchase (if any) + how much it took off.
+  discount_code_id: string | null;
+  discount_amount_cents: number | null;
   paid_at: string | null;
   created_at: string;
 }
@@ -370,6 +394,11 @@ export type Database = {
         { foreignKeyName: "plan_prices_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
       ]>;
       discount_codes: Table<DiscountCode, Partial<DiscountCode> & { code: string; discount_type: DiscountType; discount_value: number }>;
+      discount_redemptions: Table<DiscountRedemption, Partial<DiscountRedemption> & { discount_code_id: string; customer_id: string; email: string; currency: string; original_amount_cents: number; discount_amount_cents: number; final_amount_cents: number }, Partial<DiscountRedemption>, [
+        { foreignKeyName: "discount_redemptions_discount_code_id_fkey"; columns: ["discount_code_id"]; isOneToOne: false; referencedRelation: "discount_codes"; referencedColumns: ["id"] },
+        { foreignKeyName: "discount_redemptions_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        { foreignKeyName: "discount_redemptions_payment_id_fkey"; columns: ["payment_id"]; isOneToOne: false; referencedRelation: "payments"; referencedColumns: ["id"] },
+      ]>;
       subscriptions: Table<Subscription, Partial<Subscription> & { customer_id: string; plan_id: string; paypal_subscription_id: string }, Partial<Subscription>, [
         { foreignKeyName: "subscriptions_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         { foreignKeyName: "subscriptions_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
@@ -484,6 +513,33 @@ export type Database = {
         };
         Returns: null;
       };
+      reserve_discount_redemption: {
+        Args: {
+          p_code: string;
+          p_plan_id: string;
+          p_customer: string;
+          p_email: string;
+          p_currency: string;
+          p_original_amount_cents: number;
+          p_order_id?: string | null;
+          p_payment_id?: string | null;
+        };
+        Returns: {
+          ok: boolean;
+          error?: string;
+          redemption_id?: string;
+          discount_code_id?: string;
+          discount_amount_cents?: number;
+          final_amount_cents?: number;
+          discount_type?: DiscountType;
+          code?: string;
+        };
+      };
+      commit_discount_redemption: { Args: { p_redemption_id: string; p_order_id: string; p_payment_id: string }; Returns: null };
+      commit_discount_redemption_by_payment: { Args: { p_payment_id: string }; Returns: null };
+      release_discount_redemption: { Args: { p_payment_id: string }; Returns: null };
+      release_discount_reservation: { Args: { p_redemption_id: string }; Returns: null };
+      release_stale_discount_reservations: { Args: { p_older_than?: string; p_limit?: number }; Returns: number };
       share_medical_document: {
         Args: { p_document_id: string; p_teacher_id: string };
         Returns: string;

@@ -8,6 +8,7 @@ import { z } from "zod";
 import { resolvePackBySlug } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { normalizePromoCode, promoErrorMessage, reserveDiscount } from "@/lib/billing/promo";
 import {
   canTransactFromRequest,
   countryFromHeaders,
@@ -41,6 +42,8 @@ const bodySchema = z.object({
   // The visitor's live browser timezone (IANA id) — service-area gate + currency
   // fallback when GeoIP is absent (local/off-platform). Never a price input.
   clientTimezone: z.string().trim().min(1).max(64),
+  // Optional promo code (applied server-side; never a price input).
+  promoCode: z.string().trim().max(64).optional(),
 });
 
 /** Short, ambiguity-free transfer reference, e.g. "MYC-7K2QF9". */
@@ -76,7 +79,7 @@ export async function POST(req: Request): Promise<Response> {
   // Service-area gate (same as create-order): non-admins must be in UAE/India.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role")
+    .select("role, email")
     .eq("id", user.id)
     .maybeSingle();
   const country = countryFromHeaders(req.headers);
@@ -127,7 +130,7 @@ export async function POST(req: Request): Promise<Response> {
     Sentry.captureMessage(`bank-transfer intent: no AED price for plan ${pack.planId}`, "warning");
     return Response.json({ error: "AED price not configured for this plan." }, { status: 400 });
   }
-  const amountCents = aedPrice.amount_cents;
+  const originalAmount = aedPrice.amount_cents;
 
   // Reuse an open transfer for this customer + plan so repeated clicks don't pile
   // up duplicate rows in the verification queue. A partial unique index (0030)
@@ -145,6 +148,40 @@ export async function POST(req: Request): Promise<Response> {
       .maybeSingle();
 
   let payment = (await selectOpen()).data;
+
+  // Promo codes apply only when CREATING a fresh transfer — never re-priced onto
+  // an in-flight one the customer may already be wiring. Reserve the discount +
+  // discounted amount server-side before the insert; link it to the payment after.
+  const promoCode = payment ? null : normalizePromoCode(parsed.data.promoCode);
+  let amountCents = originalAmount;
+  let reservation: Extract<Awaited<ReturnType<typeof reserveDiscount>>, { ok: true }> | null = null;
+  if (promoCode) {
+    const email = user.email ?? profile?.email ?? null;
+    if (!email) {
+      return Response.json(
+        { error: "promo_email_required", message: promoErrorMessage("email_required") },
+        { status: 400 },
+      );
+    }
+    const result = await reserveDiscount(svc, {
+      code: promoCode,
+      planId: pack.planId,
+      customerId: user.id,
+      email,
+      currency: "AED",
+      originalAmountCents: originalAmount,
+    });
+    if (!result.ok) {
+      return Response.json(
+        { error: "promo_invalid", reason: result.error, message: promoErrorMessage(result.error) },
+        { status: 400 },
+      );
+    }
+    reservation = result;
+    amountCents = result.finalAmountCents;
+  }
+
+  let inserted = false;
   for (let attempt = 0; attempt < 2 && !payment; attempt++) {
     const { data, error } = await svc
       .from("payments")
@@ -156,11 +193,14 @@ export async function POST(req: Request): Promise<Response> {
         amount_cents: amountCents,
         currency: "AED",
         reference: makeReference(),
+        discount_code_id: reservation?.discountCodeId ?? null,
+        discount_amount_cents: reservation?.discountAmountCents ?? null,
       })
       .select("id, reference, amount_cents")
       .single();
     if (!error && data) {
       payment = data;
+      inserted = true;
       break;
     }
     if (error?.code === "23505") {
@@ -174,10 +214,31 @@ export async function POST(req: Request): Promise<Response> {
       `bank-transfer intent insert failed: ${error?.message ?? "unknown"}`,
       "warning",
     );
+    if (reservation) {
+      await svc.rpc("release_discount_reservation", { p_redemption_id: reservation.redemptionId });
+    }
     return Response.json({ error: "Could not start bank transfer." }, { status: 500 });
   }
   if (!payment) {
+    if (reservation) {
+      await svc.rpc("release_discount_reservation", { p_redemption_id: reservation.redemptionId });
+    }
     return Response.json({ error: "Could not start bank transfer." }, { status: 500 });
+  }
+
+  // Link the reservation to the payment it discounted (commit happens at admin
+  // verify). If we lost the insert race and reused an existing transfer instead,
+  // the reservation is orphaned — free it back to the pool.
+  if (reservation) {
+    if (inserted) {
+      await svc
+        .from("discount_redemptions")
+        .update({ payment_id: payment.id })
+        .eq("id", reservation.redemptionId);
+    } else {
+      await svc.rpc("release_discount_reservation", { p_redemption_id: reservation.redemptionId });
+      reservation = null;
+    }
   }
 
   return Response.json({
@@ -189,5 +250,16 @@ export async function POST(req: Request): Promise<Response> {
       amountCents: payment.amount_cents,
     },
     plan: { name: pack.name, sessionCredits: pack.sessionCredits },
+    discount: reservation
+      ? {
+          code: reservation.code,
+          amountCents: reservation.discountAmountCents,
+          finalAmountCents: reservation.finalAmountCents,
+          originalAmountCents: originalAmount,
+        }
+      : null,
+    // A promo was typed but couldn't apply because an in-flight transfer was
+    // reused — the client surfaces a notice so it doesn't look like the code failed.
+    promoIgnored: normalizePromoCode(parsed.data.promoCode) !== null && !reservation,
   });
 }

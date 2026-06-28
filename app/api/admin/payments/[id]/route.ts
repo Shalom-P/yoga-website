@@ -1,3 +1,4 @@
+import * as Sentry from "@sentry/nextjs";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
@@ -68,6 +69,11 @@ export async function POST(
       .update({ status: "failed", verified_by: user.id, verified_at: new Date().toISOString() })
       .eq("id", id)
       .eq("status", "pending");
+    // Free any reserved promo use back to the pool (no-op when none was applied).
+    const { error: relErr } = await svc.rpc("release_discount_redemption", { p_payment_id: id });
+    if (relErr) {
+      Sentry.captureMessage(`bank-transfer reject: promo release failed (payment ${id}): ${relErr.message}`, "warning");
+    }
     return NextResponse.json({ ok: true, status: "failed" });
   }
 
@@ -114,6 +120,16 @@ export async function POST(
     .eq("id", id)
     .eq("status", "pending");
   if (updErr) return NextResponse.json({ error: "update_failed" }, { status: 500 });
+
+  // Commit any reserved promo use exactly once (idempotent; advances times_used).
+  // Non-fatal: the credits are already granted, so a commit hiccup must not fail
+  // the verify — the stale sweep is the backstop.
+  const { error: commitErr } = await svc.rpc("commit_discount_redemption_by_payment", {
+    p_payment_id: payment.id,
+  });
+  if (commitErr) {
+    Sentry.captureMessage(`bank-transfer verify: promo commit failed (payment ${payment.id}): ${commitErr.message}`, "warning");
+  }
 
   const { data: bal } = await svc
     .from("customer_credits")

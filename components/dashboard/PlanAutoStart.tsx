@@ -7,6 +7,7 @@ import { toast } from "sonner";
 
 import { startCheckout, type BankTransferIntent } from "@/components/shared/checkout";
 import { BankTransferDialog } from "@/components/shared/BankTransferDialog";
+import { formatMoney } from "@/lib/i18n/money";
 
 /**
  * Resumes checkout after a logged-out customer clicks a pack and signs in: the
@@ -19,6 +20,9 @@ export function PlanAutoStart() {
   const params = useSearchParams();
   const router = useRouter();
   const planSlug = params.get("planSlug");
+  // Carried across the login redirect from the pricing CTA so a promo entered
+  // while logged out isn't lost when checkout resumes here.
+  const promoCode = params.get("promo") ?? undefined;
   const fired = useRef(false);
   const [bankIntent, setBankIntent] = useState<BankTransferIntent | null>(null);
 
@@ -29,6 +33,9 @@ export function PlanAutoStart() {
     startCheckout({
       planSlug,
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
+      promoCode,
+      onDiscountApplied: (d) =>
+        toast.success(`Promo ${d.code} applied — ${formatMoney(d.amountCents, d.currency)} off.`),
       onPaid: () => {
         toast.success("Payment successful!");
         router.replace("/dashboard/plan?purchased=1");
@@ -46,7 +53,7 @@ export function PlanAutoStart() {
         router.replace("/dashboard/plan");
       },
     });
-  }, [planSlug, router]);
+  }, [planSlug, promoCode, router]);
 
   return (
     <>

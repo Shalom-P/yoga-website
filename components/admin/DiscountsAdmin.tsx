@@ -37,6 +37,8 @@ type Draft = {
   applies_to_all: boolean;
   applies_to_plan_ids: string[];
   max_uses: string;
+  per_email_max: string;
+  currency: string; // "" = any; else 'INR' | 'AED'
   valid_from: string;
   valid_until: string;
   is_active: boolean;
@@ -49,6 +51,8 @@ const EMPTY: Draft = {
   applies_to_all: true,
   applies_to_plan_ids: [],
   max_uses: "",
+  per_email_max: "",
+  currency: "",
   valid_from: new Date().toISOString().slice(0, 10),
   valid_until: "",
   is_active: true,
@@ -66,6 +70,8 @@ function toDraft(c: DiscountCode): Draft {
     applies_to_all: c.applies_to_plan_ids === null || c.applies_to_plan_ids.length === 0,
     applies_to_plan_ids: c.applies_to_plan_ids ?? [],
     max_uses: c.max_uses === null ? "" : String(c.max_uses),
+    per_email_max: c.per_email_max === null ? "" : String(c.per_email_max),
+    currency: c.currency ?? "",
     valid_from: c.valid_from.slice(0, 10),
     valid_until: c.valid_until ? c.valid_until.slice(0, 10) : "",
     is_active: c.is_active,
@@ -114,6 +120,13 @@ export function DiscountsAdmin({
       toast.error("Percentage can't exceed 100.");
       return;
     }
+    if (draft.per_email_max !== "") {
+      const pem = Number(draft.per_email_max);
+      if (!Number.isInteger(pem) || pem <= 0) {
+        toast.error("Max uses per email must be a positive whole number.");
+        return;
+      }
+    }
 
     const payload = {
       code: draft.code.toUpperCase().trim(),
@@ -122,6 +135,8 @@ export function DiscountsAdmin({
         draft.discount_type === "percentage" ? Math.round(valueNum) : Math.round(valueNum * 100),
       applies_to_plan_ids: draft.applies_to_all ? null : draft.applies_to_plan_ids,
       max_uses: draft.max_uses === "" ? null : Number(draft.max_uses),
+      per_email_max: draft.per_email_max === "" ? null : Number(draft.per_email_max),
+      currency: draft.currency === "" ? null : draft.currency,
       // Append T00:00:00 so the date-only input is parsed as LOCAL midnight, not
       // UTC midnight — otherwise an AU admin's "valid from 1 June" lands ~10h
       // early (31 May 14:00Z) and the code activates a day sooner than intended.
@@ -215,7 +230,8 @@ export function DiscountsAdmin({
           <DialogHeader>
             <DialogTitle>{draft.id ? "Edit code" : "New discount code"}</DialogTitle>
             <DialogDescription>
-              Discount codes are not yet applied at one-time checkout. Codes created here are stored for when discounts are re-enabled.
+              Codes apply at checkout when buying a session pack — the discount comes off the
+              charged amount, and every redemption is recorded against the customer&apos;s email.
             </DialogDescription>
           </DialogHeader>
 
@@ -294,6 +310,46 @@ export function DiscountsAdmin({
                   onChange={(e) => setDraft({ ...draft, max_uses: e.target.value })}
                   className="mt-1.5"
                 />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <LabelWithHint
+                  htmlFor="peremail"
+                  hint="Max redemptions allowed per customer email for this code. Blank = no per-email limit."
+                >
+                  Max uses per email
+                </LabelWithHint>
+                <Input
+                  id="peremail"
+                  type="number"
+                  min={0}
+                  value={draft.per_email_max}
+                  onChange={(e) => setDraft({ ...draft, per_email_max: e.target.value })}
+                  placeholder="Unlimited"
+                  className="mt-1.5"
+                />
+              </div>
+              <div>
+                <LabelWithHint hint="Lock a fixed-amount code to one currency so the same value isn't applied across AED and INR (they differ ~22x). 'Any' is fine for percentage codes.">
+                  Currency
+                </LabelWithHint>
+                <Select
+                  value={draft.currency || "any"}
+                  onValueChange={(v) =>
+                    setDraft({ ...draft, currency: v && v !== "any" ? v : "" })
+                  }
+                >
+                  <SelectTrigger className="mt-1.5">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="any">Any currency</SelectItem>
+                    <SelectItem value="INR">INR only</SelectItem>
+                    <SelectItem value="AED">AED only</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
 
