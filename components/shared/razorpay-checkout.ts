@@ -80,17 +80,30 @@ function loadCheckoutScript(): Promise<boolean> {
   });
 }
 
+/** A promo discount the server applied to this purchase (amounts in minor units). */
+export type AppliedDiscount = {
+  code: string;
+  amountCents: number;
+  finalAmountCents: number;
+  originalAmountCents: number;
+  currency: string;
+};
+
 export type StartCheckoutArgs = {
   /** Catalog plan slug — resolved to a price + credit count server-side. */
   planSlug: string;
   /** NEXT_PUBLIC_RAZORPAY_KEY_ID. */
   keyId: string;
+  /** Optional promo code — validated + applied server-side at create-order. */
+  promoCode?: string;
   name?: string;
   description?: string;
   prefill?: { name?: string; email?: string; contact?: string };
   themeColor?: string;
   /** Fired only after the server confirms the signature + capture. */
   onPaid: (result: { orderId: string; paymentId: string; credits?: number }) => void;
+  /** Fired when a promo code was accepted + applied server-side, before checkout opens. */
+  onDiscountApplied?: (discount: AppliedDiscount) => void;
   onError: (message: string) => void;
   onDismiss?: () => void;
 };
@@ -106,6 +119,7 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
       body: JSON.stringify({
         planSlug: args.planSlug,
         clientTimezone: detectBrowserTimezone(),
+        promoCode: args.promoCode,
       }),
     });
   } catch {
@@ -118,11 +132,21 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     amount?: number;
     currency?: string;
     error?: string;
+    message?: string;
+    discount?: {
+      code: string;
+      amountCents: number;
+      finalAmountCents: number;
+      originalAmountCents: number;
+    } | null;
   };
   if (orderRes.status === 401) {
     // Session expired server-side after the client-side auth check. Redirect
     // to login; PlanAutoStart on /dashboard/plan?planSlug=… resumes checkout.
-    const next = encodeURIComponent(`/dashboard/plan?planSlug=${encodeURIComponent(args.planSlug)}`);
+    const promoQs = args.promoCode ? `&promo=${encodeURIComponent(args.promoCode)}` : "";
+    const next = encodeURIComponent(
+      `/dashboard/plan?planSlug=${encodeURIComponent(args.planSlug)}${promoQs}`,
+    );
     window.location.href = `/login?next=${next}`;
     return;
   }
@@ -131,8 +155,15 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     return;
   }
   if (!orderRes.ok || !order.orderId || order.amount == null || !order.currency) {
-    args.onError(order.error ?? "Couldn't start checkout. Please try again.");
+    // A rejected promo comes back with a friendly `message` — prefer it.
+    args.onError(order.message ?? order.error ?? "Couldn't start checkout. Please try again.");
     return;
+  }
+
+  // Surface an accepted promo before the modal opens (the modal already shows the
+  // discounted total, but an explicit "code applied" builds trust).
+  if (order.discount) {
+    args.onDiscountApplied?.({ ...order.discount, currency: order.currency });
   }
 
   // 2. Make sure the Checkout script is available.

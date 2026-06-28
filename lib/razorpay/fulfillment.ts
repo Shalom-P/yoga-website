@@ -1,5 +1,7 @@
 import "server-only";
 
+import * as Sentry from "@sentry/nextjs";
+
 import { getRazorpayClient } from "./client";
 import { resolvePackById } from "./catalog";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -49,6 +51,8 @@ export async function fulfillRazorpayPayment(
   const notes = (order.notes ?? {}) as Record<string, string | number>;
   const customerId = typeof notes.customerId === "string" ? notes.customerId : undefined;
   const planId = typeof notes.planId === "string" ? notes.planId : undefined;
+  const redemptionId =
+    typeof notes.discountRedemptionId === "string" ? notes.discountRedemptionId : undefined;
   if (!customerId || !planId) return { ok: false, reason: "missing_notes" };
   // When called from the per-user verify endpoint, the order must belong to the
   // caller — a signed-in user can't force-fulfil (or read the balance of)
@@ -61,6 +65,22 @@ export async function fulfillRazorpayPayment(
   if (!pack) return { ok: false, reason: "plan_not_found" };
 
   const svc = createSupabaseServiceClient();
+
+  // If a promo code was reserved at create-order, pull its discount so we can
+  // stamp it on the payment row (queryable per-payment record of the promo used).
+  let discountCodeId: string | null = null;
+  let discountAmountCents: number | null = null;
+  if (redemptionId) {
+    const { data: redemption } = await svc
+      .from("discount_redemptions")
+      .select("discount_code_id, discount_amount_cents")
+      .eq("id", redemptionId)
+      .maybeSingle();
+    if (redemption) {
+      discountCodeId = redemption.discount_code_id;
+      discountAmountCents = redemption.discount_amount_cents;
+    }
+  }
 
   // Record the payment (idempotent on razorpay_payment_id).
   const { data: paymentRow, error: payErr } = await svc
@@ -75,6 +95,8 @@ export async function fulfillRazorpayPayment(
         // default, so always stamp it. INR fallback is defensive only.
         currency: payment.currency ?? "INR",
         status: "completed",
+        discount_code_id: discountCodeId,
+        discount_amount_cents: discountAmountCents,
         paid_at: new Date().toISOString(),
       },
       { onConflict: "razorpay_payment_id" },
@@ -91,6 +113,23 @@ export async function fulfillRazorpayPayment(
     p_payment_id: paymentRow.id,
   });
   if (grantErr) return { ok: false, reason: "grant_failed" };
+
+  // Commit the promo redemption exactly once (idempotent via the status guard).
+  // Non-fatal: the credits are already granted, so a commit hiccup must not fail
+  // fulfilment or trigger a webhook retry storm — the stale sweep is the backstop.
+  if (redemptionId) {
+    const { error: commitErr } = await svc.rpc("commit_discount_redemption", {
+      p_redemption_id: redemptionId,
+      p_order_id: orderId,
+      p_payment_id: paymentRow.id,
+    });
+    if (commitErr) {
+      Sentry.captureMessage(
+        `discount redemption commit failed (payment ${paymentId}): ${commitErr.message}`,
+        "warning",
+      );
+    }
+  }
 
   const { data: bal } = await svc
     .from("customer_credits")
@@ -152,6 +191,18 @@ export async function reverseRazorpayPayment(
       p_payment_id: paymentRow.id,
     });
     if (clawErr) return { ok: false, reason: "clawback_failed" };
+  }
+
+  // Free any promo use this payment committed back to the pool (idempotent on a
+  // redelivered refund; a no-op when no promo was applied).
+  const { error: releaseErr } = await svc.rpc("release_discount_redemption", {
+    p_payment_id: paymentRow.id,
+  });
+  if (releaseErr) {
+    Sentry.captureMessage(
+      `discount redemption release failed (payment ${paymentId}): ${releaseErr.message}`,
+      "warning",
+    );
   }
 
   await svc.from("payments").update({ status: "refunded" }).eq("id", paymentRow.id);

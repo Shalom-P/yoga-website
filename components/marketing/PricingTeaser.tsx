@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { Check, X, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/i18n/money";
 import { currencyForTimezone, DEFAULT_CURRENCY, type Currency } from "@/lib/geo/region";
@@ -22,6 +23,7 @@ import type { PlanWithFeatures } from "@/lib/data/landing";
 export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
+  const [promo, setPromo] = useState("");
   const [bankIntent, setBankIntent] = useState<BankTransferIntent | null>(null);
   // The charged currency is resolved server-side at create-order (GeoIP-first).
   // For *display* we best-effort detect from the browser timezone. Computed
@@ -44,16 +46,21 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
     const {
       data: { user },
     } = await supabase.auth.getUser();
+    const promoCode = promo.trim() || undefined;
     // Logged out: send to login, then auto-resume checkout on /dashboard/plan.
     if (!user) {
-      const next = `/dashboard/plan?planSlug=${encodeURIComponent(planSlug)}`;
+      const promoQs = promoCode ? `&promo=${encodeURIComponent(promoCode)}` : "";
+      const next = `/dashboard/plan?planSlug=${encodeURIComponent(planSlug)}${promoQs}`;
       router.push(`/login?next=${encodeURIComponent(next)}`);
       return;
     }
     await startCheckout({
       planSlug,
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
+      promoCode,
       prefill: { email: user.email ?? undefined },
+      onDiscountApplied: (d) =>
+        toast.success(`Promo ${d.code} applied — ${formatMoney(d.amountCents, d.currency)} off.`),
       onPaid: () => {
         toast.success("Payment successful!");
         router.push("/dashboard/plan?purchased=1");
@@ -93,6 +100,25 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
           <p className="mt-4 text-muted-foreground">
             Buy a one-time pack of sessions — no subscription, and your credits never expire.
           </p>
+
+          <div className="mx-auto mt-6 flex max-w-xs flex-col items-center">
+            <label htmlFor="promo-code" className="sr-only">
+              Promo code
+            </label>
+            <Input
+              id="promo-code"
+              value={promo}
+              onChange={(e) => setPromo(e.target.value.toUpperCase())}
+              placeholder="Promo code (optional)"
+              autoComplete="off"
+              autoCapitalize="characters"
+              spellCheck={false}
+              className="text-center font-mono uppercase tracking-wide"
+            />
+            <p className="mt-1.5 text-xs text-muted-foreground">
+              Have a code? Enter it before choosing a pack.
+            </p>
+          </div>
         </motion.div>
 
         <motion.div

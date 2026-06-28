@@ -73,6 +73,24 @@ export function BankTransferDialog({
           </DialogDescription>
         </DialogHeader>
 
+        {intent.discount && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">
+            <Info className="mt-0.5 size-4 shrink-0 text-primary" />
+            <p>
+              Promo <strong className="font-mono">{intent.discount.code}</strong> applied —{" "}
+              <strong>{formatMoney(intent.discount.amountCents, intent.currency, { withCents: true })}</strong>{" "}
+              off. The amount below is already discounted.
+            </p>
+          </div>
+        )}
+
+        {intent.notice && (
+          <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+            <Info className="mt-0.5 size-4 shrink-0" />
+            <p>{intent.notice}</p>
+          </div>
+        )}
+
         <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm text-amber-900">
           <Info className="mt-0.5 size-4 shrink-0" />
           <p>
