@@ -16,12 +16,16 @@ export function LenisProvider({ children }: { children: React.ReactNode }) {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
     const lenis = new Lenis({
-      // Framerate-independent smoothing: every frame closes ~10% of the distance
-      // left to the target, so the page settles in a few frames and tracks the
-      // wheel closely. The previous time-based tween (duration: 1.1s) kept
-      // gliding for over a second after the wheel stopped — that trailing glide
-      // is what read as "lag" next to a native-scrolling site.
-      lerp: 0.1,
+      // Framerate-independent smoothing: every frame closes this fraction of the
+      // distance left to the target. Windows mouse wheels emit large, discrete
+      // deltas, so at the old lerp of 0.1 the page kept "catching up" a beat
+      // behind the wheel — that trailing glide read as lag / non-responsiveness
+      // next to a native-scrolling site. 0.2 settles in roughly half the frames,
+      // so it tracks the wheel tightly while staying smooth on trackpads.
+      lerp: 0.2,
+      // >1 so a single Windows wheel notch travels a satisfying amount instead of
+      // feeling like the page barely moves (a common "unresponsive" complaint).
+      wheelMultiplier: 1.2,
       autoRaf: true,
     });
     lenisRef.current = lenis;
