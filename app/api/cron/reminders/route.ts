@@ -2,6 +2,7 @@ import "server-only";
 
 import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { hasMedicalDocuments } from "@/lib/medical/documents";
 import { sendBookingReminder } from "@/lib/email";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 
@@ -116,6 +117,13 @@ export async function POST(req: Request): Promise<Response> {
         .eq("id", session.teacher_id)
         .maybeSingle();
 
+      // On the day-before reminder, nudge customers who haven't uploaded any
+      // health documents yet. Skipped for the 1h window (too late to be useful).
+      const needsHealthDocs =
+        window.label === "24 hours"
+          ? !(await hasMedicalDocuments(svc, booking.customer_id))
+          : false;
+
       try {
         await sendBookingReminder({
           to: profile.email,
@@ -124,6 +132,7 @@ export async function POST(req: Request): Promise<Response> {
           customerTz: profile.timezone ?? DEFAULT_CUSTOMER_TZ,
           meetLink: session.meet_link ?? null,
           when: window.label,
+          needsHealthDocs,
         });
         processed++;
       } catch (err) {

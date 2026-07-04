@@ -47,6 +47,28 @@ export type CustomerDocumentData = {
 type Db = SupabaseClient<Database>;
 
 /**
+ * True when the customer has at least one live (non-deleted) medical document.
+ *
+ * Powers the "upload before your class" nudge. Works on either client: the
+ * RLS-bound server client (owner_select scopes it to self) for the dashboard,
+ * or the service-role client in the reminder cron (scoped explicitly by
+ * customer_id). On error it fails "quiet" — returns `true` so we never nag a
+ * customer because of a transient query failure or a missing table.
+ */
+export async function hasMedicalDocuments(supabase: Db, customerId: string): Promise<boolean> {
+  const { count, error } = await supabase
+    .from("medical_documents")
+    .select("id", { count: "exact", head: true })
+    .eq("customer_id", customerId)
+    .is("deleted_at", null);
+  if (error) {
+    console.error("hasMedicalDocuments failed", { customerId, error: error.message });
+    return true;
+  }
+  return (count ?? 0) > 0;
+}
+
+/**
  * Everything the customer's "Health documents" page needs, fetched on their own
  * RLS-bound client so each query is self-scoped by policy.
  */

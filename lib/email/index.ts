@@ -45,7 +45,11 @@ export interface SendBookingReminderArgs {
   customerTz: string;
   meetLink?: string | null;
   when: "24 hours" | "1 hour";
+  /** When true, the 24h reminder appends an "upload your health documents" nudge. */
+  needsHealthDocs?: boolean;
 }
+
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
 
 export async function sendBookingReminder(
   args: SendBookingReminderArgs
@@ -56,6 +60,8 @@ export async function sendBookingReminder(
     customerTz: args.customerTz,
     meetLink: args.meetLink,
     when: args.when,
+    needsHealthDocs: args.needsHealthDocs,
+    documentsUrl: `${SITE_URL}/dashboard/documents`,
   });
   return sendEmail({ to: args.to, subject, html });
 }

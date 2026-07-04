@@ -3,7 +3,9 @@ import { ArrowRight, Video, Calendar, Sparkles } from "lucide-react";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { Button } from "@/components/ui/button";
 import { requireUser } from "@/lib/auth/guards";
+import { hasMedicalDocuments } from "@/lib/medical/documents";
 import { LocalTime, LocalTzName } from "@/components/dashboard/local-time";
+import { HealthDocsNudge } from "@/components/dashboard/HealthDocsNudge";
 
 type NextBooking = {
   id: string;
@@ -19,7 +21,7 @@ type NextBooking = {
 
 export default async function DashboardHome() {
   const { user, supabase } = await requireUser();
-  const [{ data: profile }, { data: bookingRows }] = await Promise.all([
+  const [{ data: profile }, { data: bookingRows }, hasDocs] = await Promise.all([
     supabase.from("profiles").select("full_name, timezone").eq("id", user.id).maybeSingle(),
     supabase
       .from("bookings")
@@ -30,6 +32,7 @@ export default async function DashboardHome() {
       .eq("customer_id", user.id)
       .eq("status", "confirmed")
       .limit(50),
+    hasMedicalDocuments(supabase, user.id),
   ]);
 
   const firstName = profile?.full_name?.split(" ")[0] ?? "there";
@@ -63,6 +66,10 @@ export default async function DashboardHome() {
       </header>
 
       <NextClassCard booking={nextBooking} timezone={timezone} />
+
+      {nextBooking?.session && !hasDocs && (
+        <HealthDocsNudge startIso={nextBooking.session.start_at} fallbackTz={timezone} />
+      )}
 
       <div className="grid sm:grid-cols-2 gap-5">
         <Link
