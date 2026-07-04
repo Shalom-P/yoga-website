@@ -91,7 +91,7 @@ export function ConditionLanding({ data: d }: { data: ConditionPage }) {
             </Button>
           </div>
           <p className="mt-5 text-sm text-muted-foreground">
-60 min · 1:1 · live on Google Meet
+60 min · 1:1 · live online
           </p>
         </div>
       </section>

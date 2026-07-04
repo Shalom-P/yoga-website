@@ -107,7 +107,7 @@ function NextClassCard({
           You don&apos;t have a class booked yet.
         </h2>
         <p className="mt-2 text-muted-foreground">
-          Pick a teacher and a time — your first 1:1 is free.
+          Pick a teacher and a time, your first 1:1 is free.
         </p>
         <div className="mt-6 flex flex-wrap gap-3">
           <Button asChild size="lg" className="h-11 rounded-full">
@@ -122,7 +122,7 @@ function NextClassCard({
         </div>
         <div className="mt-6 text-xs text-muted-foreground flex items-center gap-2">
           <Video className="size-3.5" />
-          Classes meet on Google Meet — we&apos;ll email you the link.
+          Classes are live online. We&apos;ll email you the link.
         </div>
       </div>
     );
@@ -146,15 +146,15 @@ function NextClassCard({
           <Button asChild size="lg" className="h-11 rounded-full">
             <a href={session.meet_link} target="_blank" rel="noreferrer">
               <Video className="size-4 mr-1" />
-              Join on Google Meet
+              Join session
             </a>
           </Button>
         ) : (
           <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <Video className="size-3.5" />
             {session.meet_status === "failed"
-              ? "Meet link unavailable — we're retrying."
-              : "Meet link will be ready shortly."}
+              ? "Join link unavailable: we're retrying."
+              : "Join link will be ready shortly."}
           </span>
         )}
         <Button asChild variant="outline" size="lg" className="h-11 rounded-full">

@@ -4,11 +4,11 @@
   "h1Before": "Yoga for an ",
   "h1Em": "active routine",
   "h1After": ", shaped around you.",
-  "heroLead": "Energising 1:1 sessions of flowing movement, scaled to your fitness and built around your routine — sustainable habits you can actually keep. Practised alongside your doctor's guidance.",
+  "heroLead": "Energising 1:1 sessions of flowing movement, scaled to your fitness and built around your routine, with sustainable habits you can actually keep. Practised alongside your doctor's guidance.",
   "empathyLabel": "You don't have to do this alone",
-  "empathyText": "Crash plans don't last. Yoga can be an enjoyable, sustainable part of your week — building an active routine and habits you can actually keep, at your own pace.",
+  "empathyText": "Crash plans don't last. Yoga can be an enjoyable, sustainable part of your week, building an active routine and habits you can actually keep, at your own pace.",
   "helpsH2": "How yoga can support an active routine.",
-  "helpsSubhead": "Four steady levers, working together — and the first one does most of the lifting.",
+  "helpsSubhead": "Four steady levers, working together, and the first one does most of the lifting.",
   "levers": [
     {
       "title": "Movement that adds up",
@@ -28,11 +28,11 @@
     }
   ],
   "posesH2": "The poses we focus on, and why.",
-  "posesSubhead": "Grouped by what they do for the body. Your teacher draws from these — they won't ask you to do all of them.",
+  "posesSubhead": "Grouped by what they do for the body. Your teacher draws from these, so they won't ask you to do all of them.",
   "poseGroups": [
     {
       "tag": "Warm-up & flow",
-      "why": "The engine — flowing movement that keeps you active.",
+      "why": "The engine: flowing movement that keeps you active.",
       "poses": [
         {
           "sa": "Surya Namaskar",
@@ -92,7 +92,7 @@
           "desc": "Balance and focus to steady both body and mind."
         }
       ],
-      "note": "We build gradually with modifications so every level is achievable — forearm or knees-down options for sensitive wrists, and gentler routes during pregnancy — and we ease off if you feel dizzy, breathless, or any pain."
+      "note": "We build gradually with modifications so every level is achievable, with forearm or knees-down options for sensitive wrists, and gentler routes during pregnancy. We ease off if you feel dizzy, breathless, or any pain."
     },
     {
       "tag": "Cool-down & rest",
@@ -118,7 +118,7 @@
   ],
   "selectionNote": "Your teacher won't hand you all of these. They'll choose the right few for your fitness, your level, and how you're feeling that day.",
   "howH2": "How we work with you to get there.",
-  "howSubhead": "One teacher who knows your name and your goals — not a different face every week.",
+  "howSubhead": "One teacher who knows your name and your goals, not a different face every week.",
   "steps": [
     {
       "title": "We get to know you",
@@ -134,7 +134,7 @@
     },
     {
       "title": "We grow it gently",
-      "body": "Gradual, sustainable progress — habits you can actually keep."
+      "body": "Gradual, sustainable progress, with habits you can actually keep."
     }
   ],
   "sessionTitle": "What a session looks like",
@@ -153,8 +153,8 @@
     "A water bottle",
     "A quiet corner"
   ],
-  "testimonialQuote": "I'd tried every intense plan and burned out. This actually fits my life — I'm stronger, more active, and for once it's something I look forward to.",
-  "testimonialWho": "<strong>Placeholder — swap for a real review.</strong> Member · practising for 5 months",
+  "testimonialQuote": "I'd tried every intense plan and burned out. This actually fits my life. I'm stronger, more active, and for once it's something I look forward to.",
+  "testimonialWho": "<strong>Placeholder: swap for a real review.</strong> Member · practising for 5 months",
   "faqH2": "Questions people ask first.",
   "faqs": [
     {
@@ -166,7 +166,7 @@
       "a": "It's a great, sustainable part of the picture. Healthy eating and your doctor's guidance matter too."
     },
     {
-      "q": "I'm a beginner and not very fit — can I keep up?",
+      "q": "I'm a beginner and not very fit. Can I keep up?",
       "a": "Yes. Intensity is matched to you with modifications, and we build gradually so every level feels achievable."
     },
     {
@@ -178,7 +178,7 @@
       "a": "Consistency beats intensity. Your teacher will suggest a sustainable rhythm you can keep."
     }
   ],
-  "safetyTitle": "Yoga supports your care — it doesn't replace it",
+  "safetyTitle": "Yoga supports your care, it doesn't replace it",
   "safetyText": "These sessions support your overall wellbeing and are practised alongside professional medical care. They are not a substitute for diagnosis, treatment, or medication. Please tell your teacher about any conditions or symptoms so they can adapt your session safely, and keep your doctor in the loop.",
-  "metaDescription": "Energising 1:1 yoga scaled to your fitness — sustainable flows and healthy habits that support an active routine and steady, lasting progress. First session free."
+  "metaDescription": "Energising 1:1 yoga scaled to your fitness, with sustainable flows and healthy habits that support an active routine and steady, lasting progress. First session free."
 }

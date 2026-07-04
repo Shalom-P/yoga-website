@@ -28,7 +28,7 @@ export default async function TeacherAvailabilityPage() {
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Times are in your local timezone ({teacher.timezone}). Click cells to toggle
-        a 1-hour bookable window — changes save instantly.
+        a 1-hour bookable window. Changes save instantly.
       </p>
 
       <AvailabilityGrid

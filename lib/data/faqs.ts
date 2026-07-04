@@ -7,10 +7,10 @@ export type Faq = { q: string; a: string };
 export const FAQS: Faq[] = [
   {
     q: "How do the 1:1 sessions work?",
-    a: "Each session is a 60-minute personalised 1:1 with a teacher of your choice, live on Google Meet at a time shown in your local time.",
+    a: "Each session is a 60-minute personalised 1:1 with a teacher of your choice, live online at a time shown in your local time.",
   },
   {
-    q: "Do I need to be a beginner — or experienced?",
+    q: "Do I need to be a beginner, or experienced?",
     a: "Either. Tell us your level in onboarding and we'll match you with a teacher who specialises in beginners, intermediates, or rehabilitation.",
   },
   {
@@ -26,16 +26,16 @@ export const FAQS: Faq[] = [
     a: "Tell us in onboarding. We'll match you with a therapy yoga teacher who specialises in safe, gentle rehabilitation.",
   },
   {
-    q: "How does paying work — is there a subscription?",
+    q: "How does paying work: is there a subscription?",
     a: "No subscription. You buy a one-time pack of sessions (5 or 10). Each booking spends one credit, and your credits never expire.",
   },
   {
     q: "Can I cancel a booked session?",
-    a: "Yes. Cancel from your dashboard before the session starts — if it was a paid session, the credit goes straight back to your account to use later.",
+    a: "Yes. Cancel from your dashboard before the session starts, and if it was a paid session, the credit goes straight back to your account to use later.",
   },
   {
     q: "How do I join the live class?",
-    a: "We email you a Google Meet link as soon as you book, plus a reminder 24h and 1h before. Click the link, you're in.",
+    a: "We email you a join link as soon as you book, plus a reminder 24h and 1h before. Click the link, you're in.",
   },
   {
     q: "What's your refund policy?",

@@ -125,15 +125,15 @@ function NextSessionCard({
           <Button asChild size="lg" className="h-11 rounded-full">
             <a href={next.meet_link} target="_blank" rel="noreferrer">
               <Video className="size-4 mr-1" />
-              Join on Google Meet
+              Join session
             </a>
           </Button>
         ) : (
           <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
             <Video className="size-3.5" />
             {next.meet_status === "failed"
-              ? "Meet link unavailable — it's being retried."
-              : "Meet link will be ready shortly."}
+              ? "Join link unavailable: it's being retried."
+              : "Join link will be ready shortly."}
           </span>
         )}
         <Button asChild variant="outline" size="lg" className="h-11 rounded-full">

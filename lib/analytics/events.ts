@@ -38,6 +38,7 @@ type EventName =
   | "paid_plan_clicked"
   | "checkout_started"
   | "checkout_completed"
+  | "checkout_verify_failed"
   | "subscription_cancelled"
   | "newsletter_signup";
 

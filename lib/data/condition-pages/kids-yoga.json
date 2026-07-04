@@ -4,11 +4,11 @@
   "h1Before": "Yoga for ",
   "h1Em": "kids",
   "h1After": ", full of play.",
-  "heroLead": "Playful 1:1 sessions of games, stories, and simple poses — building focus, flexibility, and calm in a fun, friendly space made just for your child. Their first session is free.",
+  "heroLead": "Playful 1:1 sessions of games, stories, and simple poses that build focus, flexibility, and calm in a fun, friendly space made just for your child. Their first session is free.",
   "empathyLabel": "Made just for your child",
-  "empathyText": "Children thrive when movement feels like play. Our sessions build focus, flexibility, and calm through games and stories — never pressure — in a friendly, personalised 1:1 space.",
+  "empathyText": "Children thrive when movement feels like play. Our sessions build focus, flexibility, and calm through games and stories (never pressure) in a friendly, personalised 1:1 space.",
   "helpsH2": "How yoga can help your child.",
-  "helpsSubhead": "Four gentle, playful ways yoga supports children — all wrapped up in fun.",
+  "helpsSubhead": "Four gentle, playful ways yoga supports children, all wrapped up in fun.",
   "levers": [
     {
       "title": "Focus through play",
@@ -28,7 +28,7 @@
     }
   ],
   "posesH2": "The poses we play with, and why.",
-  "posesSubhead": "Grouped by what they bring out in your child. Your teacher draws from these — they won't ask your child to do all of them.",
+  "posesSubhead": "Grouped by what they bring out in your child. Your teacher draws from these. They won't ask your child to do all of them.",
   "poseGroups": [
     {
       "tag": "Animal poses & play",
@@ -37,22 +37,22 @@
         {
           "sa": "Bhujangasana",
           "en": "Cobra",
-          "desc": "\"The snake\" — a gentle backbend children get to hiss along with."
+          "desc": "\"The snake\", a gentle backbend children get to hiss along with."
         },
         {
           "sa": "Marjaryasana–Bitilasana",
           "en": "Cat–Cow",
-          "desc": "\"Cat and cow\" — a wiggly, playful flow that loosens the back."
+          "desc": "\"Cat and cow\", a wiggly, playful flow that loosens the back."
         },
         {
           "sa": "Adho Mukha Svanasana",
           "en": "Downward dog",
-          "desc": "\"The puppy\" — a fun upside-down stretch for the whole body."
+          "desc": "\"The puppy\", a fun upside-down stretch for the whole body."
         },
         {
           "sa": "Vrksasana",
           "en": "Tree pose",
-          "desc": "\"Standing tall like a tree\" — a steady, grounding balance."
+          "desc": "\"Standing tall like a tree\", a steady, grounding balance."
         }
       ]
     },
@@ -63,7 +63,7 @@
         {
           "sa": "Vrksasana",
           "en": "Tree pose",
-          "desc": "\"The flamingo\" — balancing on one leg, just for fun."
+          "desc": "\"The flamingo\", balancing on one leg, just for fun."
         },
         {
           "sa": "Natarajasana",
@@ -94,10 +94,10 @@
         {
           "sa": "\"Flower & candle\" breath",
           "en": "Smell & blow",
-          "desc": "Smell the flower, blow out the candle — a calming little game."
+          "desc": "Smell the flower, blow out the candle: a calming little game."
         }
       ],
-      "note": "Breathing is always playful and gentle — never any forceful breath-holding."
+      "note": "Breathing is always playful and gentle, never any forceful breath-holding."
     },
     {
       "tag": "Calm & settle",
@@ -111,12 +111,12 @@
         {
           "sa": "Balasana",
           "en": "Child's pose",
-          "desc": "\"The cosy mouse\" — a snug, restful pose children find comforting."
+          "desc": "\"The cosy mouse\", a snug, restful pose children find comforting."
         },
         {
           "sa": "Shavasana",
           "en": "Final rest",
-          "desc": "\"The resting starfish\" — a still, peaceful close to every session."
+          "desc": "\"The resting starfish\", a still, peaceful close to every session."
         }
       ],
       "note": "We use age-appropriate poses and avoid neck-loading inversions like headstands and shoulderstands for children."
@@ -124,7 +124,7 @@
   ],
   "selectionNote": "Your teacher won't use all of these. They'll choose the right few for your child's age, energy, and mood that day.",
   "howH2": "How we work with you to get there.",
-  "howSubhead": "One teacher who knows your child's name and what they enjoy — not a different face every week.",
+  "howSubhead": "One teacher who knows your child's name and what they enjoy, not a different face every week.",
   "steps": [
     {
       "title": "We get to know your child",
@@ -159,13 +159,13 @@
     "Comfy clothes",
     "A clear, safe space"
   ],
-  "testimonialQuote": "My daughter looks forward to her session all week. It's playful and gentle, and she's noticeably calmer at bedtime — the same teacher every time really helped her settle in.",
-  "testimonialWho": "<strong>Placeholder — swap for a real review.</strong> Parent · child practising for 4 months",
+  "testimonialQuote": "My daughter looks forward to her session all week. It's playful and gentle, and she's noticeably calmer at bedtime. The same teacher every time really helped her settle in.",
+  "testimonialWho": "<strong>Placeholder: swap for a real review.</strong> Parent · child practising for 4 months",
   "faqH2": "Questions people ask first.",
   "faqs": [
     {
       "q": "What age is this for?",
-      "a": "Sessions are adapted by age and mood. Share your child's age and we'll tailor the games and poses — typically school-age, but do ask us."
+      "a": "Sessions are adapted by age and mood. Share your child's age and we'll tailor the games and poses. These are typically school-age, but do ask us."
     },
     {
       "q": "Does my child need to be flexible or sporty?",
@@ -173,11 +173,11 @@
     },
     {
       "q": "Do I need to be present?",
-      "a": "Yes — a parent or guardian sets up and supervises the live 1:1, and we recommend staying within sight or earshot throughout, especially for younger children. Your teacher will guide you on what works best for your child's age."
+      "a": "Yes. A parent or guardian sets up and supervises the live 1:1, and we recommend staying within sight or earshot throughout, especially for younger children. Your teacher will guide you on what works best for your child's age."
     },
     {
       "q": "Is it safe?",
-      "a": "Yes. We keep everything body-safe, avoid neck-loading inversions, and never push — fun always comes first."
+      "a": "Yes. We keep everything body-safe, avoid neck-loading inversions, and never push. Fun always comes first."
     },
     {
       "q": "How long is a session?",
@@ -185,6 +185,6 @@
     }
   ],
   "safetyTitle": "A note for parents & guardians",
-  "safetyText": "These playful sessions support your child's overall wellbeing — they are not medical or therapeutic treatment. Please set the session up in a clear, safe space, stay nearby to supervise (especially with younger children), and tell your teacher about any health conditions, injuries, or needs so they can adapt the play safely. If you have any concerns about your child's health, speak with your paediatrician.",
-  "metaDescription": "Playful, age-appropriate 1:1 yoga for children — games, stories, and simple poses that build focus, flexibility, and calm in a fun, friendly setting. First session free."
+  "safetyText": "These playful sessions support your child's overall wellbeing. They are not medical or therapeutic treatment. Please set the session up in a clear, safe space, stay nearby to supervise (especially with younger children), and tell your teacher about any health conditions, injuries, or needs so they can adapt the play safely. If you have any concerns about your child's health, speak with your paediatrician.",
+  "metaDescription": "Playful, age-appropriate 1:1 yoga for children: games, stories, and simple poses that build focus, flexibility, and calm in a fun, friendly setting. First session free."
 }

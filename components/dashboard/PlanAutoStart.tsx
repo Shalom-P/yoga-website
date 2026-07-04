@@ -12,7 +12,7 @@ import { formatMoney } from "@/lib/i18n/money";
 /**
  * Resumes checkout after a logged-out customer clicks a pack and signs in: the
  * pricing button sends them to /login?next=/dashboard/plan?planSlug=…, and this
- * opens the right rail on arrival — Razorpay (India) or the SWIFT instructions
+ * opens the right rail on arrival, Razorpay (India) or the SWIFT instructions
  * dialog (UAE). The loading card shows while `planSlug` is in the URL; each
  * outcome replaces the URL to clear it.
  */
@@ -35,7 +35,7 @@ export function PlanAutoStart() {
       keyId: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID ?? "",
       promoCode,
       onDiscountApplied: (d) =>
-        toast.success(`Promo ${d.code} applied — ${formatMoney(d.amountCents, d.currency)} off.`),
+        toast.success(`Promo ${d.code} applied, ${formatMoney(d.amountCents, d.currency)} off.`),
       onPaid: () => {
         toast.success("Payment successful!");
         router.replace("/dashboard/plan?purchased=1");

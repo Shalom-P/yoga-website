@@ -1,7 +1,7 @@
-// DRAFT — substantive but NOT a substitute for legal review before launch.
+// DRAFT: substantive but NOT a substitute for legal review before launch.
 
 export const metadata = {
-  title: "Privacy policy — My Yoga Classes",
+  title: "Privacy policy | My Yoga Classes",
   description:
     "How My Yoga Classes collects, uses, and protects your personal information, aligned with the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021), India's Digital Personal Data Protection Act 2023, and international data-protection standards.",
   alternates: { canonical: "/legal/privacy" },
@@ -32,7 +32,7 @@ export default function PrivacyPage() {
               (“<strong>we</strong>”, “<strong>us</strong>”, “<strong>our</strong>”) operates{" "}
               <strong>myyogaclasses.fit</strong>, an online platform that connects students in the
               United Arab Emirates and India with yoga teachers based in India for live 1:1
-              sessions conducted over Google Meet.
+              sessions conducted over online video conferencing.
             </p>
             <p>
               We aim to handle your personal data in line with the{" "}
@@ -69,7 +69,7 @@ export default function PrivacyPage() {
               <li>
                 <strong>Payment metadata:</strong> the session pack you purchased, payment
                 status, and Razorpay order / payment IDs. We do <strong>not</strong> store card
-                numbers, bank account details, or full payment credentials — all payment
+                numbers, bank account details, or full payment credentials. All payment
                 processing is handled directly by Razorpay and subject to Razorpay&apos;s privacy policy.
               </li>
               <li>
@@ -97,7 +97,7 @@ export default function PrivacyPage() {
             <ul className="list-disc pl-6 space-y-1">
               <li>Create and manage your account and authenticate you securely.</li>
               <li>Match you with an available teacher and schedule sessions across timezones.</li>
-              <li>Generate and send Google Meet links for your sessions.</li>
+              <li>Generate and send video session join links for your sessions.</li>
               <li>Process one-time session-pack payments in AED or INR via Razorpay.</li>
               <li>Send booking confirmations, reminders, and account notifications by email.</li>
               <li>Provide customer support.</li>
@@ -142,7 +142,7 @@ export default function PrivacyPage() {
                     <td className="py-2">India</td>
                   </tr>
                   <tr>
-                    <td className="py-2 pr-4">Google (Calendar &amp; Meet)</td>
+                    <td className="py-2 pr-4">Google Workspace</td>
                     <td className="py-2 pr-4">Session scheduling and video conferencing</td>
                     <td className="py-2">USA</td>
                   </tr>
@@ -183,7 +183,7 @@ export default function PrivacyPage() {
             <p>
               Because our teachers are based in India and our technology providers operate
               globally, your personal information is transferred to and processed in countries
-              other than your country of residence — primarily India and the United States (see
+              other than your country of residence, primarily India and the United States (see
               the table above). Where we transfer data internationally, we take reasonable steps
               to ensure an adequate level of protection, including standard contractual
               protections in our data-processing agreements and, where required, the safeguards
@@ -271,8 +271,8 @@ export default function PrivacyPage() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                <strong>UAE:</strong> the UAE Data Office (federal), or — for entities in a
-                financial free zone — the relevant free-zone data-protection commissioner (e.g.
+                <strong>UAE:</strong> the UAE Data Office (federal), or, for entities in a
+                financial free zone, the relevant free-zone data-protection commissioner (e.g.
                 the DIFC or ADGM Commissioner of Data Protection).
               </li>
               <li>

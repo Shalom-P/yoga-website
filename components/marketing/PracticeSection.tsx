@@ -24,7 +24,7 @@ export function PracticeSection({ categories }: { categories: ClassCategory[] })
             Yoga shaped around whatever your body needs.
           </h2>
           <p className="mt-4 text-muted-foreground text-pretty">
-            Pick an area for today — or let a yoga-therapy–trained teacher shape your
+            Pick an area for today, or let a yoga-therapy–trained teacher shape your
             personalised 1:1 around exactly what your body is working through.
           </p>
         </motion.div>

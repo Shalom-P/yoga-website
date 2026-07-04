@@ -28,7 +28,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
   // The charged currency is resolved server-side at create-order (GeoIP-first).
   // For *display* we best-effort detect from the browser timezone. Computed
   // during render after mount so SSR + first client render both use the default
-  // (INR) — no hydration mismatch — then it re-renders with the detected currency.
+  // (INR), no hydration mismatch, then it re-renders with the detected currency.
   const mounted = useHasMounted();
   const currency: Currency = mounted
     ? currencyForTimezone(detectBrowserTimezone()) ?? DEFAULT_CURRENCY
@@ -60,7 +60,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
       promoCode,
       prefill: { email: user.email ?? undefined },
       onDiscountApplied: (d) =>
-        toast.success(`Promo ${d.code} applied — ${formatMoney(d.amountCents, d.currency)} off.`),
+        toast.success(`Promo ${d.code} applied: ${formatMoney(d.amountCents, d.currency)} off.`),
       onPaid: () => {
         toast.success("Payment successful!");
         router.push("/dashboard/plan?purchased=1");
@@ -98,7 +98,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
             Pay as you go. No lock-ins.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Buy a one-time pack of sessions — no subscription, and your credits never expire.
+            Buy a one-time pack of sessions, no subscription, and your credits never expire.
           </p>
 
           <div className="mx-auto mt-6 flex max-w-xs flex-col items-center">
@@ -138,7 +138,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
               className={cn(
                 "relative rounded-3xl border bg-card p-7 flex flex-col",
                 p.is_featured
-                  ? "border-primary/40 ring-2 ring-primary/15 shadow-lg shadow-primary/10"
+                  ? "border-primary/60 ring-2 ring-primary/30 shadow-xl shadow-primary/15"
                   : "border-border"
               )}
             >
@@ -196,7 +196,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
         </motion.div>
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
-          Prices shown in {currency}. One-time payment — no subscription. Available to customers
+          Prices shown in {currency}. One-time payment, no subscription. Available to customers
           in the UAE and India.{" "}
           <Link href="/faq" className="text-primary hover:underline">
             Read the FAQ →

@@ -284,7 +284,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
             <DialogDescription>
               {draft.id
                 ? "Update the pack details. Changes apply to new purchases immediately."
-                : "Create a new session pack — set its price and how many session-credits a purchase grants."}
+                : "Create a new session pack: set its price and how many session-credits a purchase grants."}
             </DialogDescription>
           </DialogHeader>
 

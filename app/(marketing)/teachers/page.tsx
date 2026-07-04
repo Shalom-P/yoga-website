@@ -4,6 +4,7 @@ import { Star } from "lucide-react";
 import { getAllActiveTeachers } from "@/lib/data/landing";
 import { PageHeader } from "@/components/marketing/PageHeader";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
+import { cn } from "@/lib/utils";
 
 export const revalidate = 300;
 export const metadata = {
@@ -14,6 +15,10 @@ export const metadata = {
 
 export default async function TeachersPage() {
   const teachers = await getAllActiveTeachers();
+  // A tiny roster (1–2) centres so a lone card reads as an intentional feature;
+  // 3+ uses the deterministic left-aligned grid so a 4th/5th teacher wraps to a
+  // tidy left-aligned next row instead of a lone centred orphan.
+  const fewTeachers = teachers.length <= 2;
   return (
     <>
       <PageHeader
@@ -23,12 +28,30 @@ export default async function TeachersPage() {
       />
 
       <section className="pb-24">
-        <div className="mx-auto grid max-w-[1240px] gap-6 px-7 sm:grid-cols-2 lg:grid-cols-3">
+        {teachers.length === 0 ? (
+          <p className="mx-auto max-w-md px-7 text-center text-muted-foreground">
+            Our teachers are being onboarded right now, so check back soon, or book
+            a 1:1 from the homepage and we&apos;ll match you.
+          </p>
+        ) : (
+        <div
+          className={cn(
+            "mx-auto max-w-[1240px] px-7",
+            fewTeachers
+              ? "flex flex-wrap justify-center gap-6"
+              : "grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+          )}
+        >
           {teachers.map((t, i) => (
             <Link
               key={t.id}
               href={`/teachers/${t.slug}`}
-              className="group overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-[var(--myc-shadow-card)] transition-all hover:-translate-y-1 hover:shadow-[var(--myc-shadow-soft)]"
+              className={cn(
+                "group overflow-hidden rounded-[var(--radius)] border border-border bg-card shadow-[var(--myc-shadow-card)] transition-all hover:-translate-y-1 hover:shadow-[var(--myc-shadow-soft)]",
+                // Only constrain width in the centred (few-teacher) layout; the
+                // grid sizes its own columns.
+                fewTeachers && "w-full sm:w-[368px]"
+              )}
             >
               <div
                 className="relative aspect-[4/5]"
@@ -86,6 +109,7 @@ export default async function TeachersPage() {
             </Link>
           ))}
         </div>
+        )}
       </section>
 
       <FinalCTA headline="Book a 1:1 with any teacher above." />

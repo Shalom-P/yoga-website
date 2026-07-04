@@ -138,7 +138,7 @@ export function DiscountsAdmin({
       per_email_max: draft.per_email_max === "" ? null : Number(draft.per_email_max),
       currency: draft.currency === "" ? null : draft.currency,
       // Append T00:00:00 so the date-only input is parsed as LOCAL midnight, not
-      // UTC midnight — otherwise an AU admin's "valid from 1 June" lands ~10h
+      // UTC midnight. Otherwise an AU admin's "valid from 1 June" lands ~10h
       // early (31 May 14:00Z) and the code activates a day sooner than intended.
       valid_from: new Date(`${draft.valid_from}T00:00:00`).toISOString(),
       valid_until: draft.valid_until
@@ -206,7 +206,7 @@ export function DiscountsAdmin({
                     {c.max_uses !== null && ` / ${c.max_uses}`}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {c.valid_until ? new Date(c.valid_until).toLocaleDateString("en-GB") : "—"}
+                    {c.valid_until ? new Date(c.valid_until).toLocaleDateString("en-GB") : "-"}
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={c.is_active ? "secondary" : "outline"}>
@@ -230,7 +230,7 @@ export function DiscountsAdmin({
           <DialogHeader>
             <DialogTitle>{draft.id ? "Edit code" : "New discount code"}</DialogTitle>
             <DialogDescription>
-              Codes apply at checkout when buying a session pack — the discount comes off the
+              Codes apply at checkout when buying a session pack. The discount comes off the
               charged amount, and every redemption is recorded against the customer&apos;s email.
             </DialogDescription>
           </DialogHeader>

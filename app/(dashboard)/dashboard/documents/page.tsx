@@ -46,7 +46,7 @@ export default async function DocumentsPage() {
         </h1>
         <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
           Upload medical reports for your teacher to review before a session. Files
-          are private to you — a teacher can only open one after you explicitly
+          are private to you. A teacher can only open one after you explicitly
           share it, and you can revoke access any time.
         </p>
       </div>
@@ -54,7 +54,7 @@ export default async function DocumentsPage() {
       <div className="mt-5 flex items-start gap-2.5 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 text-[13px] text-foreground">
         <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
         <p>
-          Stored encrypted in a private vault. Nobody — not even studio admins —
+          Stored encrypted in a private vault. Nobody (not even studio admins)
           can see a document unless you share it. Every time a teacher opens a
           file, it&apos;s recorded below.
         </p>

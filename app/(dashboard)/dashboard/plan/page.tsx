@@ -60,7 +60,7 @@ export default async function PlanPage({
       <p className="mt-2 text-muted-foreground">
         {balance > 0
           ? "Use them to book any paid class. Top up with another pack anytime."
-          : "Upgrade when you're ready — buy a pack of sessions, no subscription."}
+          : "Upgrade when you're ready: buy a pack of sessions, no subscription."}
       </p>
 
       {booked && (
@@ -69,7 +69,7 @@ export default async function PlanPage({
           <div className="text-sm">
             <p className="font-medium text-foreground">Your free 1:1 is booked 🎉</p>
             <p className="mt-0.5 text-muted-foreground">
-              We&apos;ll email your Google Meet link. Want to keep practising? Grab a pack below.
+              We&apos;ll email your join link. Want to keep practising? Grab a pack below.
             </p>
           </div>
         </div>
@@ -81,7 +81,7 @@ export default async function PlanPage({
           <div className="text-sm">
             <p className="font-medium text-foreground">Pack purchased 🎉</p>
             <p className="mt-0.5 text-muted-foreground">
-              Your credits are ready — time to book your next class.
+              Your credits are ready, time to book your next class.
             </p>
           </div>
         </div>

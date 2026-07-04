@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/nextjs";
 
 // Catches errors thrown by the root layout itself, which app/error.tsx (nested
 // inside that layout) cannot. Renders without the layout, so no globals.css,
-// fonts, or providers are available here — inline styles only.
+// fonts, or providers are available here: inline styles only.
 export default function GlobalError({
   error,
   reset,
@@ -38,7 +38,7 @@ export default function GlobalError({
           Something went out of balance.
         </h1>
         <p style={{ marginTop: "1rem", maxWidth: "28rem", color: "#6b645e" }}>
-          An unexpected error occurred. Try again — if it keeps happening, we&apos;d
+          An unexpected error occurred. Try again. If it keeps happening, we&apos;d
           love to hear about it.
         </p>
         <button

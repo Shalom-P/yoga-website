@@ -92,24 +92,12 @@ export function StyleCards({ categories }: { categories: ClassCategory[] }) {
 }
 
 export function ClassGrid({ categories }: { categories: ClassCategory[] }) {
+  // Standalone /classes page: the page's <PageHeader> already states the title
+  // ("Yoga for whatever your body is working on"), so this grid renders without
+  // its own near-identical heading — the homepage uses PracticeSection instead.
   return (
-    <section id="classes" className="py-24 md:py-32">
+    <section id="classes" className="pb-24 pt-4 md:pb-32 md:pt-6">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5 }}
-          className="text-center mb-12"
-        >
-          <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-3">
-            What you can work on
-          </div>
-          <h2 className="text-3xl md:text-5xl tracking-tight text-balance max-w-2xl mx-auto">
-            Yoga shaped around whatever your body is working on.
-          </h2>
-        </motion.div>
-
         <StyleCards categories={categories} />
       </div>
     </section>

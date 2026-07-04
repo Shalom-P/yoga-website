@@ -60,20 +60,20 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.f
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),
   title: {
-    default: "My Yoga Classes — Live 1:1 online yoga teacher",
+    default: "My Yoga Classes: Live 1:1 online yoga teacher",
     template: "%s · My Yoga Classes",
   },
   description:
-    "Live online yoga with expert teachers from India. Book a 60-minute personalised 1:1 session — shown in your local time.",
+    "Live online yoga with expert teachers from India. Book a 60-minute personalised 1:1 session, shown in your local time.",
   applicationName: "My Yoga Classes",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
     siteName: "My Yoga Classes",
     locale: "en",
-    title: "My Yoga Classes — Live 1:1 online yoga teacher",
+    title: "My Yoga Classes: Live 1:1 online yoga teacher",
     description:
-      "Find your 1:1 yoga teacher. 60-minute personalised session. Pick your teacher. Pick your time. Meets on Google Meet.",
+      "Find your 1:1 yoga teacher. 60-minute personalised session. Pick your teacher. Pick your time. Meets live online.",
   },
   twitter: { card: "summary_large_image" },
 };
@@ -117,11 +117,11 @@ export default function RootLayout({
         />
         {/* Force light: the brand skin is light-only (no .dark token set in
             globals.css), so enabling system dark would force-light the page
-            tokens while shadcn's dark: variants still fired on form controls —
+            tokens while shadcn's dark: variants still fired on form controls,
             a broken half-dark state. Re-enable system/toggle only once a real
             `.dark .myc-theme` / `.dark .myc-app` skin exists. */}
         <ThemeProvider attribute="class" forcedTheme="light">
-          {/* Lenis smooth-scroll is scoped to the marketing layout — the app,
+          {/* Lenis smooth-scroll is scoped to the marketing layout; the app,
               admin and auth surfaces use native scrolling (see (marketing)/layout). */}
           <AnalyticsProvider>{children}</AnalyticsProvider>
           <Toaster richColors position="top-center" />

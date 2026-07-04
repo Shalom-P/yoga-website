@@ -35,7 +35,7 @@ export default async function TeacherDocumentsPage() {
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           Medical reports your students have chosen to share with you. Please treat
-          them as confidential — each time you open a file, the student is notified
+          them as confidential. Each time you open a file, the student is notified
           in their access history. A student can revoke access at any time.
         </p>
       </header>

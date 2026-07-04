@@ -127,7 +127,7 @@ export function SessionsAdmin({
         );
         return;
       }
-      toast.success("Session scheduled. Meet link will appear shortly.");
+      toast.success("Session scheduled. Join link will appear shortly.");
       handleOpenChange(false);
       router.refresh();
     } catch {
@@ -141,7 +141,7 @@ export function SessionsAdmin({
     setCancelling(id);
     try {
       // Goes through DELETE /api/admin/sessions so bookings are cancelled and
-      // the Meet event is removed — a direct sessions.update would leave both
+      // the Meet event is removed; a direct sessions.update would leave both
       // dangling.
       const res = await fetch("/api/admin/sessions", {
         method: "DELETE",
@@ -205,7 +205,7 @@ export function SessionsAdmin({
             Sessions
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Schedule classes — Meet links are auto-created.
+            Schedule classes. Join links are auto-created.
           </p>
         </div>
         <div className="flex gap-2">
@@ -232,7 +232,7 @@ export function SessionsAdmin({
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Teacher</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Class</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Capacity</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Meet</th>
+                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Link</th>
                 <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
                 <th className="px-4 py-3 font-medium text-muted-foreground text-left">Actions</th>
               </tr>
@@ -243,7 +243,7 @@ export function SessionsAdmin({
                   <td className="px-4 py-3 whitespace-nowrap">
                     {formatCustomerTime(s.start_at)}
                   </td>
-                  <td className="px-4 py-3">{s.teacher?.display_name ?? "—"}</td>
+                  <td className="px-4 py-3">{s.teacher?.display_name ?? "-"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.category?.name ?? "1:1"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.capacity}</td>
                   <td className="px-4 py-3">
@@ -438,7 +438,7 @@ export function SessionsAdmin({
               <div>
                 <LabelWithHint
                   htmlFor="dur"
-                  hint="Class length in minutes. Used for the Meet event end time and the teacher-overlap check."
+                  hint="Class length in minutes. Used for the session end time and the teacher-overlap check."
                 >
                   Duration (minutes)
                 </LabelWithHint>
@@ -498,8 +498,8 @@ export function SessionsAdmin({
               />
               Mark as free-trial slot
               <FieldHint>
-                Free-trial bookings are subject to the &quot;one free 1:1 per customer&quot; rule —
-                a customer can only claim one across their lifetime.
+                Free-trial bookings are subject to the &quot;one free 1:1 per customer&quot; rule,
+                so a customer can only claim one across their lifetime.
               </FieldHint>
             </Label>
           </div>

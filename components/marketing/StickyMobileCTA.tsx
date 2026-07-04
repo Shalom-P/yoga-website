@@ -24,7 +24,7 @@ export function StickyMobileCTA() {
       <div className="flex items-center justify-between gap-3 rounded-2xl border border-border bg-background/95 p-3 shadow-lg backdrop-blur">
         <div className="text-sm">
           <div className="font-medium">Book a 1:1 session</div>
-          <div className="text-xs text-muted-foreground">Live on Google Meet</div>
+          <div className="text-xs text-muted-foreground">Live online</div>
         </div>
         <Button
           asChild

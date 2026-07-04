@@ -7,7 +7,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Class types",
   description:
-    "Diabetes, hypertension, prenatal, hormonal health, pain relief, mental health, weight loss, geriatric, kids — find the 1:1 yoga that fits what your body is working on.",
+    "Diabetes, hypertension, prenatal, hormonal health, pain relief, mental health, weight loss, geriatric, kids: find the 1:1 yoga that fits what your body is working on.",
   alternates: { canonical: "/classes" },
 };
 

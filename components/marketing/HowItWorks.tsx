@@ -7,21 +7,21 @@ const STEPS = [
   {
     n: "01",
     title: "Match with your teacher",
-    body: "Tell us your level and goals. We'll pair you with the right 200-hr certified teacher from India — or pick your own.",
+    body: "Tell us your level and goals. We'll pair you with the right 200-hr certified teacher from India, or pick your own.",
     href: "/teachers",
     cta: "Meet the teachers →",
   },
   {
     n: "02",
     title: "Book a time that suits you",
-    body: "Choose a slot from live availability, shown in your local time. Book in seconds — pay only for the sessions you book.",
+    body: "Choose a slot from live availability, shown in your local time. Book in seconds, pay only for the sessions you book.",
     href: "/pricing",
     cta: "See pricing →",
   },
   {
     n: "03",
     title: "Meet live, one-on-one",
-    body: "Roll out your mat — it's just you and your teacher on Google Meet. Real-time corrections, your pace, their full attention.",
+    body: "Roll out your mat: it's just you and your teacher, live online. Real-time corrections, your pace, their full attention.",
     href: "/login?next=/dashboard/book",
     cta: "Book a session →",
   },
@@ -49,7 +49,7 @@ export function HowItWorks() {
           </div>
           <p className="text-lg text-muted-foreground text-pretty">
             No app to download. No equipment beyond your mat. Just you and a teacher who&apos;s
-            fully focused on you — pay only for the sessions you book.
+            fully focused on you, pay only for the sessions you book.
           </p>
         </motion.div>
 

@@ -84,28 +84,28 @@ export default async function AdminDashboard() {
   const stats = [
     {
       label: "Signups today",
-      value: kpis ? String(kpis.signups_today) : "—",
+      value: kpis ? String(kpis.signups_today) : "-",
       icon: Users,
       highlight: true,
       note: "new accounts today",
     },
     {
       label: "Trials today",
-      value: kpis ? String(kpis.trials_today) : "—",
+      value: kpis ? String(kpis.trials_today) : "-",
       icon: Calendar,
       highlight: true,
       note: "free 1:1s booked",
     },
     {
       label: "Revenue MTD (INR)",
-      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.INR ?? 0, "INR") : "—",
+      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.INR ?? 0, "INR") : "-",
       icon: TrendingUp,
       highlight: true,
       note: "India, this month",
     },
     {
       label: "Revenue MTD (AED)",
-      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.AED ?? 0, "AED") : "—",
+      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.AED ?? 0, "AED") : "-",
       icon: Video,
       highlight: true,
       note: "UAE, this month",
@@ -270,14 +270,14 @@ export default async function AdminDashboard() {
                   <tr key={b.id}>
                     <Td>
                       <strong className="font-semibold text-foreground">
-                        {b.customer?.full_name ?? "—"}
+                        {b.customer?.full_name ?? "-"}
                       </strong>
                     </Td>
-                    <Td>{b.session?.teacher?.display_name ?? "—"}</Td>
+                    <Td>{b.session?.teacher?.display_name ?? "-"}</Td>
                     <Td>
                       {b.session
                         ? formatInTz(b.session.start_at, DEFAULT_CUSTOMER_TZ, "EEE · h:mm a")
-                        : "—"}
+                        : "-"}
                     </Td>
                     <Td>
                       {b.is_free_trial ? (

@@ -4,11 +4,11 @@
   "h1Before": "Gentle yoga for ",
   "h1Em": "older adults",
   "h1After": ", shaped around you.",
-  "heroLead": "Slow, supportive 1:1 sessions of gentle movement and balance work — with seated and chair-supported options, built around your body and your pace. Practised alongside the care your doctor provides.",
+  "heroLead": "Slow, supportive 1:1 sessions of gentle movement and balance work, with seated and chair-supported options, built around your body and your pace. Practised alongside the care your doctor provides.",
   "empathyLabel": "You don't have to do this alone",
-  "empathyText": "Staying steady on your feet matters. Yoga can be a gentle, supportive part of your week — building everyday mobility and confidence at a pace that suits you.",
+  "empathyText": "Staying steady on your feet matters. Yoga can be a gentle, supportive part of your week, building everyday mobility and confidence at a pace that suits you.",
   "helpsH2": "How yoga can support older adults.",
-  "helpsSubhead": "Four gentle levers, working together — and the first one does most of the lifting.",
+  "helpsSubhead": "Four gentle levers, working together, and the first one does most of the lifting.",
   "levers": [
     {
       "title": "Everyday mobility",
@@ -28,7 +28,7 @@
     }
   ],
   "posesH2": "The poses we focus on, and why.",
-  "posesSubhead": "Grouped by what they do for the body. Your teacher draws from these — they won't ask you to do all of them.",
+  "posesSubhead": "Grouped by what they do for the body. Your teacher draws from these, and won't ask you to do all of them.",
   "poseGroups": [
     {
       "tag": "Seated & chair",
@@ -52,7 +52,7 @@
         {
           "sa": "Sukhasana",
           "en": "Seated breathing",
-          "desc": "Calm and centring — a comfortable seat for soft, even breathing."
+          "desc": "Calm and centring: a comfortable seat for soft, even breathing."
         }
       ]
     },
@@ -100,10 +100,10 @@
         {
           "sa": "Supported gentle backbend",
           "en": "Opening the chest",
-          "desc": "Opening the chest with a small, supported lift — no strain."
+          "desc": "Opening the chest with a small, supported lift, no strain."
         }
       ],
-      "note": "If you have osteoporosis or low bone density, we avoid deep forward bends and strong twists — please tell your teacher."
+      "note": "If you have osteoporosis or low bone density, we avoid deep forward bends and strong twists, so please tell your teacher."
     },
     {
       "tag": "Breathwork & rest",
@@ -122,14 +122,14 @@
         {
           "sa": "Shavasana",
           "en": "Final relaxation",
-          "desc": "On a chair or floor, as comfortable — a still close to every session."
+          "desc": "On a chair or floor, as comfortable, a still close to every session."
         }
       ]
     }
   ],
   "selectionNote": "Your teacher won't hand you all of these. They'll choose the right few for your body, your level, and how you're feeling that day.",
   "howH2": "How we work with you to get there.",
-  "howSubhead": "One teacher who knows your name and your goals — not a different face every week.",
+  "howSubhead": "One teacher who knows your name and your goals, not a different face every week.",
   "steps": [
     {
       "title": "We get to know you",
@@ -165,19 +165,19 @@
     "A quiet corner"
   ],
   "testimonialQuote": "At 72 I was nervous about starting. My teacher kept a chair beside me the whole time and went at my pace. I feel steadier on my feet and far more confident.",
-  "testimonialWho": "<strong>Placeholder — swap for a real review.</strong> Member · practising for 6 months",
+  "testimonialWho": "<strong>Placeholder. Swap for a real review.</strong> Member · practising for 6 months",
   "faqH2": "Questions people ask first.",
   "faqs": [
     {
-      "q": "I haven't exercised in years, or I use a chair — can I still do this?",
+      "q": "I haven't exercised in years, or I use a chair. Can I still do this?",
       "a": "Yes. Sessions can be done seated or with chair support, and we start very gently and slowly."
     },
     {
-      "q": "I get dizzy or have trouble with balance — is it safe?",
+      "q": "I get dizzy or have trouble with balance. Is it safe?",
       "a": "We move slowly, keep support within reach, and adapt to you. Please tell your teacher and check with your doctor first."
     },
     {
-      "q": "I have arthritis, or a knee or hip replacement — can I join?",
+      "q": "I have arthritis, or a knee or hip replacement. Can I join?",
       "a": "Often yes, gently and adapted. Tell your teacher and check with your doctor first so we can plan around it."
     },
     {
@@ -189,7 +189,7 @@
       "a": "Everyone is different. Many people feel a little steadier and more confident within a few weeks of gentle, regular practice."
     }
   ],
-  "safetyTitle": "Yoga supports your care — it doesn't replace it",
+  "safetyTitle": "Yoga supports your care, it doesn't replace it",
   "safetyText": "These sessions support your overall wellbeing and are practised alongside professional medical care. They are not a substitute for diagnosis, treatment, or medication. Please tell your teacher about any conditions or symptoms so they can adapt your session safely, and keep your doctor in the loop.",
-  "metaDescription": "Slow, supportive 1:1 yoga for older adults — gentle movement, balance, and chair-supported options to help with everyday mobility and confidence. First session free."
+  "metaDescription": "Slow, supportive 1:1 yoga for older adults: gentle movement, balance, and chair-supported options to help with everyday mobility and confidence. First session free."
 }

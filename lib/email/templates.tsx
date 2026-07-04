@@ -171,7 +171,7 @@ function BookingConfirmationTemplate({
         You&apos;re booked in!
       </Heading>
       <BodyText>
-        Great news — your 1:1 yoga session has been confirmed. See you on the mat!
+        Great news, your 1:1 yoga session has been confirmed. See you on the mat!
       </BodyText>
 
       <InfoBox>
@@ -272,7 +272,7 @@ function BookingReminderTemplate({
       </Heading>
       <BodyText>
         {isImminient
-          ? `Just a quick nudge — your 1:1 session with ${teacherName} is about to begin.`
+          ? `Just a quick nudge: your 1:1 session with ${teacherName} is about to begin.`
           : `Your yoga session with ${teacherName} is coming up tomorrow. We can't wait to see you on the mat!`}
       </BodyText>
 

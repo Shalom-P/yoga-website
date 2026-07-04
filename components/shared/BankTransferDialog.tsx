@@ -42,12 +42,12 @@ export function BankTransferDialog({
       setCopied(key);
       setTimeout(() => setCopied((c) => (c === key ? null : c)), 1500);
     } catch {
-      toast.error("Couldn't copy — please copy it manually.");
+      toast.error("Couldn't copy, please copy it manually.");
     }
   }
 
   const amountMajor = (intent.amountCents / 100).toFixed(2);
-  // Show the exact figure (with fils) — it's the amount the customer must wire,
+  // Show the exact figure (with fils), it's the amount the customer must wire,
   // and it has to match what the "copy amount" button copies (amountMajor).
   const amountDisplay = formatMoney(intent.amountCents, intent.currency, { withCents: true });
   const fields = [
@@ -77,7 +77,7 @@ export function BankTransferDialog({
           <div className="flex items-start gap-2.5 rounded-xl border border-primary/30 bg-primary/5 px-4 py-3 text-sm text-foreground">
             <Info className="mt-0.5 size-4 shrink-0 text-primary" />
             <p>
-              Promo <strong className="font-mono">{intent.discount.code}</strong> applied —{" "}
+              Promo <strong className="font-mono">{intent.discount.code}</strong> applied:{" "}
               <strong>{formatMoney(intent.discount.amountCents, intent.currency, { withCents: true })}</strong>{" "}
               off. The amount below is already discounted.
             </p>
@@ -96,7 +96,7 @@ export function BankTransferDialog({
           <p>
             This is a <strong>temporary</strong> payment method for UAE customers while we finish
             setting up card payments. Your session credits are added as soon as we confirm your
-            transfer{intent.reference ? " — quote the reference below so we can match it" : ""}.
+            transfer{intent.reference ? ". Quote the reference below so we can match it" : ""}.
           </p>
         </div>
 

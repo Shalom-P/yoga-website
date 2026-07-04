@@ -188,7 +188,7 @@ export function SlotOverrides({ teacherId, teacherTimezone, initial }: Props) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {r.reason ?? "—"}
+                    {r.reason ?? "-"}
                   </td>
                   <td className="px-4 py-3 text-right">
                     <Button

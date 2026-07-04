@@ -27,7 +27,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
               className="myc-eyebrow mb-6"
             >
               <span className="myc-dot" aria-hidden="true" />
-              Personalised 1:1 · Live on Google Meet
+              Personalised 1:1 · Live online
             </motion.div>
 
             <motion.h1

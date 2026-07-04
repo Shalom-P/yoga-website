@@ -84,7 +84,7 @@ export function MedicalDocuments({
     }
     if (file.size > MEDICAL_DOC_MAX_BYTES) {
       toast.error(
-        `That file is ${(file.size / 1024 / 1024).toFixed(0)} MB — the limit is ${(
+        `That file is ${(file.size / 1024 / 1024).toFixed(0)} MB, but the limit is ${(
           MEDICAL_DOC_MAX_BYTES /
           1024 /
           1024
@@ -237,7 +237,7 @@ export function MedicalDocuments({
                         ))}
                       </div>
                     ) : (
-                      <p className="mt-2 text-xs text-muted-foreground">Private — not shared</p>
+                      <p className="mt-2 text-xs text-muted-foreground">Private, not shared</p>
                     )}
                   </div>
                 </div>
@@ -346,7 +346,7 @@ function ShareDialog({
   const sharedIds = new Set((doc?.shares ?? []).map((s) => s.teacher_id));
   // Active shares whose teacher is no longer in the bookable list (e.g. the
   // teacher was deactivated). Without a dedicated revoke row here, the customer
-  // would have no way to un-share — breaking the "revoke any time" promise.
+  // would have no way to un-share, breaking the "revoke any time" promise.
   const bookedIds = new Set(bookedTeachers.map((t) => t.id));
   const orphanShares = (doc?.shares ?? []).filter((s) => !bookedIds.has(s.teacher_id));
   const hasAny = bookedTeachers.length > 0 || orphanShares.length > 0;
@@ -383,7 +383,7 @@ function ShareDialog({
         <DialogHeader>
           <DialogTitle>Share document</DialogTitle>
           <DialogDescription>
-            {doc?.file_name} — choose which of your teachers can open this file. You
+            {doc?.file_name}: choose which of your teachers can open this file. You
             can revoke access at any time.
           </DialogDescription>
         </DialogHeader>
