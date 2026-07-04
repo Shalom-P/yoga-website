@@ -383,6 +383,20 @@ export async function getLandingSettings(keys: string[]): Promise<Record<string,
   return (data as Record<string, unknown>) ?? {};
 }
 
+// Admin-entered landing copy is stored in the DB (admin_settings) and can still
+// contain retired phrasing that predates a copy change and cannot be fixed from
+// code alone (e.g. "Google Meet", after the switch to vendor-neutral "online").
+// Scrub it at render time so the marketing site never shows it, whatever is
+// stored. Order matters: replace the whole "on/via/over Google Meet" phrase
+// before the bare-noun fallback, so "we meet on Google Meet" reads "we meet
+// online" rather than "we meet on online".
+function scrubRetiredCopy(s: string): string {
+  return s
+    .replace(/\b(?:on|via|over)\s+Google\s+Meet\b/gi, "online")
+    .replace(/\bGoogle\s+Meet\s+link\b/gi, "join link")
+    .replace(/\bGoogle\s+Meet\b/gi, "online");
+}
+
 export function landingSetting<T = string>(
   settings: Record<string, unknown>,
   key: string,
@@ -395,5 +409,6 @@ export function landingSetting<T = string>(
   if (v === null || v === undefined || (typeof v === "string" && v.trim() === "")) {
     return fallback;
   }
+  if (typeof v === "string") return scrubRetiredCopy(v) as T;
   return v as T;
 }
