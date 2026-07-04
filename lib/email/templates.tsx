@@ -243,6 +243,10 @@ export interface BookingReminderArgs {
   customerTz: string;
   meetLink?: string | null;
   when: "24 hours" | "1 hour";
+  /** When true, append an "upload your health documents" nudge (24h reminder only). */
+  needsHealthDocs?: boolean;
+  /** Absolute URL to the customer's health-documents page (for the nudge button). */
+  documentsUrl?: string;
 }
 
 function BookingReminderTemplate({
@@ -251,10 +255,15 @@ function BookingReminderTemplate({
   customerTz,
   meetLink,
   when,
+  needsHealthDocs,
+  documentsUrl,
 }: BookingReminderArgs) {
   const sessionTime = formatCustomerTime(startUtc, customerTz);
   const hasMeetLink = Boolean(meetLink);
   const isImminient = when === "1 hour";
+  // Only nudge on the day-before reminder: an hour out is too late to upload a
+  // report and have the teacher review it before class.
+  const showHealthDocsNudge = Boolean(needsHealthDocs && documentsUrl && !isImminient);
 
   return (
     <EmailWrapper
@@ -320,6 +329,52 @@ function BookingReminderTemplate({
           you don&apos;t see it, please contact us via WhatsApp.
         </BodyText>
       )}
+
+      {showHealthDocsNudge ? (
+        <Section
+          style={{
+            backgroundColor: "#F5F3FF",
+            borderLeft: `4px solid ${brand.accent}`,
+            borderRadius: "6px",
+            padding: "16px 20px",
+            margin: "24px 0",
+          }}
+        >
+          <Text
+            style={{
+              color: brand.text,
+              fontSize: "16px",
+              fontWeight: "700",
+              lineHeight: "1.5",
+              margin: "0 0 6px",
+            }}
+          >
+            Help {teacherName} prepare
+          </Text>
+          <Text
+            style={{ color: brand.text, fontSize: "14px", lineHeight: "1.6", margin: "0 0 14px" }}
+          >
+            If you have any medical reports or notes about injuries or health conditions, upload
+            them so your teacher can tailor your session. It&apos;s optional and private: only a
+            teacher you choose to share with can open it.
+          </Text>
+          <Button
+            href={documentsUrl!}
+            style={{
+              backgroundColor: brand.accent,
+              borderRadius: "8px",
+              color: "#FFFFFF",
+              display: "inline-block",
+              fontSize: "15px",
+              fontWeight: "600",
+              padding: "12px 24px",
+              textDecoration: "none",
+            }}
+          >
+            Upload health documents
+          </Button>
+        </Section>
+      ) : null}
 
       <Hr style={{ borderColor: brand.border, margin: "24px 0" }} />
       <MutedText>
