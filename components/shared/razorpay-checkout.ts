@@ -13,6 +13,7 @@
 
 import { detectBrowserTimezone } from "@/lib/timezone";
 import { OUTSIDE_SERVICE_AREA } from "@/lib/geo/region";
+import { track } from "@/lib/analytics/events";
 
 const CHECKOUT_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 const SCRIPT_TIMEOUT_MS = 10_000;
@@ -123,7 +124,7 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
       }),
     });
   } catch {
-    args.onError("Network error — please try again.");
+    args.onError("Network error. Please try again.");
     return;
   }
 
@@ -193,8 +194,10 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
         });
         const verify = (await verifyRes.json().catch(() => ({}))) as {
           verified?: boolean;
+          pending?: boolean;
           credits?: number;
           error?: string;
+          reason?: string;
         };
         if (verifyRes.ok && verify.verified) {
           args.onPaid({
@@ -203,7 +206,22 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
             credits: verify.credits,
           });
         } else {
-          args.onError(verify.error ?? "Payment couldn't be verified.");
+          // Surface the machine reason for support/debugging; the user only sees
+          // the friendly message. `pending` means the charge landed but capture
+          // is still settling, so the webhook backstop fulfils it shortly.
+          if (verify.reason) {
+            console.error("[razorpay] verify not confirmed:", verify.reason);
+            track("checkout_verify_failed", {
+              reason: verify.reason,
+              pending: Boolean(verify.pending),
+            });
+          }
+          args.onError(
+            verify.error ??
+              (verify.pending
+                ? "Payment received. Your credits may take a moment to appear; contact support if they don't show shortly."
+                : "Payment couldn't be verified."),
+          );
         }
       } catch {
         args.onError("Payment verification failed. Please contact support.");

@@ -2,7 +2,7 @@
 
 /**
  * The single "buy a pack" entry point for the UI. It asks the server which
- * payment rail to use (decided GeoIP-first — see /api/payments/intent) and
+ * payment rail to use (decided GeoIP-first, see /api/payments/intent) and
  * branches:
  *   - India (INR)  → the existing Razorpay Checkout flow (startRazorpayCheckout).
  *   - UAE (AED)    → a manual SWIFT transfer; `onBankTransfer` fires with the
@@ -50,7 +50,7 @@ export async function startCheckout(args: StartCheckoutArgsWithBank): Promise<vo
       }),
     });
   } catch {
-    args.onError("Network error — please try again.");
+    args.onError("Network error, please try again.");
     return;
   }
 
@@ -84,7 +84,7 @@ export async function startCheckout(args: StartCheckoutArgsWithBank): Promise<vo
     return;
   }
   if (!res.ok || !data.method) {
-    // A rejected promo comes back with a friendly `message` — prefer it.
+    // A rejected promo comes back with a friendly `message`, prefer it.
     args.onError(data.message ?? data.error ?? "Couldn't start checkout. Please try again.");
     return;
   }
@@ -112,7 +112,7 @@ export async function startCheckout(args: StartCheckoutArgsWithBank): Promise<vo
     return;
   }
 
-  // Razorpay (India) — needs the publishable key for the modal.
+  // Razorpay (India) needs the publishable key for the modal.
   if (!args.keyId) {
     args.onError("Checkout isn't configured yet.");
     return;

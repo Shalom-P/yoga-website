@@ -136,14 +136,14 @@ function SimpleDetail({ c }: { c: Category }) {
 
           <p className="rounded-2xl bg-secondary/40 px-5 py-4 text-sm text-muted-foreground text-pretty">
             Yoga supports your overall wellbeing and is practised alongside professional medical
-            care — it is not a substitute for diagnosis, treatment, or medication. Tell your teacher
+            care. It is not a substitute for diagnosis, treatment, or medication. Tell your teacher
             about any conditions so they can adapt your session safely.
           </p>
 
           <div className="pt-2 text-center">
             {cta}
             <p className="mt-3 text-xs text-muted-foreground">
-              60 min · 1:1 · live on Google Meet
+              60 min · 1:1 · live online
             </p>
           </div>
         </div>

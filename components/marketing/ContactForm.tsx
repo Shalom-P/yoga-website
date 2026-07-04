@@ -35,7 +35,7 @@ export function ContactForm() {
       setName("");
       setEmail("");
       setMessage("");
-      toast.success("Thanks — we'll reply within 1 business day.");
+      toast.success("Thanks, we'll reply within 1 business day.");
     } catch {
       toast.error("Couldn't send your message just now. Please email us directly.");
     } finally {

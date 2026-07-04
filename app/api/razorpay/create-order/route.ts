@@ -26,7 +26,7 @@ export const runtime = "nodejs";
  * CLAUDE.md "Three auth-guard paths"), so this handler authenticates itself.
  *
  * The price + credit count are resolved server-side from the `plans` table by
- * `planSlug` — the client never sends an amount, so it can't tamper with what
+ * `planSlug`, so the client never sends an amount and can't tamper with what
  * it's charged. The order's notes bind it to the customer + plan so fulfilment
  * (verify-payment / webhook) can credit the right account for the right pack.
  */
@@ -34,10 +34,10 @@ export const runtime = "nodejs";
 const bodySchema = z.object({
   planSlug: z.string().trim().min(1).max(64),
   // The visitor's live browser timezone (IANA id). Used for the service-area
-  // purchase gate and as a currency fallback — the price is never client-supplied.
+  // purchase gate and as a currency fallback. The price is never client-supplied.
   clientTimezone: z.string().trim().min(1).max(64),
   // Optional promo code. The discount + final amount are computed server-side
-  // (see lib/billing/promo.ts) — the client only ever sends the raw code string.
+  // (see lib/billing/promo.ts). The client only ever sends the raw code string.
   promoCode: z.string().trim().max(64).optional(),
 });
 
@@ -46,7 +46,7 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ error: "Razorpay is not configured." }, { status: 500 });
   }
 
-  // Authenticate first — fail fast before touching the request body.
+  // Authenticate first, failing fast before touching the request body.
   const supabase = await createSupabaseServerClient();
   const {
     data: { user },
@@ -72,7 +72,7 @@ export async function POST(req: Request): Promise<Response> {
 
   // Service-area purchase gate. Non-admin customers must be in a served country
   // (UAE or India) to buy a pack; admins may operate from anywhere. This is the
-  // single choke point for purchases — no order means no Checkout and no fulfilment.
+  // single choke point for purchases. No order means no Checkout and no fulfilment.
   const { data: profile } = await supabase
     .from("profiles")
     .select("role, email")
@@ -99,7 +99,7 @@ export async function POST(req: Request): Promise<Response> {
   // (GeoIP country wins; browser timezone is the local/off-platform fallback).
   const { currency } = resolveRegion({ country, timezone: parsed.data.clientTimezone });
 
-  // Trusted price lookup — reject anything that isn't an active plan.
+  // Trusted price lookup, rejecting anything that isn't an active plan.
   const pack = await resolvePackBySlug(parsed.data.planSlug, currency);
   if (!pack) {
     return Response.json({ error: "Unknown plan" }, { status: 400 });
@@ -179,7 +179,7 @@ export async function POST(req: Request): Promise<Response> {
       try {
         await svc.rpc("release_discount_reservation", { p_redemption_id: reservation.redemptionId });
       } catch {
-        /* ignore — sweep will reclaim it */
+        /* ignore, the sweep will reclaim it */
       }
     }
     // The SDK rejects with { statusCode, error } on API failures; a network
@@ -192,7 +192,7 @@ export async function POST(req: Request): Promise<Response> {
     const status = e?.statusCode === 401 ? 502 : 500;
     const message =
       e?.statusCode === 401
-        ? "Razorpay authentication failed — check your API keys."
+        ? "Razorpay authentication failed. Check your API keys."
         : e?.error?.description ?? "Failed to create Razorpay order.";
     return Response.json({ error: message }, { status });
   }

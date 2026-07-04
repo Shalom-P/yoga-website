@@ -161,7 +161,7 @@ export function TeacherSlotPicker({
   }
 
   // For a trial-eligible non-admin, hold off on the slot grid until the real
-  // browser timezone resolves — otherwise an out-of-area user sees a flash of
+  // browser timezone resolves, otherwise an out-of-area user sees a flash of
   // bookable slots before the banner. Admins and paid bookings are unaffected.
   if (!isAdmin && freeTrialAvailable && !tzResolved) {
     return (
@@ -219,9 +219,9 @@ export function TeacherSlotPicker({
           ) : error === "slot_taken" ? (
             "That slot was just booked by someone else. Try another time."
           ) : error === "slot_in_past" ? (
-            "That time has just passed — pick a slot at least 15 minutes from now."
+            "That time has just passed. Pick a slot at least 15 minutes from now."
           ) : error === "slot_unavailable" ? (
-            "The teacher isn't available then anymore — pick another time."
+            "The teacher isn't available then anymore. Pick another time."
           ) : error === OUTSIDE_SERVICE_AREA ? (
             "The free 1:1 trial is available to customers in the UAE and India only."
           ) : (

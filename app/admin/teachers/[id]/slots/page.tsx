@@ -42,7 +42,7 @@ export default async function TeacherSlotsPage({
         Back to teacher
       </Link>
       <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-        Availability — {teacher.display_name}
+        Availability: {teacher.display_name}
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
         Times shown in the teacher&apos;s local timezone ({teacher.timezone}). Click cells to toggle availability.

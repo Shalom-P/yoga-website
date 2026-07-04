@@ -194,7 +194,7 @@ function EmailLogin({ next }: { next: string }) {
             onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
             placeholder="Enter the code from your email"
             maxLength={OTP_MAX_LENGTH}
-            className="mt-1.5 text-center tracking-[0.4em] text-lg"
+            className="mt-1.5 h-11 text-center tracking-[0.4em] text-lg"
           />
           <p className="mt-1.5 text-xs text-muted-foreground">Sent to {email}.</p>
         </div>
@@ -233,7 +233,7 @@ function EmailLogin({ next }: { next: string }) {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           placeholder="you@example.com"
-          className="mt-1.5"
+          className="mt-1.5 h-11"
         />
         <p className="mt-1.5 text-xs text-muted-foreground">
           We&apos;ll email a verification code to{" "}

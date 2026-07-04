@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * Plays a teacher's self-intro clip (MP4 from Supabase Storage, `intro_video_url`).
- * Native <video controls> — no client JS needed. Render only when a URL exists.
+ * Native <video controls>, no client JS needed. Render only when a URL exists.
  *
  * The rounded corners + clipping live on the WRAPPER, not the <video>. A <video>
  * is a replaced element: WebKit/Safari paints its native control bar outside the
@@ -32,7 +32,7 @@ export function TeacherIntroVideo({
         controls
         preload="metadata"
         poster={poster ?? undefined}
-        aria-label={`Intro video — ${name}`}
+        aria-label={`Intro video: ${name}`}
         className="size-full object-cover"
       >
         <source src={src} />

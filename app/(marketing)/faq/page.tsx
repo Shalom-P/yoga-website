@@ -9,7 +9,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "FAQ",
   description:
-    "Common questions about 1:1 yoga sessions, pricing, scheduling, and how online classes on Google Meet work.",
+    "Common questions about 1:1 yoga sessions, pricing, scheduling, and how online classes work.",
   alternates: { canonical: "/faq" },
 };
 

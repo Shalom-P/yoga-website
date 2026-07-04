@@ -10,16 +10,16 @@ function isRateLimit(m: string): boolean {
 /** For the login / email-OTP flow. */
 export function friendlyAuthError(message?: string | null): string {
   const m = (message ?? "").toLowerCase();
-  if (isRateLimit(m)) return "Too many attempts — please wait a minute and try again.";
+  if (isRateLimit(m)) return "Too many attempts. Please wait a minute and try again.";
   if (m.includes("expired") || m.includes("invalid") || m.includes("token")) {
-    return "That code looks invalid or has expired — request a new one.";
+    return "That code looks invalid or has expired. Please request a new one.";
   }
-  return "Something went wrong — please try again.";
+  return "Something went wrong. Please try again.";
 }
 
 /** For authenticated DB writes (onboarding, profile). */
 export function friendlyFormError(message?: string | null): string {
   const m = (message ?? "").toLowerCase();
-  if (isRateLimit(m)) return "Too many attempts — please wait a minute and try again.";
-  return "Couldn't save your details just now — please try again.";
+  if (isRateLimit(m)) return "Too many attempts. Please wait a minute and try again.";
+  return "Couldn't save your details just now. Please try again.";
 }

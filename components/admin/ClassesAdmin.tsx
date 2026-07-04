@@ -97,7 +97,7 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
       name: c.name,
       description: c.description ?? "",
       long_description: c.long_description ?? "",
-      // One item per line — keeps commas inside what_to_expect bullets intact.
+      // One item per line, which keeps commas inside what_to_expect bullets intact.
       helps_with: c.helps_with.join("\n"),
       what_to_expect: c.what_to_expect.join("\n"),
       who_for: c.who_for ?? "",
@@ -250,7 +250,7 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             <div>
               <LabelWithHint
                 htmlFor="long_description"
-                hint="Longer intro paragraph on the /classes/<slug> detail page. Keep claims safe: this practice supports/complements wellbeing alongside medical care — never say it cures, treats, or lowers a condition."
+                hint="Longer intro paragraph on the /classes/<slug> detail page. Keep claims safe: this practice supports/complements wellbeing alongside medical care. Never say it cures, treats, or lowers a condition."
               >
                 Long description (detail page)
               </LabelWithHint>
@@ -266,7 +266,7 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             <div>
               <LabelWithHint
                 htmlFor="helps_with"
-                hint="Shown as 'What it can help with' chips on the detail page. One per line (or comma-separated on a single line). Frame as what the practice supports (e.g. 'Stress management', 'Better sleep') — avoid disease-claim wording."
+                hint="Shown as 'What it can help with' chips on the detail page. One per line (or comma-separated on a single line). Frame as what the practice supports (e.g. 'Stress management', 'Better sleep'), and avoid disease-claim wording."
               >
                 Helps with (one per line)
               </LabelWithHint>
@@ -283,7 +283,7 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             <div>
               <LabelWithHint
                 htmlFor="what_to_expect"
-                hint="Bullets under 'What to expect in a session' on the detail page. One per line — bullets may contain commas. Use these to encode safety guardrails (e.g. no breath-holding, no deep twists in pregnancy)."
+                hint="Bullets under 'What to expect in a session' on the detail page. One per line, and bullets may contain commas. Use these to encode safety guardrails (e.g. no breath-holding, no deep twists in pregnancy)."
               >
                 What to expect (one per line)
               </LabelWithHint>
@@ -300,7 +300,7 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             <div>
               <LabelWithHint
                 htmlFor="who_for"
-                hint="Shown in the 'Who it's for' card on the detail page. Describe the audience and reinforce that this complements — and is not a substitute for — medical care."
+                hint="Shown in the 'Who it's for' card on the detail page. Describe the audience and reinforce that this complements (and is not a substitute for) medical care."
               >
                 Who it&apos;s for
               </LabelWithHint>
@@ -316,7 +316,7 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <LabelWithHint
-                  hint="How vigorous the class is — drives the colour-coded badge on the class card."
+                  hint="How vigorous the class is, which drives the colour-coded badge on the class card."
                 >
                   Intensity
                 </LabelWithHint>

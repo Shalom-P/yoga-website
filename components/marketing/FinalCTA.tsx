@@ -39,7 +39,7 @@ export function FinalCTA({ headline }: { headline: string }) {
             {headline}
           </h2>
           <p className="mx-auto mt-5 max-w-[540px] text-lg text-primary-foreground/80 text-pretty">
-            Book a personalised 1:1 today and meet a teacher who&apos;ll know your name — and your
+            Book a personalised 1:1 today and meet a teacher who&apos;ll know your name, and your
             goals.
           </p>
           <Button

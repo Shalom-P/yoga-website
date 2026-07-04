@@ -123,16 +123,16 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
           <tbody>
             {rows.map((c) => (
               <tr key={c.id} className="border-t border-border">
-                <td className="px-4 py-3">{c.full_name ?? "—"}</td>
-                <td className="px-4 py-3 text-muted-foreground">{c.email ?? "—"}</td>
+                <td className="px-4 py-3">{c.full_name ?? "-"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{c.email ?? "-"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{c.timezone}</td>
                 <td className="px-4 py-3 text-muted-foreground capitalize">
-                  {c.experience_level ?? "—"}
+                  {c.experience_level ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground max-w-[160px] truncate" title={(c.goals ?? []).join(", ") || undefined}>
-                  {(c.goals ?? []).join(", ") || "—"}
+                  {(c.goals ?? []).join(", ") || "-"}
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">{c.referral_source ?? "—"}</td>
+                <td className="px-4 py-3 text-muted-foreground">{c.referral_source ?? "-"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{c.marketing_opt_in ? "Yes" : "No"}</td>
                 <td className="px-4 py-3 tabular-nums">{c.credits}</td>
                 <td className="px-4 py-3">

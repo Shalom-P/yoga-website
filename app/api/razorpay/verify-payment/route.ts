@@ -84,9 +84,30 @@ export async function POST(req: Request): Promise<Response> {
       if (result.reason === "customer_mismatch") {
         return Response.json({ verified: false, error: "Not your order" }, { status: 403 });
       }
+      // A still-uncaptured payment (rare now that fulfilment captures on-authorize)
+      // is PENDING, not failed: the customer was charged and the webhook backstop
+      // settles it shortly. Tell the UI so, instead of a scary hard error.
+      if (result.reason.startsWith("not_paid")) {
+        Sentry.captureMessage(`razorpay verify pending capture: ${result.reason}`, "info");
+        return Response.json(
+          {
+            verified: false,
+            pending: true,
+            reason: result.reason,
+            error:
+              "Payment received. We're still confirming it, so your credits may take a moment to appear. If they don't show up shortly, contact support and we'll add them right away.",
+          },
+          { status: 202 },
+        );
+      }
       Sentry.captureMessage(`razorpay verify fulfil failed: ${result.reason}`, "warning");
       return Response.json(
-        { verified: false, error: "Payment not confirmed", reason: result.reason },
+        {
+          verified: false,
+          reason: result.reason,
+          error:
+            "Payment received but not yet confirmed. If you were charged, contact support and we'll credit your account right away.",
+        },
         { status: 400 },
       );
     }

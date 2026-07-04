@@ -202,7 +202,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
             <div>
               <LabelWithHint
                 htmlFor="display_name"
-                hint="Public name shown on /teachers, the booking page, and Meet invites."
+                hint="Public name shown on /teachers, the booking page, and session invites."
               >
                 Display name
               </LabelWithHint>
@@ -414,7 +414,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
           <div>
             <LabelWithHint
               htmlFor="gcal"
-              hint="Optional teacher-owned Google calendar to host their Meet events on. Leave blank to use the system calendar."
+              hint="Optional teacher-owned Google calendar to host their session events on. Leave blank to use the system calendar."
             >
               Google Calendar ID
             </LabelWithHint>

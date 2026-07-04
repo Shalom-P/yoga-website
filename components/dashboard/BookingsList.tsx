@@ -183,7 +183,7 @@ export function BookingsList({
                             </div>
                           </>
                         ) : (
-                          <span className="text-muted-foreground">—</span>
+                          <span className="text-muted-foreground">-</span>
                         )}
                       </Td>
                       <Td className="text-foreground">
@@ -301,12 +301,12 @@ function RowActions({
 
 // For an upcoming session without a link yet (pending or failed), let the
 // customer force creation on demand instead of waiting for the retry cron.
-// /api/meet/create-link is idempotent — returns the existing link if one exists.
+// /api/meet/create-link is idempotent: returns the existing link if one exists.
 function GenerateLink({ row }: { row: Row }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const sessionId = row.session?.id;
-  if (!sessionId) return <span className="text-xs text-muted-foreground">—</span>;
+  if (!sessionId) return <span className="text-xs text-muted-foreground">-</span>;
 
   async function generate() {
     setLoading(true);
@@ -318,10 +318,10 @@ function GenerateLink({ row }: { row: Row }) {
       });
       const body = (await res.json().catch(() => ({}))) as { meetLink?: string; error?: string };
       if (!res.ok || !body.meetLink) {
-        toast.error("Your link isn't ready yet — please try again in a moment.");
+        toast.error("Your link isn't ready yet. Please try again in a moment.");
         return;
       }
-      toast.success("Meet link ready.");
+      toast.success("Join link ready.");
       router.refresh();
     } catch {
       toast.error("Network error.");
@@ -337,7 +337,7 @@ function GenerateLink({ row }: { row: Row }) {
       className="h-8 rounded-full px-3 text-xs"
       onClick={generate}
       disabled={loading}
-      title="Generate your Google Meet join link"
+      title="Generate your session join link"
     >
       {loading ? <Loader2 className="size-3.5 animate-spin" /> : "Get link"}
     </Button>

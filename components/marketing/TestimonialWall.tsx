@@ -46,7 +46,18 @@ export function TestimonialWall({ reviews }: { reviews: ReviewWithTeacher[] }) {
                 <span className="text-accent">”</span>
               </blockquote>
               <figcaption className="mt-auto flex items-center gap-3">
-                <div className="size-11 shrink-0 rounded-full bg-gradient-to-br from-[var(--myc-accent-soft)] to-accent" />
+                <div
+                  className="flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-accent to-primary text-sm font-semibold text-accent-foreground"
+                  aria-hidden="true"
+                >
+                  {(r.display_name_override ?? "")
+                    .split(" ")
+                    .map((w) => w[0])
+                    .filter(Boolean)
+                    .slice(0, 2)
+                    .join("")
+                    .toUpperCase() || "★"}
+                </div>
                 <div>
                   <div className="text-sm font-semibold">
                     {r.display_name_override ?? "Verified student"}

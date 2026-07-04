@@ -191,6 +191,12 @@ html.lenis body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-hanken), system-ui, -apple-system, sans-serif;
+  /* Cormorant Garamond ships oldstyle (text) figures by default, so "1:1" — the
+     core brand phrase, set in the display serif across the hero, stats, marquee
+     and CTAs — renders as short, dotless glyphs that read like "ı:ı". Force
+     lining figures site-wide. Inherited, so it reaches every serif descendant;
+     the Hanken body font is already lining, so this is a no-op there. */
+  font-variant-numeric: lining-nums;
 }
 
 /* Marketing keeps the generous editorial scale + radius; the app

@@ -122,7 +122,7 @@ export function ReviewsAdmin({ rows }: { rows: ReviewRow[] }) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">
-                    {r.teacher?.display_name ?? "—"}
+                    {r.teacher?.display_name ?? "-"}
                   </td>
                   <td className="px-4 py-3">
                     <StarRating rating={r.rating} />

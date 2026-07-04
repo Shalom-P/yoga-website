@@ -41,7 +41,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       setLoading(false);
-      toast.error("Session expired — please log in again.");
+      toast.error("Session expired. Please log in again.");
       window.location.href = "/login?next=/dashboard/profile";
       return;
     }
@@ -125,7 +125,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
         <Checkbox checked={state.marketing_opt_in} onCheckedChange={(v) => set("marketing_opt_in", v === true)} />
         <span>Email me tips, drops, and the occasional offer.</span>
         <FieldHint>
-          Optional — class reminders and receipts still go out regardless.
+          Optional. Class reminders and receipts still go out regardless.
         </FieldHint>
       </Label>
       <Button type="submit" disabled={loading} className="rounded-full">

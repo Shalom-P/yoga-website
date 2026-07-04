@@ -1,7 +1,7 @@
-// DRAFT — substantive but NOT a substitute for legal review before launch.
+// DRAFT: substantive but NOT a substitute for legal review before launch.
 
 export const metadata = {
-  title: "Refund policy — My Yoga Classes",
+  title: "Refund policy | My Yoga Classes",
   description:
     "My Yoga Classes refund and cancellation policy, including one-time session packs and your statutory rights under UAE and Indian consumer law.",
   alternates: { canonical: "/legal/refund" },
@@ -30,7 +30,7 @@ export default function RefundPage() {
             <p>
               Sessions are booked through the platform and paid for using a{" "}
               <strong>one-time session pack</strong>. You are only ever charged for the packs you
-              choose to buy — there is no subscription and no automatic recurring charge.
+              choose to buy, and there is no subscription and no automatic recurring charge.
             </p>
           </section>
 
@@ -40,7 +40,7 @@ export default function RefundPage() {
             <p>
               Paid access is sold as{" "}
               <strong>one-time session packs in AED or INR (by region) via Razorpay</strong>. You
-              are charged once when you buy a pack — there is no subscription and no automatic
+              are charged once when you buy a pack, and there is no subscription and no automatic
               recurring charge.
             </p>
             <p>
@@ -60,7 +60,7 @@ export default function RefundPage() {
             <p>
               We do <strong>not</strong> provide refunds for unused credits except as required
               by law (see Section 5 below) or at our discretion. If you have a problem with a
-              purchase, please contact us — see Section 4.
+              purchase, please contact us. See Section 4.
             </p>
           </section>
 
@@ -95,10 +95,10 @@ export default function RefundPage() {
             </h2>
             <p>
               Nothing in this Refund Policy limits or excludes any rights you have under the
-              mandatory consumer-protection law that applies to you — including the{" "}
+              mandatory consumer-protection law that applies to you, including the{" "}
               <strong>UAE Consumer Protection Law (Federal Law No. 15 of 2020)</strong> for
               customers in the UAE and the <strong>Consumer Protection Act 2019</strong> for
-              customers in India — that cannot be excluded by agreement.
+              customers in India, that cannot be excluded by agreement.
             </p>
             <p>
               If the services we provide are not delivered with due care and skill, are not fit

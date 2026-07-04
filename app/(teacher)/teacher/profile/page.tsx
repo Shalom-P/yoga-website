@@ -20,7 +20,7 @@ export default async function TeacherProfilePage() {
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
         This is what students see on your public teacher page. Photos, video, your
-        URL handle and calendar are managed by the studio admin — ask them to update
+        URL handle and calendar are managed by the studio admin. Ask them to update
         those. Public changes can take a few minutes to appear on the site.
       </p>
 

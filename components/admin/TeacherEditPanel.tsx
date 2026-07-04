@@ -137,11 +137,11 @@ export function TeacherEditPanel({
           <Detail label="Years experience" value={String(teacher.years_experience)} />
           <Detail
             label="Specialties"
-            value={teacher.specialties.length ? teacher.specialties.join(", ") : "—"}
+            value={teacher.specialties.length ? teacher.specialties.join(", ") : "-"}
           />
           <Detail
             label="Languages"
-            value={teacher.languages.length ? teacher.languages.join(", ") : "—"}
+            value={teacher.languages.length ? teacher.languages.join(", ") : "-"}
           />
           <Detail label="Google Calendar ID" value={teacher.google_calendar_id ?? "(system calendar)"} />
         </dl>
@@ -181,7 +181,7 @@ export function TeacherEditPanel({
           ) : (
             <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-dashed border-border p-4">
               <p className="text-sm text-muted-foreground">
-                No login yet — this teacher can&apos;t sign in or manage their own
+                No login yet. This teacher can&apos;t sign in or manage their own
                 schedule.
               </p>
               <Button
@@ -291,7 +291,7 @@ export function TeacherEditPanel({
             <DialogDescription>
               {linkedAccount?.email ?? "This account"} will lose teacher access and
               revert to a regular customer account. The teacher profile, availability
-              and sessions are all preserved — you can re-invite a login later.
+              and sessions are all preserved, and you can re-invite a login later.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -312,7 +312,7 @@ function Detail({ label, value }: { label: string; value: string | null }) {
   return (
     <div>
       <div className="text-xs uppercase tracking-wide text-muted-foreground">{label}</div>
-      <div className="mt-0.5">{value ?? "—"}</div>
+      <div className="mt-0.5">{value ?? "-"}</div>
     </div>
   );
 }
@@ -340,7 +340,7 @@ function MediaPreview({
             className={`w-full ${aspect} rounded-lg border border-border bg-black object-cover`}
           />
         ) : (
-          // Public Storage URL — plain <img> avoids next/image remotePatterns config.
+          // Public Storage URL, plain <img> avoids next/image remotePatterns config.
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={url}

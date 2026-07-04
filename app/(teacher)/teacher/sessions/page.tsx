@@ -106,7 +106,7 @@ function SessionTable({
                       </div>
                     </Td>
                     <Td className="text-foreground">
-                      {student?.full_name ?? "—"}
+                      {student?.full_name ?? "-"}
                       {r.students.length > 1 && (
                         <span className="text-xs text-muted-foreground">
                           {" "}
@@ -123,7 +123,7 @@ function SessionTable({
                           </div>
                         </>
                       ) : (
-                        "—"
+                        "-"
                       )}
                     </Td>
                     <Td className="text-foreground">

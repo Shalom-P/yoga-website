@@ -24,7 +24,7 @@ export default function AboutPage() {
             brilliant 200-hr+ certified yoga teachers in India were teaching empty rooms.
           </p>
           <p>
-            Our bet: bring those teachers to your home — live, on Google Meet — for less
+            Our bet: bring those teachers to your home (live, online) for less
             than the price of a single in-person studio class.
           </p>
           <p>
@@ -36,7 +36,7 @@ export default function AboutPage() {
           <p>
             Every teacher is a 200-hr Yoga Alliance certified professional. Most have
             500+ hours and years of in-studio teaching. We pay them fair, professional
-            private-tutor rates — not gig-worker rates — because that&apos;s how you
+            private-tutor rates (not gig-worker rates) because that&apos;s how you
             keep brilliant teachers brilliant.
           </p>
         </div>

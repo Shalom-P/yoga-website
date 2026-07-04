@@ -1,5 +1,5 @@
 // High-level transactional email senders. Server-only (re-exported from templates + client).
-// Import from "@/lib/email" — do not import templates or client directly from call sites.
+// Import from "@/lib/email", do not import templates or client directly from call sites.
 
 import "server-only";
 
@@ -93,7 +93,7 @@ export async function sendContactMessage(
   return sendEmail({
     to: SUPPORT_EMAIL,
     replyTo: args.email,
-    subject: `Contact form — ${args.name}`,
+    subject: `Contact form: ${args.name}`,
     html,
     text: `Name: ${args.name}\nEmail: ${args.email}\n\n${args.message}`,
   });

@@ -79,7 +79,7 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
     try {
       ({ error } = await supabase.from("bookings").update(patch).eq("id", id));
     } catch (e) {
-      error = { message: e instanceof Error ? e.message : "Network error — please retry." };
+      error = { message: e instanceof Error ? e.message : "Network error, please retry." };
     } finally {
       setBusy(null);
     }
@@ -109,7 +109,7 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
     try {
       ({ error } = await supabase.from("bookings").update(patch).eq("id", cancelTarget.id));
     } catch (e) {
-      error = { message: e instanceof Error ? e.message : "Network error — please retry." };
+      error = { message: e instanceof Error ? e.message : "Network error, please retry." };
     } finally {
       setCancelling(false);
     }
@@ -169,13 +169,13 @@ export function BookingsAdmin({ rows }: { rows: Row[] }) {
               {filtered.map((r) => (
                 <tr key={r.id} className="border-t border-border">
                   <td className="px-4 py-3">
-                    <div>{r.customer?.full_name ?? "—"}</div>
+                    <div>{r.customer?.full_name ?? "-"}</div>
                     <div className="text-xs text-muted-foreground">{r.customer?.email ?? ""}</div>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap">
-                    {r.session ? formatCustomerTime(r.session.start_at) : "—"}
+                    {r.session ? formatCustomerTime(r.session.start_at) : "-"}
                   </td>
-                  <td className="px-4 py-3">{r.session?.teacher?.display_name ?? "—"}</td>
+                  <td className="px-4 py-3">{r.session?.teacher?.display_name ?? "-"}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">
                       <Badge

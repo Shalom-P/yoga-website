@@ -1,9 +1,9 @@
-// DRAFT — substantive but NOT a substitute for legal review before launch.
+// DRAFT: substantive but NOT a substitute for legal review before launch.
 
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms of service — My Yoga Classes",
+  title: "Terms of service: My Yoga Classes",
   description:
     "Terms governing your use of myyogaclasses.fit, including session packs, bookings, cancellation, and your consumer rights under UAE and Indian law.",
   alternates: { canonical: "/legal/terms" },
@@ -42,9 +42,9 @@ export default function TermsPage() {
             </p>
             <p>
               <strong>Nothing in these Terms limits or excludes any rights you have under
-              mandatory consumer-protection law in your country of residence — including the UAE
+              mandatory consumer-protection law in your country of residence, including the UAE
               Consumer Protection Law (Federal Law No. 15 of 2020) and India&apos;s Consumer
-              Protection Act 2019 — that cannot be excluded by agreement.</strong>
+              Protection Act 2019, that cannot be excluded by agreement.</strong>
             </p>
           </section>
 
@@ -54,7 +54,7 @@ export default function TermsPage() {
             <p>
               My Yoga Classes is an online platform connecting students in the United Arab
               Emirates and India with qualified yoga teachers based in India. Sessions are
-              delivered live via Google Meet on a one-to-one basis, paid for with a session pack.
+              delivered live online on a one-to-one basis, paid for with a session pack.
             </p>
             <p>
               We act as the platform operator and are responsible for scheduling, billing, and
@@ -92,7 +92,7 @@ export default function TermsPage() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                A Google Meet link will be generated and sent to your registered email address
+                A join link will be generated and sent to your registered email address
                 and accessible via your dashboard.
               </li>
               <li>
@@ -146,7 +146,7 @@ export default function TermsPage() {
             <p>
               You may cancel a booked session at any time before it starts, from your account
               dashboard. If the booking used a session credit, that credit is returned to your
-              account to use on a future booking — see our{" "}
+              account to use on a future booking. See our{" "}
               <Link className="underline" href="/legal/refund">
                 Refund Policy
               </Link>{" "}
@@ -197,8 +197,8 @@ export default function TermsPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">8. Intellectual property</h2>
             <p>
-              All content on myyogaclasses.fit — including text, graphics, logos, teacher
-              profiles, and software — is owned by or licensed to us and is protected by UAE,
+              All content on myyogaclasses.fit, including text, graphics, logos, teacher
+              profiles, and software, is owned by or licensed to us and is protected by UAE,
               Indian, and international intellectual property laws. You may not reproduce,
               distribute, or create derivative works without our prior written consent.
             </p>
@@ -255,7 +255,7 @@ export default function TermsPage() {
             </h2>
             <p>
               Our services come with consumer guarantees that cannot be excluded under the
-              mandatory consumer-protection law that applies to you — including the{" "}
+              mandatory consumer-protection law that applies to you, including the{" "}
               <strong>UAE Consumer Protection Law (Federal Law No. 15 of 2020)</strong> and its
               implementing regulations for customers in the UAE, and the{" "}
               <strong>Consumer Protection Act 2019</strong> for customers in India. Where a

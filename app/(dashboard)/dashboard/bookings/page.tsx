@@ -75,8 +75,8 @@ export default async function BookingsPage({
           role="status"
           className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4 text-sm text-foreground"
         >
-          <strong className="font-medium">Session booked.</strong> Your Google Meet link will
-          appear on the booking below shortly — we&apos;ll also email it to you.
+          <strong className="font-medium">Session booked.</strong> Your join link will
+          appear on the booking below shortly. We&apos;ll also email it to you.
         </div>
       )}
 

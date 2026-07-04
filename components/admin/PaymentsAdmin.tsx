@@ -56,7 +56,7 @@ export function PaymentsAdmin({ rows }: { rows: BankTransferRow[] }) {
       toast.success(
         `Verified ${who}'s transfer. ${row.session_credits ?? 0} credit${
           row.session_credits === 1 ? "" : "s"
-        } granted — new balance: ${balance ?? "—"}.`,
+        } granted, new balance: ${balance ?? "-"}.`,
       );
     } else {
       toast.success(`Rejected ${who}'s pending transfer.`);
@@ -85,18 +85,18 @@ export function PaymentsAdmin({ rows }: { rows: BankTransferRow[] }) {
             {rows.map((r) => (
               <tr key={r.id} className="border-t border-border">
                 <td className="px-4 py-3">
-                  <div>{r.customer_name ?? "—"}</div>
-                  <div className="text-xs text-muted-foreground">{r.customer_email ?? "—"}</div>
+                  <div>{r.customer_name ?? "-"}</div>
+                  <div className="text-xs text-muted-foreground">{r.customer_email ?? "-"}</div>
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
-                  {r.plan_name ?? "—"}
+                  {r.plan_name ?? "-"}
                   {r.session_credits != null && (
                     <span className="text-xs"> · {r.session_credits} cr</span>
                   )}
                 </td>
                 <td className="px-4 py-3 tabular-nums">{formatMoney(r.amount_cents, r.currency)}</td>
                 <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
-                  {r.reference ?? "—"}
+                  {r.reference ?? "-"}
                 </td>
                 <td className="px-4 py-3 text-muted-foreground">
                   {new Date(r.created_at).toLocaleDateString("en-GB")}
@@ -125,7 +125,7 @@ export function PaymentsAdmin({ rows }: { rows: BankTransferRow[] }) {
                     <span className="text-xs text-muted-foreground">
                       {r.verified_at
                         ? new Date(r.verified_at).toLocaleDateString("en-GB")
-                        : "—"}
+                        : "-"}
                     </span>
                   )}
                 </td>
@@ -173,7 +173,7 @@ export function PaymentsAdmin({ rows }: { rows: BankTransferRow[] }) {
             <DialogDescription>
               Marks {rejectTarget?.customer_name ?? rejectTarget?.customer_email}&apos;s pending
               transfer as failed. No credits are granted. Use this for abandoned or duplicate
-              requests — the customer can start a new one anytime.
+              requests. The customer can start a new one anytime.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

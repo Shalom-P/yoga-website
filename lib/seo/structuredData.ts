@@ -1,6 +1,6 @@
 // Typed structured-data (JSON-LD) builders. Rendered via <JsonLd data={...} />.
-// These give search engines rich-result signals — FAQ accordions, teacher
-// knowledge panels, star ratings — that a trust-driven yoga site benefits from.
+// These give search engines rich-result signals (FAQ accordions, teacher
+// knowledge panels, star ratings) that a trust-driven yoga site benefits from.
 
 import type {
   WithContext,
@@ -47,7 +47,7 @@ export function courseJsonLd(cat: ClassCategory, url: string): WithContext<Cours
   return {
     "@context": "https://schema.org",
     "@type": "Course",
-    name: cat.name.toLowerCase().includes("yoga") ? `1:1 ${cat.name}` : `1:1 Yoga — ${cat.name} focus`,
+    name: cat.name.toLowerCase().includes("yoga") ? `1:1 ${cat.name}` : `1:1 Yoga: ${cat.name} focus`,
     description: cat.description ?? undefined,
     url,
     provider: { "@type": "Organization", name: ORG_NAME, sameAs: url },

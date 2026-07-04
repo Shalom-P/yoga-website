@@ -29,7 +29,7 @@ export function NewsletterForm() {
       toast.success("You're on the list. Welcome.");
       setEmail("");
     } catch {
-      toast.error("Couldn't sign you up just now — please try again.");
+      toast.error("Couldn't sign you up just now, please try again.");
     } finally {
       setLoading(false);
     }
@@ -44,13 +44,16 @@ export function NewsletterForm() {
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         disabled={loading}
-        className="bg-background"
+        // The footer sits on a dark surface, so the inherited text colour is
+        // light, and on the cream `bg-background` field that makes typed text
+        // invisible. Pin the foreground (and match the button height).
+        className="h-11 bg-background text-foreground"
       />
       <Button
         type="submit"
         disabled={loading}
         variant="outline"
-        className="shrink-0 text-foreground"
+        className="h-11 shrink-0 text-foreground"
       >
         {loading ? "…" : "Subscribe"}
       </Button>

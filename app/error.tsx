@@ -27,7 +27,7 @@ export default function ErrorPage({
         Something went <span className="text-accent italic">out of balance.</span>
       </h1>
       <p className="mt-4 max-w-md text-muted-foreground">
-        An unexpected error occurred. Try again — if it keeps happening, we&apos;d love to hear
+        An unexpected error occurred. Try again. If it keeps happening, we&apos;d love to hear
         about it.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">

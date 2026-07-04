@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const t = await getTeacherBySlug(slug);
   return {
-    title: t ? `${t.display_name} — Yoga Teacher` : "Teacher",
+    title: t ? `${t.display_name}: Yoga Teacher` : "Teacher",
     description: t?.headline ?? undefined,
     alternates: { canonical: `/teachers/${slug}` },
   };
@@ -44,7 +44,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
             <div className="space-y-2">
               <TeacherIntroVideo src={t.intro_video_url} poster={t.avatar_url} name={t.display_name} />
               <p className="text-center text-xs text-muted-foreground">
-                Meet {t.display_name.split(" ")[0]} — a quick hello.
+                Meet {t.display_name.split(" ")[0]}, a quick hello.
               </p>
             </div>
           ) : (

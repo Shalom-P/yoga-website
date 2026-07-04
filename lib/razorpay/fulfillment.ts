@@ -34,20 +34,13 @@ export async function fulfillRazorpayPayment(
     rzp.payments.fetch(paymentId),
   ]);
 
-  // The payment must belong to this order and the money must have SETTLED. An
-  // `authorized` payment is only a hold that can still void/expire — granting
-  // credits on it would release value before capture. Require `captured`; the
-  // capture webhook arrives separately and fulfils then.
   if (payment.order_id !== orderId) return { ok: false, reason: "order_mismatch" };
-  if (payment.status !== "captured") return { ok: false, reason: `not_paid:${payment.status}` };
-  // Defence-in-depth: the captured amount + currency must match the order.
-  if (Number(payment.amount) !== Number(order.amount)) {
-    return { ok: false, reason: "amount_mismatch" };
-  }
-  if (order.currency && payment.currency && payment.currency !== order.currency) {
-    return { ok: false, reason: "currency_mismatch" };
-  }
 
+  // Attribute + authorise the order BEFORE any money action. An order we can't
+  // map to a customer + plan (or, on the verify path, one the caller doesn't
+  // own) must never be captured: leaving it as an authorized hold lets it expire
+  // and return the funds, rather than capturing money we'd then refuse to
+  // fulfil. All fields come from the notes we stamped at create-order.
   const notes = (order.notes ?? {}) as Record<string, string | number>;
   const customerId = typeof notes.customerId === "string" ? notes.customerId : undefined;
   const planId = typeof notes.planId === "string" ? notes.planId : undefined;
@@ -55,10 +48,45 @@ export async function fulfillRazorpayPayment(
     typeof notes.discountRedemptionId === "string" ? notes.discountRedemptionId : undefined;
   if (!customerId || !planId) return { ok: false, reason: "missing_notes" };
   // When called from the per-user verify endpoint, the order must belong to the
-  // caller — a signed-in user can't force-fulfil (or read the balance of)
+  // caller: a signed-in user can't force-fulfil, capture, or read the balance of
   // someone else's pending payment. The webhook omits this (it has no user).
   if (opts.expectedCustomerId && customerId !== opts.expectedCustomerId) {
     return { ok: false, reason: "customer_mismatch" };
+  }
+
+  // A successful Checkout can land as `authorized` (a hold) instead of
+  // `captured`: either because account Auto-Capture is off, or because this
+  // verify round-trip races Razorpay's own capture flip. Rather than dead-end a
+  // customer who has already been charged (and lean on the capture webhook,
+  // which is dead whenever RAZORPAY_WEBHOOK_SECRET is unset), capture it here for
+  // the EXACT order amount + currency. Idempotent: it only fires while the
+  // payment is still `authorized`, and a concurrent capture (verify vs webhook)
+  // rejects with "already captured", which we absorb by re-reading the payment.
+  let settled = payment;
+  if (settled.status === "authorized") {
+    try {
+      settled = await rzp.payments.capture(paymentId, Number(order.amount), order.currency);
+    } catch (err) {
+      Sentry.captureMessage(
+        `razorpay capture-on-authorized fell back to refetch (payment ${paymentId}): ${
+          err instanceof Error ? err.message : "unknown error"
+        }`,
+        "info",
+      );
+      settled = await rzp.payments.fetch(paymentId);
+    }
+  }
+
+  // The money must have SETTLED before we grant value. If it is still not
+  // captured, bail: a genuinely pending/failed payment is left for the capture
+  // webhook (the backstop) to fulfil once Razorpay settles it.
+  if (settled.status !== "captured") return { ok: false, reason: `not_paid:${settled.status}` };
+  // Defence-in-depth: the captured amount + currency must match the order.
+  if (Number(settled.amount) !== Number(order.amount)) {
+    return { ok: false, reason: "amount_mismatch" };
+  }
+  if (order.currency && settled.currency && settled.currency !== order.currency) {
+    return { ok: false, reason: "currency_mismatch" };
   }
 
   const pack = await resolvePackById(planId);
@@ -90,10 +118,10 @@ export async function fulfillRazorpayPayment(
         razorpay_payment_id: paymentId,
         razorpay_order_id: orderId,
         customer_id: customerId,
-        amount_cents: Number(payment.amount),
+        amount_cents: Number(settled.amount),
         // Razorpay reports the captured currency (AED/INR); the column has no
         // default, so always stamp it. INR fallback is defensive only.
-        currency: payment.currency ?? "INR",
+        currency: settled.currency ?? "INR",
         status: "completed",
         discount_code_id: discountCodeId,
         discount_amount_cents: discountAmountCents,

@@ -22,7 +22,7 @@ import {
   landingSetting,
 } from "@/lib/data/landing";
 
-// ISR — admin edits to landing copy go live within ~60s
+// ISR: admin edits to landing copy go live within ~60s
 export const revalidate = 60;
 
 export default async function LandingPage() {
@@ -41,7 +41,7 @@ export default async function LandingPage() {
   ]);
 
   const headline = landingSetting(settings, "landing.hero_headline", "Find your 1:1 yoga teacher.");
-  const subhead = landingSetting(settings, "landing.hero_subhead", "A 60-minute personalised session, live on Google Meet — shown in your local time. Pick your teacher, pick your time.");
+  const subhead = landingSetting(settings, "landing.hero_subhead", "A 60-minute personalised session, live online, shown in your local time. Pick your teacher, pick your time.");
   const trustRating = landingSetting(settings, "landing.trust_rating", "4.9");
   const trustCount = landingSetting(settings, "landing.trust_count", "1,200+ reviews");
   const finalHeadline = landingSetting(settings, "landing.final_headline", "Book your 1:1 session today.");

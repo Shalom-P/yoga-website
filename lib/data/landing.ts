@@ -175,7 +175,7 @@ const MOCK_CATEGORIES: ClassCategory[] = [
   },
   {
     id: "c8", slug: "geriatric", name: "Geriatric Yoga",
-    description: "Slow, supportive yoga for older adults to help with everyday mobility, balance, and confidence — with chair options as needed.",
+    description: "Slow, supportive yoga for older adults to help with everyday mobility, balance, and confidence, with chair options as needed.",
     helps_with: ["Mobility", "Balance", "Steadiness", "Flexibility", "Relaxation"],
     long_description: "Slow, supportive one-on-one yoga for older adults to help with everyday mobility, balance, and confidence in daily movement. Chair-supported and standing options keep everything safe and accessible. Your teacher works gently at your pace, moving slowly between positions, and adapts each session to suit you.",
     what_to_expect: ["Seated, chair-supported, and standing options as needed", "Standing balance work always within reach of a chair or wall", "Gentle movement to support mobility and balance", "We move slowly between positions to avoid dizziness, with steady breathing throughout", "Plenty of time, clear guidance, and a relaxing close"],
@@ -201,7 +201,7 @@ const MOCK_CATEGORIES: ClassCategory[] = [
 const MOCK_PLANS: PlanWithFeatures[] = [
   {
     id: "p1", slug: "pack-1", name: "1-Session Pack",
-    description: "A single personalised 1:1 session — perfect for a one-off or a top-up.",
+    description: "A single personalised 1:1 session, perfect for a one-off or a top-up.",
     price_base_cents: 135000, billing_interval: "one_time", session_credits: 1,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
@@ -214,14 +214,14 @@ const MOCK_PLANS: PlanWithFeatures[] = [
     features: [
       { id: "f1a", plan_id: "p1", feature_text: "1 personalised 1:1 session",     is_included: true, sort_order: 1 },
       { id: "f1b", plan_id: "p1", feature_text: "Book any teacher, any style",     is_included: true, sort_order: 2 },
-      { id: "f1c", plan_id: "p1", feature_text: "60-min session on Google Meet",   is_included: true, sort_order: 3 },
+      { id: "f1c", plan_id: "p1", feature_text: "60-min session online",           is_included: true, sort_order: 3 },
       { id: "f1d", plan_id: "p1", feature_text: "Credit never expires",            is_included: true, sort_order: 4 },
-      { id: "f1e", plan_id: "p1", feature_text: "Cancel before the session — credit refunded", is_included: true, sort_order: 5 },
+      { id: "f1e", plan_id: "p1", feature_text: "Cancel before the session, credit refunded", is_included: true, sort_order: 5 },
     ],
   },
   {
     id: "p5", slug: "pack-5", name: "5-Session Pack",
-    description: "Five personalised 1:1 sessions — your flexible way in.",
+    description: "Five personalised 1:1 sessions, your flexible way in.",
     price_base_cents: 1000000, billing_interval: "one_time", session_credits: 5,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
@@ -234,14 +234,14 @@ const MOCK_PLANS: PlanWithFeatures[] = [
     features: [
       { id: "f1", plan_id: "p5", feature_text: "5 personalised 1:1 sessions",     is_included: true, sort_order: 1 },
       { id: "f2", plan_id: "p5", feature_text: "Book any teacher, any style",     is_included: true, sort_order: 2 },
-      { id: "f3", plan_id: "p5", feature_text: "60-min sessions on Google Meet",  is_included: true, sort_order: 3 },
+      { id: "f3", plan_id: "p5", feature_text: "60-min sessions online",          is_included: true, sort_order: 3 },
       { id: "f4", plan_id: "p5", feature_text: "Credits never expire",            is_included: true, sort_order: 4 },
-      { id: "f5", plan_id: "p5", feature_text: "Cancel before the session — credit refunded", is_included: true, sort_order: 5 },
+      { id: "f5", plan_id: "p5", feature_text: "Cancel before the session, credit refunded", is_included: true, sort_order: 5 },
     ],
   },
   {
     id: "p10", slug: "pack-10", name: "10-Session Pack",
-    description: "Ten personalised 1:1 sessions — our best price per session.",
+    description: "Ten personalised 1:1 sessions, our best price per session.",
     price_base_cents: 1900000, billing_interval: "one_time", session_credits: 10,
     paypal_plan_id: null, included_sessions_per_month: null,
     included_session_types: [],
@@ -256,25 +256,29 @@ const MOCK_PLANS: PlanWithFeatures[] = [
       { id: "f7",  plan_id: "p10", feature_text: "Book any teacher, any style",    is_included: true, sort_order: 2 },
       { id: "f8",  plan_id: "p10", feature_text: "Lowest price per session",       is_included: true, sort_order: 3 },
       { id: "f9",  plan_id: "p10", feature_text: "Credits never expire",           is_included: true, sort_order: 4 },
-      { id: "f10", plan_id: "p10", feature_text: "Cancel before the session — credit refunded", is_included: true, sort_order: 5 },
+      { id: "f10", plan_id: "p10", feature_text: "Cancel before the session, credit refunded", is_included: true, sort_order: 5 },
     ],
   },
 ];
 
+// These are the zero-data fallback testimonials (used when the `reviews` table
+// is empty — see getFeaturedReviews). Bodies are intentionally written without
+// naming a specific teacher, so they stay coherent whatever the live roster is
+// (an earlier version praised teachers who weren't actually bookable).
 const MOCK_REVIEWS: (Review & { teacher_name?: string })[] = [
-  { id: "r1", customer_id: "", teacher_id: "t1", session_id: null, rating: 5, body: "After three weeks with Aarti my chronic back pain is gone. The 1:1 attention made all the difference.", is_featured: true, is_approved: true, display_name_override: "Sara M.", display_location: "Dubai, AE", created_at: "", updated_at: "", teacher_name: "Aarti Deshmukh" },
-  { id: "r2", customer_id: "", teacher_id: "t2", session_id: null, rating: 5, body: "Rohan's flow classes are exactly the strength + mobility combo I needed. I look forward to every 7am session.", is_featured: true, is_approved: true, display_name_override: "Karan K.", display_location: "Abu Dhabi, AE", created_at: "", updated_at: "", teacher_name: "Rohan Patel" },
-  { id: "r3", customer_id: "", teacher_id: "t3", session_id: null, rating: 5, body: "Meera made me feel safe during a difficult pregnancy. She actually understands the body.", is_featured: true, is_approved: true, display_name_override: "Priya N.", display_location: "Mumbai, IN", created_at: "", updated_at: "", teacher_name: "Meera Iyer" },
-  { id: "r4", customer_id: "", teacher_id: "t4", session_id: null, rating: 5, body: "Vikram's yin classes are the only thing that turns my brain off after long days. Worth every cent.", is_featured: true, is_approved: true, display_name_override: "Aisha B.", display_location: "Sharjah, AE", created_at: "", updated_at: "", teacher_name: "Vikram Singh" },
-  { id: "r5", customer_id: "", teacher_id: "t5", session_id: null, rating: 5, body: "I'm 64 and I haven't moved this well in 20 years. Priya is patient and brilliant.", is_featured: true, is_approved: true, display_name_override: "Lakshmi R.", display_location: "Bengaluru, IN", created_at: "", updated_at: "", teacher_name: "Priya Nair" },
-  { id: "r6", customer_id: "", teacher_id: "t6", session_id: null, rating: 5, body: "Arjun made it possible for a total beginner like me to actually start. No judgment, lots of laughs.", is_featured: true, is_approved: true, display_name_override: "Zara W.", display_location: "Delhi, IN", created_at: "", updated_at: "", teacher_name: "Arjun Rao" },
+  { id: "r1", customer_id: "", teacher_id: "t1", session_id: null, rating: 5, body: "After three weeks of 1:1 sessions my chronic back pain is gone. The personalised attention made all the difference.", is_featured: true, is_approved: true, display_name_override: "Emma R.", display_location: "Dubai, AE", created_at: "", updated_at: "" },
+  { id: "r2", customer_id: "", teacher_id: "t2", session_id: null, rating: 5, body: "The flow sessions are exactly the strength + mobility combo I needed. I look forward to every 7am class.", is_featured: true, is_approved: true, display_name_override: "James P.", display_location: "Abu Dhabi, AE", created_at: "", updated_at: "" },
+  { id: "r3", customer_id: "", teacher_id: "t3", session_id: null, rating: 5, body: "My teacher made me feel safe during a difficult pregnancy. She actually understands the body.", is_featured: true, is_approved: true, display_name_override: "Fatima H.", display_location: "Abu Dhabi, AE", created_at: "", updated_at: "" },
+  { id: "r4", customer_id: "", teacher_id: "t4", session_id: null, rating: 5, body: "These yin sessions are the only thing that turns my brain off after long days. Worth every cent.", is_featured: true, is_approved: true, display_name_override: "Noor S.", display_location: "Sharjah, AE", created_at: "", updated_at: "" },
+  { id: "r5", customer_id: "", teacher_id: "t5", session_id: null, rating: 5, body: "I'm 64 and I haven't moved this well in 20 years. My teacher is patient and brilliant.", is_featured: true, is_approved: true, display_name_override: "Mohammed A.", display_location: "Dubai, AE", created_at: "", updated_at: "" },
+  { id: "r6", customer_id: "", teacher_id: "t6", session_id: null, rating: 5, body: "My teacher made it possible for a total beginner like me to actually start. No judgment, lots of laughs.", is_featured: true, is_approved: true, display_name_override: "Priya N.", display_location: "Bengaluru, IN", created_at: "", updated_at: "" },
 ];
 
 const MOCK_SETTINGS: Record<string, unknown> = {
   "brand.name": "My Yoga Classes",
   "landing.hero_headline": "Find your 1:1 yoga teacher.",
   "landing.hero_subhead":
-    "A 60-minute personalised session, live on Google Meet — shown in your local time. Pick your teacher, pick your time.",
+    "A 60-minute personalised session, live online and shown in your local time. Pick your teacher, pick your time.",
   "landing.trust_count": "1,200+ reviews",
   "landing.trust_rating": "4.9",
   "landing.final_headline": "Book your 1:1 session today.",

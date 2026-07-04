@@ -33,7 +33,7 @@ export function OnboardingForm({
   next?: string;
 }) {
   const router = useRouter();
-  // full name field state — prefilled from the profile (Google logins
+  // full name field state, prefilled from the profile (Google logins
   // already carry a name; email-OTP users start blank).
   const [fullName, setFullName] = useState(initialFullName);
   // default to the user's real detected timezone; they can change it below.
@@ -60,7 +60,7 @@ export function OnboardingForm({
     if (!user) {
       // reset loading before early return so button isn't stuck
       setLoading(false);
-      toast.error("Session expired — please log in again.");
+      toast.error("Session expired. Please log in again.");
       router.push("/login");
       return;
     }
@@ -92,7 +92,7 @@ export function OnboardingForm({
 
   return (
     <form onSubmit={onSubmit} className="mt-8 space-y-7">
-      {/* Full name field — email-OTP sign-ups arrive with a blank name, so we
+      {/* Full name field: email-OTP sign-ups arrive with a blank name, so we
           collect it here during onboarding. */}
       <div>
         <Label htmlFor="full-name" className="mb-2 block">
@@ -113,16 +113,16 @@ export function OnboardingForm({
       <div>
         <LabelWithHint
           className="mb-2"
-          hint="Helps teachers pitch the right level of cues — pick whichever feels honest, you can change it later."
+          hint="Helps teachers pitch the right level of cues. Pick whichever feels honest, you can change it later."
         >
           What&apos;s your level?
         </LabelWithHint>
         <Select value={level} onValueChange={(v) => v && setLevel(v)}>
           <SelectTrigger className="h-11 w-full"><SelectValue /></SelectTrigger>
           <SelectContent>
-            <SelectItem value="beginner">Beginner — new or returning</SelectItem>
-            <SelectItem value="intermediate">Intermediate — a few months of practice</SelectItem>
-            <SelectItem value="advanced">Advanced — regular practice</SelectItem>
+            <SelectItem value="beginner">Beginner, new or returning</SelectItem>
+            <SelectItem value="intermediate">Intermediate, a few months of practice</SelectItem>
+            <SelectItem value="advanced">Advanced, regular practice</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -130,7 +130,7 @@ export function OnboardingForm({
       <div>
         <LabelWithHint
           className="mb-2"
-          hint="Auto-detected from your device — used to show class times in hours that make sense to you (not the teacher's IST). Change it if it's wrong."
+          hint="Auto-detected from your device, used to show class times in hours that make sense to you (not the teacher's IST). Change it if it's wrong."
         >
           Your timezone
         </LabelWithHint>
@@ -140,7 +140,7 @@ export function OnboardingForm({
       <div>
         <LabelWithHint
           className="mb-3"
-          hint="Tick anything that feels relevant — we use this to recommend teachers and classes."
+          hint="Tick anything that feels relevant, we use this to recommend teachers and classes."
         >
           What are you hoping to get out of this?
         </LabelWithHint>
@@ -170,7 +170,7 @@ export function OnboardingForm({
         />
         <span>Email me tips, class drops, and the occasional offer.</span>
         <FieldHint>
-          Optional — class reminders and booking confirmations still go out either way.
+          Optional. Class reminders and booking confirmations still go out either way.
         </FieldHint>
       </Label>
 
