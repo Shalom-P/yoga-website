@@ -355,7 +355,13 @@ export async function getPlansWithFeatures(): Promise<PlanWithFeatures[]> {
   ]);
   return plans.map((p) => ({
     ...p,
-    features: features?.filter((f) => f.plan_id === p.id) ?? [],
+    // Scrub retired "Google Meet" phrasing from admin/DB-stored plan copy (see
+    // scrubRetiredCopy) so pricing bullets never render it, whatever is stored.
+    description: typeof p.description === "string" ? scrubRetiredCopy(p.description) : p.description,
+    features:
+      features
+        ?.filter((f) => f.plan_id === p.id)
+        .map((f) => ({ ...f, feature_text: scrubRetiredCopy(f.feature_text) })) ?? [],
     prices: prices?.filter((pp) => pp.plan_id === p.id) ?? [],
   }));
 }
