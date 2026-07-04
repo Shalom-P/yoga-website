@@ -397,7 +397,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
           </div>
 
           <div>
-            <LabelWithHint hint="Short (30–60s) intro video where the teacher introduces themselves. MP4 or WebM, up to 100 MB, served from Supabase Storage.">
+            <LabelWithHint hint="Short (30-60s) intro video where the teacher introduces themselves. MP4 or WebM, up to 100 MB, served from Supabase Storage.">
               Intro video
             </LabelWithHint>
             <MediaUploadField

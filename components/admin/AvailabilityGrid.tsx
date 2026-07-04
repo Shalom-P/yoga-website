@@ -166,7 +166,7 @@ export function AvailabilityGrid({ teacherId, teacherTimezone, initial }: Props)
             {HOURS.map((h) => (
               <tr key={h} className="border-t border-border">
                 <td className="px-3 py-2 text-muted-foreground">
-                  {pad(h)}:00 – {pad(h + 1)}:00
+                  {pad(h)}:00 - {pad(h + 1)}:00
                 </td>
                 {DAYS.map((d) => {
                   const key = timeKey(d.dow, h);
@@ -213,7 +213,7 @@ export function AvailabilityGrid({ teacherId, teacherTimezone, initial }: Props)
                 <li key={r.id} className="flex items-center justify-between gap-2">
                   <span className="text-muted-foreground">
                     {DAYS.find((d) => d.dow === r.day_of_week)?.label} ·{" "}
-                    {r.start_time.slice(0, 5)}–{r.end_time.slice(0, 5)}{" "}
+                    {r.start_time.slice(0, 5)}-{r.end_time.slice(0, 5)}{" "}
                     ({r.slot_duration_minutes} min slots)
                   </span>
                   <button

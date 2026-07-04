@@ -171,7 +171,7 @@ export function SlotOverrides({ teacherId, teacherTimezone, initial }: Props) {
                   <td className="px-4 py-3 font-medium tabular-nums">{r.date}</td>
                   <td className="px-4 py-3 text-muted-foreground tabular-nums">
                     {r.start_time && r.end_time
-                      ? `${r.start_time.slice(0, 5)} – ${r.end_time.slice(0, 5)}`
+                      ? `${r.start_time.slice(0, 5)} - ${r.end_time.slice(0, 5)}`
                       : <span className="italic text-xs">All day</span>}
                   </td>
                   <td className="px-4 py-3">

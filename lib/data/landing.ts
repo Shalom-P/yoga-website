@@ -400,7 +400,10 @@ function scrubRetiredCopy(s: string): string {
   return s
     .replace(/\b(?:on|via|over)\s+Google\s+Meet\b/gi, "online")
     .replace(/\bGoogle\s+Meet\s+link\b/gi, "join link")
-    .replace(/\bGoogle\s+Meet\b/gi, "online");
+    .replace(/\bGoogle\s+Meet\b/gi, "online")
+    // Display copy must never show long dashes; DB-stored copy can still contain
+    // en/em dashes, so normalize them to a plain hyphen at render.
+    .replace(/[–—]/g, "-");
 }
 
 export function landingSetting<T = string>(

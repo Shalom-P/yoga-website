@@ -32,7 +32,7 @@ type Draft = {
   id?: string;
   code: string;
   discount_type: DiscountType;
-  // Value as displayed: percent (0–100) or a fixed amount in major units (decimals)
+  // Value as displayed: percent (0-100) or a fixed amount in major units (decimals)
   discount_value_display: string;
   applies_to_all: boolean;
   applies_to_plan_ids: string[];
@@ -283,7 +283,7 @@ export function DiscountsAdmin({
                       : "Flat amount off, in the purchase currency's major units. Not yet applied to one-time checkout."
                   }
                 >
-                  Value {draft.discount_type === "percentage" ? "(0–100 %)" : "(amount)"}
+                  Value {draft.discount_type === "percentage" ? "(0-100 %)" : "(amount)"}
                 </LabelWithHint>
                 <Input
                   id="value"
