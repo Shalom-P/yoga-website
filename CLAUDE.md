@@ -9,6 +9,12 @@ npm run dev          # Next dev server on :3000
 npm run build        # Production build
 npm run lint         # eslint . — flat config in eslint.config.mjs (was `next lint`; swapped for Next 16)
 npm run typecheck    # tsc --noEmit — strict mode is on
+npm test             # vitest run
+npm run test:watch   # vitest
+
+# Single file / single test
+npx vitest run lib/geo/region.test.ts
+npx vitest run lib/geo/region.test.ts -t "accepts the served markets"
 
 # Drizzle (schema source of truth is supabase/migrations — see "Schema ownership")
 npm run db:generate  # Generate a migration from lib/db/schema.ts diff
@@ -16,7 +22,7 @@ npm run db:migrate   # Apply pending Drizzle migrations
 npm run db:studio    # Open Drizzle Studio
 ```
 
-No test runner is wired up yet. There is no single-test command.
+**Test convention:** Vitest 2, `environment: "node"` (`vitest.config.ts`, `@` aliased to repo root). Tests sit beside their source (`lib/geo/region.test.ts`). Coverage is deliberately limited to **pure, dependency-free helpers** — no DB, no network, no React, no mocks anywhere. There is no integration or component test harness; don't assume one exists.
 
 `legacy-peer-deps=true` is forced via `.npmrc` because `@sentry/nextjs` hasn't bumped its Next.js peer cap to 16 — `npm install` without it will fail. Do not remove it, and make sure your host honours `.npmrc` (or passes `--legacy-peer-deps`) at install time.
 
@@ -31,13 +37,14 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 - **`(marketing)/`** — public, no auth, renders with mock data if Supabase isn't configured (see "Mock fallback"). Pricing, teachers, classes, reviews, legal pages.
 - **`(auth)/`** — `/login`, `/onboarding`, `/auth/callback`. Login uses Supabase: Google OAuth + passwordless **Email OTP** (`signInWithOtp({ email })` → `verifyOtp({ email, token, type: "email" })`). The inline 6-digit code flow needs the Supabase "Magic Link" email template to include `{{ .Token }}`, else Supabase sends a magic link instead. Phone/SMS OTP has been removed; `profiles.phone` is now an optional, user-supplied contact field (not used for auth and not required to book).
 - **`(dashboard)/`** — customer area, gated by middleware.
+- **`(teacher)/`** — the teacher surface at `/teacher` (schedule, documents), gated by middleware *and* `requireTeacher()`. See "Teacher accounts".
 - **`admin/`** — role-gated by middleware *and* `requireAdmin()` in pages. Admin-edited landing copy lives in the `admin_settings` table (key→jsonb) and is read with `revalidate: 60`, so changes propagate ≤1 min.
-- **`api/`** — route handlers for booking confirm/cancel, Meet link creation/retry (`meet/create-link`), admin session create/cancel (`admin/sessions`), Razorpay order-create + payment-verify (`razorpay/create-order`, `razorpay/verify-payment`) + **webhook**, newsletter signup, on-demand ISR busting (`admin/revalidate`), and the scheduled-job handlers under `cron/*` (see "Scheduled jobs"). Middleware **does not** run on `/api/` (see `middleware.ts` matcher) — every handler must auth itself, and admin-only routes re-check `profiles.role` inline.
+- **`api/`** — route handlers for booking confirm/cancel, Meet link creation/retry (`meet/create-link`), admin session create/cancel (`admin/sessions`), admin manual credit grants (`admin/credits`), Razorpay order-create + payment-verify (`razorpay/create-order`, `razorpay/verify-payment`) + **webhook**, the bank-transfer rail (`payments/intent`, `admin/payments/[id]`), medical documents, contact + newsletter, on-demand ISR busting (`admin/revalidate`), and the scheduled-job handlers under `cron/*` (see "Scheduled jobs"). Middleware **does not** run on `/api/` (see `middleware.ts` matcher) — every handler must auth itself, and admin-only routes re-check `profiles.role` inline.
 
 ### Three auth-guard paths — use the right one
 
-1. **`middleware.ts` → `lib/supabase/middleware.ts`** runs on every non-API, non-static request. Refreshes the Supabase session cookie *and* redirects unauth users away from `/dashboard|/admin`, and non-admins away from `/admin`. Cookies set during the auth refresh have to be re-applied to redirect responses — that's what the `pendingCookies` array is doing; don't drop it if you edit the file.
-2. **`lib/auth/guards.ts`** — `requireUser()` / `requireAdmin()` for Server Components and Server Actions. **API route handlers must call `supabase.auth.getUser()` themselves** because middleware skips `/api/`.
+1. **`middleware.ts` → `lib/supabase/middleware.ts`** runs on every non-API, non-static request. Refreshes the Supabase session cookie *and* does role routing: unauth users off `/dashboard|/admin|/teacher`, non-admins off `/admin`, non-teachers off `/teacher`, teachers off `/dashboard`. Cookies set during the auth refresh have to be re-applied to redirect responses — that's what the `pendingCookies` array is doing; don't drop it if you edit the file. Matching uses the `inArea()` helper (`path === base || startsWith(base + "/")`), deliberately **not** a bare prefix — a bare prefix would make `/teacher` swallow the public `/teachers` marketing listing.
+2. **`lib/auth/guards.ts`** — `requireUser()` / `requireAdmin()` / `requireTeacher()` for Server Components and Server Actions. Middleware is routing, not an authorization boundary; the guard is the real gate, so call it in the page/layout too. **API route handlers must call `supabase.auth.getUser()` themselves** because middleware skips `/api/`.
 3. **`lib/cron/auth.ts` → `assertCron(req)`** — for the machine-triggered `cron/*` handlers, which use no Supabase auth at all. It checks `Authorization: Bearer <CRON_SECRET>` and fails **closed**: 503 if `CRON_SECRET` is unset, 401 if it's wrong. Call it first in every cron handler.
 
 ### Three Supabase clients — pick by context
@@ -54,7 +61,13 @@ This is a **conversion-first marketing site + customer dashboard + admin shell +
 
 ### Schema ownership
 
-- **Authoritative migrations live in `supabase/migrations/0001…0022`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates. (Highlights: `0011` Razorpay credit-pack billing; `0016` booking-reminder idempotency; `0017` booking-integrity (`book_session` RPC + overlap EXCLUDE); `0018` RLS/grants hardening; `0019` refund reconciliation; `0020` retires the legacy subscription plans for one-time credit packs + a `one_time` billing interval; `0021` refund-once idempotency (`refund_session_credit`) + blocklist check inside `book_session`; `0022` multi-currency: `plan_prices` (AED/INR) child table, `price_aud_cents`→`price_base_cents` / `amount_aud_cents`→`amount_cents` renames, currency-neutral `fixed_amount_cents` discount enum, `admin_kpis` per-currency revenue.)
+- **Authoritative migrations live in `supabase/migrations/0001…0033`** and run via the Supabase SQL editor / `psql`. They contain RLS policies, RPCs, triggers, idempotency tables, partial unique indexes, and Storage bucket policies — none of which Drizzle generates. Highlights:
+  - `0011` Razorpay credit-pack billing · `0016` booking-reminder idempotency · `0017` booking-integrity (`book_session` RPC + overlap EXCLUDE) · `0018` RLS/grants hardening · `0019` refund reconciliation
+  - `0020` retires the legacy subscription plans for one-time credit packs + a `one_time` billing interval · `0021` refund-once idempotency (`refund_session_credit`) + blocklist check inside `book_session`
+  - `0022` multi-currency: `plan_prices` (AED/INR) child table, `price_aud_cents`→`price_base_cents` / `amount_aud_cents`→`amount_cents` renames, currency-neutral `fixed_amount_cents` discount enum, `admin_kpis` per-currency revenue
+  - `0023` + `0024_category_copy_positive` condition-based class categories · `0024_teacher_role`/`0025`/`0026`/`0028`/`0029` teacher logins (see "Teacher accounts") · `0027` private medical documents
+  - `0030` bank-transfer payment rail · `0031` pack pricing (adds `pack-1`, re-prices AED) · `0032` discount redemptions · `0033` makes the `payments.razorpay_payment_id` unique index **total** rather than partial (a partial index can't serve as an `ON CONFLICT` arbiter for PostgREST's `.upsert()`, which was raising `42P10` → `payment_record_failed`, i.e. "captured but no credits")
+- ⚠️ **There are two `0024_` files** (`0024_teacher_role.sql` and `0024_category_copy_positive.sql`) — they shipped from parallel branches. Apply both; don't "fix" the numbering, the live DB already has them.
 - `drizzle.config.ts` points `out` at `supabase/migrations`, but `db:generate` is for *introspection and ad-hoc work*. When you change schema, write the SQL by hand to keep RLS / RPCs intact and bump the migration number. `0007_security_fixes.sql` is the canonical example of how add-on migrations are structured.
 - **Writing the migration file is not enough — apply it to the live DB** (`psql`/SQL editor). Features break until their object exists: e.g. the `/admin/customers` Demote button 500s until `0010`'s RPC is applied.
 
@@ -71,6 +84,42 @@ Migration `0027` adds a **third, deliberately different** bucket: `medical-docum
 - **Admins get NO read access to PHI** (no admin RLS policy on these tables — by design). The owner can read their own access log (transparency).
 - Server data access lives in `lib/medical/documents.ts` (customer queries on the RLS client; teacher queries on the **service-role** client like `lib/teacher/sessions.ts`, since a teacher can't read `profiles`). Shared client/UI constants (bucket id, limits) are in `lib/medical/constants.ts`. UI: `/dashboard/documents` (customer) and `/teacher/documents` (teacher).
 - This bucket's host is **not** in `next.config.ts` remotePatterns and must not be — these files are never rendered via `next/image`; they download through signed URLs only.
+
+### Teacher accounts (`0024_teacher_role` → `0029`)
+
+A "teacher" is two separable things: a **record** in `public.teachers` (since `0002`, no auth identity) and an **optional linked login**. `POST /api/admin/teachers/[id]/invite` is the single creation path — it finds an existing profile by email or calls `auth.admin.inviteUserByEmail(..., redirectTo: /auth/callback?next=/teacher)`, then **always** elevates via the `promote_to_teacher(target_user_id, target_teacher_id, acting_admin_id)` RPC. That RPC is the only elevation route: it self-gates on `is_admin(...)`, links `teachers.profile_id` atomically (refusing to steal an already-linked record), sets `profiles.role='teacher'`, and writes `audit_log`. `demote_from_teacher()` reverses it (cannot self-demote) but currently has **no API route** — the revoke UI path is incomplete.
+
+Things that break silently if you touch them:
+- `0024_teacher_role` must be applied **in its own transaction** before `0025` — Postgres forbids using a new enum label in the transaction that adds it.
+- The `auth.uid() IS NULL ⇒ privileged` carve-outs in `tg_teachers_lock_admin_cols` (`0026`) and `tg_profiles_lock_sensitive` (`0029`) are load-bearing. Without them the service-role promote path silently reverts `profile_id`/`role` and you get half-promoted teachers. The `0013` INSERT hardening (force `role='customer'`) stays intact so elevation only ever happens via UPDATE through the RPCs.
+- `teachers_profile_id_uniq` (`0028`, partial unique on non-null `profile_id`) makes the DB the source of truth for one-profile-one-teacher; the app's check-then-act guards are racy without it, and every `.eq("profile_id", …).single()` breaks on a double link.
+- `0028`'s `teachers_revoke_shares_on_unlink` trigger revokes `medical_document_shares` whenever `profile_id` moves away from a person. Removing it is a PHI leak.
+- Identity helpers (`is_teacher`, `owns_teacher`, `teacher_owns_booking`) are `SECURITY DEFINER` to avoid RLS recursion — keep them that way.
+
+`lib/teacher/sessions.ts` uses the **service-role** client on purpose: `0025` grants a teacher RLS read on their own `sessions`/`bookings`, but `profiles` stays self/admin-only, so a teacher's own token cannot read the *student's* name/timezone that the schedule UI needs. It's gated by `requireTeacher()` plus an explicit `.eq("teacher_id", teacherId)`, and deliberately does not select student emails. Teachers are read-only on sessions/bookings; creation, cancellation, and attendance stay admin/service-role.
+
+### Two payment rails — Razorpay and manual bank transfer
+
+Since `0030` there are **two** rails, and the choice is made **server-side only**. `POST /api/payments/intent` is the single entry point the buy-a-pack UI calls: it authenticates, applies the service-area gate (`canTransactFromRequest`), resolves currency via `resolveRegion()`, and returns `{ method: "razorpay" }` with **no side effects** for non-AED (India continues on the untouched create-order → verify flow). AED creates or reuses a `pending` `payments` row with `method='bank_transfer'` and a random `MYC-XXXXXX` reference. This is a temporary rail until Razorpay International/AED is enabled on the account.
+
+Bank-transfer states: `pending` → `completed` (admin verify) or `failed` (admin reject); `refunded`/`failed` are terminal. Approval is admin-only via `POST /api/admin/payments/[id]` (`action: verify|reject`), which re-checks `profiles.role` inline. It grants credits through the **same** `grant_session_credits(...)` RPC the Razorpay rail uses — it mirrors `lib/razorpay/fulfillment.ts` rather than introducing a parallel grant path. `POST /api/admin/credits` is a separate add-only manual grant (`reason='admin_adjust'`, `p_payment_id: null`, 1–100 credits).
+
+Invariants:
+- **Grant credits *before* flipping status.** A grant failure must leave the row `pending`/retryable, never `completed` with no credits.
+- The status update is conditioned on `.eq("status","pending")`, so re-verify is a no-op.
+- The partial unique index `payments_one_pending_bank_transfer (customer_id, plan_id) where method='bank_transfer' and status='pending'` is the real double-credit defense — the intent route catches `23505` and re-reads the winner.
+- The intent route resolves price from the **explicit AED `plan_prices` row** and refuses the `plans.price_base_cents` fallback: that INR figure is literally what the customer would be told to wire.
+- `lib/payments/bankTransfer.ts` holds the UAE account details as client-safe constants and must **not** import `server-only` — the customer dialog imports it.
+
+### Discount codes (`0032`) — reserve → commit
+
+A reserve-at-checkout / commit-at-fulfilment ledger layered on the credit-pack flow. (The older `discount_codes` table from `0004` belonged to the retired PayPal subscription rail and had no plumbing into packs.)
+
+`reserve_discount_redemption` runs `FOR UPDATE` on the code row (serializing cap checks), validates active/date-window/`applies_to_plan_ids`/currency lock, counts *live* (`reserved` + `committed`) uses against `max_uses` and `per_email_max`, computes the discount **in the order currency**, rejects `final < 100` minor units, and snapshots a lowercased email from the session. Statuses: `reserved` → `committed` | `released`; `committed` → `reversed` (terminal, full refund only). A `released` row can be **resurrected** to `committed` — that's what makes a post-sweep late capture still work.
+
+Both rails share `lib/billing/promo.ts`. Razorpay: create-order reserves, then stamps `discountRedemptionId` into the **Razorpay order notes** so `fulfillRazorpayPayment` can `commit_discount_redemption` exactly once without a fragile post-order DB patch. Bank transfer: the intent route reserves and patches `payment_id` onto the redemption; admin verify calls `commit_discount_redemption_by_payment`, admin reject calls `release_discount_redemption`. Full refunds release from `reverseRazorpayPayment`.
+
+Invariants: amounts are always derived server-side (the client sends only a raw string through `normalizePromoCode`); commit guards on `status in ('reserved','released')` so a double-fire can't double-increment `times_used`; `reversed` must never re-commit; every RPC is `SECURITY DEFINER` with EXECUTE revoked from `public`/`anon`/`authenticated`; promos apply only when *creating* a bank transfer, never re-priced onto an in-flight one; orphaned reservations must be released on every failure path.
 
 ### Mock fallback for the marketing site
 
@@ -100,11 +149,12 @@ Flow: `POST /api/razorpay/create-order` resolves the customer's currency from `r
 
 ### Scheduled jobs (handlers exist; scheduler is BYO)
 
-Three cron handlers live under `app/api/cron/`, each gated by `assertCron` (Bearer `CRON_SECRET` — see auth paths above) and running on the service-role client:
+Five cron handlers live under `app/api/cron/`, each gated by `assertCron` (Bearer `CRON_SECRET` — see auth paths above) and running on the service-role client:
 - **`reminders`** (~hourly) — emails a ±10-min band around now+24h and now+1h. Idempotent since `0016` (a `booking_reminders` ledger keyed on booking + kind dedupes a double-fire in the same band).
 - **`no-show-sweep`** (~hourly) — flips still-`confirmed` bookings to `no_show` 2h after the session ended (`booking_status` enum from `0003`). Skips sessions whose Meet link never provisioned (`meet_status <> 'created'`) so a customer isn't penalised for an operational failure.
 - **`meet-retry`** (~15–30 min) — retries `createMeetEvent` for not-yet-started sessions stuck at `meet_status='pending'|'failed'`, batched (50/run) to avoid Calendar rate limits.
 - **`medical-orphan-sweep`** (~daily) — backstop cleanup for the private `medical-documents` bucket: removes stored objects >1h old with no live `medical_documents` row (failed metadata POST, or bytes left after a failed soft-delete removal). Bounded per run; reports `truncated` flags instead of silently capping.
+- **`discount-reservation-sweep`** (~hourly) — `release_stale_discount_reservations(2h, 500)`. Required because an abandoned Checkout otherwise holds a `max_uses`/`per_email_max` slot forever, most painfully blocking the buyer's own retry. It sweeps **only `payment_id IS NULL`** rows: a bank-transfer reservation is tied to a real pending wire that may legitimately sit for days.
 
 There is **no scheduler in the repo** (no `vercel.json` / host config). Wire each endpoint to your host's cron, an external scheduler, or Supabase `pg_cron` + `pg_net`, POSTing with `Authorization: Bearer $CRON_SECRET`.
 
@@ -117,15 +167,22 @@ There is **no scheduler in the repo** (no `vercel.json` / host config). Wire eac
 - **Locale:** `en` (per-currency `en-IN` / `en-AE` for money). Money helper is `formatMoney(cents, currency)` in `lib/i18n/money.ts`. Internal money is integer minor units (`plans.price_base_cents`, `plan_prices.amount_cents`, `payments.amount_cents`); never store floats. Currencies: AED + INR.
 - **Analytics:** `lib/analytics/events.ts` — call `track(name, props)` with a name from the typed `EventName` allow-list (extend the union, don't pass free-form strings). `track()` / `initPosthog()` are silent no-ops when `NEXT_PUBLIC_POSTHOG_KEY` is unset, matching the zero-env preview story.
 - **`cn` helper:** lives in `lib/utils.ts`; `lib/utils/cn.ts` just re-exports it. shadcn's `components.json` aliases `utils → @/lib/utils`, so import `cn` from `@/lib/utils`.
-- **`server-only` import:** `lib/db/client.ts`, `lib/google/calendar.ts`, and `lib/razorpay/{client,fulfillment,catalog}.ts` use the `server-only` package — importing them from a client component will hard-fail the build. Keep that boundary.
+- **`server-only` import:** `lib/db/client.ts`, `lib/google/calendar.ts`, and `lib/razorpay/{client,fulfillment,catalog}.ts` use the `server-only` package — importing them from a client component will hard-fail the build. Keep that boundary. `lib/payments/bankTransfer.ts` and `lib/geo/region.ts` are the deliberate exceptions: both are imported client-side and must stay pure.
+- **Error copy:** `lib/ui/errors.ts` (`friendlyAuthError` / `friendlyFormError`) is a mandated boundary. Raw Supabase/Postgres strings (RLS policy text, unique-constraint messages) must never reach a toast.
+- **Service area + currency:** `lib/geo/region.ts` is the `{IN, AE}` gate. It prefers unforgeable edge GeoIP country over self-reported browser timezone specifically to close a spoofing bypass on the purchase and free-trial routes — don't reorder that precedence.
+- **CSP:** `next.config.ts` ships a hand-maintained Content-Security-Policy allow-listing Razorpay, Supabase (REST + wss), PostHog, Sentry ingest, and Google OAuth. **Any new third-party origin must be added there or it silently breaks in production only.** `'unsafe-eval'` is dev-only; `'unsafe-inline'` for scripts is intentional (nonces would force every page dynamic).
+- **Sentry:** wired via `instrumentation.ts` (server/edge + `onRequestError` for RSC errors) and `instrumentation-client.ts`. Both no-op without `NEXT_PUBLIC_SENTRY_DSN`. `withSentryConfig` / source-map upload is deliberately not set up yet.
+- **SEO:** typed JSON-LD builders in `lib/seo/structuredData.ts` (schema-dts). Teacher-edited fields flow into JSON-LD, so keep the escaping — a past round fixed a stored XSS there.
+- **Validation:** `lib/validation/phone.ts` restricts country codes to `["AE","IN"]`. `app/api/contact/route.ts` uses a zero-length `company` honeypot and returns a fake `ok: true` when tripped.
 
 ## Conversion notes — read before changing landing copy
 
 (From the README — these are product-level constraints, not style preferences.)
 
-- The above-fold "Book my free 1:1 session" CTA carries the bulk of conversion; it must be visible in viewport 1 on every device.
+- ⚠️ **Editing copy in code often changes nothing on the live site.** The live hero/subhead (`admin_settings`), pricing bullets (`plan_features`), and reviews (`reviews` table) are **DB-driven and override the code strings and the mocks**. Change them at `/admin/settings → Landing copy`, or accept that your edit only shows in the zero-env mock path. `scrubRetiredCopy()` in `lib/data/landing.ts` additionally strips retired phrases (e.g. "Google Meet") at render time, because the DB still stores them.
+- The above-fold "Book my 1:1 session" CTA carries the bulk of conversion; it must be visible in viewport 1 on every device.
 - Mobile sticky CTA is non-negotiable (75% of traffic is mobile).
-- Free-trial-first messaging ("no credit card") outperforms paid-first by ~10× at top of funnel — don't bury it.
+- **Free-trial / "no credit card" wording has been deliberately stripped from all public copy** (keep the "1:1" framing). Do not reintroduce it. Note the standing mismatch: the **backend still grants a free first session** (`isFreeTrial` in `app/api/bookings/confirm/route.ts`, enforced by the `bookings_one_free_trial_per_customer` index). Copy and backend disagree on purpose right now — don't "fix" one side in isolation.
 - Public pricing is the #1 trust signal — keep `/pricing` visible from the nav.
 - Real teacher photos beat any other landing element; the placeholder SVG avatars in `MOCK_TEACHERS` are not the final state.
-- All landing copy is editable from `/admin/settings → Landing copy` via the `admin_settings` table; the page renders with `revalidate: 60`.
+- **No em-dashes in user-facing copy.** They read as AI-written. Use a comma, colon, or period. (This file and other internal docs are exempt.)
