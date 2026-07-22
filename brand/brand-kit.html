@@ -1,0 +1,344 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>My Yoga Classes — Brand Kit V1.2</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Hanken+Grotesk:wght@400;600;700&display=swap');
+
+  :root {
+    --forest: #0F5C4E;
+    --coral: #FF6A4D;
+    --cream: #FBF7EF;
+    --ink: #16352E;
+    --mint: #DCEAE0;
+    --peach: #FBE3D5;
+    --butter: #F6ECCB;
+    --sky: #DEE8EA;
+    --grey: #6b7a75;
+    --line: #e6e0d4;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  @page { size: A4; margin: 0; }
+  body {
+    font-family: 'Hanken Grotesk', -apple-system, sans-serif;
+    color: var(--ink);
+    background: #fff;
+  }
+  .page {
+    width: 210mm; min-height: 296mm;
+    padding: 22mm 18mm;
+    page-break-after: always;
+    background: #fff;
+  }
+  .page:last-child { page-break-after: auto; }
+  h1, h2, .serif { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 500; }
+  .eyebrow {
+    font-size: 10px; font-weight: 700; letter-spacing: 0.18em;
+    text-transform: uppercase; color: var(--forest); margin-bottom: 10px;
+  }
+  h2 { font-size: 34px; margin-bottom: 8px; color: var(--ink); }
+  .lede { color: var(--grey); font-size: 14px; line-height: 1.55; max-width: 560px; margin-bottom: 24px; }
+  .lede b { color: var(--ink); }
+
+  /* ---------- cover ---------- */
+  .cover-card {
+    background: var(--forest); border-radius: 18px; color: var(--cream);
+    text-align: center; padding: 64px 40px 56px; margin-bottom: 44px;
+  }
+  .cover-badge {
+    width: 128px; height: 128px; background: var(--cream); border-radius: 6px;
+    display: inline-flex; align-items: center; justify-content: center; margin-bottom: 28px;
+  }
+  .cover-badge svg { width: 88px; height: 88px; }
+  .cover-card h1 { font-size: 58px; font-weight: 500; margin-bottom: 14px; }
+  .cover-sub { color: var(--coral); font-size: 13px; font-weight: 700; letter-spacing: 0.18em; margin-bottom: 34px; }
+  .cover-meta { color: #9fc4b8; font-size: 11px; font-weight: 600; letter-spacing: 0.18em; }
+
+  .voice-box {
+    background: var(--mint); border-radius: 12px; padding: 20px 24px;
+    font-size: 13.5px; line-height: 1.6; color: var(--ink);
+  }
+
+  /* ---------- lockups ---------- */
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+  .lockup-card { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .lockup-preview { height: 168px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; }
+  .lockup-preview.teal { background: var(--forest); }
+  .lockup-preview.cream { background: var(--cream); }
+  .lockup-caption { padding: 14px 16px; font-size: 12.5px; line-height: 1.5; color: var(--grey); }
+  .lockup-caption b { color: var(--ink); }
+  .lockup-name { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; }
+  .lockup-tag { font-size: 6.5px; font-weight: 700; letter-spacing: 0.2em; color: var(--coral); }
+  .lockup-preview.teal .lockup-name { color: var(--cream); }
+  .lockup-preview.cream .lockup-name { color: var(--forest); }
+  .banner-row { display: flex; align-items: center; gap: 12px; }
+  .banner-text { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; }
+  .dodont { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 20px; }
+  .dd-card { border: 1px solid var(--line); border-radius: 12px; padding: 18px 20px; }
+  .dd-card h3 { font-size: 11px; font-weight: 700; letter-spacing: 0.15em; margin-bottom: 12px; }
+  .dd-card.do h3 { color: var(--forest); }
+  .dd-card.dont h3 { color: var(--coral); }
+  .dd-card ul { list-style: none; }
+  .dd-card li { font-size: 12.5px; line-height: 1.5; color: var(--ink); padding-left: 20px; position: relative; margin-bottom: 10px; }
+  .dd-card.do li::before { content: "✓"; position: absolute; left: 0; color: var(--forest); font-weight: 700; }
+  .dd-card.dont li::before { content: "✕"; position: absolute; left: 0; color: var(--coral); font-weight: 700; }
+
+  /* ---------- palette ---------- */
+  .grid4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 18px; }
+  .swatch { border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+  .swatch .chip { height: 74px; }
+  .swatch .meta { padding: 10px 12px; }
+  .swatch .meta b { display: block; font-size: 12.5px; color: var(--ink); }
+  .swatch .meta span { display: block; font-size: 11px; color: var(--grey); margin-top: 2px; }
+  .note-box {
+    background: var(--mint); border-radius: 12px; padding: 16px 20px;
+    font-size: 13px; line-height: 1.6; color: var(--ink);
+  }
+
+  /* ---------- type ---------- */
+  .type-card { border: 1px solid var(--line); border-radius: 12px; padding: 24px 26px; margin-bottom: 18px; }
+  .type-label { font-size: 10px; font-weight: 700; letter-spacing: 0.18em; color: var(--grey); text-transform: uppercase; margin-bottom: 14px; }
+  .type-head { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 46px; line-height: 1.05; letter-spacing: -0.012em; margin-bottom: 14px; }
+  .type-head em { color: var(--coral); }
+  .type-body { font-size: 20px; line-height: 1.55; margin-bottom: 12px; }
+  .type-note { font-size: 12px; color: var(--grey); line-height: 1.5; }
+
+  /* ---------- ads ---------- */
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 18px; }
+  .size-card { border: 1px solid var(--line); border-radius: 12px; padding: 16px 18px; }
+  .size-card .lab { font-size: 9.5px; font-weight: 700; letter-spacing: 0.16em; color: var(--grey); margin-bottom: 8px; }
+  .size-card .dim { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 27px; margin-bottom: 6px; }
+  .size-card .use { font-size: 11.5px; color: var(--grey); }
+  .headline-row { display: flex; border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; gap: 18px; margin-bottom: 12px; align-items: center; }
+  .headline-row .h { flex: 1.3; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 21px; line-height: 1.2; }
+  .headline-row .h em { color: var(--coral); }
+  .headline-row .why { flex: 1; font-size: 11.5px; color: var(--grey); line-height: 1.45; }
+  .ad-demo { background: var(--forest); border-radius: 14px; text-align: center; padding: 40px 30px; margin-top: 6px; }
+  .ad-demo .eb { color: var(--coral); font-size: 11px; font-weight: 700; letter-spacing: 0.2em; margin-bottom: 14px; }
+  .ad-demo .hl { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 42px; color: var(--cream); line-height: 1.1; margin-bottom: 14px; }
+  .ad-demo .hl em { color: var(--coral); }
+  .ad-demo .sub { color: #cfe0d9; font-size: 14px; max-width: 420px; margin: 0 auto 22px; line-height: 1.5; }
+  .ad-demo .btn { display: inline-block; background: var(--coral); color: #fff; font-weight: 700; font-size: 14px; padding: 13px 28px; border-radius: 999px; }
+
+  footer { border-top: 1px solid var(--line); margin-top: 34px; padding-top: 16px; text-align: center; font-size: 11px; color: var(--grey); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<!-- ============ PAGE 1 : COVER + AT A GLANCE ============ -->
+<div class="page">
+  <div class="cover-card">
+    <div class="cover-badge">
+      <svg viewBox="0 0 96 96" fill="none" stroke="#0F5C4E" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="48" cy="13.5" r="11.3"/>
+        <path d="M17.5 71 C 22 58 32 42 44.5 30 C 49 33 54 36.5 55 40.5 C 56 44.5 52.5 49.8 48 52.8 C 43.5 55.8 28 63.7 17.5 71 Z"/>
+        <path d="M78.5 71 C 74 58 64 42 51.5 30 C 47 33 42 36.5 41 40.5 C 40 44.5 43.5 49.8 48 52.8 C 52.5 55.8 68 63.7 78.5 71 Z"/>
+        <path d="M48 84 C 42 81.8 34 74.5 26 74.5 C 18 74.5 6 77.8 6 84 C 6 90.2 18 93.5 26 93.5 C 34 93.5 42 86.2 48 84 C 54 81.8 62 74.5 70 74.5 C 78 74.5 90 77.8 90 84 C 90 90.2 78 93.5 70 93.5 C 62 93.5 54 86.2 48 84 Z"/>
+      </svg>
+    </div>
+    <h1>My Yoga Classes</h1>
+    <div class="cover-sub">LIVE 1-ON-1 YOGA &nbsp;·&nbsp; CERTIFIED TEACHERS</div>
+    <div class="cover-meta">BRAND KIT &nbsp;·&nbsp; V1.2 &nbsp;·&nbsp; MYYOGACLASSES.FIT</div>
+  </div>
+
+  <div class="eyebrow">The brand at a glance</div>
+  <h2>Calm, personal, expert.</h2>
+  <p class="lede">My Yoga Classes pairs every student with a certified teacher for live, one-on-one
+    sessions. The brand should feel like a deep breath: warm, grounded, and quietly
+    premium. Never loud or gimmicky.</p>
+
+  <div class="voice-box">
+    <b>Voice:</b> warm and encouraging, plain-spoken, expert without being preachy.
+    Speak to one person, not a crowd. Favor short sentences and verbs that feel
+    calm: <i>breathe, move, restore, show up</i>. Avoid hype words, all-caps shouting,
+    and crash-diet "transform your body" language.
+  </div>
+</div>
+
+<!-- ============ PAGE 2 : LOGO ============ -->
+<div class="page">
+  <div class="eyebrow">Logo</div>
+  <h2>The mark &amp; lockups</h2>
+  <p class="lede">A single line-art meditator in lotus: head, folded arms and crossed legs drawn
+    as one calm stroke. The master vector lives at <b>brand/logo.svg</b> in the site repo;
+    ready-to-use lockups live in <b>brand/exports</b>.</p>
+
+  <div class="grid2">
+    <div class="lockup-card">
+      <div class="lockup-preview teal">
+        <svg width="52" height="52" viewBox="0 0 96 96" fill="none" stroke="#FBF7EF" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="48" cy="13.5" r="11.3"/>
+          <path d="M17.5 71 C 22 58 32 42 44.5 30 C 49 33 54 36.5 55 40.5 C 56 44.5 52.5 49.8 48 52.8 C 43.5 55.8 28 63.7 17.5 71 Z"/>
+          <path d="M78.5 71 C 74 58 64 42 51.5 30 C 47 33 42 36.5 41 40.5 C 40 44.5 43.5 49.8 48 52.8 C 52.5 55.8 68 63.7 78.5 71 Z"/>
+          <path d="M48 84 C 42 81.8 34 74.5 26 74.5 C 18 74.5 6 77.8 6 84 C 6 90.2 18 93.5 26 93.5 C 34 93.5 42 86.2 48 84 C 54 81.8 62 74.5 70 74.5 C 78 74.5 90 77.8 90 84 C 90 90.2 78 93.5 70 93.5 C 62 93.5 54 86.2 48 84 Z"/>
+        </svg>
+        <div class="lockup-name">My Yoga Classes</div>
+        <div class="lockup-tag">LIVE 1-ON-1 YOGA</div>
+      </div>
+      <div class="lockup-caption"><b>logo-name-teal</b> — primary stacked lockup on green. Use as the default.</div>
+    </div>
+
+    <div class="lockup-card">
+      <div class="lockup-preview cream">
+        <svg width="52" height="52" viewBox="0 0 96 96" fill="none" stroke="#0F5C4E" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="48" cy="13.5" r="11.3"/>
+          <path d="M17.5 71 C 22 58 32 42 44.5 30 C 49 33 54 36.5 55 40.5 C 56 44.5 52.5 49.8 48 52.8 C 43.5 55.8 28 63.7 17.5 71 Z"/>
+          <path d="M78.5 71 C 74 58 64 42 51.5 30 C 47 33 42 36.5 41 40.5 C 40 44.5 43.5 49.8 48 52.8 C 52.5 55.8 68 63.7 78.5 71 Z"/>
+          <path d="M48 84 C 42 81.8 34 74.5 26 74.5 C 18 74.5 6 77.8 6 84 C 6 90.2 18 93.5 26 93.5 C 34 93.5 42 86.2 48 84 C 54 81.8 62 74.5 70 74.5 C 78 74.5 90 77.8 90 84 C 90 90.2 78 93.5 70 93.5 C 62 93.5 54 86.2 48 84 Z"/>
+        </svg>
+        <div class="lockup-name">My Yoga Classes</div>
+        <div class="lockup-tag">LIVE 1-ON-1 YOGA</div>
+      </div>
+      <div class="lockup-caption"><b>logo-name-cream</b> — stacked lockup for light/cream backgrounds.</div>
+    </div>
+
+    <div class="lockup-card">
+      <div class="lockup-preview teal">
+        <svg width="76" height="76" viewBox="0 0 96 96" fill="none" stroke="#FBF7EF" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="48" cy="13.5" r="11.3"/>
+          <path d="M17.5 71 C 22 58 32 42 44.5 30 C 49 33 54 36.5 55 40.5 C 56 44.5 52.5 49.8 48 52.8 C 43.5 55.8 28 63.7 17.5 71 Z"/>
+          <path d="M78.5 71 C 74 58 64 42 51.5 30 C 47 33 42 36.5 41 40.5 C 40 44.5 43.5 49.8 48 52.8 C 52.5 55.8 68 63.7 78.5 71 Z"/>
+          <path d="M48 84 C 42 81.8 34 74.5 26 74.5 C 18 74.5 6 77.8 6 84 C 6 90.2 18 93.5 26 93.5 C 34 93.5 42 86.2 48 84 C 54 81.8 62 74.5 70 74.5 C 78 74.5 90 77.8 90 84 C 90 90.2 78 93.5 70 93.5 C 62 93.5 54 86.2 48 84 Z"/>
+        </svg>
+      </div>
+      <div class="lockup-caption"><b>logo-social-teal</b> — icon-only mark for avatars &amp; favicons.</div>
+    </div>
+
+    <div class="lockup-card">
+      <div class="lockup-preview teal">
+        <div class="banner-row">
+          <svg width="46" height="46" viewBox="0 0 96 96" fill="none" stroke="#FBF7EF" stroke-width="4.4" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="48" cy="13.5" r="11.3"/>
+            <path d="M17.5 71 C 22 58 32 42 44.5 30 C 49 33 54 36.5 55 40.5 C 56 44.5 52.5 49.8 48 52.8 C 43.5 55.8 28 63.7 17.5 71 Z"/>
+            <path d="M78.5 71 C 74 58 64 42 51.5 30 C 47 33 42 36.5 41 40.5 C 40 44.5 43.5 49.8 48 52.8 C 52.5 55.8 68 63.7 78.5 71 Z"/>
+            <path d="M48 84 C 42 81.8 34 74.5 26 74.5 C 18 74.5 6 77.8 6 84 C 6 90.2 18 93.5 26 93.5 C 34 93.5 42 86.2 48 84 C 54 81.8 62 74.5 70 74.5 C 78 74.5 90 77.8 90 84 C 90 90.2 78 93.5 70 93.5 C 62 93.5 54 86.2 48 84 Z"/>
+          </svg>
+          <div class="banner-text">
+            <div class="lockup-name">My Yoga Classes</div>
+            <div class="lockup-tag">LIVE 1-ON-1 YOGA · CERTIFIED TEACHERS</div>
+          </div>
+        </div>
+      </div>
+      <div class="lockup-caption"><b>logo-name-banner</b> — horizontal lockup for wide headers &amp; email.</div>
+    </div>
+  </div>
+
+  <div class="dodont">
+    <div class="dd-card do">
+      <h3>DO</h3>
+      <ul>
+        <li>Keep clear space around the mark equal to the height of the circle "head".</li>
+        <li>Use teal-on-cream or cream-on-teal for maximum warmth and contrast.</li>
+        <li>Use the icon-only mark when the name appears elsewhere on the layout.</li>
+      </ul>
+    </div>
+    <div class="dd-card dont">
+      <h3>DON'T</h3>
+      <ul>
+        <li>Don't recolor the mark outside the brand palette or add gradients/shadows.</li>
+        <li>Don't stretch, rotate, or crowd the logo against busy photos.</li>
+        <li>Don't place the cream logo on light or low-contrast backgrounds.</li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- ============ PAGE 3 : PALETTE ============ -->
+<div class="page">
+  <div class="eyebrow">Color</div>
+  <h2>Palette</h2>
+  <p class="lede">Deep forest green anchors the brand; warm coral is the single accent that drives the
+    eye to actions. Cream keeps everything soft and editorial.</p>
+
+  <div class="grid4">
+    <div class="swatch"><div class="chip" style="background:#0F5C4E"></div><div class="meta"><b>Forest Green</b><span>#0F5C4E</span><span>Primary · brand color</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#FF6A4D"></div><div class="meta"><b>Coral</b><span>#FF6A4D</span><span>Accent · CTAs only</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#FBF7EF; border-bottom:1px solid var(--line)"></div><div class="meta"><b>Cream</b><span>#FBF7EF</span><span>Background</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#16352E"></div><div class="meta"><b>Ink Green</b><span>#16352E</span><span>Body text</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#DCEAE0"></div><div class="meta"><b>Mint</b><span>#DCEAE0</span><span>Soft surface</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#FBE3D5"></div><div class="meta"><b>Peach</b><span>#FBE3D5</span><span>Soft surface</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#F6ECCB"></div><div class="meta"><b>Butter</b><span>#F6ECCB</span><span>Soft surface</span></div></div>
+    <div class="swatch"><div class="chip" style="background:#DEE8EA"></div><div class="meta"><b>Sky</b><span>#DEE8EA</span><span>Soft surface</span></div></div>
+  </div>
+
+  <div class="note-box">
+    <b>The 60-30-10 rule for ads:</b> ~60% cream space, ~30% forest green, ~10%
+    coral reserved for the one thing you want clicked. Coral should appear once per layout.
+  </div>
+</div>
+
+<!-- ============ PAGE 4 : TYPE ============ -->
+<div class="page">
+  <div class="eyebrow">Typography</div>
+  <h2>Type system</h2>
+  <p class="lede">An elegant serif for headlines paired with a clean grotesque for everything else.
+    Italics in coral add a gentle, human accent.</p>
+
+  <div class="type-card">
+    <div class="type-label">Headlines — Cormorant Garamond (Medium 500)</div>
+    <div class="type-head">Find your calm, <em><i>one breath</i></em> at a time</div>
+    <div class="type-note">Use for headlines, hero statements, big numbers. Set tight (line-height ~1.05),
+      letter-spacing &minus;0.012em. Italic + coral for emphasis words.</div>
+  </div>
+
+  <div class="type-card">
+    <div class="type-label">Body &amp; UI — Hanken Grotesk (Regular / SemiBold)</div>
+    <div class="type-body">Live, one-on-one sessions with certified teachers, booked
+      around your schedule, from anywhere. Buttons, labels, captions, and body copy all use Hanken Grotesk.</div>
+    <div class="type-note">Eyebrows &amp; labels: SemiBold, uppercase, letter-spacing 0.18em. Body: Regular,
+      line-height 1.55.</div>
+  </div>
+</div>
+
+<!-- ============ PAGE 5 : ADS ============ -->
+<div class="page">
+  <div class="eyebrow">Using this for ads</div>
+  <h2>Ad recipe</h2>
+  <p class="lede">A repeatable layout that always looks on-brand: forest or cream background, serif
+    headline, one coral CTA, the mark in a corner.</p>
+
+  <div class="grid3">
+    <div class="size-card"><div class="lab">SQUARE</div><div class="dim">1080 × 1080</div><div class="use">Instagram / Facebook feed</div></div>
+    <div class="size-card"><div class="lab">STORY / REEL</div><div class="dim">1080 × 1920</div><div class="use">IG &amp; FB stories, vertical</div></div>
+    <div class="size-card"><div class="lab">LANDSCAPE</div><div class="dim">1200 × 628</div><div class="use">Meta link ads, banners</div></div>
+  </div>
+
+  <div class="headline-row">
+    <div class="h">"Your own yoga teacher. Live, 1-on-1, from home."</div>
+    <div class="why">Leads with the core differentiator: personal + live.</div>
+  </div>
+  <div class="headline-row">
+    <div class="h">"Show up for yourself <em><i>today</i></em>."</div>
+    <div class="why">Short, calm, action-led. Coral on the emphasis word.</div>
+  </div>
+  <div class="headline-row">
+    <div class="h">"Certified teachers. Sessions that fit your day."</div>
+    <div class="why">Trust + convenience in one line.</div>
+  </div>
+
+  <div class="ad-demo">
+    <div class="eb">LIVE 1-ON-1 YOGA</div>
+    <div class="hl">Find your calm, <em><i>one breath</i></em> at a time</div>
+    <div class="sub">Private sessions with certified teachers, booked around your schedule.</div>
+    <span class="btn">Book a 1:1 intro session</span>
+  </div>
+</div>
+
+<!-- ============ PAGE 6 : RULES + FOOTER ============ -->
+<div class="page">
+  <div class="note-box" style="margin-top:6px">
+    <b>Quick rules for every ad:</b> one headline, one CTA, lots of breathing room. Put
+    the coral only on the button. Keep photography natural and warm-lit (real
+    people, soft light, calm spaces). No neon, no stock-y "extreme fitness" energy.
+    Copy note: don't use "free" or "no credit card" claims in public copy; lead with the 1:1 story.
+  </div>
+
+  <footer>
+    My Yoga Classes — Brand Kit V1.2 · myyogaclasses.fit · Colors &amp; type sourced from the live site theme ·
+    Source: <b>brand/brand-kit.html</b> in the site repo · Master mark: <b>brand/logo.svg</b>
+  </footer>
+</div>
+
+</body>
+</html>
