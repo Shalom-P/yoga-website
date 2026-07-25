@@ -61,6 +61,43 @@ export async function resolvePackBySlug(
 }
 
 /**
+ * Every purchasable pack in a currency, ordered the way the pricing grid renders
+ * them. Used by the promo-code preview, which has to price *all* packs at once
+ * (a code may be restricted to some of them via `applies_to_plan_ids`).
+ *
+ * Same trusted-price rule as resolvePackBySlug: amounts come from the DB, never
+ * from the client, and a missing per-currency row falls back to the base price.
+ */
+export async function listActivePacks(currency: Currency): Promise<RazorpayPack[]> {
+  const svc = createSupabaseServiceClient();
+  const { data: plans } = await svc
+    .from("plans")
+    .select("id, slug, name, price_base_cents, session_credits")
+    .eq("is_active", true)
+    .order("sort_order", { ascending: true });
+  if (!plans || plans.length === 0) return [];
+
+  const { data: prices } = await svc
+    .from("plan_prices")
+    .select("plan_id, amount_cents")
+    .eq("currency", currency)
+    .in(
+      "plan_id",
+      plans.map((p) => p.id),
+    );
+  const amountByPlan = new Map((prices ?? []).map((p) => [p.plan_id, p.amount_cents]));
+
+  return plans.map((plan) => ({
+    planId: plan.id,
+    slug: plan.slug,
+    name: plan.name,
+    amount: amountByPlan.get(plan.id) ?? plan.price_base_cents,
+    currency,
+    sessionCredits: plan.session_credits,
+  }));
+}
+
+/**
  * Resolve a pack by id — used during fulfilment from a paid order's notes. No
  * `is_active` filter: a customer who already paid must still be credited even if
  * an admin has since hidden the plan. Fulfilment only reads `sessionCredits`;
