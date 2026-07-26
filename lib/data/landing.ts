@@ -1,9 +1,14 @@
 // Server-side data layer for the marketing site.
 // Reads from Supabase if NEXT_PUBLIC_SUPABASE_URL is configured.
 // Otherwise returns realistic mock data so the site renders cleanly during local dev / preview deploys.
+//
+// Uses the cookie-free anon client on purpose: the cookie-bound server client
+// awaits cookies(), which opts every calling page into dynamic rendering and
+// silently kills the (marketing) group's ISR windows. All data read here is
+// public (anon-readable RLS policies), so no session is needed.
 
 import { cache } from "react";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAnonClient } from "@/lib/supabase/anon";
 import type { Teacher, Plan, PlanFeature, PlanPrice, ClassCategory, Review } from "@/lib/supabase/types";
 
 /** A plan plus its features and per-currency prices (AED/INR), for pricing UIs. */
@@ -292,7 +297,7 @@ const MOCK_SETTINGS: Record<string, unknown> = {
 // the 9th+ teacher's detail page and over-fetch for a slug filter).
 export async function getFeaturedTeachers(): Promise<Teacher[]> {
   if (!isSupabaseConfigured) return MOCK_TEACHERS;
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("teachers")
     .select("*")
@@ -306,7 +311,7 @@ export async function getFeaturedTeachers(): Promise<Teacher[]> {
 // booking grid.
 export async function getAllActiveTeachers(): Promise<Teacher[]> {
   if (!isSupabaseConfigured) return MOCK_TEACHERS;
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("teachers")
     .select("*")
@@ -320,7 +325,7 @@ export async function getAllActiveTeachers(): Promise<Teacher[]> {
 // request-deduped). Returns null when not found / inactive.
 export const getTeacherBySlug = cache(async (slug: string): Promise<Teacher | null> => {
   if (!isSupabaseConfigured) return MOCK_TEACHERS.find((t) => t.slug === slug) ?? null;
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("teachers")
     .select("*")
@@ -334,7 +339,7 @@ export const getTeacherBySlug = cache(async (slug: string): Promise<Teacher | nu
 // component body (e.g. classes/[slug]) issues one query per request.
 export const getClassCategories = cache(async (): Promise<ClassCategory[]> => {
   if (!isSupabaseConfigured) return MOCK_CATEGORIES;
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("class_categories")
     .select("*")
@@ -345,7 +350,7 @@ export const getClassCategories = cache(async (): Promise<ClassCategory[]> => {
 
 export async function getPlansWithFeatures(): Promise<PlanWithFeatures[]> {
   if (!isSupabaseConfigured) return MOCK_PLANS;
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAnonClient();
   const { data: plans } = await supabase
     .from("plans").select("*").eq("is_active", true).order("sort_order");
   if (!plans || plans.length === 0) return MOCK_PLANS;
@@ -368,7 +373,7 @@ export async function getPlansWithFeatures(): Promise<PlanWithFeatures[]> {
 
 export async function getFeaturedReviews(): Promise<(Review & { teacher_name?: string })[]> {
   if (!isSupabaseConfigured) return MOCK_REVIEWS;
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("reviews")
     .select("*, teacher:teachers(display_name)")
@@ -384,7 +389,7 @@ export async function getFeaturedReviews(): Promise<(Review & { teacher_name?: s
 
 export async function getLandingSettings(keys: string[]): Promise<Record<string, unknown>> {
   if (!isSupabaseConfigured) return Object.fromEntries(keys.map((k) => [k, MOCK_SETTINGS[k]]));
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAnonClient();
   const { data } = await supabase.rpc("get_admin_settings", { keys });
   return (data as Record<string, unknown>) ?? {};
 }

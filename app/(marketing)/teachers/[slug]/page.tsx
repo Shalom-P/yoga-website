@@ -6,11 +6,20 @@ import { Button } from "@/components/ui/button";
 import { TeacherIntroVideo } from "@/components/shared/TeacherIntroVideo";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { personJsonLd, breadcrumbJsonLd } from "@/lib/seo/structuredData";
-import { getTeacherBySlug } from "@/lib/data/landing";
+import { getTeacherBySlug, getAllActiveTeachers } from "@/lib/data/landing";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
 
 export const revalidate = 300;
+
+// Without this, `revalidate` above is inert: a dynamic segment with no known
+// params is server-rendered on every request and never enters the ISR cache.
+// The roster is small, so prerender it all. dynamicParams stays on (default),
+// so a teacher added after the build still renders on demand and is then cached.
+export async function generateStaticParams() {
+  const teachers = await getAllActiveTeachers();
+  return teachers.map((t) => ({ slug: t.slug }));
+}
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;

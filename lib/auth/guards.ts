@@ -43,11 +43,8 @@ export async function requireTeacher(nextPath = "/teacher") {
   return { user, profile, supabase };
 }
 
-/** Returns the current user without redirecting. */
-export async function getCurrentUser() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user;
-}
+// NOTE: there is deliberately no "getCurrentUser without redirect" helper here.
+// Its one consumer was the (marketing) layout, where the cookies() call inside
+// createSupabaseServerClient opted the whole route group into dynamic rendering
+// and disabled ISR. Static pages that need auth-aware UI should resolve it
+// client-side (see MarketingNav).

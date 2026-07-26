@@ -14,6 +14,15 @@ type Category = Awaited<ReturnType<typeof getClassCategories>>[number];
 
 export const revalidate = 300;
 
+// Without this, `revalidate` above is inert: a dynamic segment with no known
+// params is server-rendered on every request and never enters the ISR cache.
+// The condition set is small and stable, so prerender it all. dynamicParams
+// stays on (default), so a category added later still renders on demand.
+export async function generateStaticParams() {
+  const categories = await getClassCategories();
+  return categories.map((c) => ({ slug: c.slug }));
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const categories = await getClassCategories();

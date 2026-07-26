@@ -3,17 +3,15 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Footer } from "@/components/marketing/Footer";
 import { LenisProvider } from "@/components/shared/LenisProvider";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
-import { getCurrentUser } from "@/lib/auth/guards";
 
-export default async function MarketingLayout({
+// No auth read here on purpose: awaiting cookies() (via getCurrentUser) would
+// opt the whole (marketing) group into dynamic rendering and disable every
+// page's ISR window. MarketingNav resolves auth state client-side instead.
+export default function MarketingLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  // Determine auth state server-side so the nav can swap "Log in" → "Dashboard"
-  // for signed-in users. Otherwise jumping from /dashboard to a marketing page
-  // looks like you got logged out.
-  const user = await getCurrentUser();
   return (
     <LenisProvider>
       {/* Honour prefers-reduced-motion across all Motion animations (the JS
@@ -26,7 +24,7 @@ export default async function MarketingLayout({
           >
             Skip to content
           </a>
-          <MarketingNav isAuthenticated={!!user} />
+          <MarketingNav />
           <main id="main-content" className="flex-1 pt-16">
             {children}
           </main>
