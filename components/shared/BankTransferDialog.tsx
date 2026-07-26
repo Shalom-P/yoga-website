@@ -95,7 +95,7 @@ export function BankTransferDialog({
           <Info className="mt-0.5 size-4 shrink-0" />
           <p>
             This is a <strong>temporary</strong> payment method for UAE customers while we finish
-            setting up card payments. Your session credits are added as soon as we confirm your
+            setting up card payments. Your prepaid sessions are added as soon as we confirm your
             transfer{intent.reference ? ". Quote the reference below so we can match it" : ""}.
           </p>
         </div>

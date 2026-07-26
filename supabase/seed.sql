@@ -86,20 +86,20 @@ begin
     (p1,  '1 private 1:1 session',           true, 1),
     (p1,  'Book any teacher, any style',     true, 2),
     (p1,  '60-min session on Google Meet',   true, 3),
-    (p1,  'Credit never expires',            true, 4),
-    (p1,  'Cancel before the session — credit refunded', true, 5),
+    (p1,  'Session never expires',            true, 4),
+    (p1,  'Cancel before the session — session returned', true, 5),
 
     (p5,  '5 private 1:1 sessions',          true, 1),
     (p5,  'Book any teacher, any style',     true, 2),
     (p5,  '60-min sessions on Google Meet',  true, 3),
-    (p5,  'Credits never expire',            true, 4),
-    (p5,  'Cancel before the session — credit refunded', true, 5),
+    (p5,  'Sessions never expire',            true, 4),
+    (p5,  'Cancel before the session — session returned', true, 5),
 
     (p10, '10 private 1:1 sessions',         true, 1),
     (p10, 'Book any teacher, any style',     true, 2),
     (p10, 'Lowest price per session',        true, 3),
-    (p10, 'Credits never expire',            true, 4),
-    (p10, 'Cancel before the session — credit refunded', true, 5)
+    (p10, 'Sessions never expire',            true, 4),
+    (p10, 'Cancel before the session — session returned', true, 5)
   on conflict do nothing;
 end $$;
 

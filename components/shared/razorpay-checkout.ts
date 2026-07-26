@@ -219,7 +219,7 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
           args.onError(
             verify.error ??
               (verify.pending
-                ? "Payment received. Your credits may take a moment to appear; contact support if they don't show shortly."
+                ? "Payment received. Your sessions may take a moment to appear; contact support if they don't show shortly."
                 : "Payment couldn't be verified."),
           );
         }

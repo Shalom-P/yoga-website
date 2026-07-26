@@ -54,7 +54,7 @@ export default async function PlanPage({
       </div>
       <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-heading)] tracking-tight mt-1">
         {balance > 0
-          ? `${balance} session credit${balance === 1 ? "" : "s"} ready.`
+          ? `${balance} prepaid 1:1 session${balance === 1 ? "" : "s"} ready.`
           : "You're on the free trial."}
       </h1>
       <p className="mt-2 text-muted-foreground">
@@ -81,7 +81,7 @@ export default async function PlanPage({
           <div className="text-sm">
             <p className="font-medium text-foreground">Pack purchased 🎉</p>
             <p className="mt-0.5 text-muted-foreground">
-              Your credits are ready, time to book your next class.
+              Your sessions are ready, time to book your next class.
             </p>
           </div>
         </div>
@@ -103,7 +103,7 @@ export default async function PlanPage({
                   {balance} session{balance === 1 ? "" : "s"} left
                 </div>
                 <div className="text-sm text-muted-foreground">
-                  Credits don&apos;t expire. Book whenever you like.
+                  Your prepaid sessions don&apos;t expire. Book whenever you like.
                 </div>
               </div>
             </div>

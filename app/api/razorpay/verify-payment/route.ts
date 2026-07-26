@@ -95,7 +95,7 @@ export async function POST(req: Request): Promise<Response> {
             pending: true,
             reason: result.reason,
             error:
-              "Payment received. We're still confirming it, so your credits may take a moment to appear. If they don't show up shortly, contact support and we'll add them right away.",
+              "Payment received. We're still confirming it, so your sessions may take a moment to appear. If they don't show up shortly, contact support and we'll add them right away.",
           },
           { status: 202 },
         );
@@ -106,7 +106,7 @@ export async function POST(req: Request): Promise<Response> {
           verified: false,
           reason: result.reason,
           error:
-            "Payment received but not yet confirmed. If you were charged, contact support and we'll credit your account right away.",
+            "Payment received but not yet confirmed. If you were charged, contact support and we'll sort it out right away.",
         },
         { status: 400 },
       );

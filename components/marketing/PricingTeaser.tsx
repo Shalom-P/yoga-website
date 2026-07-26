@@ -187,7 +187,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
             Pay as you go. No lock-ins.
           </h2>
           <p className="mt-4 text-muted-foreground">
-            Buy a one-time pack of sessions, no subscription, and your credits never expire.
+            Buy a one-time pack of 1:1 sessions, no subscription, and your sessions never expire.
           </p>
 
           <div className="mx-auto mt-6 flex max-w-xs flex-col items-center">

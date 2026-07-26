@@ -102,7 +102,7 @@ export default function TermsPage() {
               <li>
                 If you are unable to attend, please cancel or reschedule at least 24 hours
                 before the session start time. Late cancellations and no-shows may result in the
-                session credit used for that booking being forfeited.
+                prepaid session used for that booking being forfeited.
               </li>
             </ul>
             <p>
@@ -118,22 +118,26 @@ export default function TermsPage() {
               5. Session packs and payment
             </h2>
             <p>
-              Paid access is sold as <strong>one-time session packs</strong>, priced in{" "}
+              Paid access is sold as <strong>one-time packs of live 1:1 sessions</strong>, priced
+              in{" "}
               <strong>UAE Dirhams (AED) or Indian Rupees (INR) depending on your region</strong>{" "}
-              and paid via Razorpay. There is no subscription and no automatic recurring charge.
+              and paid via Razorpay or, for UAE customers, by bank transfer. There is no
+              subscription and no automatic recurring charge.
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                Buying a pack grants a number of session credits to your account. Each paid
-                class you book uses one credit. You are charged once, at the time of purchase.
+                Buying a pack adds a number of prepaid 1:1 sessions to your account. Each paid
+                class you book uses one of them. You are charged once, at the time of purchase.
+                Prepaid sessions can only be redeemed for live one-to-one sessions with a
+                teacher: they are not a general-purpose balance and have no cash value.
               </li>
               <li>
                 Prices are displayed inclusive of any applicable taxes (such as UAE VAT or India
                 GST). We will notify you before any change to pack pricing takes effect.
               </li>
               <li>
-                Credits are personal to you, may not be transferred to another person, and do
-                not expire unless we expressly state otherwise.
+                Prepaid sessions are personal to you, may not be transferred to another person,
+                and do not expire unless we expressly state otherwise.
               </li>
             </ul>
           </section>
@@ -145,7 +149,7 @@ export default function TermsPage() {
             </h2>
             <p>
               You may cancel a booked session at any time before it starts, from your account
-              dashboard. If the booking used a session credit, that credit is returned to your
+              dashboard. If the booking used a prepaid session, it is returned to your
               account to use on a future booking. See our{" "}
               <Link className="underline" href="/legal/refund">
                 Refund Policy
@@ -180,7 +184,7 @@ export default function TermsPage() {
                 infrastructure.
               </li>
               <li>
-                Share your account, session links, or session credits with anyone else.
+                Share your account, session links, or prepaid sessions with anyone else.
               </li>
               <li>
                 Engage or attempt to engage teachers for sessions outside the platform in a
@@ -265,8 +269,8 @@ export default function TermsPage() {
             <ul className="list-disc pl-6 space-y-1">
               <li>Have the problem remedied within a reasonable time; and</li>
               <li>
-                Where it cannot be remedied, cancel and obtain a refund for any unused session
-                credits, plus any other remedy available under applicable law.
+                Where it cannot be remedied, cancel and obtain a refund for any unused prepaid
+                sessions, plus any other remedy available under applicable law.
               </li>
             </ul>
             <p>
@@ -296,7 +300,7 @@ export default function TermsPage() {
               email at least 14 days before they take effect. Your continued use of the Service
               after the effective date constitutes acceptance of the updated Terms. If you do
               not accept the changes, you may stop using the Service and request a refund of any
-              unused session credits before the effective date.
+              unused prepaid sessions before the effective date.
             </p>
           </section>
 

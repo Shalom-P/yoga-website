@@ -9,6 +9,7 @@
 
 import { cache } from "react";
 import { createSupabaseAnonClient } from "@/lib/supabase/anon";
+import { sessionsNotCredits } from "@/lib/copy/sessions";
 import type { Teacher, Plan, PlanFeature, PlanPrice, ClassCategory, Review } from "@/lib/supabase/types";
 
 /** A plan plus its features and per-currency prices (AED/INR), for pricing UIs. */
@@ -220,8 +221,8 @@ const MOCK_PLANS: PlanWithFeatures[] = [
       { id: "f1a", plan_id: "p1", feature_text: "1 personalised 1:1 session",     is_included: true, sort_order: 1 },
       { id: "f1b", plan_id: "p1", feature_text: "Book any teacher, any style",     is_included: true, sort_order: 2 },
       { id: "f1c", plan_id: "p1", feature_text: "60-min session online",           is_included: true, sort_order: 3 },
-      { id: "f1d", plan_id: "p1", feature_text: "Credit never expires",            is_included: true, sort_order: 4 },
-      { id: "f1e", plan_id: "p1", feature_text: "Cancel before the session, credit refunded", is_included: true, sort_order: 5 },
+      { id: "f1d", plan_id: "p1", feature_text: "Session never expires",            is_included: true, sort_order: 4 },
+      { id: "f1e", plan_id: "p1", feature_text: "Cancel before the session, session returned", is_included: true, sort_order: 5 },
     ],
   },
   {
@@ -240,8 +241,8 @@ const MOCK_PLANS: PlanWithFeatures[] = [
       { id: "f1", plan_id: "p5", feature_text: "5 personalised 1:1 sessions",     is_included: true, sort_order: 1 },
       { id: "f2", plan_id: "p5", feature_text: "Book any teacher, any style",     is_included: true, sort_order: 2 },
       { id: "f3", plan_id: "p5", feature_text: "60-min sessions online",          is_included: true, sort_order: 3 },
-      { id: "f4", plan_id: "p5", feature_text: "Credits never expire",            is_included: true, sort_order: 4 },
-      { id: "f5", plan_id: "p5", feature_text: "Cancel before the session, credit refunded", is_included: true, sort_order: 5 },
+      { id: "f4", plan_id: "p5", feature_text: "Sessions never expire",            is_included: true, sort_order: 4 },
+      { id: "f5", plan_id: "p5", feature_text: "Cancel before the session, session returned", is_included: true, sort_order: 5 },
     ],
   },
   {
@@ -260,8 +261,8 @@ const MOCK_PLANS: PlanWithFeatures[] = [
       { id: "f6",  plan_id: "p10", feature_text: "10 personalised 1:1 sessions",   is_included: true, sort_order: 1 },
       { id: "f7",  plan_id: "p10", feature_text: "Book any teacher, any style",    is_included: true, sort_order: 2 },
       { id: "f8",  plan_id: "p10", feature_text: "Lowest price per session",       is_included: true, sort_order: 3 },
-      { id: "f9",  plan_id: "p10", feature_text: "Credits never expire",           is_included: true, sort_order: 4 },
-      { id: "f10", plan_id: "p10", feature_text: "Cancel before the session, credit refunded", is_included: true, sort_order: 5 },
+      { id: "f9",  plan_id: "p10", feature_text: "Sessions never expire",           is_included: true, sort_order: 4 },
+      { id: "f10", plan_id: "p10", feature_text: "Cancel before the session, session returned", is_included: true, sort_order: 5 },
     ],
   },
 ];
@@ -394,21 +395,26 @@ export async function getLandingSettings(keys: string[]): Promise<Record<string,
   return (data as Record<string, unknown>) ?? {};
 }
 
-// Admin-entered landing copy is stored in the DB (admin_settings) and can still
-// contain retired phrasing that predates a copy change and cannot be fixed from
-// code alone (e.g. "Google Meet", after the switch to vendor-neutral "online").
-// Scrub it at render time so the marketing site never shows it, whatever is
-// stored. Order matters: replace the whole "on/via/over Google Meet" phrase
-// before the bare-noun fallback, so "we meet on Google Meet" reads "we meet
-// online" rather than "we meet on online".
+// Admin-entered landing copy is stored in the DB (admin_settings, plan_features)
+// and can still contain phrasing that predates a copy change and cannot be fixed
+// from code alone: "Google Meet" after the switch to vendor-neutral "online", and
+// "credits" after the switch to prepaid-session wording (see lib/copy/sessions.ts
+// for why that one matters for App Store review). Scrub at render time so the
+// marketing site never shows either, whatever is stored.
+//
+// Order matters: replace the whole "on/via/over Google Meet" phrase before the
+// bare-noun fallback, so "we meet on Google Meet" reads "we meet online" rather
+// than "we meet on online".
 function scrubRetiredCopy(s: string): string {
-  return s
-    .replace(/\b(?:on|via|over)\s+Google\s+Meet\b/gi, "online")
-    .replace(/\bGoogle\s+Meet\s+link\b/gi, "join link")
-    .replace(/\bGoogle\s+Meet\b/gi, "online")
-    // Display copy must never show long dashes; DB-stored copy can still contain
-    // en/em dashes, so normalize them to a plain hyphen at render.
-    .replace(/[–—]/g, "-");
+  return sessionsNotCredits(
+    s
+      .replace(/\b(?:on|via|over)\s+Google\s+Meet\b/gi, "online")
+      .replace(/\bGoogle\s+Meet\s+link\b/gi, "join link")
+      .replace(/\bGoogle\s+Meet\b/gi, "online")
+      // Display copy must never show long dashes; DB-stored copy can still contain
+      // en/em dashes, so normalize them to a plain hyphen at render.
+      .replace(/[–—]/g, "-")
+  );
 }
 
 export function landingSetting<T = string>(

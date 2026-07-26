@@ -27,11 +27,11 @@ export const FAQS: Faq[] = [
   },
   {
     q: "How does paying work: is there a subscription?",
-    a: "No subscription. You buy a one-time pack of sessions (5 or 10). Each booking spends one credit, and your credits never expire.",
+    a: "No subscription. You buy a one-time pack of 1:1 sessions (1, 5 or 10). Each booking uses one of them, and your prepaid sessions never expire.",
   },
   {
     q: "Can I cancel a booked session?",
-    a: "Yes. Cancel from your dashboard before the session starts, and if it was a paid session, the credit goes straight back to your account to use later.",
+    a: "Yes. Cancel from your dashboard before the session starts, and if it was a paid session, it goes straight back to your account to use later.",
   },
   {
     q: "How do I join the live class?",
