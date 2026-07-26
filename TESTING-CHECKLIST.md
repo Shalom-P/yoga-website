@@ -87,7 +87,7 @@ These are environment / migration / scheduler dependencies that make working fea
 
 ### Nav, header, footer
 - [ ] 🔴 Desktop nav links — _how:_ any marketing route (md+) — _expect:_ Teachers, Classes, Pricing, Reviews, FAQ, About all resolve; logo → /; Contact is footer-only
-- [ ] 🔴 Header auth-state swap — _how:_ top-right, logged out then logged in — _expect:_ "Log in" + "Book free session" → swap to "Dashboard" (/dashboard) + "Book a session" (/dashboard/book) via server getCurrentUser()
+- [ ] 🔴 Header auth-state swap — _how:_ top-right, logged out then logged in — _expect:_ "Log in" + "Book free session" → swap to "Dashboard" (/dashboard) + "Book a session" (/dashboard/book) via client-side session check in MarketingNav (may swap a beat after load; marketing pages are static/ISR)
 - [ ] 🔴 Mobile hamburger menu — _how:_ mobile — _expect:_ 6 links + auth buttons, Menu↔X toggle, aria-expanded updates, links navigate + close drawer
 - [ ] Header scrolled state — _how:_ any route, scroll >12px — _expect:_ transparent → frosted bg + bottom border
 - [ ] 🔴 Footer links — _how:_ footer any route — _expect:_ Explore/Company/Legal links resolve; "Email us" → mailto:hello@myyogaclasses.fit (.fit, never .com.au); logo → /

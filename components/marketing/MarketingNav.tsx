@@ -6,6 +6,7 @@ import { motion } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { BrandMark } from "@/components/shared/BrandMark";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
 const NAV_LINKS = [
@@ -17,15 +18,39 @@ const NAV_LINKS = [
   { href: "/about", label: "About" },
 ] as const;
 
-export function MarketingNav({ isAuthenticated = false }: { isAuthenticated?: boolean }) {
+export function MarketingNav() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  // Resolved client-side (browser Supabase session) rather than passed down
+  // from the server layout: a cookies() read in the layout would opt the whole
+  // (marketing) group out of static/ISR rendering. Display-only, it just swaps
+  // "Log in" for "Dashboard"; the real gates are middleware + server guards.
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) return;
+    let cancelled = false;
+    const supabase = createSupabaseBrowserClient();
+    // getSession() reads the local auth cookie, no network round-trip.
+    supabase.auth.getSession().then(({ data }) => {
+      if (!cancelled) setIsAuthenticated(!!data.session);
+    });
+    // The nav stays mounted across marketing navigations, so also follow
+    // sign-in/sign-out that happens after mount (including in another tab).
+    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!cancelled) setIsAuthenticated(!!session);
+    });
+    return () => {
+      cancelled = true;
+      sub.subscription.unsubscribe();
+    };
   }, []);
 
   return (
