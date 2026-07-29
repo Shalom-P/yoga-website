@@ -20,7 +20,12 @@ export default async function AdminPaymentsPage() {
     .limit(200);
 
   const rowsRaw = payments ?? [];
-  const customerIds = [...new Set(rowsRaw.map((p) => p.customer_id))];
+  // customer_id is nullable since 0035 (account deletion detaches payments for
+  // tax retention). A null inside .in() errors the whole profiles query, so
+  // filter like plan_id below.
+  const customerIds = [
+    ...new Set(rowsRaw.map((p) => p.customer_id).filter((x): x is string => Boolean(x))),
+  ];
   const planIds = [...new Set(rowsRaw.map((p) => p.plan_id).filter((x): x is string => Boolean(x)))];
 
   const [{ data: profiles }, { data: plans }] = await Promise.all([
@@ -32,11 +37,11 @@ export default async function AdminPaymentsPage() {
   const planById = new Map((plans ?? []).map((p) => [p.id, p]));
 
   const rows: BankTransferRow[] = rowsRaw.map((p) => {
-    const customer = profileById.get(p.customer_id);
+    const customer = p.customer_id ? profileById.get(p.customer_id) : undefined;
     const plan = p.plan_id ? planById.get(p.plan_id) : undefined;
     return {
       id: p.id,
-      customer_name: customer?.full_name ?? null,
+      customer_name: p.customer_id ? (customer?.full_name ?? null) : "Deleted account",
       customer_email: customer?.email ?? null,
       plan_name: plan?.name ?? null,
       session_credits: plan?.session_credits ?? null,

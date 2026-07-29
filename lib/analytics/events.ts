@@ -7,6 +7,10 @@ import type { PostHog } from "posthog-js";
 
 let client: PostHog | null = null;
 let initialized = false;
+// True while a PHI screen is mounted (see pausePhiCapture / PhiReplayGuard). Kept
+// at module scope so it's honoured even if PostHog initialises after the guard
+// mounts.
+let phiPaused = false;
 
 export async function initPosthog() {
   if (initialized || typeof window === "undefined") return;
@@ -19,8 +23,31 @@ export async function initPosthog() {
     capture_pageview: "history_change",
     persistence: "localStorage+cookie",
     autocapture: false,
+    // Session replay must never leak health data (PHI). Mask every input, plus any
+    // element opted out with [data-phi]. PHI pages pause recording entirely.
+    session_recording: {
+      maskAllInputs: true,
+      maskTextSelector: "[data-phi]",
+    },
   });
   client = posthog;
+  if (phiPaused) {
+    try { posthog.stopSessionRecording(); } catch { /* recording may be off */ }
+  }
+}
+
+/** Stop session replay while sensitive (health) data is on screen. */
+export function pausePhiCapture() {
+  phiPaused = true;
+  if (!client) return;
+  try { client.stopSessionRecording(); } catch { /* recording may be off */ }
+}
+
+/** Resume session replay after leaving a PHI screen. */
+export function resumePhiCapture() {
+  phiPaused = false;
+  if (!client) return;
+  try { client.startSessionRecording(); } catch { /* recording may be off */ }
 }
 
 type EventName =

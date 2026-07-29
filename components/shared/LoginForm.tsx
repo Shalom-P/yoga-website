@@ -13,6 +13,8 @@ import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import { isValidEmail } from "@/lib/validation/email";
 import { friendlyAuthError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
+import { useIsNative } from "@/lib/native/useIsNative";
+import { nativeOAuthSignIn } from "@/lib/native/capacitor";
 
 export function LoginForm() {
   const params = useSearchParams();
@@ -20,6 +22,10 @@ export function LoginForm() {
   // window.location.href, which would otherwise be an open redirect.
   const next = safeNext(params.get("next"));
   const errorParam = params.get("error");
+  // Sign in with Apple is required by App Store Guideline 4.8 when Google login
+  // is offered, so the Apple tab is shown inside the native iOS shell. On the web
+  // the login UX is unchanged (Google + Email).
+  const native = useIsNative();
 
   // Surface OAuth callback errors passed as ?error=
   useEffect(() => {
@@ -36,12 +42,18 @@ export function LoginForm() {
         </div>
       )}
       <Tabs defaultValue="google" className="w-full">
-        <TabsList className="w-full grid grid-cols-2">
+        <TabsList className={`w-full grid ${native ? "grid-cols-3" : "grid-cols-2"}`}>
+          {native && <TabsTrigger value="apple">Apple</TabsTrigger>}
           <TabsTrigger value="google">Google</TabsTrigger>
           <TabsTrigger value="email">Email</TabsTrigger>
         </TabsList>
+        {native && (
+          <TabsContent value="apple" className="mt-6">
+            <OAuthLogin provider="apple" next={next} label="Continue with Apple" icon={<AppleIcon />} />
+          </TabsContent>
+        )}
         <TabsContent value="google" className="mt-6">
-          <GoogleLogin next={next} />
+          <OAuthLogin provider="google" next={next} label="Continue with Google" icon={<GoogleIcon />} />
         </TabsContent>
         <TabsContent value="email" className="mt-6">
           <EmailLogin next={next} />
@@ -51,28 +63,47 @@ export function LoginForm() {
   );
 }
 
-function GoogleLogin({ next }: { next: string }) {
+function OAuthLogin({
+  provider,
+  next,
+  label,
+  icon,
+}: {
+  provider: "google" | "apple";
+  next: string;
+  label: string;
+  icon: React.ReactNode;
+}) {
   const [loading, setLoading] = useState(false);
   const supabase = createSupabaseBrowserClient();
+  const native = useIsNative();
 
-  async function signInWithGoogle() {
+  async function signIn() {
     setLoading(true);
-    track("signup_started", { method_intent: "google", next_path: next });
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
-    if (error) {
-      toast.error(friendlyAuthError(error.message));
+    track("signup_started", { method_intent: provider, next_path: next });
+    try {
+      if (native) {
+        // System-browser flow; success returns via the myyoga:// deep link.
+        await nativeOAuthSignIn(supabase, provider, next, () => setLoading(false));
+      } else {
+        const { error } = await supabase.auth.signInWithOAuth({
+          provider,
+          options: {
+            redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
+          },
+        });
+        if (error) throw error;
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Sign-in failed.";
+      toast.error(friendlyAuthError(msg));
       setLoading(false);
     }
   }
 
   return (
     <Button
-      onClick={signInWithGoogle}
+      onClick={signIn}
       disabled={loading}
       size="lg"
       variant="outline"
@@ -82,8 +113,8 @@ function GoogleLogin({ next }: { next: string }) {
         <Loader2 className="size-4 animate-spin" />
       ) : (
         <>
-          <GoogleIcon />
-          Continue with Google
+          {icon}
+          {label}
         </>
       )}
     </Button>
@@ -244,6 +275,14 @@ function EmailLogin({ next }: { next: string }) {
         {loading ? <Loader2 className="size-4 animate-spin" /> : "Send code"}
       </Button>
     </form>
+  );
+}
+
+function AppleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="size-5 mr-2" fill="currentColor" aria-hidden="true">
+      <path d="M16.365 1.43c0 1.14-.467 2.227-1.214 3.02-.795.84-2.09 1.49-3.156 1.404-.13-1.11.43-2.27 1.14-3.01.79-.83 2.18-1.45 3.23-1.414zM20.9 17.06c-.51 1.18-.76 1.71-1.42 2.76-.92 1.46-2.22 3.28-3.83 3.29-1.43.01-1.8-.93-3.74-.92-1.94.01-2.35.94-3.78.92-1.61-.02-2.84-1.66-3.76-3.12-2.58-4.08-2.85-8.87-1.26-11.42 1.13-1.81 2.91-2.87 4.59-2.87 1.71 0 2.78.94 4.19.94 1.37 0 2.2-.94 4.19-.94 1.5 0 3.09.82 4.22 2.23-3.71 2.03-3.11 7.33.38 9.13z"/>
+    </svg>
   );
 }
 

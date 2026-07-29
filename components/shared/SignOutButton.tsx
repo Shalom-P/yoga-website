@@ -4,6 +4,7 @@ import { useState } from "react";
 import { LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { unregisterPushNotifications } from "@/lib/native/push";
 
 type Props = {
   variant?: "ghost" | "outline";
@@ -17,6 +18,10 @@ export function SignOutButton({ variant = "ghost", size = "sm", className }: Pro
 
   async function signOut() {
     setLoading(true);
+    // Remove this device's push token BEFORE signOut(): the DELETE endpoint
+    // authenticates with the session cookie signOut() destroys. Without it the
+    // device keeps receiving the previous user's session reminders. No-op on web.
+    await unregisterPushNotifications().catch(() => {});
     await supabase.auth.signOut();
     window.location.href = "/";
   }
