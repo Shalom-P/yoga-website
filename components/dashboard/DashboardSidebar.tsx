@@ -20,7 +20,7 @@ const ITEMS = [
   { href: "/dashboard/book",     label: "Book a session",    icon: CalendarPlus },
   { href: "/dashboard/bookings", label: "My bookings",       icon: CalendarCheck },
   { href: "/dashboard/documents", label: "Health documents", icon: FileText },
-  { href: "/dashboard/plan",     label: "My plan & credits", icon: Wallet },
+  { href: "/dashboard/plan",     label: "My sessions", icon: Wallet },
   { href: "/dashboard/profile",  label: "Profile",           icon: UserRound },
 ];
 

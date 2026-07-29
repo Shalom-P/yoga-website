@@ -32,7 +32,7 @@ export function PendingBankTransfers({ transfers }: { transfers: BankTransferInt
               <p className="font-medium text-foreground">Bank transfer pending verification</p>
               <p className="text-muted-foreground">
                 {t.planName} · {formatMoney(t.amountCents, t.currency)} · we&apos;ll add{" "}
-                {t.sessionCredits} credit{t.sessionCredits === 1 ? "" : "s"} once we confirm it
+                {t.sessionCredits} session{t.sessionCredits === 1 ? "" : "s"} once we confirm it
                 {t.reference ? ` · ref ${t.reference}` : ""}.
               </p>
             </div>

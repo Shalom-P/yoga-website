@@ -49,16 +49,16 @@ export default function RefundPage() {
             </p>
           </section>
 
-          {/* 3. Unused credits */}
+          {/* 3. Unused prepaid sessions */}
           <section className="space-y-3">
-            <h2 className="text-xl font-semibold text-foreground">3. Unused credits</h2>
+            <h2 className="text-xl font-semibold text-foreground">3. Unused prepaid sessions</h2>
             <p>
               Because packs are one-time purchases, there is no subscription to cancel and no
-              recurring charge to stop. Any session credits you have purchased remain on your
+              recurring charge to stop. Any prepaid sessions you have purchased remain on your
               account until you use them.
             </p>
             <p>
-              We do <strong>not</strong> provide refunds for unused credits except as required
+              We do <strong>not</strong> provide refunds for unused prepaid sessions except as required
               by law (see Section 5 below) or at our discretion. If you have a problem with a
               purchase, please contact us. See Section 4.
             </p>
@@ -107,7 +107,7 @@ export default function RefundPage() {
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>
-                A full or partial refund, including a refund of unused credits, where the failure
+                A full or partial refund, including a refund of unused prepaid sessions, where the failure
                 is serious or cannot be put right; or
               </li>
               <li>
@@ -130,7 +130,7 @@ export default function RefundPage() {
               If a session cannot be delivered due to a fault on our side (for example, a
               teacher no-show or a platform outage) we will make-good by offering a replacement
               session at no additional charge. If a replacement session is not possible, we will
-              credit or refund you for that session proportionally.
+              return that session to your account or refund you for it proportionally.
             </p>
             <p>
               We are not responsible for connectivity issues on your end (internet outages,

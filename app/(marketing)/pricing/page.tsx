@@ -22,7 +22,7 @@ export default async function PricingPage() {
       <PageHeader
         eyebrow="Pricing"
         title={<>Pay only when <em>you&apos;re ready.</em></>}
-        subhead="Buy a one-time pack of sessions, no subscription, and your credits never expire."
+        subhead="Buy a one-time pack of 1:1 sessions, no subscription, and your sessions never expire."
       />
       <PricingTeaser plans={plans} />
       <FAQ />

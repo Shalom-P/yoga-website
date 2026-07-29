@@ -211,7 +211,7 @@ export function TeacherSlotPicker({
             </div>
           ) : error === "insufficient_credits" ? (
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <span>You&apos;re out of session credits. Buy a pack to keep booking.</span>
+              <span>You&apos;re out of prepaid sessions. Buy a pack to keep booking.</span>
               <Button asChild size="sm" className="shrink-0 rounded-full">
                 <Link href="/dashboard/plan">Buy a pack</Link>
               </Button>
