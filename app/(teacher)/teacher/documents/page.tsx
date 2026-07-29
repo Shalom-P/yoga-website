@@ -3,6 +3,7 @@ import { requireTeacher } from "@/lib/auth/guards";
 import { getTeacherSharedDocuments } from "@/lib/medical/documents";
 import { formatBytes, mimeLabel } from "@/lib/medical/constants";
 import { TeacherDocumentList } from "@/components/teacher/TeacherDocumentList";
+import { PhiReplayGuard } from "@/components/shared/PhiReplayGuard";
 
 export const metadata = { title: "Student documents" };
 
@@ -28,7 +29,8 @@ export default async function TeacherDocumentsPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+    <div data-phi className="mx-auto max-w-4xl px-4 sm:px-6 lg:px-8 py-10 space-y-8">
+      <PhiReplayGuard />
       <header>
         <h1 className="text-3xl font-[family-name:var(--font-heading)] tracking-tight">
           Student documents

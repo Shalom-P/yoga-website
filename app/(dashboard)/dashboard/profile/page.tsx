@@ -1,5 +1,6 @@
 import { requireUser } from "@/lib/auth/guards";
 import { ProfileForm } from "@/components/dashboard/ProfileForm";
+import { DeleteAccountSection } from "@/components/dashboard/DeleteAccountSection";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 
 export default async function ProfilePage() {
@@ -28,6 +29,7 @@ export default async function ProfilePage() {
           marketing_opt_in: profile?.marketing_opt_in ?? false,
         }}
       />
+      <DeleteAccountSection />
     </div>
   );
 }

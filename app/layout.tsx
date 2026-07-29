@@ -9,6 +9,7 @@ import {
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/components/shared/AnalyticsProvider";
+import { NativeBridge } from "@/components/shared/NativeBridge";
 import type { Organization, WithContext } from "schema-dts";
 import "./globals.css";
 
@@ -124,6 +125,7 @@ export default function RootLayout({
           {/* Lenis smooth-scroll is scoped to the marketing layout; the app,
               admin and auth surfaces use native scrolling (see (marketing)/layout). */}
           <AnalyticsProvider>{children}</AnalyticsProvider>
+          <NativeBridge />
           <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>

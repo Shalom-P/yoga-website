@@ -3,10 +3,12 @@
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  Upload, Loader2, FileText, Download, Trash2, Share2, ShieldCheck, History, Check,
+  Upload, Loader2, FileText, Download, Trash2, Share2, ShieldCheck, History, Check, Camera,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useIsNative } from "@/lib/native/useIsNative";
+import { capturePhotoAsFile } from "@/lib/native/capacitor";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -67,6 +69,7 @@ export function MedicalDocuments({
 }) {
   const supabase = createSupabaseBrowserClient();
   const router = useRouter();
+  const native = useIsNative();
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [busyId, setBusyId] = useState<string | null>(null);
@@ -132,6 +135,18 @@ export function MedicalDocuments({
     }
   }
 
+  // Native: capture a report with the camera or pick from the photo library.
+  async function takePhoto() {
+    try {
+      const file = await capturePhotoAsFile();
+      if (file) await handleFile(file);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      // Camera.getPhoto throws on user cancellation — don't surface that as an error.
+      if (!/cancel/i.test(msg)) toast.error("Couldn't capture the photo.");
+    }
+  }
+
   async function download(doc: DocView) {
     setBusyId(doc.id);
     try {
@@ -185,6 +200,18 @@ export function MedicalDocuments({
             }}
             className="max-w-xs"
           />
+          {native && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              disabled={uploading}
+              onClick={() => void takePhoto()}
+              className="h-9 rounded-full"
+            >
+              <Camera className="size-4" /> Take photo
+            </Button>
+          )}
           {uploading ? (
             <span className="flex items-center gap-1.5 text-sm text-muted-foreground">
               <Loader2 className="size-4 animate-spin" /> Uploading…
@@ -308,7 +335,7 @@ export function MedicalDocuments({
       />
 
       <Dialog open={deleteTarget !== null} onOpenChange={(o) => !o && setDeleteTarget(null)}>
-        <DialogContent>
+        <DialogContent data-phi>
           <DialogHeader>
             <DialogTitle>Delete this document?</DialogTitle>
             <DialogDescription>
@@ -379,7 +406,7 @@ function ShareDialog({
 
   return (
     <Dialog open={doc !== null} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent>
+      <DialogContent data-phi>
         <DialogHeader>
           <DialogTitle>Share document</DialogTitle>
           <DialogDescription>

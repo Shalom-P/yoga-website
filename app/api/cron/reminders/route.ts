@@ -4,6 +4,7 @@ import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { hasMedicalDocuments } from "@/lib/medical/documents";
 import { sendBookingReminder } from "@/lib/email";
+import { notifyUser } from "@/lib/push/notify";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 
 // ---------------------------------------------------------------------------
@@ -44,6 +45,10 @@ export async function POST(req: Request): Promise<Response> {
   ];
 
   let processed = 0;
+  // Push notifications collected during the email loops, flushed at the end
+  // under PUSH_FLUSH_BUDGET_MS so APNs can never starve the email sends.
+  const PUSH_FLUSH_BUDGET_MS = 20_000;
+  const pushJobs: Array<{ customerId: string; body: string }> = [];
 
   for (const window of windows) {
     const lo = new Date(window.center - WINDOW_MS).toISOString();
@@ -139,7 +144,34 @@ export async function POST(req: Request): Promise<Response> {
         // Fire-and-forget errors are logged but never surface to the caller.
         console.error(`[cron/reminders] sendBookingReminder failed for booking ${booking.id}:`, err);
       }
+
+      // Best-effort native push alongside the email (no-op unless APNs is set
+      // up). Deliberately NOT sent inline: a hanging APNs connection between two
+      // emails could push the run past the function deadline and abort the
+      // remaining reminder emails, which the ±10-min bands would never retry.
+      // Collected here, flushed after every email has gone out.
+      pushJobs.push({
+        customerId: booking.customer_id,
+        body: `Your 1:1 with ${teacher?.display_name ?? "your teacher"} starts in ${window.label}.`,
+      });
     }
+  }
+
+  // Flush pushes only after ALL emails are sent, bounded by a hard wall-clock
+  // budget so APNs latency can never blow the function deadline. Awaited (not
+  // fire-and-forget) because serverless runtimes may freeze pending work once
+  // the response returns.
+  if (pushJobs.length > 0) {
+    await Promise.race([
+      Promise.allSettled(
+        pushJobs.map((j) =>
+          notifyUser(j.customerId, { title: "Your yoga session", body: j.body }).catch((err) =>
+            console.error(`[cron/reminders] push failed for customer ${j.customerId}:`, err),
+          ),
+        ),
+      ),
+      new Promise((resolve) => setTimeout(resolve, PUSH_FLUSH_BUDGET_MS)),
+    ]);
   }
 
   return Response.json({ ok: true, processed });

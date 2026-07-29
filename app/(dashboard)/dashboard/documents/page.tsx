@@ -4,6 +4,7 @@ import { getCustomerDocumentData } from "@/lib/medical/documents";
 import { formatBytes, mimeLabel } from "@/lib/medical/constants";
 import { DEFAULT_CUSTOMER_TZ, formatInTz } from "@/lib/timezone";
 import { MedicalDocuments } from "@/components/dashboard/MedicalDocuments";
+import { PhiReplayGuard } from "@/components/shared/PhiReplayGuard";
 
 export const metadata = { title: "Health documents" };
 
@@ -35,7 +36,8 @@ export default async function DocumentsPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <div data-phi className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+      <PhiReplayGuard />
       <div className="myc-eyebrow">
         <span className="myc-dot" />
         Health documents
