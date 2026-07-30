@@ -51,3 +51,10 @@ test.env.local
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# xcode
+# MYYOGACLASSES/ was an abandoned SwiftUI starter that got staged and then deleted.
+# The shipping iOS app is the Capacitor shell in the separate myyogaclasses-ios repo.
+MYYOGACLASSES/
+xcuserdata/
+*.xcuserstate
