@@ -40,7 +40,10 @@ export function OnboardingForm({
   const [tz, setTz] = useState(() => detectBrowserTimezone());
   const [level, setLevel] = useState("beginner");
   const [goals, setGoals] = useState<string[]>([]);
-  const [marketing, setMarketing] = useState(true);
+  // Unchecked by default: UAE PDPL / India DPDP require consent via a clear
+  // affirmative action, which a pre-ticked box is not. "Yes" in the DB must
+  // mean the customer actually ticked it.
+  const [marketing, setMarketing] = useState(false);
   const [loading, setLoading] = useState(false);
   const supabase = createSupabaseBrowserClient();
 
