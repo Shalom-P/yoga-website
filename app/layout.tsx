@@ -11,6 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/components/shared/AnalyticsProvider";
 import { NativeBridge } from "@/components/shared/NativeBridge";
 import type { Organization, WithContext } from "schema-dts";
+import { INSTAGRAM_URL } from "@/lib/seo/structuredData";
 import "./globals.css";
 
 const inter = Inter({
@@ -87,6 +88,7 @@ const orgJsonLd: WithContext<Organization> = {
   name: "My Yoga Classes",
   url: siteUrl,
   logo: `${siteUrl}/icon.svg`,
+  sameAs: [INSTAGRAM_URL],
   description:
     "Live online 1:1 yoga with expert teachers from India for students across the UAE and India. Book a personalised session in your local time.",
   areaServed: [
