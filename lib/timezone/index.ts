@@ -13,6 +13,20 @@ export const TEACHER_TZ = "Asia/Kolkata";
  * Falls back to a curated worldwide set on the rare runtime without
  * `Intl.supportedValuesOf`, so the picker is never empty.
  */
+// The zones our markets actually search for, with labels that make them
+// findable. Raw IANA ids are a trap here: ICU's list has "Asia/Calcutta" (not
+// "Asia/Kolkata"), so searching "India" matches only the Indian-Ocean
+// "Indian/*" zones and "Kolkata" matches nothing at all — a real customer
+// ended up stored as Indian/Reunion (UTC+4, 90 min off IST) that way.
+const FEATURED_ZONES: { value: string; label: string }[] = [
+  { value: "Asia/Kolkata", label: "India · IST (Asia/Kolkata)" },
+  { value: "Asia/Dubai", label: "UAE · Dubai, Abu Dhabi (Asia/Dubai)" },
+];
+// Alias ids hidden from the list because a featured entry covers them (a
+// profile that already stores one still renders — the select synthesizes a
+// label for unknown ids).
+const ALIASED_ZONE_IDS = new Set(["Asia/Calcutta"]);
+
 export function getTimezoneOptions(): { value: string; label: string }[] {
   let ids: string[] = [];
   try {
@@ -21,19 +35,15 @@ export function getTimezoneOptions(): { value: string; label: string }[] {
     ids = [];
   }
   if (!ids.length) {
-    ids = Array.from(
-      new Set([
-        "Asia/Kolkata",
-        "Asia/Dubai",
-        "UTC",
-        "Asia/Singapore",
-        "Europe/London",
-        "America/New_York",
-        "America/Los_Angeles",
-      ])
-    );
+    ids = ["UTC", "Asia/Singapore", "Europe/London", "America/New_York", "America/Los_Angeles"];
   }
-  return ids.map((id) => ({ value: id, label: id.replace(/_/g, " ") }));
+  const featured = new Set(FEATURED_ZONES.map((z) => z.value));
+  return [
+    ...FEATURED_ZONES,
+    ...ids
+      .filter((id) => !featured.has(id) && !ALIASED_ZONE_IDS.has(id))
+      .map((id) => ({ value: id, label: id.replace(/_/g, " ") })),
+  ];
 }
 
 /** Format a UTC timestamp in a given IANA timezone. */

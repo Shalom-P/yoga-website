@@ -150,7 +150,7 @@ Flow: `POST /api/razorpay/create-order` resolves the customer's currency from `r
 ### Scheduled jobs (handlers exist; scheduler is BYO)
 
 Five cron handlers live under `app/api/cron/`, each gated by `assertCron` (Bearer `CRON_SECRET` — see auth paths above) and running on the service-role client:
-- **`reminders`** (~hourly) — emails a ±10-min band around now+24h and now+1h. Idempotent since `0016` (a `booking_reminders` ledger keyed on booking + kind dedupes a double-fire in the same band).
+- **`reminders`** (~hourly) — emails a ±10-min band around now+24h and now+1h. Idempotent since `0016` (`reminded_at_24h`/`reminded_at_1h` columns on `bookings` are claimed via conditional UPDATE before sending; there is no separate ledger table).
 - **`no-show-sweep`** (~hourly) — flips still-`confirmed` bookings to `no_show` 2h after the session ended (`booking_status` enum from `0003`). Skips sessions whose Meet link never provisioned (`meet_status <> 'created'`) so a customer isn't penalised for an operational failure.
 - **`meet-retry`** (~15–30 min) — retries `createMeetEvent` for not-yet-started sessions stuck at `meet_status='pending'|'failed'`, batched (50/run) to avoid Calendar rate limits.
 - **`medical-orphan-sweep`** (~daily) — backstop cleanup for the private `medical-documents` bucket: removes stored objects >1h old with no live `medical_documents` row (failed metadata POST, or bytes left after a failed soft-delete removal). Bounded per run; reports `truncated` flags instead of silently capping.
