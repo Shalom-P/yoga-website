@@ -1,7 +1,9 @@
 import Link from "next/link";
+import { Instagram } from "lucide-react";
 import { NewsletterForm } from "@/components/marketing/NewsletterForm";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { YogaFigure } from "@/components/shared/YogaFigure";
+import { INSTAGRAM_URL } from "@/lib/seo/structuredData";
 
 export function Footer() {
   // On the dark pine background the deep-coral --accent fails contrast on hover,
@@ -26,6 +28,15 @@ export function Footer() {
             Live, personalised 1:1 yoga with expert teachers from India. Book a session in your
             local time.
           </p>
+          <a
+            href={INSTAGRAM_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="mt-4 inline-flex items-center gap-2 text-sm text-background/80 hover:text-accent"
+          >
+            <Instagram className="size-4" aria-hidden />
+            @myyogaclasses.fit
+          </a>
           <div className="mt-6 max-w-sm">
             <NewsletterForm />
           </div>

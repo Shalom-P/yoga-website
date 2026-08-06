@@ -14,6 +14,11 @@ import type { Teacher, ClassCategory } from "@/lib/supabase/types";
 
 const ORG_NAME = "My Yoga Classes";
 
+// Official social profiles. Referenced by the Organization JSON-LD `sameAs`
+// (how Google ties the domain to these accounts) and the footer links —
+// keep both in sync through this constant.
+export const INSTAGRAM_URL = "https://www.instagram.com/myyogaclasses.fit/";
+
 export function faqPageJsonLd(faqs: Faq[]): WithContext<FAQPage> {
   return {
     "@context": "https://schema.org",
