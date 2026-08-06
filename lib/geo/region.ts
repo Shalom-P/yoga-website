@@ -32,9 +32,13 @@ export const OUTSIDE_SERVICE_AREA = "outside_service_area";
 /** Default currency when the region can't be resolved (India is the larger market). */
 export const DEFAULT_CURRENCY: Currency = "INR";
 
-// Each market has a single canonical IANA zone, so exact-match is correct.
+// Each market maps from its IANA zone ids. Browsers (Chrome/Safari/Edge, all
+// ICU-based) report the LEGACY id "Asia/Calcutta" from
+// Intl.DateTimeFormat().resolvedOptions().timeZone, never "Asia/Kolkata" —
+// missing that alias silently locked every Indian customer out of booking.
 const MARKET_BY_TIMEZONE: Record<string, Market> = {
   "Asia/Kolkata": "IN",
+  "Asia/Calcutta": "IN", // legacy alias — what ICU browsers actually report
   "Asia/Dubai": "AE",
 };
 const CURRENCY_BY_MARKET: Record<Market, Currency> = { IN: "INR", AE: "AED" };

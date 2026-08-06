@@ -15,11 +15,58 @@ describe("isServiceTimezone", () => {
     expect(isServiceTimezone("Asia/Kolkata")).toBe(true);
     expect(isServiceTimezone("Asia/Dubai")).toBe(true);
   });
+  it("accepts the legacy Asia/Calcutta id that ICU browsers actually report", () => {
+    // Chrome/Safari/Edge return "Asia/Calcutta" from
+    // Intl.DateTimeFormat().resolvedOptions().timeZone — not "Asia/Kolkata".
+    expect(isServiceTimezone("Asia/Calcutta")).toBe(true);
+    expect(currencyForTimezone("Asia/Calcutta")).toBe("INR");
+    expect(canTransactFromTimezone({ isAdmin: false, timezone: "Asia/Calcutta" })).toBe(true);
+    expect(
+      canTransactFromRequest({ isAdmin: false, country: null, timezone: "Asia/Calcutta" }),
+    ).toBe(true);
+  });
   it("rejects everything else and empty values", () => {
     expect(isServiceTimezone("Australia/Sydney")).toBe(false);
     expect(isServiceTimezone("America/New_York")).toBe(false);
     expect(isServiceTimezone(null)).toBe(false);
     expect(isServiceTimezone(undefined)).toBe(false);
+  });
+});
+
+describe("world sweep — every IANA timezone and every possible country code", () => {
+  // The full set of ids a browser can report for the served markets. ICU
+  // canonicalizes Kolkata → Calcutta, so browsers never report "Asia/Kolkata",
+  // but a stored profile or a non-ICU runtime still can.
+  const SERVED_ZONE_IDS = ["Asia/Kolkata", "Asia/Calcutta", "Asia/Dubai"];
+
+  it("exactly the India/UAE zone ids pass; all other world zones are blocked", () => {
+    const zones = Intl.supportedValuesOf("timeZone");
+    expect(zones.length).toBeGreaterThan(300); // sanity: the sweep is real
+    const passing = zones.filter((z) => isServiceTimezone(z));
+    // Nothing outside the served markets slips through (Muscat, Karachi,
+    // Colombo, Tehran etc. share offsets with served zones but must fail).
+    for (const z of passing) expect(SERVED_ZONE_IDS).toContain(z);
+    // Both markets are represented in what the world's browsers can report.
+    expect(passing.some((z) => currencyForTimezone(z) === "INR")).toBe(true);
+    expect(passing.some((z) => currencyForTimezone(z) === "AED")).toBe(true);
+  });
+
+  it("every served id still passes after ICU canonicalization (what browsers report)", () => {
+    for (const z of SERVED_ZONE_IDS) {
+      const reported = new Intl.DateTimeFormat("en", { timeZone: z }).resolvedOptions().timeZone;
+      expect(isServiceTimezone(reported)).toBe(true);
+      expect(currencyForTimezone(reported)).toBe(currencyForTimezone(z));
+    }
+  });
+
+  it("all 676 possible ISO alpha-2 codes: only IN and AE transact", () => {
+    const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (const a of A) {
+      for (const b of A) {
+        const code = `${a}${b}`;
+        expect(isServiceCountry(code)).toBe(code === "IN" || code === "AE");
+      }
+    }
   });
 });
 
