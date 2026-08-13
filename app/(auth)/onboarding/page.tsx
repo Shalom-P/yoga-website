@@ -23,7 +23,7 @@ export default async function OnboardingPage({
   // again — send them on to wherever they were headed.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, experience_level")
+    .select("full_name, phone, experience_level")
     .eq("id", user.id)
     .maybeSingle();
   if (profile?.experience_level) {
@@ -41,9 +41,13 @@ export default async function OnboardingPage({
           Let&apos;s find your <span className="text-accent italic">perfect teacher.</span>
         </h1>
         <p className="mt-3 text-muted-foreground">
-          Three quick questions, then you&apos;ll see slots in your local time.
+          A few quick details, then you&apos;ll see slots in your local time.
         </p>
-        <OnboardingForm initialFullName={profile?.full_name ?? ""} next={next} />
+        <OnboardingForm
+          initialFullName={profile?.full_name ?? ""}
+          initialPhone={profile?.phone ?? ""}
+          next={next}
+        />
       </div>
     </div>
   );
