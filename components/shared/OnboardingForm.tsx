@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneField } from "@/components/ui/phone-field";
 import { Label } from "@/components/ui/label";
 import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -12,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { detectBrowserTimezone } from "@/lib/timezone";
+import { toE164, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
 import { friendlyFormError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
 
@@ -27,15 +29,21 @@ const GOALS = [
 
 export function OnboardingForm({
   initialFullName = "",
+  initialPhone = "",
   next = "/dashboard/book",
 }: {
   initialFullName?: string;
+  initialPhone?: string;
   next?: string;
 }) {
   const router = useRouter();
   // full name field state, prefilled from the profile (Google logins
   // already carry a name; email-OTP users start blank).
   const [fullName, setFullName] = useState(initialFullName);
+  // Mandatory at sign-up. PhoneField reports E.164, so `phone` is either "" or
+  // a fully-qualified number; toE164() below is the belt-and-braces check.
+  const [phone, setPhone] = useState(initialPhone);
+  const phoneRef = useRef<HTMLInputElement>(null);
   // default to the user's real detected timezone; they can change it below.
   const [tz, setTz] = useState(() => detectBrowserTimezone());
   const [level, setLevel] = useState("beginner");
@@ -58,6 +66,17 @@ export function OnboardingForm({
       toast.error("Please enter your full name.");
       return;
     }
+    // Phone is mandatory at sign-up. Store canonical E.164 so every downstream
+    // reader (admin, teacher hand-off) sees one shape.
+    const e164 = toE164(phone);
+    if (!e164) {
+      // Focus the field as well as toasting: the toast is transient and the
+      // native `required` check can't fire here (see PhoneField), so focus is
+      // what actually tells a keyboard or screen-reader user where the problem is.
+      phoneRef.current?.focus();
+      toast.error(phone.trim() ? PHONE_ERROR_MESSAGE : "Please enter your mobile number.");
+      return;
+    }
     setLoading(true);
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
@@ -77,6 +96,7 @@ export function OnboardingForm({
         id: user.id,
         // persist full name
         full_name: fullName.trim(),
+        phone: e164,
         timezone: tz,
         experience_level: level as "beginner" | "intermediate" | "advanced",
         goals,
@@ -109,6 +129,27 @@ export function OnboardingForm({
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
           placeholder="Your full name"
+          className="h-11"
+        />
+      </div>
+
+      {/* Mobile number: required, so a teacher or the studio can reach you about
+          a session (schedule changes, a link that will not open). */}
+      <div>
+        <LabelWithHint
+          htmlFor="phone"
+          className="mb-2"
+          hint="We use this only to reach you about your sessions, never for marketing. Pick your country, then type the number."
+        >
+          Mobile number <span aria-hidden="true" className="text-destructive">*</span>
+        </LabelWithHint>
+        <PhoneField
+          id="phone"
+          name="phone"
+          required
+          inputRef={phoneRef}
+          value={phone}
+          onChange={setPhone}
           className="h-11"
         />
       </div>

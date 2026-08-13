@@ -33,8 +33,9 @@ export function isValidPhone(
 /**
  * Normalize any accepted input to canonical E.164 ("+971501234567"), or null if
  * it isn't a valid number. Run this on every write so the stored number has one
- * canonical shape. Phone is an optional contact field only — auth is email OTP,
- * not SMS — so this is purely about storing a consistent value.
+ * canonical shape. Phone is a required contact field (collected during sign-up)
+ * but is never an auth factor — login is email OTP / OAuth, not SMS — so this is
+ * purely about storing a consistent, reachable value.
  */
 export function toE164(
   value: string | null | undefined,

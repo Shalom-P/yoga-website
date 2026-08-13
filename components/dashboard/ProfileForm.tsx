@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { PhoneField } from "@/components/ui/phone-field";
 import { Label } from "@/components/ui/label";
@@ -26,15 +26,18 @@ type Initial = {
 export function ProfileForm({ initial }: { initial: Initial }) {
   const [state, setState] = useState(initial);
   const [loading, setLoading] = useState(false);
+  const phoneRef = useRef<HTMLInputElement>(null);
   const supabase = createSupabaseBrowserClient();
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
-    // Phone is optional. Empty clears it; a non-empty value must still parse.
-    const hasPhone = Boolean(state.phone.trim());
-    const e164 = hasPhone ? toE164(state.phone) : null;
-    if (hasPhone && !e164) {
-      toast.error(PHONE_ERROR_MESSAGE);
+    // Phone is mandatory (collected at sign-up), so it can't be cleared here
+    // either. Legacy profiles created before that have to fill it in on the
+    // first save.
+    const e164 = toE164(state.phone);
+    if (!e164) {
+      phoneRef.current?.focus();
+      toast.error(state.phone.trim() ? PHONE_ERROR_MESSAGE : "Please enter your mobile number.");
       return;
     }
     setLoading(true);
@@ -94,11 +97,18 @@ export function ProfileForm({ initial }: { initial: Initial }) {
       <div>
         <LabelWithHint
           htmlFor="phone"
-          hint="Optional. If you add it, we may use it to contact you about your bookings."
+          hint="We use this only to reach you about your sessions, never for marketing."
         >
-          Phone (optional)
+          Mobile number <span aria-hidden="true" className="text-destructive">*</span>
         </LabelWithHint>
-        <PhoneField id="phone" value={state.phone ?? ""} onChange={(v) => set("phone", v)} className="mt-1.5" />
+        <PhoneField
+          id="phone"
+          required
+          inputRef={phoneRef}
+          value={state.phone ?? ""}
+          onChange={(v) => set("phone", v)}
+          className="mt-1.5"
+        />
       </div>
       <div>
         <LabelWithHint hint="Your local timezone. Drives the times shown on bookings, reminders, and the slot picker.">
