@@ -109,6 +109,7 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
             <tr>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
+              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Phone</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Timezone</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Level</th>
               <th className="text-left px-4 py-3 font-medium text-muted-foreground">Goals</th>
@@ -125,6 +126,17 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
               <tr key={c.id} className="border-t border-border">
                 <td className="px-4 py-3">{c.full_name ?? "-"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{c.email ?? "-"}</td>
+                {/* Stored E.164, so it is dialable as-is. Profiles created
+                    before phone became mandatory at sign-up still have none. */}
+                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                  {c.phone ? (
+                    <a href={`tel:${c.phone}`} className="hover:text-foreground hover:underline">
+                      {c.phone}
+                    </a>
+                  ) : (
+                    "-"
+                  )}
+                </td>
                 <td className="px-4 py-3 text-muted-foreground">{c.timezone}</td>
                 <td className="px-4 py-3 text-muted-foreground capitalize">
                   {c.experience_level ?? "-"}
@@ -175,7 +187,7 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
             ))}
             {rows.length === 0 && (
               <tr>
-                <td colSpan={11} className="text-center px-4 py-12 text-muted-foreground">
+                <td colSpan={12} className="text-center px-4 py-12 text-muted-foreground">
                   No customers yet.
                 </td>
               </tr>
