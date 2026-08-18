@@ -11,6 +11,13 @@ function isRateLimit(m: string): boolean {
 export function friendlyAuthError(message?: string | null): string {
   const m = (message ?? "").toLowerCase();
   if (isRateLimit(m)) return "Too many attempts. Please wait a minute and try again.";
+  // GoTrue answers 500 `unexpected_failure` / "Error sending confirmation email"
+  // when the mailer itself fails: custom SMTP unset, so the built-in sender is
+  // in play and refuses any address outside the Supabase org. Distinct copy
+  // because the user has done nothing wrong and retrying will not help them.
+  if (m.includes("error sending")) {
+    return "We couldn't send that code. Please try another sign-in option, or contact hello@myyogaclasses.fit.";
+  }
   if (m.includes("expired") || m.includes("invalid") || m.includes("token")) {
     return "That code looks invalid or has expired. Please request a new one.";
   }

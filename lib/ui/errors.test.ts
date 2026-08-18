@@ -8,6 +8,12 @@ describe("friendlyAuthError", () => {
   it("maps invalid/expired OTP codes", () => {
     expect(friendlyAuthError("Token has expired or is invalid")).toMatch(/invalid|expired/i);
   });
+  it("distinguishes a mailer failure from the generic fallback", () => {
+    // The exact GoTrue body behind the App Store 2.1 rejection (Aug 2026).
+    const raw = "Error sending confirmation email";
+    expect(friendlyAuthError(raw)).not.toMatch(/something went wrong/i);
+    expect(friendlyAuthError(raw)).toMatch(/couldn't send that code/i);
+  });
   it("falls back to a generic message and never echoes raw text", () => {
     const raw = "new row violates row-level security policy for table profiles";
     expect(friendlyAuthError(raw)).not.toContain("row-level security");
