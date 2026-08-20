@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Coins, ShieldCheck, ShieldOff } from "lucide-react";
+import { Coins, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -42,6 +42,9 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
   const [creditTarget, setCreditTarget] = useState<Row | null>(null);
   const [creditAmount, setCreditAmount] = useState("1");
   const [granting, setGranting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<Row | null>(null);
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   async function promote() {
     if (!target) return;
@@ -98,6 +101,26 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
     );
     setCreditTarget(null);
     setCreditAmount("1");
+    router.refresh();
+  }
+
+  function closeDelete() {
+    setDeleteTarget(null);
+    setDeleteConfirm("");
+  }
+
+  async function removeUser() {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    const res = await fetch(`/api/admin/customers/${deleteTarget.id}`, { method: "DELETE" });
+    setDeleting(false);
+    if (!res.ok) {
+      const body = await res.json().catch(() => null);
+      toast.error(body?.message ?? body?.error ?? "Failed to delete account.");
+      return;
+    }
+    toast.success(`${deleteTarget.full_name ?? deleteTarget.email ?? "Account"} permanently deleted.`);
+    closeDelete();
     router.refresh();
   }
 
@@ -180,6 +203,21 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
                     >
                       <ShieldOff className="size-3.5 mr-1" />
                       Demote
+                    </Button>
+                  )}
+                  {/* Customers only. Deleting a teacher would unlink their live
+                      teachers record and revoke every student's document share,
+                      so those get demoted first (the API refuses them too). */}
+                  {c.role === "customer" && (
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="text-destructive hover:text-destructive"
+                      onClick={() => setDeleteTarget(c)}
+                      aria-label={`Delete ${c.full_name ?? c.email ?? "account"}`}
+                    >
+                      <Trash2 className="size-3.5 mr-1" />
+                      Delete
                     </Button>
                   )}
                 </td>
@@ -279,6 +317,49 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
               disabled={demoting}
             >
               {demoting ? "Demoting…" : "Demote"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={deleteTarget !== null} onOpenChange={(o) => !o && closeDelete()}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete this account permanently?</DialogTitle>
+            <DialogDescription>
+              {deleteTarget?.full_name ?? deleteTarget?.email ?? "This account"} will be removed
+              from the studio. This cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="text-sm text-muted-foreground space-y-2">
+            <p>What happens:</p>
+            <ul className="list-disc pl-5 space-y-1">
+              <li>Their upcoming sessions are cancelled and the Meet invites are pulled from the teacher calendars.</li>
+              <li>
+                Their profile, bookings, health documents and{" "}
+                {deleteTarget?.credits ?? 0} unused session
+                {deleteTarget?.credits === 1 ? "" : "s"} are destroyed.
+              </li>
+              <li>Payment records are kept, detached from the person, because tax rules require it.</li>
+            </ul>
+          </div>
+          <Input
+            value={deleteConfirm}
+            onChange={(e) => setDeleteConfirm(e.target.value)}
+            placeholder="Type DELETE to confirm"
+            aria-label="Type DELETE to confirm"
+            autoComplete="off"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDelete} disabled={deleting}>
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={removeUser}
+              disabled={deleting || deleteConfirm.trim().toUpperCase() !== "DELETE"}
+            >
+              {deleting ? "Deleting…" : "Delete permanently"}
             </Button>
           </DialogFooter>
         </DialogContent>
