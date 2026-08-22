@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard, CalendarPlus, CalendarCheck, FileText, Wallet, UserRound, Menu, ArrowLeft,
+  ShieldCheck,
 } from "lucide-react";
 import { BrandMark } from "@/components/shared/BrandMark";
 import { SignOutButton } from "@/components/shared/SignOutButton";
@@ -41,9 +42,11 @@ function BrandHeader({ onNavigate }: { onNavigate?: () => void }) {
 function NavLinks({
   pathname,
   onNavigate,
+  isAdmin = false,
 }: {
   pathname: string;
   onNavigate?: () => void;
+  isAdmin?: boolean;
 }) {
   return (
     <nav className="p-3 space-y-1 flex-1 overflow-y-auto">
@@ -69,6 +72,27 @@ function NavLinks({
           </Link>
         );
       })}
+      {/* Admins get an explicit way into /admin from the member area. In a
+          browser you can just type the URL; inside the Capacitor shell there is
+          no address bar, so without this link an admin who signs in on the phone
+          is stranded on the customer dashboard with no route to the console.
+          Purely navigational: /admin is still gated by the middleware role check
+          and by requireAdmin() in every page under it. */}
+      {isAdmin && (
+        <Link
+          href="/admin"
+          onClick={onNavigate}
+          className={cn(
+            "mt-2 flex items-center gap-2.5 rounded-lg border-t border-border px-3 pb-2 pt-4 text-sm transition-colors",
+            pathname.startsWith("/admin")
+              ? "text-primary font-medium"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          )}
+        >
+          <ShieldCheck className="size-4" />
+          Admin
+        </Link>
+      )}
     </nav>
   );
 }
@@ -88,9 +112,11 @@ function UserCard({ userName, userEmail }: { userName: string; userEmail: string
 export function DashboardSidebar({
   userName,
   userEmail,
+  isAdmin = false,
 }: {
   userName: string;
   userEmail: string;
+  isAdmin?: boolean;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -103,7 +129,7 @@ export function DashboardSidebar({
         <div className="p-5 border-b border-border">
           <BrandHeader />
         </div>
-        <NavLinks pathname={pathname} />
+        <NavLinks pathname={pathname} isAdmin={isAdmin} />
         <UserCard userName={userName} userEmail={userEmail} />
       </aside>
 
@@ -123,7 +149,7 @@ export function DashboardSidebar({
             <div className="p-5 border-b border-border">
               <BrandHeader onNavigate={close} />
             </div>
-            <NavLinks pathname={pathname} onNavigate={close} />
+            <NavLinks pathname={pathname} onNavigate={close} isAdmin={isAdmin} />
             <div className="border-t border-border p-3 space-y-1">
               <Link
                 href="/"
