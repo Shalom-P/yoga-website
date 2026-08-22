@@ -30,6 +30,32 @@ export async function GET(request: Request) {
   const hasMagicLink =
     tokenHash && typeParam && EMAIL_OTP_TYPES.has(typeParam as EmailOtpType);
 
+  // The provider can bounce us here with ?error=... instead of a code. Without
+  // this branch the request falls through to the redirect at the bottom and the
+  // user is silently sent to `next`, where the middleware bounces them to /login
+  // with no explanation at all.
+  //
+  // The most common cause is a phone-number-only Apple ID (common in IN/CN): it
+  // has no email address, so with Supabase's "Allow users without an email"
+  // switched off GoTrue refuses to create the account. Retrying can never work,
+  // so the copy has to send them to a different method rather than say "try
+  // again".
+  //
+  // `error_description` is provider-controlled text and LoginForm renders
+  // ?error= inside a trusted role="alert" banner, so it is NEVER forwarded
+  // verbatim. It is only pattern-matched here to pick one of our own strings.
+  const providerError = url.searchParams.get("error");
+  if (providerError && !code && !hasMagicLink) {
+    const description = url.searchParams.get("error_description") ?? "";
+    const missingEmail = /email/i.test(description);
+    const message = missingEmail
+      ? "That Apple ID has no email address attached, so we can't finish signing you in. Please continue with Google or email instead."
+      : "Sign-in didn't finish. Please try again, or continue with Google or email.";
+    return NextResponse.redirect(
+      new URL(`/login?error=${encodeURIComponent(message)}`, url.origin),
+    );
+  }
+
   if (code || hasMagicLink) {
     const supabase = await createSupabaseServerClient();
 
