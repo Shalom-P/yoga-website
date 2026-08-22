@@ -153,11 +153,20 @@ async function handleAuthDeepLink(rawUrl: string): Promise<void> {
     // harmless: it fails the PKCE verifier-cookie exchange.)
     window.location.href = `/auth/callback?code=${encodeURIComponent(code)}&next=${encodeURIComponent(next)}`;
   } else if (hadError) {
-    // Deliberately a FIXED message. error_description is attacker-writable from
-    // any other app on the phone, and LoginForm renders the error param in a
-    // trusted role=alert banner — forwarding it verbatim would let arbitrary
-    // apps paint phishing copy inside our login screen.
-    window.location.href = `/login?error=${encodeURIComponent("Sign-in didn't finish. Please try again.")}`;
+    // Still FIXED messages. error_description is attacker-writable from any
+    // other app on the phone, and LoginForm renders the error param in a trusted
+    // role=alert banner, so it is never forwarded verbatim. It is only
+    // pattern-matched to choose between two strings we control, mirroring the
+    // same branch in app/(auth)/auth/callback/route.ts.
+    //
+    // The email case is a phone-number-only Apple ID (common in IN/CN). It has
+    // no address for us to create an account with, so "try again" would be a
+    // lie: the only way forward is a different sign-in method.
+    const description = url.searchParams.get("error_description") ?? "";
+    const message = /email/i.test(description)
+      ? "That Apple ID has no email address attached, so we can't finish signing you in. Please continue with Google or email instead."
+      : "Sign-in didn't finish. Please try again, or continue with Google or email.";
+    window.location.href = `/login?error=${encodeURIComponent(message)}`;
   }
 }
 
