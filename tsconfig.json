@@ -38,6 +38,7 @@
   ],
   "exclude": [
     "node_modules",
-    "supabase/functions/book-session"
+    "supabase/functions/book-session",
+    "supabase/functions/document-url"
   ]
 }

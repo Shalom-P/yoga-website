@@ -1,11 +1,16 @@
 import { describe, it, expect } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, existsSync } from "node:fs";
 import { generateSlots } from "@/lib/booking/slots";
 
-const S = process.env.SCRATCH!;
+const S = process.env.SCRATCH;
+// This test compares against output from the compiled Swift generator, which
+// `scripts/verify-slots.sh` in the iOS repo produces. Skip when run on its own
+// rather than failing a suite that has no way to generate it.
+const swiftOutput = S ? `${S}/swift-slots.txt` : null;
+const haveSwift = !!swiftOutput && existsSync(swiftOutput);
 
 describe("the iOS slot grid agrees with the web implementation", () => {
-  it("produces byte-identical start times for the same availability", () => {
+  it.skipIf(!haveSwift)("produces byte-identical start times for the same availability", () => {
     const availability = [
       { day_of_week: 0, start_time: "06:00", end_time: "08:00", slot_duration_minutes: 60 },
       { day_of_week: 0, start_time: "06:00:00", end_time: "07:00:00", slot_duration_minutes: 60 },
@@ -23,7 +28,7 @@ describe("the iOS slot grid agrees with the web implementation", () => {
       ["2026-09-15"],
     ).map((s) => s.at.toISOString().replace(".000Z", "Z"));
 
-    const swift = readFileSync(`${S}/swift-slots.txt`, "utf8").trim().split("\n");
+    const swift = readFileSync(swiftOutput!, "utf8").trim().split("\n");
 
     expect(swift.length).toBeGreaterThan(0);
     expect(swift).toEqual(web);
