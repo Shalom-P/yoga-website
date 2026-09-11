@@ -354,8 +354,8 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
         </motion.div>
 
         <p className="mt-10 text-center text-sm text-muted-foreground">
-          Prices shown in {displayCurrency}. One-time payment, no subscription. Available to
-          customers in the UAE and India.{" "}
+          Prices shown in {displayCurrency}. One-time payment, no subscription. Book from
+          anywhere in the world.{" "}
           <Link href="/faq" className="text-primary hover:underline">
             Read the FAQ →
           </Link>

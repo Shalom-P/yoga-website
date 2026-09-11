@@ -9,7 +9,8 @@ import { cn } from "@/lib/utils";
 export const revalidate = 300;
 export const metadata = {
   title: "Teachers",
-  description: "Meet our certified yoga teachers from India, teaching live to the UAE and India.",
+  description:
+    "Meet our certified yoga teachers from India. Every one is Yoga Alliance trained and teaches live 1:1 sessions to students around the world.",
   alternates: { canonical: "/teachers" },
 };
 

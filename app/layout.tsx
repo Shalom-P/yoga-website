@@ -90,11 +90,10 @@ const orgJsonLd: WithContext<Organization> = {
   logo: `${siteUrl}/icon.svg`,
   sameAs: [INSTAGRAM_URL],
   description:
-    "Live online 1:1 yoga with expert teachers from India for students across the UAE and India. Book a personalised session in your local time.",
-  areaServed: [
-    { "@type": "Country", name: "United Arab Emirates" },
-    { "@type": "Country", name: "India" },
-  ],
+    "Live online 1:1 yoga with expert teachers from India, for students anywhere in the world. Book a personalised session in your local time.",
+  // The studio takes customers worldwide. Naming specific countries here tells
+  // search engines the service area stops at their borders.
+  areaServed: "Worldwide",
   knowsLanguage: ["en"],
   contactPoint: {
     "@type": "ContactPoint",

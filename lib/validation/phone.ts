@@ -4,14 +4,15 @@ import {
   type CountryCode,
 } from "libphonenumber-js";
 
-// Numbers we issue/accept: +971 UAE customers and +91 India customers/teachers.
-// Used to scope the country dropdown in <PhoneField> and to default new entries.
-export const PHONE_COUNTRIES: CountryCode[] = ["AE", "IN"];
-export const DEFAULT_PHONE_COUNTRY: CountryCode = "AE";
+// Customers are welcome from any country, so <PhoneField> offers every calling
+// code rather than an allow-list. There is deliberately no default country: for
+// a worldwide audience any pre-selection is wrong for most people, and seeding a
+// calling code would also satisfy a native `required` check before a single
+// digit is typed. Callers that know better can pass `defaultCountry`.
 
 // One shared message so login, booking, and profile all say the same thing.
 export const PHONE_ERROR_MESSAGE =
-  "Enter a valid mobile number with country code, e.g. +971 5X XXX XXXX.";
+  "Enter a valid mobile number including your country code, for example +971 50 123 4567.";
 
 /**
  * True when `value` is a valid phone number. Accepts E.164 ("+971501234567") or a

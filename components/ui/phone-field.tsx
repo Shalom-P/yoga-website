@@ -2,22 +2,30 @@
 
 import "react-phone-number-input/style.css";
 import * as React from "react";
-import PhoneInput, { type Country, type Flags } from "react-phone-number-input";
-import AE from "country-flag-icons/react/3x2/AE";
-import IN from "country-flag-icons/react/3x2/IN";
+import PhoneInput, { type Country } from "react-phone-number-input";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
-import { DEFAULT_PHONE_COUNTRY, PHONE_COUNTRIES } from "@/lib/validation/phone";
 
-// Flags as inline SVG components. Without this, react-phone-number-input loads
-// each flag from purecatamphetamine.github.io, which our CSP `img-src` blocks,
-// so the selector renders a broken image. Allow-listing that origin would put a
-// third-party asset on the sign-up path; bundling the two flags we actually
-// offer is smaller and offline-safe. Imported per country (not the whole
-// `react-phone-number-input/flags` map) to keep ~250 unused flags out of the
-// bundle. A caller passing extra `countries` falls back to the remote image for
-// those, so add its flag here too.
-const FLAGS: Flags = { AE, IN };
+// Flags as text, not images. react-phone-number-input otherwise loads each flag
+// from purecatamphetamine.github.io, which our CSP `img-src` blocks, so every
+// entry renders as a broken image. The previous fix bundled the flag SVGs for
+// the only two countries on offer; now that the selector lists every country
+// that would mean shipping ~250 SVGs on the sign-up path.
+//
+// A regional-indicator pair renders the flag as a glyph the font already has:
+// nothing to download, nothing for the CSP to block, and no bundle cost. Windows
+// ships no flag glyphs and falls back to the two letters ("US"), which still
+// identifies the country, and the dropdown spells the name out beside it.
+function FlagGlyph({ country, countryName }: { country: Country; countryName: string }) {
+  const glyph = String.fromCodePoint(
+    ...[...country].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65),
+  );
+  return (
+    <span role="img" aria-label={countryName} className="text-base leading-none">
+      {glyph}
+    </span>
+  );
+}
 
 // react-phone-number-input drives focus/caret through a ref, so the custom input
 // must forward it. shadcn's Input passes ref straight through to the base-ui
@@ -59,8 +67,9 @@ type PhoneFieldProps = {
    * back to the field rather than relying on a transient toast.
    */
   inputRef?: React.Ref<HTMLInputElement>;
-  /** ISO codes offered in the flag dropdown. Defaults to AE + IN. */
+  /** Restrict the dropdown to these ISO codes. Defaults to every country. */
   countries?: Country[];
+  /** Pre-selected country. Defaults to none, so the customer picks their own. */
   defaultCountry?: Country;
 };
 
@@ -76,22 +85,22 @@ export function PhoneField({
   className,
   required,
   inputRef,
-  countries = PHONE_COUNTRIES,
-  defaultCountry = DEFAULT_PHONE_COUNTRY,
+  countries,
+  defaultCountry,
   ...rest
 }: PhoneFieldProps) {
   return (
     <PhoneInput
       international
-      countryCallingCodeEditable={false}
       countries={countries}
       defaultCountry={defaultCountry}
-      flags={FLAGS}
-      // `international` seeds the input with the country calling code ("+971"),
-      // so the native `required` check is already satisfied before any digits
-      // are typed and cannot be the guard here. aria-required is what actually
-      // reaches assistive tech; the real enforcement stays in the submit
-      // handler, which validates and focuses this input via inputRef.
+      flagComponent={FlagGlyph}
+      // With no `defaultCountry` the field starts empty rather than seeded with a
+      // calling code, so a customer types or picks their own from anywhere. The
+      // calling code stays editable for the same reason: nothing is pre-chosen
+      // for them to be stuck with. aria-required is what reaches assistive tech;
+      // the real enforcement stays in the submit handler, which validates and
+      // focuses this input via inputRef.
       aria-required={required || undefined}
       // Must go through `ref`, not the library's `inputRef` prop: PhoneInput's
       // forwardRef wrapper spreads `{inputRef: ref}` last, so a caller-supplied
