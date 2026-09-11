@@ -12,7 +12,6 @@
  */
 
 import { detectBrowserTimezone } from "@/lib/timezone";
-import { OUTSIDE_SERVICE_AREA } from "@/lib/geo/region";
 import {
   startRazorpayCheckout,
   type AppliedDiscount,
@@ -77,10 +76,6 @@ export async function startCheckout(args: StartCheckoutArgsWithBank): Promise<vo
       `/dashboard/plan?planSlug=${encodeURIComponent(args.planSlug)}${promoQs}`,
     );
     window.location.href = `/login?next=${next}`;
-    return;
-  }
-  if (res.status === 403 && data.error === OUTSIDE_SERVICE_AREA) {
-    args.onError("Session packs can only be purchased from within the UAE or India.");
     return;
   }
   if (!res.ok || !data.method) {

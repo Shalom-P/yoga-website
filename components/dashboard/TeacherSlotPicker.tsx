@@ -6,7 +6,6 @@ import { useRouter } from "next/navigation";
 import { formatInTimeZone } from "date-fns-tz";
 import { Button } from "@/components/ui/button";
 import { useBrowserTz, useHasMounted } from "@/components/dashboard/local-time";
-import { isServiceTimezone, OUTSIDE_SERVICE_AREA } from "@/lib/geo/region";
 import { generateSlots, type Availability, type Slot } from "@/lib/booking/slots";
 
 type Props = {
@@ -20,7 +19,7 @@ type Props = {
   creditBalance: number;
   /** Teacher-TZ "yyyy-MM-dd" dates the teacher has blocked off (no bookings). */
   blockedDates?: string[];
-  /** Admins may book from any location; customers must be in the UAE or India. */
+  /** Admins skip the wait for browser-timezone resolution below. */
   isAdmin: boolean;
 };
 
@@ -44,12 +43,6 @@ export function TeacherSlotPicker({
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
-  // Service-area gate for the free 1:1 trial. Non-admins outside the UAE/India
-  // can't claim it (the server enforces this too). Paid bookings that spend
-  // already-purchased credits are unaffected.
-  const outsideServiceArea = !isAdmin && !isServiceTimezone(customerTz);
-  const trialBlocked = outsideServiceArea && freeTrialAvailable;
-
   const grouped = useMemo(() => {
     const now = new Date();
     const slots = generateSlots(availability, teacherTimezone, now, blockedDates ?? []);
@@ -67,10 +60,6 @@ export function TeacherSlotPicker({
   const isPaid = !freeTrialAvailable;
 
   function onSlotClick(slot: Slot) {
-    if (trialBlocked) {
-      setError(OUTSIDE_SERVICE_AREA);
-      return;
-    }
     if (isPaid && creditBalance <= 0) {
       setError("insufficient_credits");
       return;
@@ -102,30 +91,15 @@ export function TeacherSlotPicker({
     setError(body.error ?? "booking_failed");
   }
 
-  // For a trial-eligible non-admin, hold off on the slot grid until the real
-  // browser timezone resolves, otherwise an out-of-area user sees a flash of
-  // bookable slots before the banner. Admins and paid bookings are unaffected.
+  // Hold off on the slot grid until the real browser timezone resolves. The
+  // first paint uses the stored profile zone (useBrowserTz), so rendering
+  // immediately would group slots into the wrong days and then reshuffle.
+  // This used to exist to avoid flashing bookable slots at an out-of-area user
+  // before the service-area banner; that gate is gone, the timezone race is not.
   if (!isAdmin && freeTrialAvailable && !tzResolved) {
     return (
       <div className="mt-10 rounded-2xl border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
-        Checking your location…
-      </div>
-    );
-  }
-
-  // Outside the service area + free trial still unclaimed → nothing is bookable
-  // here. Show why instead of a slot grid the booking API would reject anyway.
-  if (trialBlocked) {
-    return (
-      <div className="mt-10 rounded-2xl border border-border bg-muted/30 p-6 text-sm text-muted-foreground">
-        <p className="font-medium text-foreground">
-          The free 1:1 trial is available to customers in the UAE and India.
-        </p>
-        <p className="mt-1.5">
-          We detected your timezone as {customerTz}, which is outside our service
-          area, so we can&apos;t book a trial class for you right now. If this looks
-          wrong, check your device&apos;s time &amp; timezone settings.
-        </p>
+        Checking your local time…
       </div>
     );
   }
@@ -164,8 +138,6 @@ export function TeacherSlotPicker({
             "That time has just passed. Pick a slot at least 15 minutes from now."
           ) : error === "slot_unavailable" ? (
             "The teacher isn't available then anymore. Pick another time."
-          ) : error === OUTSIDE_SERVICE_AREA ? (
-            "The free 1:1 trial is available to customers in the UAE and India only."
           ) : (
             "Couldn't book that slot. Please try again."
           )}

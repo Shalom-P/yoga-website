@@ -12,7 +12,6 @@
  */
 
 import { detectBrowserTimezone } from "@/lib/timezone";
-import { OUTSIDE_SERVICE_AREA } from "@/lib/geo/region";
 import { track } from "@/lib/analytics/events";
 
 const CHECKOUT_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
@@ -149,10 +148,6 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
       `/dashboard/plan?planSlug=${encodeURIComponent(args.planSlug)}${promoQs}`,
     );
     window.location.href = `/login?next=${next}`;
-    return;
-  }
-  if (orderRes.status === 403 && order.error === OUTSIDE_SERVICE_AREA) {
-    args.onError("Session packs can only be purchased from within the UAE or India.");
     return;
   }
   if (!orderRes.ok || !order.orderId || order.amount == null || !order.currency) {

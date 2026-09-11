@@ -1,41 +1,39 @@
 /**
- * Service-area gate + region/currency resolution.
+ * Region and currency resolution.
  *
- * The studio serves customers physically in the **UAE and India** (teachers are
- * in India — see CLAUDE.md). Non-admin visitors located elsewhere are blocked
- * from buying session packs and from claiming the free 1:1 trial.
+ * **The studio is open to customers anywhere.** This module used to double as a
+ * service-area gate that blocked non-admin visitors outside the UAE and India
+ * from buying session packs and from claiming the free 1:1. That gate has been
+ * removed. What remains is the billing half: deciding which currency to charge.
  *
- * Two responsibilities, kept together because both key off the same signal
- * (GeoIP country, with the live browser timezone as a fallback):
- *   1. the transaction gate (may this visitor buy / claim the trial?), and
- *   2. currency resolution (UAE → AED, India → INR).
+ * Two markets have a currency of their own (UAE → AED, India → INR); everywhere
+ * else falls back to {@link DEFAULT_CURRENCY}. GeoIP country is still preferred
+ * over the self-reported browser timezone, and that preference still matters
+ * even without a gate: it decides what a customer is *charged*, so a caller must
+ * not be able to pick their own currency by POSTing a timezone.
  *
- * We prefer the edge GeoIP country (which a caller cannot forge) and only fall
- * back to the self-reported browser timezone when no GeoIP header is present
- * (local dev / self-hosted). This closes the "POST a fake timezone" bypass on
- * the purchase and free-trial routes AND prevents a UAE visitor being charged
- * INR (or vice versa) by spoofing.
+ * Removing the gate does not by itself make payment work everywhere. Razorpay
+ * settles INR on an Indian account, and International/AED acceptance is an
+ * account-level setting. A customer outside India can now reach Checkout and may
+ * still be declined by the provider until that is enabled. That is configuration,
+ * not code.
  *
  * This module is pure and dependency-free on purpose so both client components
  * and Node route handlers can import it.
  */
 
+/** A market with a currency of its own. Not an allow-list: see the note above. */
 export type Market = "IN" | "AE";
 export type Currency = "INR" | "AED";
 
-/** Countries whose customers may transact. */
-export const SERVICE_COUNTRIES: readonly Market[] = ["IN", "AE"];
-
-/** Shared error code returned by the gated API routes and matched client-side. */
-export const OUTSIDE_SERVICE_AREA = "outside_service_area";
-
-/** Default currency when the region can't be resolved (India is the larger market). */
+/** Currency used when the request resolves to no specific market. */
 export const DEFAULT_CURRENCY: Currency = "INR";
 
 // Each market maps from its IANA zone ids. Browsers (Chrome/Safari/Edge, all
 // ICU-based) report the LEGACY id "Asia/Calcutta" from
 // Intl.DateTimeFormat().resolvedOptions().timeZone, never "Asia/Kolkata" —
-// missing that alias silently locked every Indian customer out of booking.
+// missing that alias silently billed every Indian customer in the fallback
+// currency instead of their own.
 const MARKET_BY_TIMEZONE: Record<string, Market> = {
   "Asia/Kolkata": "IN",
   "Asia/Calcutta": "IN", // legacy alias — what ICU browsers actually report
@@ -44,16 +42,13 @@ const MARKET_BY_TIMEZONE: Record<string, Market> = {
 const CURRENCY_BY_MARKET: Record<Market, Currency> = { IN: "INR", AE: "AED" };
 const LOCALE_BY_CURRENCY: Record<Currency, string> = { INR: "en-IN", AED: "en-AE" };
 
-/** True when an ISO country code is one we serve. */
-export function isServiceCountry(country: string | null | undefined): boolean {
+/**
+ * True when an ISO country code has a currency of its own. This is a *billing*
+ * question only. It is not a permission check and must never be used as one.
+ */
+export function isBillingMarket(country: string | null | undefined): country is Market {
   if (!country) return false;
-  return (SERVICE_COUNTRIES as readonly string[]).includes(country.toUpperCase());
-}
-
-/** True when an IANA timezone id belongs to a market we serve. */
-export function isServiceTimezone(tz: string | null | undefined): boolean {
-  if (!tz) return false;
-  return tz in MARKET_BY_TIMEZONE;
+  return country.toUpperCase() in CURRENCY_BY_MARKET;
 }
 
 /**
@@ -66,48 +61,13 @@ export function countryFromHeaders(headers: Headers): string | null {
   return c ? c.trim().toUpperCase() : null;
 }
 
-/**
- * Client-side rule (no GeoIP available): admins always; everyone else must be in
- * a served timezone. Used by the slot picker for an early UX gate.
- */
-export function canTransactFromTimezone({
-  isAdmin,
-  timezone,
-}: {
-  isAdmin: boolean;
-  timezone: string | null | undefined;
-}): boolean {
-  return isAdmin || isServiceTimezone(timezone);
-}
-
-/**
- * Authoritative server-side gate. Prefers the edge GeoIP country (which a caller
- * cannot spoof by POSTing a fake timezone); only falls back to the self-reported
- * browser timezone when no GeoIP header is present (local/off-platform).
- */
-export function canTransactFromRequest({
-  isAdmin,
-  country,
-  timezone,
-}: {
-  isAdmin: boolean;
-  country: string | null | undefined;
-  timezone: string | null | undefined;
-}): boolean {
-  if (isAdmin) return true;
-  // GeoIP present → it is the source of truth (ignore the client timezone).
-  if (country) return isServiceCountry(country);
-  // No GeoIP (local dev / non-Vercel host) → fall back to browser timezone.
-  return isServiceTimezone(timezone);
-}
-
-/** Currency for a served ISO country, or null if not served. */
+/** Currency for an ISO country, or null when it is not a market of its own. */
 export function currencyForCountry(country: string | null | undefined): Currency | null {
-  if (!isServiceCountry(country)) return null;
-  return CURRENCY_BY_MARKET[country!.toUpperCase() as Market];
+  if (!isBillingMarket(country)) return null;
+  return CURRENCY_BY_MARKET[country.toUpperCase() as Market];
 }
 
-/** Currency for a served timezone, or null if not served. */
+/** Currency for an IANA timezone, or null when it is not a market of its own. */
 export function currencyForTimezone(tz: string | null | undefined): Currency | null {
   if (!tz) return null;
   const market = MARKET_BY_TIMEZONE[tz];
@@ -128,7 +88,7 @@ export type ResolvedRegion = {
 /**
  * Resolve the billing context for a request. GeoIP country is the source of
  * truth; the browser/profile timezone is a fallback for local/off-platform.
- * Falls back to {@link DEFAULT_CURRENCY} so a pricing page always shows *a* price.
+ * Always resolves to a currency, so a pricing page shows a price everywhere.
  */
 export function resolveRegion({
   country,
@@ -137,7 +97,13 @@ export function resolveRegion({
   country?: string | null;
   timezone?: string | null;
 }): ResolvedRegion {
-  const currency = currencyForCountry(country) ?? currencyForTimezone(timezone) ?? DEFAULT_CURRENCY;
-  const resolvedCountry = isServiceCountry(country) ? (country!.toUpperCase() as Market) : null;
+  // When GeoIP is present it decides outright, INCLUDING when the country has no
+  // currency of its own. Falling through to the timezone here would let any
+  // visitor pick their own billing currency by changing their clock, which is
+  // the spoof the old service-area gate used to make unreachable.
+  const currency = country
+    ? currencyForCountry(country) ?? DEFAULT_CURRENCY
+    : currencyForTimezone(timezone) ?? DEFAULT_CURRENCY;
+  const resolvedCountry = isBillingMarket(country) ? (country.toUpperCase() as Market) : null;
   return { country: resolvedCountry, currency, locale: localeForCurrency(currency) };
 }

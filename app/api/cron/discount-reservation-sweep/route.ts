@@ -39,3 +39,18 @@ export async function POST(req: Request): Promise<Response> {
   // released === the per-run cap means there may be more to sweep next run.
   return Response.json({ ok: true, released, truncated: released >= 500 });
 }
+
+/**
+ * Vercel Cron issues a **GET**, and these handlers only exported POST, so every
+ * scheduled run would have returned 405 and the job would have looked healthy
+ * while doing nothing. GET simply delegates.
+ *
+ * This widens the method, not the access: `assertCron` still requires
+ * `Authorization: Bearer <CRON_SECRET>` and fails closed when the secret is
+ * unset, so an unauthenticated GET is rejected exactly as an unauthenticated
+ * POST is. Vercel injects that header automatically when CRON_SECRET is set as
+ * an environment variable.
+ */
+export async function GET(req: Request): Promise<Response> {
+  return POST(req);
+}

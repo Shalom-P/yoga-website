@@ -9,10 +9,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { normalizePromoCode, promoErrorMessage, reserveDiscount } from "@/lib/billing/promo";
 import {
-  canTransactFromRequest,
   countryFromHeaders,
   resolveRegion,
-  OUTSIDE_SERVICE_AREA,
 } from "@/lib/geo/region";
 
 // The Razorpay SDK requires the Node runtime.
@@ -70,33 +68,18 @@ export async function POST(req: Request): Promise<Response> {
     );
   }
 
-  // Service-area purchase gate. Non-admin customers must be in a served country
-  // (UAE or India) to buy a pack; admins may operate from anywhere. This is the
-  // single choke point for purchases. No order means no Checkout and no fulfilment.
+  // Still the single choke point for purchases: no order means no Checkout and no
+  // fulfilment. The profile is read for the email a promo redemption is keyed to,
+  // and the GeoIP country decides the billing currency just below.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("role, email")
+    .select("email")
     .eq("id", user.id)
     .maybeSingle();
   const country = countryFromHeaders(req.headers);
-  if (
-    !canTransactFromRequest({
-      isAdmin: profile?.role === "admin",
-      country,
-      timezone: parsed.data.clientTimezone,
-    })
-  ) {
-    return Response.json(
-      {
-        error: OUTSIDE_SERVICE_AREA,
-        message: "Session packs can only be purchased from within the UAE or India.",
-      },
-      { status: 403 },
-    );
-  }
 
-  // Resolve the billing currency from the same trusted signal as the gate
-  // (GeoIP country wins; browser timezone is the local/off-platform fallback).
+  // GeoIP country wins over the browser timezone; it decides what the customer
+  // is charged, so a caller must not pick their own currency by POSTing a zone.
   const { currency } = resolveRegion({ country, timezone: parsed.data.clientTimezone });
 
   // Trusted price lookup, rejecting anything that isn't an active plan.

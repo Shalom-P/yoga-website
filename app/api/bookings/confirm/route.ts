@@ -8,9 +8,6 @@ import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import {
-  canTransactFromRequest,
-  countryFromHeaders,
-  OUTSIDE_SERVICE_AREA,
 } from "@/lib/geo/region";
 
 // Reaches lib/google/calendar.ts (Vercel OIDC / @vercel/oidc) via
@@ -86,20 +83,6 @@ export async function POST(req: Request) {
     .select("timezone, role")
     .eq("id", user.id)
     .maybeSingle();
-
-  // Service-area free-trial gate. Non-admin customers must be in a served country
-  // (UAE or India) to claim the free 1:1; admins may book from anywhere. Paid
-  // bookings (spending already-purchased credits) are intentionally not gated here.
-  if (
-    parsed.data.isFreeTrial &&
-    !canTransactFromRequest({
-      isAdmin: bookerProfile?.role === "admin",
-      country: countryFromHeaders(req.headers),
-      timezone: parsed.data.clientTimezone,
-    })
-  ) {
-    return NextResponse.json({ error: OUTSIDE_SERVICE_AREA }, { status: 403 });
-  }
 
   // Paid (non-trial) sessions spend one session-credit, reserved after the slot
   // is confirmed available (see below). The free 1:1 trial never spends credits.

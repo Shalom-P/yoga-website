@@ -10,10 +10,8 @@ import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { normalizePromoCode, promoErrorMessage, reserveDiscount } from "@/lib/billing/promo";
 import {
-  canTransactFromRequest,
   countryFromHeaders,
   resolveRegion,
-  OUTSIDE_SERVICE_AREA,
 } from "@/lib/geo/region";
 
 // resolvePackBySlug uses the service-role client; Node runtime required.
@@ -83,21 +81,6 @@ export async function POST(req: Request): Promise<Response> {
     .eq("id", user.id)
     .maybeSingle();
   const country = countryFromHeaders(req.headers);
-  if (
-    !canTransactFromRequest({
-      isAdmin: profile?.role === "admin",
-      country,
-      timezone: parsed.data.clientTimezone,
-    })
-  ) {
-    return Response.json(
-      {
-        error: OUTSIDE_SERVICE_AREA,
-        message: "Session packs can only be purchased from within the UAE or India.",
-      },
-      { status: 403 },
-    );
-  }
 
   const { currency } = resolveRegion({ country, timezone: parsed.data.clientTimezone });
 
