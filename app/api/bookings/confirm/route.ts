@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { formatInTimeZone } from "date-fns-tz";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
@@ -8,7 +7,9 @@ import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import {
-} from "@/lib/geo/region";
+  slotInsideAvailability,
+  teacherDateISO,
+} from "@/lib/booking/availability";
 
 // Reaches lib/google/calendar.ts (Vercel OIDC / @vercel/oidc) via
 // provisionSessionMeet — that dependency is Node-runtime only.
@@ -24,49 +25,67 @@ const schema = z.object({
   clientTimezone: z.string().trim().min(1).max(64),
 });
 
-// Postgres day_of_week is 0=Sun..6=Sat; date-fns "i" returns 1=Mon..7=Sun.
-function teacherDayOfWeek(startUtc: Date, tz: string): number {
-  const iso = Number(formatInTimeZone(startUtc, tz, "i"));
-  return iso === 7 ? 0 : iso;
-}
+/**
+ * When set, booking is performed by the `book-session` Supabase Edge Function
+ * instead of inline here, and this route becomes a thin proxy.
+ *
+ * The point is to have ONE implementation of the booking rules once the native
+ * client books directly. Leaving both paths live would mean two sets of
+ * availability and overlap rules, and booking is the flow where a divergence
+ * double-books a teacher and spends a credit twice.
+ *
+ * Unset by default, so nothing changes until the function is deployed.
+ * e.g. https://<ref>.supabase.co/functions/v1/book-session
+ */
+const EDGE_URL = process.env.BOOKING_EDGE_FUNCTION_URL;
 
-// Postgres `time` columns can serialize as "06:00", "06:00:00", or "06:00:00.000".
-// Normalize to "HH:mm:ss" so the lexical string comparison below is sound — the
-// client slot picker pads identically (TeacherSlotPicker.padHms).
-function padHms(hms: string): string {
-  const [h = "00", m = "00", s = "00"] = hms.split(":");
-  return `${h.padStart(2, "0")}:${m.padStart(2, "0")}:${s.slice(0, 2).padStart(2, "0")}`;
-}
-
-type AvailabilityWindow = {
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  slot_duration_minutes: number;
-};
-
-function slotInsideAvailability(
-  start: Date,
-  end: Date,
-  durationMinutes: number,
-  tz: string,
-  windows: AvailabilityWindow[],
-): boolean {
-  const dow = teacherDayOfWeek(start, tz);
-  const endDow = teacherDayOfWeek(end, tz);
-  // Reject slots that cross midnight in the teacher TZ for v1.
-  if (dow !== endDow) return false;
-  const startHms = formatInTimeZone(start, tz, "HH:mm:ss");
-  const endHms = formatInTimeZone(end, tz, "HH:mm:ss");
-  return windows.some(
-    (w) =>
-      w.day_of_week === dow &&
-      // The requested duration must match the window's slot granularity — a
-      // client can't book a longer-than-offered slot that merely fits the end.
-      durationMinutes === (w.slot_duration_minutes || 60) &&
-      startHms >= padHms(w.start_time) &&
-      endHms <= padHms(w.end_time),
+/**
+ * Meet provisioning, confirmation email and analytics. Shared by both paths.
+ *
+ * These stay on the Node side even when the Edge Function does the booking:
+ * provisionSessionMeet needs Vercel OIDC, and the email template lives in
+ * lib/email. So a web booking still gets its Meet link synchronously, while a
+ * booking made directly against the function relies on cron/meet-retry.
+ */
+async function finishBooking(args: {
+  svc: ReturnType<typeof createSupabaseServiceClient>;
+  sessionId: string;
+  start: Date;
+  end: Date;
+  teacherId: string;
+  teacherName: string;
+  calendarId: string | null;
+  userId: string;
+  userEmail: string | null;
+  customerTz: string;
+  isFreeTrial: boolean;
+}) {
+  const meetLink = await provisionSessionMeet(
+    args.svc,
+    { id: args.sessionId, start_at: args.start.toISOString(), end_at: args.end.toISOString() },
+    {
+      summary: `Yoga with ${args.teacherName}`,
+      attendeeEmails: args.userEmail ? [args.userEmail] : [],
+      calendarId: args.calendarId,
+    },
   );
+
+  if (args.userEmail) {
+    // Awaited, not fire-and-forget: in serverless, work started after the
+    // response may not run. The helper never throws.
+    await sendBookingConfirmation({
+      to: args.userEmail,
+      teacherName: args.teacherName,
+      startUtc: args.start.toISOString(),
+      customerTz: args.customerTz,
+      meetLink,
+    });
+  }
+
+  void trackServer(args.userId, args.isFreeTrial ? "trial_booked" : "session_booked", {
+    teacher_id: args.teacherId,
+    session_id: args.sessionId,
+  });
 }
 
 export async function POST(req: Request) {
@@ -86,6 +105,67 @@ export async function POST(req: Request) {
 
   // Paid (non-trial) sessions spend one session-credit, reserved after the slot
   // is confirmed available (see below). The free 1:1 trial never spends credits.
+
+  const customerTz = bookerProfile?.timezone ?? DEFAULT_CUSTOMER_TZ;
+
+  if (EDGE_URL) {
+    // The function authenticates from the JWT, so hand it this session's token
+    // rather than the cookies it cannot read.
+    const { data: { session: authSession } } = await supabase.auth.getSession();
+    if (!authSession?.access_token) {
+      return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+    }
+
+    const res = await fetch(EDGE_URL, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${authSession.access_token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        teacherId: parsed.data.teacherId,
+        startAt: parsed.data.startAt,
+        durationMinutes: parsed.data.durationMinutes,
+        isFreeTrial: parsed.data.isFreeTrial,
+      }),
+    });
+    const body = (await res.json().catch(() => ({}))) as {
+      bookingId?: string;
+      sessionId?: string;
+      teacherName?: string;
+      startAt?: string;
+      error?: string;
+    };
+    // Error codes are identical on both sides, so pass them straight through:
+    // every client already handles slot_taken, slot_unavailable and the rest.
+    if (!res.ok || !body.sessionId || !body.bookingId) {
+      return NextResponse.json({ error: body.error ?? "booking_failed" }, { status: res.status || 500 });
+    }
+
+    const bookedStart = new Date(body.startAt ?? parsed.data.startAt);
+    const svcAfter = createSupabaseServiceClient();
+    const { data: t } = await svcAfter
+      .from("teachers")
+      .select("google_calendar_id")
+      .eq("id", parsed.data.teacherId)
+      .single();
+
+    await finishBooking({
+      svc: svcAfter,
+      sessionId: body.sessionId,
+      start: bookedStart,
+      end: new Date(bookedStart.getTime() + parsed.data.durationMinutes * 60_000),
+      teacherId: parsed.data.teacherId,
+      teacherName: body.teacherName ?? "your teacher",
+      calendarId: t?.google_calendar_id ?? null,
+      userId: user.id,
+      userEmail: user.email ?? null,
+      customerTz,
+      isFreeTrial: parsed.data.isFreeTrial,
+    });
+
+    return NextResponse.json({ bookingId: body.bookingId, sessionId: body.sessionId });
+  }
 
   const start = new Date(parsed.data.startAt);
   if (Number.isNaN(start.getTime())) {
@@ -124,7 +204,7 @@ export async function POST(req: Request) {
 
   // Honor one-off date overrides: a blocked date is never bookable, even when it
   // matches the recurring weekly availability above.
-  const teacherDate = formatInTimeZone(start, teacherTz, "yyyy-MM-dd");
+  const teacherDate = teacherDateISO(start, teacherTz);
   const { data: overrides } = await svc
     .from("teacher_slot_overrides")
     .select("is_blocked")
