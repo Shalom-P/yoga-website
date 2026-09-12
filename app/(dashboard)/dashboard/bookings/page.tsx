@@ -7,7 +7,7 @@ import { BookingsList } from "@/components/dashboard/BookingsList";
 import { HealthDocsNudge } from "@/components/dashboard/HealthDocsNudge";
 import { LocalTzLabel } from "@/components/dashboard/local-time";
 import { cn } from "@/lib/utils";
-import type { BookingStatus } from "@/lib/supabase/types";
+import type { BookingStatus, MeetStatus } from "@/lib/supabase/types";
 
 type Row = {
   id: string;
@@ -18,7 +18,7 @@ type Row = {
     start_at: string;
     end_at: string;
     meet_link: string | null;
-    meet_status: "pending" | "created" | "failed" | null;
+    meet_status: MeetStatus | null;
     teacher: { display_name: string } | null;
     class_category: { name: string } | null;
   } | null;

@@ -102,7 +102,12 @@ export type ClassCategory = {
   created_at: string;
   updated_at: string;
 }
-export type MeetStatus = "pending" | "created" | "failed";
+/**
+ * "release_pending" is the mirror of "pending": the event exists and should be
+ * torn down. Written by the `cancel-booking` Edge Function, which has no Google
+ * credentials, and swept by cron/meet-retry, which does. Migration 0038.
+ */
+export type MeetStatus = "pending" | "created" | "failed" | "release_pending";
 export type Session = {
   id: string;
   teacher_id: string;

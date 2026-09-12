@@ -4,6 +4,7 @@ import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { requireUser } from "@/lib/auth/guards";
 import { hasMedicalDocuments } from "@/lib/medical/documents";
 import { LocalTime, LocalTzLabel, LocalTzName } from "@/components/dashboard/local-time";
+import type { MeetStatus } from "@/lib/supabase/types";
 
 type NextBooking = {
   id: string;
@@ -13,7 +14,7 @@ type NextBooking = {
     start_at: string;
     end_at: string;
     meet_link: string | null;
-    meet_status: "pending" | "created" | "failed" | null;
+    meet_status: MeetStatus | null;
     teacher: { display_name: string } | null;
     class_category: { name: string } | null;
   } | null;
