@@ -178,6 +178,7 @@ html.lenis body {
   --myc-ink-3: #8a9a90;
   --myc-line: #e6dfce;
   --myc-primary-hover: #0b463b;
+  --myc-accent-hover: #b83218;  /* light-palette counterpart of the dark token */
   --myc-accent-soft: #fbd9c9;   /* peach tint */
   --myc-bg-2: #f2ecdd;
   --myc-mint: #dceae0;
@@ -351,20 +352,27 @@ html.lenis body {
 /* ============================================================
    Dark teal-glass skin — MARKETING SURFACE ONLY.
 
-   From the "My Yoga Classes" design canvas (THEMES.dark). Scoped to
-   .myc-theme rather than routed through next-themes on purpose:
+   Scoped to `.myc-dark`, NOT `.myc-theme`. `.myc-theme` is the brand layer and
+   is also applied to app/(auth)/layout.tsx, app/error.tsx and app/not-found.tsx
+   — hanging the dark palette off it silently re-skinned the login funnel, the
+   404 and the global error boundary. `.myc-dark` is added only by
+   app/(marketing)/layout.tsx, so the dark skin reaches exactly the pages it was
+   designed for.
+
+   From the "My Yoga Classes" design canvas (THEMES.dark). Applied as a class
+   rather than routed through next-themes on purpose:
      - .myc-app (dashboard + admin) keeps the light :root palette, so the
        logged-in product is untouched by this redesign.
      - No ThemeProvider change, so `forcedTheme="light"` in app/layout.tsx
        stays as-is and there is no flash-of-wrong-theme to manage.
-   Declared after the .myc-theme blocks above so these win on equal
-   specificity. Contrast against #0a2b26 (all AA or better):
+   Declared after the .myc-theme blocks above, and one class deeper, so these
+   win. Contrast against #0a2b26 (all AA or better):
      foreground #fbf7ef 14.2:1 · muted-foreground #9fbdb2 7.5:1
      accent #ff6a4d 5.4:1 · accent-bright #ff9a84 7.4:1 · primary #7fd4bd 8.7:1
    accent-foreground is the design's --on-accent (#16352e), 4.7:1 on coral.
    White on coral is only 2.8:1, so never pair text-white with bg-accent here.
    ============================================================ */
-.myc-theme {
+.myc-dark {
   color-scheme: dark;
 
   --background:               #0a2b26;   /* deep pine */
@@ -437,8 +445,8 @@ html.lenis body {
 /* The marketing wrapper paints its own background, but overscroll/rubber-band
    exposes the document behind it — which still carries the light :root cream.
    Paint the root dark whenever a marketing page is mounted. */
-html:has(.myc-theme),
-html:has(.myc-theme) body {
+html:has(.myc-dark),
+html:has(.myc-dark) body {
   background: #0a2b26;
 }
 
@@ -450,15 +458,18 @@ html:has(.myc-theme) body {
    never lands in browsers that want it unprefixed.
    The design's repeated recipe: a faint ink wash, a hairline, and a blur.
    Using color-mix against --foreground keeps one definition working on either
-   palette, so these stay correct if the marketing skin is ever flipped back. */
-.myc-theme .myc-glass {
+   palette. Deliberately NOT scoped to .myc-dark: PricingTeaser carries these
+   classes and also renders on /dashboard/plan, which sits under .myc-app, where
+   a .myc-dark-scoped rule would not match and the pack cards would lose their
+   background, border and shadow entirely. */
+.myc-glass {
   background: color-mix(in srgb, var(--foreground) 5%, transparent);
   border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
   backdrop-filter: blur(18px);
   box-shadow: 0 30px 80px -50px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 color-mix(in srgb, var(--foreground) 10%, transparent);
 }
-.myc-theme .myc-glass-strong {
+.myc-glass-strong {
   background: color-mix(in srgb, var(--foreground) 7%, transparent);
   border: 1px solid color-mix(in srgb, var(--foreground) 16%, transparent);
   backdrop-filter: blur(22px) saturate(140%);
@@ -467,7 +478,7 @@ html:has(.myc-theme) body {
 }
 /* Nav bar + sticky CTA: tinted by the page background rather than the ink, so
    content scrolling underneath reads as frosted rather than washed out. */
-.myc-theme .myc-glass-bar {
+.myc-glass-bar {
   background: color-mix(in srgb, var(--background) 62%, transparent);
   border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
   backdrop-filter: blur(20px) saturate(140%);
@@ -477,7 +488,7 @@ html:has(.myc-theme) body {
 
 /* Frosted panel for content sitting directly over the hero footage, where the
    lighter --glass tints cannot be relied on to hold contrast. */
-.myc-theme .myc-glass-over-media {
+.myc-glass-over-media {
   background: color-mix(in srgb, var(--background) 88%, transparent);
   border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
   backdrop-filter: blur(22px) saturate(140%);
@@ -489,12 +500,12 @@ html:has(.myc-theme) body {
 /* The hero video plate is full-bleed below md, where a feathered left edge
    would just eat the image; the inline mask is cancelled at that width. */
 @media (max-width: 767px) {
-  .myc-theme .myc-hero-plate {
+  .myc-dark .myc-hero-plate {
     mask-image: none !important;
     -webkit-mask-image: none !important;
   }
 }
-.myc-theme .myc-hero-wash {
+.myc-dark .myc-hero-wash {
   background: radial-gradient(
     ellipse 70% 80% at 78% 50%,
     var(--myc-hero-1) 0%,

@@ -1,8 +1,16 @@
+import type { Viewport } from "next";
 import { MotionConfig } from "motion/react";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Footer } from "@/components/marketing/Footer";
 import { LenisProvider } from "@/components/shared/LenisProvider";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
+
+// Only this route group wears the dark skin, so the browser-chrome tint is set
+// here rather than in the root layout — /login, the dashboard and admin keep the
+// root's cream. Nested viewport exports override the root's per route.
+export const viewport: Viewport = {
+  themeColor: "#0a2b26",
+};
 
 // No auth read here on purpose: awaiting cookies() (via getCurrentUser) would
 // opt the whole (marketing) group into dynamic rendering and disable every
@@ -17,7 +25,9 @@ export default function MarketingLayout({
       {/* Honour prefers-reduced-motion across all Motion animations (the JS
           whileInView/opacity reveals aren't covered by the CSS media query). */}
       <MotionConfig reducedMotion="user">
-        <div className="myc-theme">
+        {/* myc-dark carries the dark skin. It is deliberately NOT on .myc-theme:
+            that class also wraps (auth), error.tsx and not-found.tsx. */}
+        <div className="myc-theme myc-dark">
           <a
             href="#main-content"
             className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"

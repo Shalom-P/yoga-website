@@ -17,7 +17,9 @@ export function StickyMobileCTA() {
 
   return (
     <div
-      className={`fixed inset-x-0 bottom-0 z-[60] p-3 transition-transform duration-300 md:hidden ${
+      // z-40, below the z-50 dialog/sheet overlay: at z-[60] this bar floated over
+      // an open modal and swallowed taps meant for its footer buttons.
+      className={`fixed inset-x-0 bottom-0 z-40 p-3 transition-transform duration-300 md:hidden ${
         show ? "translate-y-0" : "translate-y-full"
       }`}
     >

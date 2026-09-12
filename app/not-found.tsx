@@ -19,7 +19,7 @@ export default function NotFound() {
         The page you&apos;re looking for doesn&apos;t exist or has moved.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Button asChild size="lg" className="h-12 rounded-full px-7 bg-accent text-white hover:bg-accent/90">
+        <Button asChild size="lg" className="h-12 rounded-full px-7 bg-accent text-accent-foreground hover:bg-accent/90">
           <Link href="/">Back to home</Link>
         </Button>
         <Button asChild variant="outline" size="lg" className="h-12 rounded-full px-7">

@@ -26,6 +26,7 @@ import {
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { SUPPORTED_CURRENCIES } from "@/lib/geo/region";
 import type { DiscountCode, DiscountType, Plan } from "@/lib/supabase/types";
 
 type Draft = {
@@ -38,7 +39,7 @@ type Draft = {
   applies_to_plan_ids: string[];
   max_uses: string;
   per_email_max: string;
-  currency: string; // "" = any; else 'INR' | 'AED'
+  currency: string; // "" = any; else one of SUPPORTED_CURRENCIES
   valid_from: string;
   valid_until: string;
   is_active: boolean;
@@ -332,7 +333,7 @@ export function DiscountsAdmin({
                 />
               </div>
               <div>
-                <LabelWithHint hint="Lock a fixed-amount code to one currency so the same value isn't applied across AED and INR (they differ ~22x). 'Any' is fine for percentage codes.">
+                <LabelWithHint hint="Lock a fixed-amount code to one currency so the same integer value isn't applied across currencies whose minor units differ by up to ~90x. 'Any' is fine for percentage codes, which are currency-agnostic.">
                   Currency
                 </LabelWithHint>
                 <Select
@@ -346,8 +347,11 @@ export function DiscountsAdmin({
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="any">Any currency</SelectItem>
-                    <SelectItem value="INR">INR only</SelectItem>
-                    <SelectItem value="AED">AED only</SelectItem>
+                    {SUPPORTED_CURRENCIES.map((c) => (
+                      <SelectItem key={c} value={c}>
+                        {c} only
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

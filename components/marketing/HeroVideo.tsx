@@ -83,14 +83,21 @@ export function HeroVideo({ className }: { className?: string }) {
 
     // Don't decode frames nobody is looking at — this is most of the battery
     // and CPU cost once the visitor has scrolled past the hero.
+    let inView = true;
     const io = new IntersectionObserver(
-      ([entry]) => (entry.isIntersecting ? play() : v.pause()),
+      ([entry]) => {
+        inView = entry.isIntersecting;
+        if (inView) play();
+        else v.pause();
+      },
       { threshold: 0.1 },
     );
     io.observe(v);
 
     const onVisibility = () => {
-      if (document.visibilityState === "visible") play();
+      // Guarded on inView: without it, returning to the tab resumed the video
+      // even when it had been scrolled far off screen, undoing the pause above.
+      if (document.visibilityState === "visible" && inView) play();
     };
     document.addEventListener("visibilitychange", onVisibility);
 

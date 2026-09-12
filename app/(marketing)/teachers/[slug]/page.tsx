@@ -120,7 +120,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
             <Button
               asChild
               size="lg"
-              className="h-12 rounded-full bg-accent px-6 font-semibold text-white shadow-[var(--myc-shadow-soft)] hover:bg-accent/90"
+              className="h-12 rounded-full bg-accent px-6 font-semibold text-accent-foreground shadow-[var(--myc-shadow-soft)] hover:bg-accent/90"
             >
               <Link href={`/login?next=${encodeURIComponent(`/dashboard/book/${t.slug}`)}`}>
                 Book a 1:1 with {t.display_name.split(" ")[0]}

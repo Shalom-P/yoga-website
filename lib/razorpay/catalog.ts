@@ -129,17 +129,45 @@ export async function listActivePacks(currency: Currency): Promise<RazorpayPack[
  * with GBP rows and a fourth without) is deliberately NOT offered, because a
  * pricing grid that silently drops a pack is worse than one in rupees.
  */
+/**
+ * The answer is a property of the pack catalogue, not of the caller, and only
+ * changes when an admin edits prices — but /api/region is public and calls this
+ * on every visit, so without a cache each page view costs two service-role reads
+ * against the same Postgres the booking flow depends on.
+ */
+const PRICED_TTL_MS = 60_000;
+let pricedCache: { at: number; value: Set<Currency> } | null = null;
+
 export async function pricedCurrencies(): Promise<Set<Currency>> {
+  const now = Date.now();
+  if (pricedCache && now - pricedCache.at < PRICED_TTL_MS) return pricedCache.value;
+
   const svc = createSupabaseServiceClient();
-  const { data: plans } = await svc.from("plans").select("id").eq("is_active", true);
+  // Both reads THROW rather than coalescing to []. A failed read is not the same
+  // fact as "this currency has no prices": swallowing it silently downgraded
+  // every non-INR customer for the duration of a blip, logged nothing, and then
+  // self-healed. Failing loud keeps a transient outage out of people's invoices.
+  const { data: plans, error: plansErr } = await svc
+    .from("plans")
+    .select("id")
+    .eq("is_active", true);
+  if (plansErr) {
+    throw new Error(`pricedCurrencies: could not read plans — ${plansErr.message}`);
+  }
   const activeIds = new Set((plans ?? []).map((p) => p.id));
   const priced = new Set<Currency>([DEFAULT_CURRENCY]);
-  if (activeIds.size === 0) return priced;
+  if (activeIds.size === 0) {
+    pricedCache = { at: now, value: priced };
+    return priced;
+  }
 
-  const { data: prices } = await svc
+  const { data: prices, error: pricesErr } = await svc
     .from("plan_prices")
     .select("plan_id, currency")
     .in("plan_id", [...activeIds]);
+  if (pricesErr) {
+    throw new Error(`pricedCurrencies: could not read plan_prices — ${pricesErr.message}`);
+  }
 
   const byCurrency = new Map<string, Set<string>>();
   for (const row of prices ?? []) {
@@ -152,6 +180,7 @@ export async function pricedCurrencies(): Promise<Set<Currency>> {
       priced.add(currency);
     }
   }
+  pricedCache = { at: now, value: priced };
   return priced;
 }
 

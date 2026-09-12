@@ -122,10 +122,12 @@ export default function TermsPage() {
               Paid access is sold as <strong>one-time packs of live 1:1 sessions</strong>, priced
               in{" "}
               <strong>UAE Dirhams (AED) or Indian Rupees (INR) depending on your region</strong>{" "}
-              and paid via Razorpay or, for UAE customers, by bank transfer. If you are outside
-              the UAE and India you are charged in <strong>Indian Rupees (INR)</strong>; your bank
-              or card issuer may apply its own conversion rate and a foreign-transaction fee,
-              which we do not receive and cannot control. There is no subscription and no
+              and paid via Razorpay or, for UAE customers, by bank transfer. Elsewhere we bill
+              in the currency shown on the pack before you pay, which may be your own or, where
+              we do not price in it, another currency. The exact amount and currency are always
+              displayed at checkout before you confirm, and that figure is what you are charged.
+              Your bank or card issuer may apply its own conversion rate and a foreign-transaction
+              fee, which we do not receive and cannot control. There is no subscription and no
               automatic recurring charge.
             </p>
             <ul className="list-disc pl-6 space-y-1">
