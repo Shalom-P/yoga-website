@@ -38,7 +38,7 @@ export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   const slug = parsed.success ? parsed.data.slug : undefined;
 
-  revalidatePath("/"); // landing page TeacherCarousel
+  revalidatePath("/"); // landing page TeacherGrid
   revalidatePath("/teachers"); // teachers listing
   if (slug) revalidatePath(`/teachers/${slug}`); // teacher detail page
 

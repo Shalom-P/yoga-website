@@ -11,8 +11,8 @@ import { FAQS } from "@/lib/data/faqs";
 
 export function FAQ() {
   return (
-    <section id="faq" className="py-24 md:py-32">
-      <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
+    <section id="faq" className="px-6 pb-[110px] pt-10">
+      <div className="mx-auto max-w-[760px]">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -20,22 +20,22 @@ export function FAQ() {
           transition={{ duration: 0.5 }}
           className="text-center mb-12"
         >
-          <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-3">
+          <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
             Common questions
           </div>
-          <h2 className="text-3xl md:text-5xl tracking-tight text-balance">
-            The bits people usually ask before booking.
+          <h2 className="text-[clamp(2rem,4vw,3.2rem)] font-medium leading-[1.08] tracking-[-0.015em] text-balance">
+            Before you book.
           </h2>
         </motion.div>
 
-        <Accordion className="space-y-3">
+        <Accordion className="flex flex-col gap-2.5">
           {FAQS.map((f, i) => (
             <AccordionItem
               key={i}
               value={`faq-${i}`}
-              className="rounded-2xl border border-border bg-card px-5 data-[state=open]:bg-secondary/30"
+              className="myc-glass px-[22px] data-[state=open]:bg-foreground/[0.08]"
             >
-              <AccordionTrigger className="text-left text-base font-medium hover:no-underline py-5">
+              <AccordionTrigger className="py-5 text-left text-[16.5px] font-medium hover:no-underline">
                 {f.q}
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground pb-5 text-pretty">

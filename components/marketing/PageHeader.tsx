@@ -34,20 +34,29 @@ export function PageHeader({
 }: PageHeaderProps) {
   const centered = align === "center";
   return (
-    <section className={`px-7 pt-32 pb-12 ${BG_CLASS[background]}`}>
+    <section
+      className={`relative overflow-hidden px-6 pb-10 pt-[106px] ${BG_CLASS[background]}`}
+    >
+      {/* Soft teal bloom behind the title, matching the landing hero's atmosphere */}
       <div
-        className={`mx-auto max-w-3xl ${centered ? "text-center" : "text-left max-w-4xl"}`}
+        aria-hidden="true"
+        className={`pointer-events-none absolute -top-[35%] h-[600px] w-[600px] rounded-full blur-[140px] ${
+          centered ? "left-1/2 -translate-x-1/2" : "-right-[10%]"
+        }`}
+        style={{ background: "var(--myc-glow-1)" }}
+      />
+      <div
+        className={`relative mx-auto max-w-3xl ${centered ? "text-center" : "text-left max-w-4xl"}`}
       >
-        <div className={`myc-eyebrow mb-4 ${centered ? "justify-center" : ""}`}>
-          <span className="myc-dot" aria-hidden="true" />
+        <div className="mb-[18px] text-[13px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           {eyebrow}
         </div>
-        <h1 className="text-[clamp(2.75rem,6vw,4.5rem)] leading-[1.08] tracking-tight text-balance [&_em]:text-accent [&_em]:italic">
+        <h1 className="text-[clamp(2.6rem,5.5vw,4.8rem)] font-medium leading-[1.04] tracking-[-0.015em] text-balance [&_em]:italic [&_em]:text-accent">
           {title}
         </h1>
         {subhead ? (
           <p
-            className={`mt-5 text-lg text-muted-foreground text-pretty ${
+            className={`mt-[22px] text-lg text-muted-foreground text-pretty ${
               centered ? "mx-auto max-w-2xl" : "max-w-2xl"
             }`}
           >

@@ -1,10 +1,8 @@
 import { Hero } from "@/components/marketing/Hero";
-import { Marquee } from "@/components/marketing/Marquee";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
-import { TeacherCarousel } from "@/components/marketing/TeacherCarousel";
+import { TeacherGrid } from "@/components/marketing/TeacherGrid";
 import { PracticeSection } from "@/components/marketing/PracticeSection";
 import { TestimonialWall } from "@/components/marketing/TestimonialWall";
-import { OutcomeStats } from "@/components/marketing/OutcomeStats";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { FAQ } from "@/components/marketing/FAQ";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
@@ -56,11 +54,9 @@ export default async function LandingPage() {
         trustRating={trustRating}
         trustCount={trustCount}
       />
-      <Marquee />
-      <OutcomeStats rating={trustRating} />
       <HowItWorks />
-      <TeacherCarousel teachers={teachers} />
       <PracticeSection categories={categories} />
+      <TeacherGrid teachers={teachers} />
       <PricingTeaser plans={plans} />
       <TestimonialWall reviews={reviews} />
       <FAQ />
