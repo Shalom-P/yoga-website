@@ -29,6 +29,7 @@ import { toast } from "sonner";
 import { formatCustomerTime } from "@/lib/timezone";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AdminPageHeader } from "@/components/admin/AdminPage";
+import type { MeetStatus } from "@/lib/supabase/types";
 
 type SessionRow = {
   id: string;
@@ -38,7 +39,7 @@ type SessionRow = {
   status: "scheduled" | "live" | "completed" | "cancelled";
   is_free_trial: boolean;
   meet_link: string | null;
-  meet_status: "pending" | "created" | "failed" | null;
+  meet_status: MeetStatus | null;
   recording_url: string | null;
   teacher: { id: string; display_name: string } | null;
   category: { id: string; name: string } | null;

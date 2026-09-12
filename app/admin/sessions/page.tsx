@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { SessionsAdmin } from "@/components/admin/SessionsAdmin";
+import type { MeetStatus } from "@/lib/supabase/types";
 
 type SessionWithJoins = {
   id: string;
@@ -9,7 +10,7 @@ type SessionWithJoins = {
   status: "scheduled" | "live" | "completed" | "cancelled";
   is_free_trial: boolean;
   meet_link: string | null;
-  meet_status: "pending" | "created" | "failed" | null;
+  meet_status: MeetStatus | null;
   recording_url: string | null;
   teacher: { id: string; display_name: string } | null;
   category: { id: string; name: string } | null;

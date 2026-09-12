@@ -2,7 +2,7 @@ import "server-only";
 
 import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import { provisionSessionMeet } from "@/lib/google/provisionMeet";
+import { provisionSessionMeet, releaseSessionMeet } from "@/lib/google/provisionMeet";
 
 // provisionSessionMeet -> lib/google/calendar.ts uses @vercel/oidc (Node only).
 export const runtime = "nodejs";
@@ -98,7 +98,62 @@ export async function POST(req: Request): Promise<Response> {
     if (meetLink) processed++;
   }
 
-  return Response.json({ ok: true, processed });
+  const released = await sweepReleases(svc);
+
+  return Response.json({ ok: true, processed, released });
+}
+
+/**
+ * The other direction: tear down Meet events whose bookings were all cancelled.
+ *
+ * `/api/bookings/cancel` deletes the event inline, because it runs on Node and
+ * has the Google credentials. The `cancel-booking` Edge Function, which is what
+ * the native iOS client calls, does not and cannot — Vercel OIDC is not
+ * mintable from Deno — so it marks the session `meet_status='release_pending'`
+ * (migration 0038) and leaves the deletion here.
+ *
+ * Without this, a customer cancelling from the app would leave the teacher a
+ * dead hour on their calendar and keep a live join link to a class that is not
+ * happening.
+ *
+ * The set is normally empty and is indexed (`sessions_meet_release_idx`).
+ */
+async function sweepReleases(
+  svc: ReturnType<typeof createSupabaseServiceClient>,
+): Promise<number> {
+  const { data: sessions } = await svc
+    .from("sessions")
+    .select("id, meet_event_id, meet_calendar_id")
+    .eq("meet_status", "release_pending")
+    .limit(BATCH_SIZE);
+
+  if (!sessions || sessions.length === 0) return 0;
+
+  let released = 0;
+  for (const session of sessions) {
+    // Swallows its own errors, so a Google outage leaves the row marked and the
+    // next run retries rather than losing the intent.
+    await releaseSessionMeet(session);
+
+    // The link is gone whether or not Google agreed, so it must stop being
+    // shown. Clearing meet_event_id also stops the retry pass above from
+    // adopting the deleted event via `recover: true`.
+    //
+    // meet_status goes to NULL, not 'failed': the retry pass selects
+    // .in("meet_status", ["pending","failed"]), so 'failed' would make it
+    // immediately provision a fresh link for a session with no attendees, and
+    // this sweep would then have nothing to release it again. NULL means "no
+    // link, and none wanted", which is exactly the state a session with no live
+    // bookings should be in.
+    const { error } = await svc
+      .from("sessions")
+      .update({ meet_status: null, meet_link: null, meet_event_id: null })
+      .eq("id", session.id)
+      .eq("meet_status", "release_pending"); // idempotent against a concurrent run
+    if (!error) released++;
+  }
+
+  return released;
 }
 
 /**
