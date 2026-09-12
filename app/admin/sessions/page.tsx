@@ -61,7 +61,7 @@ export default async function AdminSessionsPage({
   const sessionRows: SessionWithJoins[] = sessions ?? [];
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div>
       <SessionsAdmin
         sessions={sessionRows}
         teachers={teachers ?? []}

@@ -8,7 +8,7 @@ export default async function AdminDiscountsPage() {
     supabase.from("plans").select("id, name").eq("is_active", true).order("sort_order"),
   ]);
   return (
-    <div className="p-8 max-w-6xl">
+    <div>
       <DiscountsAdmin discounts={discounts ?? []} plans={plans ?? []} />
     </div>
   );

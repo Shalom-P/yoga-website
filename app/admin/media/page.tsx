@@ -8,7 +8,7 @@ export default async function AdminMediaPage() {
     .select("*")
     .order("created_at", { ascending: false });
   return (
-    <div className="p-8 max-w-6xl">
+    <div>
       <MediaAdmin media={data ?? []} />
     </div>
   );

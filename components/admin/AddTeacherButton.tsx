@@ -9,7 +9,7 @@ export function AddTeacherButton() {
   const [open, setOpen] = useState(false);
   return (
     <>
-      <Button className="rounded-full" onClick={() => setOpen(true)}>
+      <Button onClick={() => setOpen(true)}>
         <Plus className="size-4 mr-1" />
         Add teacher
       </Button>

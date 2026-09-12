@@ -89,17 +89,17 @@ export function ReviewsAdmin({ rows }: { rows: ReviewRow[] }) {
 
   return (
     <>
-      <div className="rounded-2xl border border-border bg-card overflow-x-auto">
+      <div className="myc-glass overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/40">
+          <thead>
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Author</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Teacher</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Rating</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground max-w-xs">Body</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
-              <th className="px-4 py-3"></th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Author</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Teacher</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Rating</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap max-w-xs">Body</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Status</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Date</th>
+              <th className="bg-foreground/4 px-4 py-2.5"></th>
             </tr>
           </thead>
           <tbody>

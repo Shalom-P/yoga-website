@@ -107,21 +107,21 @@ export function TeacherEditPanel({
 
   return (
     <>
-      <div className="rounded-2xl border border-border bg-card p-6">
+      <div className="myc-glass p-6">
         <div className="flex items-start justify-between gap-4">
           <div>
             <div className="text-sm text-muted-foreground">Slug</div>
             <div className="font-mono text-sm">{teacher.slug}</div>
           </div>
           <div className="flex gap-2">
-            <Button size="sm" variant="outline" className="rounded-full" onClick={() => setEditOpen(true)}>
+            <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
               <Pencil className="size-3.5 mr-1" />
               Edit details
             </Button>
             <Button
               size="sm"
               variant="outline"
-              className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+              className="text-destructive hover:bg-destructive/10 hover:text-destructive"
               onClick={() => setDeleteOpen(true)}
               disabled={!teacher.is_active}
             >
@@ -171,7 +171,7 @@ export function TeacherEditPanel({
               <Button
                 size="sm"
                 variant="outline"
-                className="rounded-full text-destructive hover:bg-destructive/10 hover:text-destructive"
+                className="text-destructive hover:bg-destructive/10 hover:text-destructive"
                 onClick={() => setRevokeOpen(true)}
               >
                 <UserX className="size-3.5 mr-1" />
@@ -187,7 +187,7 @@ export function TeacherEditPanel({
               <Button
                 size="sm"
                 variant="outline"
-                className="rounded-full"
+               
                 onClick={() => setInviteOpen(true)}
               >
                 <Mail className="size-3.5 mr-1" />

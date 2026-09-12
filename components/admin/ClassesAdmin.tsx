@@ -28,6 +28,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { MediaUploadField } from "./MediaUploadField";
 import type { ClassCategory, IntensityLevel } from "@/lib/supabase/types";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 const CLASS_MEDIA_BUCKET = "promotional-media";
 
@@ -152,17 +153,20 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-          Class categories
-        </h1>
-        <Button className="rounded-full" onClick={openAdd}>
-          <Plus className="size-4 mr-1" />
-          Add category
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Catalog"
+        title="Class categories"
+        sub="The condition-based categories the marketing site groups classes by."
+        className="mb-7"
+        actions={
+          <Button onClick={openAdd}>
+            <Plus className="size-4 mr-1" />
+            Add category
+          </Button>
+        }
+      />
 
-      <div className="rounded-2xl border border-border bg-card divide-y divide-border">
+      <div className="myc-glass divide-y divide-border">
         {categories.map((c) => (
           <div key={c.id} className="flex items-center gap-4 px-5 py-4">
             <div className="flex-1">
@@ -174,7 +178,7 @@ export function ClassesAdmin({ categories }: { categories: ClassCategory[] }) {
               </div>
               <div className="text-sm text-muted-foreground">{c.description}</div>
             </div>
-            <span className="text-xs px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground capitalize">
+            <span className="myc-pill myc-pill-gray capitalize">
               {c.intensity}
             </span>
             <Button size="sm" variant="ghost" onClick={() => openEdit(c)}>

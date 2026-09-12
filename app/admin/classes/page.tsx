@@ -8,7 +8,7 @@ export default async function AdminClassesPage() {
     .select("*")
     .order("sort_order");
   return (
-    <div className="p-8 max-w-5xl">
+    <div className="max-w-5xl">
       <ClassesAdmin categories={data ?? []} />
     </div>
   );

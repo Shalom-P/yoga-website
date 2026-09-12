@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { PaymentsAdmin, type BankTransferRow } from "@/components/admin/PaymentsAdmin";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 /**
  * Manual UAE bank-transfer verification queue. Lists every bank-transfer payment
@@ -57,18 +58,22 @@ export default async function AdminPaymentsPage() {
   const pendingCount = rows.filter((r) => r.status === "pending").length;
 
   return (
-    <div className="p-8 max-w-7xl">
-      <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-        Bank transfers
-      </h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">
-        UAE customers paying by SWIFT. Verify each transfer to release their session credits.
-        {pendingCount > 0 && (
-          <span className="ml-1 font-medium text-foreground">
-            {pendingCount} awaiting verification.
-          </span>
-        )}
-      </p>
+    <div>
+      <AdminPageHeader
+        eyebrow="Operations"
+        title="Bank transfers"
+        sub={
+          <>
+            UAE customers paying by SWIFT. Verify each transfer to release their
+            prepaid sessions.
+            {pendingCount > 0 && (
+              <strong className="ml-1 font-semibold text-foreground">
+                {pendingCount} awaiting verification.
+              </strong>
+            )}
+          </>
+        }
+      />
       <div className="mt-6">
         <PaymentsAdmin rows={rows} />
       </div>

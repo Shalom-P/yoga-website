@@ -6,8 +6,8 @@ import { YogaAvatar } from "@/components/shared/YogaAvatar";
 import { formatMoney } from "@/lib/i18n/money";
 import { DEFAULT_CURRENCY } from "@/lib/geo/region";
 import { formatCustomerTime, formatInTz, tzShort, DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
-import { cn } from "@/lib/utils";
 import type { BookingStatus } from "@/lib/supabase/types";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 type Kpis = {
   signups_today: number;
@@ -133,51 +133,45 @@ export default async function AdminDashboard() {
   const today = formatInTz(nowIso, DEFAULT_CUSTOMER_TZ, "EEEE, d MMMM");
 
   return (
-    <div className="p-8 max-w-6xl">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="font-[family-name:var(--font-cormorant)] text-3xl md:text-4xl tracking-tight">
-            Overview
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Signed in as {user.email} · {today}
-          </p>
-        </div>
-        <Button asChild className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90">
-          <Link href="/admin/sessions">
+    <div>
+      <AdminPageHeader
+        eyebrow="Studio console"
+        pulse
+        title="Overview"
+        sub={`Signed in as ${user.email} · ${today}`}
+        actions={
+          <Link
+            href="/admin/sessions"
+            className="inline-flex items-center gap-2 bg-accent px-[18px] py-2.5 text-sm font-semibold text-accent-foreground shadow-[0_14px_40px_-16px_color-mix(in_srgb,var(--accent)_45%,transparent)] transition-colors hover:bg-[var(--myc-accent-hover)]"
+          >
             <Plus className="size-4" />
             Schedule a session
           </Link>
-        </Button>
-      </div>
+        }
+      />
 
-      <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="mt-6 grid gap-3.5 [grid-template-columns:repeat(auto-fit,minmax(200px,1fr))]">
         {stats.map((stat) => (
-          <div key={stat.label} className="rounded-2xl border border-border bg-card p-5 shadow-[var(--myc-shadow-card)]">
+          <div key={stat.label} className="myc-glass px-[22px] py-5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
+              <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
                 {stat.label}
               </span>
               <stat.icon className="size-4 text-muted-foreground" />
             </div>
-            <div
-              className={cn(
-                "mt-3 font-[family-name:var(--font-cormorant)] text-[2.4rem] leading-none",
-                stat.highlight && "italic text-accent"
-              )}
-            >
+            <div className="mt-3 font-[family-name:var(--font-cormorant)] text-[clamp(2rem,2.8vw,2.6rem)] italic leading-none tracking-[-0.01em] text-accent">
               {stat.value}
             </div>
-            <div className="mt-2 text-xs text-muted-foreground">{stat.note}</div>
+            <div className="mt-2.5 text-[12.5px] text-muted-foreground">{stat.note}</div>
           </div>
         ))}
       </div>
 
       <div className="mt-6 grid lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--myc-shadow-card)]">
+        <div className="myc-glass p-6">
           <div className="flex items-center justify-between">
-            <h2 className="font-[family-name:var(--font-cormorant)] text-xl">Upcoming sessions</h2>
-            <Link href="/admin/sessions" className="text-xs text-primary hover:underline">
+            <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold">Upcoming sessions</h2>
+            <Link href="/admin/sessions" className="text-[12.5px] font-semibold text-accent hover:underline">
               View all →
             </Link>
           </div>
@@ -228,8 +222,8 @@ export default async function AdminDashboard() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--myc-shadow-card)]">
-          <h2 className="font-[family-name:var(--font-cormorant)] text-xl">Recent activity</h2>
+        <div className="myc-glass p-6">
+          <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold">Recent activity</h2>
           {activity.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
               Nothing logged yet. Webhook events and admin actions show up here.
@@ -255,10 +249,10 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--myc-shadow-card)]">
+      <div className="myc-glass mt-6 overflow-hidden">
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
-          <h2 className="font-[family-name:var(--font-cormorant)] text-xl">Recent bookings</h2>
-          <Button asChild size="sm" className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
+          <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold">Recent bookings</h2>
+          <Button asChild size="sm" className="bg-accent text-accent-foreground hover:bg-accent/90">
             <Link href="/admin/bookings">All bookings →</Link>
           </Button>
         </div>
@@ -327,7 +321,7 @@ function BookingStatusPill({ status }: { status: BookingStatus }) {
 
 function Th({ children }: { children?: React.ReactNode }) {
   return (
-    <th className="bg-muted px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <th className="bg-foreground/4 px-[18px] py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
       {children}
     </th>
   );

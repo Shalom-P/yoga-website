@@ -4,6 +4,7 @@ import { ArrowLeft } from "lucide-react";
 import { requireAdmin } from "@/lib/auth/guards";
 import { AvailabilityGrid } from "@/components/admin/AvailabilityGrid";
 import { SlotOverrides } from "@/components/admin/SlotOverrides";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 export default async function TeacherSlotsPage({
   params,
@@ -33,7 +34,7 @@ export default async function TeacherSlotsPage({
   ]);
 
   return (
-    <div className="p-8 max-w-6xl">
+    <div>
       <Link
         href={`/admin/teachers/${id}`}
         className="text-sm text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mb-4"
@@ -41,12 +42,11 @@ export default async function TeacherSlotsPage({
         <ArrowLeft className="size-3.5" />
         Back to teacher
       </Link>
-      <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-        Availability: {teacher.display_name}
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Times shown in the teacher&apos;s local timezone ({teacher.timezone}). Click cells to toggle availability.
-      </p>
+      <AdminPageHeader
+        eyebrow="Availability"
+        title={teacher.display_name}
+        sub={`Times shown in the teacher's local timezone (${teacher.timezone}). Click cells to toggle availability.`}
+      />
 
       <AvailabilityGrid teacherId={id} teacherTimezone={teacher.timezone} initial={availability ?? []} />
 

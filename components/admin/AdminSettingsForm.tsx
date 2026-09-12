@@ -71,7 +71,7 @@ export function AdminSettingsForm({ section, fields }: { section: string; fields
           )}
         </div>
       ))}
-      <Button onClick={save} disabled={saving} className="rounded-full">
+      <Button onClick={save} disabled={saving}>
         {saving ? "Saving…" : "Save changes"}
       </Button>
     </div>

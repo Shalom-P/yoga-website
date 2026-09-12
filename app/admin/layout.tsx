@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { requireAdmin } from "@/lib/auth/guards";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
-import { SignOutButton } from "@/components/shared/SignOutButton";
 
 export default async function AdminLayout({
   children,
@@ -10,22 +8,32 @@ export default async function AdminLayout({
 }) {
   await requireAdmin();
   return (
-    <div className="myc-app myc-dark min-h-dvh flex flex-col lg:flex-row">
+    <div className="myc-app myc-dark myc-sharp min-h-dvh flex flex-col lg:flex-row">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-foreground"
       >
         Skip to content
       </a>
       <AdminSidebar />
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="hidden lg:flex border-b border-border bg-background h-14 items-center justify-between px-6">
-          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground">
-            ← Back to site
-          </Link>
-          <SignOutButton />
-        </header>
-        <main id="main-content" className="flex-1 bg-secondary/20">{children}</main>
+      {/* `overflow-clip` contains the bloom without creating a scroll container,
+          which would break sticky table headers and the sticky sidebar. */}
+      <div className="relative flex min-w-0 flex-1 flex-col overflow-clip">
+        {/* Radial gradient, not a blurred orb: blur() here is a full-size filter
+            pass repaid on every navigation (see 45dff3e). */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-[15%] -top-[25%] size-[640px]"
+          style={{
+            background: "radial-gradient(closest-side, var(--myc-glow-1), transparent 70%)",
+          }}
+        />
+        <main
+          id="main-content"
+          className="relative mx-auto w-full max-w-[1180px] flex-1 px-5 pb-32 pt-8 sm:px-8 sm:pt-10 lg:px-9"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

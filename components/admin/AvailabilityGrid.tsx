@@ -148,15 +148,15 @@ export function AvailabilityGrid({ teacherId, teacherTimezone, initial }: Props)
 
   return (
     <>
-      <div className="mt-8 rounded-2xl border border-border bg-card overflow-x-auto">
+      <div className="mt-8 myc-glass overflow-x-auto">
         <table className="w-full min-w-[640px] text-sm">
-          <thead className="bg-muted/40">
+          <thead>
             <tr>
-              <th className="px-3 py-2 text-left text-muted-foreground font-medium">
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">
                 Time ({teacherTimezone === "Asia/Kolkata" ? "IST" : teacherTimezone})
               </th>
               {DAYS.map((d) => (
-                <th key={d.dow} className="px-3 py-2 text-left text-muted-foreground font-medium">
+                <th key={d.dow} className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">
                   {d.label}
                 </th>
               ))}
@@ -184,7 +184,7 @@ export function AvailabilityGrid({ teacherId, teacherTimezone, initial }: Props)
                           "w-full h-8 rounded-md border transition-colors flex items-center justify-center",
                           active
                             ? "bg-primary text-primary-foreground border-primary hover:bg-primary/90"
-                            : "border-border bg-card hover:bg-muted",
+                            : "border-border bg-foreground/5 hover:bg-foreground/10",
                           isPending && "opacity-60"
                         )}
                       >
