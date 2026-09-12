@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { PhoneField } from "@/components/ui/phone-field";
 import { Label } from "@/components/ui/label";
-import { FieldHint, LabelWithHint } from "@/components/ui/field-hint";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -74,73 +73,123 @@ export function ProfileForm({ initial }: { initial: Initial }) {
   }
 
   return (
-    <form onSubmit={onSubmit} className="mt-8 space-y-5">
-      <div>
-        <LabelWithHint
-          htmlFor="full_name"
-          hint="How teachers will greet you in class. Visible only on your own bookings and to admins."
-        >
-          Full name
-        </LabelWithHint>
-        <Input id="full_name" value={state.full_name} onChange={(e) => set("full_name", e.target.value)} className="mt-1.5" />
-      </div>
-      <div>
-        <LabelWithHint
-          htmlFor="email"
-          hint="Comes from your login provider (Google or email). To change, sign in with a different account."
-        >
-          Email
-        </LabelWithHint>
-        <Input id="email" type="email" value={state.email} disabled className="mt-1.5" />
-        <p className="text-xs text-muted-foreground mt-1">Email is set by your login provider.</p>
-      </div>
-      <div>
-        <LabelWithHint
-          htmlFor="phone"
-          hint="We use this only to reach you about your sessions, never for marketing."
-        >
-          Mobile number <span aria-hidden="true" className="text-destructive">*</span>
-        </LabelWithHint>
+    <form onSubmit={onSubmit} className="myc-glass mt-7 flex flex-col gap-[22px] p-7">
+      <Field
+        htmlFor="full_name"
+        label="Full name"
+        hint="How teachers will greet you in class. Visible only on your own bookings and to admins."
+      >
+        <Input
+          id="full_name"
+          value={state.full_name}
+          onChange={(e) => set("full_name", e.target.value)}
+        />
+      </Field>
+
+      <Field
+        htmlFor="email"
+        label="Email"
+        hint="Email is set by your login provider. To change it, sign in with a different account."
+      >
+        <Input id="email" type="email" value={state.email} disabled />
+      </Field>
+
+      <Field
+        htmlFor="phone"
+        label={
+          <>
+            Mobile number{" "}
+            <span aria-hidden="true" className="text-accent">
+              *
+            </span>
+          </>
+        }
+        hint="We use this only to reach you about your sessions, never for marketing."
+      >
         <PhoneField
           id="phone"
           required
           inputRef={phoneRef}
           value={state.phone ?? ""}
           onChange={(v) => set("phone", v)}
-          className="mt-1.5"
         />
+      </Field>
+
+      <div className="grid gap-[18px] [grid-template-columns:repeat(auto-fit,minmax(220px,1fr))]">
+        <Field
+          label="Timezone"
+          hint="Drives the times shown on bookings, reminders and the slot picker."
+        >
+          <TimezoneSelect
+            value={state.timezone}
+            onValueChange={(v) => set("timezone", v)}
+          />
+        </Field>
+        <Field label="Experience level" hint="Helps teachers tailor cues. Change it any time.">
+          <Select
+            value={state.experience_level}
+            onValueChange={(v) => v && set("experience_level", v as Initial["experience_level"])}
+          >
+            <SelectTrigger className="h-11 w-full capitalize">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="beginner">Beginner</SelectItem>
+              <SelectItem value="intermediate">Intermediate</SelectItem>
+              <SelectItem value="advanced">Advanced</SelectItem>
+            </SelectContent>
+          </Select>
+        </Field>
       </div>
-      <div>
-        <LabelWithHint hint="Your local timezone. Drives the times shown on bookings, reminders, and the slot picker.">
-          Timezone
-        </LabelWithHint>
-        <div className="mt-1.5">
-          <TimezoneSelect value={state.timezone} onValueChange={(v) => set("timezone", v)} />
-        </div>
-      </div>
-      <div>
-        <LabelWithHint hint="Helps teachers tailor cues. You can change this any time.">
-          Experience level
-        </LabelWithHint>
-        <Select value={state.experience_level} onValueChange={(v) => v && set("experience_level", v as Initial["experience_level"])}>
-          <SelectTrigger className="mt-1.5 h-11 w-full capitalize"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            <SelectItem value="beginner">Beginner</SelectItem>
-            <SelectItem value="intermediate">Intermediate</SelectItem>
-            <SelectItem value="advanced">Advanced</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <Label className="items-center gap-3 text-sm font-normal">
-        <Checkbox checked={state.marketing_opt_in} onCheckedChange={(v) => set("marketing_opt_in", v === true)} />
-        <span>Email me tips, drops, and the occasional offer.</span>
-        <FieldHint>
-          Optional. Class reminders and receipts still go out regardless.
-        </FieldHint>
+
+      <Label className="items-start gap-3 text-sm font-normal">
+        <Checkbox
+          className="mt-0.5"
+          checked={state.marketing_opt_in}
+          onCheckedChange={(v) => set("marketing_opt_in", v === true)}
+        />
+        <span>
+          Email me tips, drops, and the occasional offer.
+          <span className="mt-0.5 block text-[12.5px] text-muted-foreground">
+            Optional. Class reminders and receipts still go out regardless.
+          </span>
+        </span>
       </Label>
-      <Button type="submit" disabled={loading} className="rounded-full">
-        {loading ? "Saving…" : "Save changes"}
-      </Button>
+
+      <div>
+        <Button
+          type="submit"
+          disabled={loading}
+          className="h-11 bg-accent px-5 text-[14.5px] font-semibold text-accent-foreground hover:bg-[var(--myc-accent-hover)]"
+        >
+          {loading ? "Saving\u2026" : "Save changes"}
+        </Button>
+      </div>
     </form>
+  );
+}
+
+/** Label, control and an always-visible hint, the way the canvas lays a field
+ *  out. The popover <FieldHint> stays the pattern for dense admin forms; this
+ *  one is short enough to spell every hint out. */
+function Field({
+  htmlFor,
+  label,
+  hint,
+  children,
+}: {
+  htmlFor?: string;
+  label: React.ReactNode;
+  hint: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col gap-[7px]">
+      <Label htmlFor={htmlFor} className="text-[13px] font-semibold text-foreground/85">
+        {label}
+      </Label>
+      {children}
+      <p className="text-[12.5px] text-muted-foreground">{hint}</p>
+    </div>
   );
 }

@@ -114,39 +114,49 @@ export function BookingsList({
 
   if (rows.length === 0) {
     return (
-      <div className="mt-8 rounded-2xl border border-dashed border-border bg-card p-12 text-center shadow-[var(--myc-shadow-card)]">
+      <div className="myc-glass mt-7 p-12 text-center">
         <CalendarDays className="mx-auto mb-4 size-10 text-muted-foreground" />
-        <p className="text-muted-foreground">No sessions yet.</p>
-        <Button asChild className="mt-5 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
-          <Link href="/dashboard/book">Book your first session</Link>
-        </Button>
+        <p className="font-[family-name:var(--font-cormorant)] text-2xl">No sessions yet.</p>
+        <Link
+          href="/dashboard/book"
+          className="mt-5 inline-flex items-center bg-accent px-5 py-3 text-sm font-semibold text-accent-foreground transition-colors hover:bg-[var(--myc-accent-hover)]"
+        >
+          Book your first session
+        </Link>
       </div>
     );
   }
 
   return (
     <>
-      <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--myc-shadow-card)]">
-        <div className="flex flex-wrap gap-2 border-b border-border px-5 py-3.5">
+      <div className="myc-glass mt-6 overflow-hidden">
+        <div className="flex flex-wrap gap-1.5 border-b border-border px-[18px] py-3.5">
           {FILTERS.map((f) => (
             <button
               key={f.key}
               type="button"
               onClick={() => setFilter(f.key)}
               className={cn(
-                "rounded-full border px-3.5 py-1.5 text-[13px] transition-colors",
+                "border px-3.5 py-1.5 text-[13px] font-medium transition-colors",
                 filter === f.key
-                  ? "border-primary bg-primary text-primary-foreground"
+                  ? "border-accent bg-accent text-accent-foreground"
                   : "border-border text-muted-foreground hover:border-foreground hover:text-foreground"
               )}
             >
-              {f.label}
+              {f.label}{" "}
+              <span className="opacity-60">
+                {f.key === "upcoming"
+                  ? upcoming.length
+                  : f.key === "past"
+                    ? past.length
+                    : cancelled.length}
+              </span>
             </button>
           ))}
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-sm">
+          <table className="w-full min-w-[680px] text-sm">
             <thead>
               <tr>
                 <Th>When ({tzShort(tz)})</Th>
@@ -267,22 +277,22 @@ function RowActions({
     return (
       <div className="flex items-center justify-end gap-2">
         {link ? (
-          <Button asChild size="sm" className="h-8 rounded-full px-3 text-xs">
-            <a href={link} target="_blank" rel="noreferrer">
-              <Video className="size-3.5" />
-              Join
-            </a>
-          </Button>
+          <a
+            href={link}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1.5 bg-accent px-3 py-1.5 text-[12.5px] font-semibold text-accent-foreground transition-colors hover:bg-[var(--myc-accent-hover)]"
+          >
+            <Video className="size-3.5" />
+            Join
+          </a>
         ) : (
           <GenerateLink row={row} />
         )}
-        <Button asChild size="sm" variant="outline" className="hidden h-8 rounded-full px-3 text-xs sm:inline-flex">
-          <Link href="/dashboard/book">Book another</Link>
-        </Button>
         <Button
           size="sm"
           variant="outline"
-          className="h-8 rounded-full px-3 text-xs"
+          className="h-8 px-3 text-xs hover:border-destructive hover:text-destructive"
           onClick={onCancel}
         >
           Cancel
@@ -292,7 +302,7 @@ function RowActions({
   }
   return (
     <div className="flex justify-end">
-      <Button asChild size="sm" variant="outline" className="h-8 rounded-full px-3 text-xs">
+      <Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
         <Link href="/dashboard/book">Book again</Link>
       </Button>
     </div>
@@ -334,7 +344,7 @@ function GenerateLink({ row }: { row: Row }) {
     <Button
       size="sm"
       variant="outline"
-      className="h-8 rounded-full px-3 text-xs"
+      className="h-8 px-3 text-xs"
       onClick={generate}
       disabled={loading}
       title="Generate your session join link"

@@ -50,6 +50,13 @@ const MIME_BY_EXT: Record<string, string> = {
   heic: "image/heic",
   heif: "image/heif",
 };
+/** Short badge token for a document tile: "PDF", "JPG", "HEIC". Falls back to
+ *  the human label when the name carries no usable extension. */
+function extToken(fileName: string, fallback: string): string {
+  const ext = fileName.split(".").pop()?.toUpperCase() ?? "";
+  return /^[A-Z0-9]{2,4}$/.test(ext) ? ext : fallback;
+}
+
 function resolveMime(file: File): string | null {
   if (file.type && EXT_BY_MIME[file.type]) return file.type;
   const ext = file.name.split(".").pop()?.toLowerCase() ?? "";
@@ -187,7 +194,7 @@ export function MedicalDocuments({
   return (
     <>
       {/* Upload tile */}
-      <div className="mt-6 rounded-2xl border border-dashed border-border bg-card p-5">
+      <div className="mt-5 border border-dashed border-foreground/25 bg-foreground/3 px-[22px] py-5">
         <div className="flex flex-wrap items-center gap-3">
           <Input
             ref={inputRef}
@@ -207,7 +214,7 @@ export function MedicalDocuments({
               size="sm"
               disabled={uploading}
               onClick={() => void takePhoto()}
-              className="h-9 rounded-full"
+              className="h-9"
             >
               <Camera className="size-4" /> Take photo
             </Button>
@@ -226,81 +233,85 @@ export function MedicalDocuments({
 
       {/* Documents */}
       {documents.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-border bg-card p-10 text-center shadow-[var(--myc-shadow-card)]">
+        <div className="myc-glass mt-5 px-6 py-11 text-center">
           <FileText className="mx-auto mb-3 size-9 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
-            No documents yet. Upload a report above to get started.
+          <p className="font-[family-name:var(--font-cormorant)] text-2xl">No documents yet.</p>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            Upload a report above to get started.
           </p>
         </div>
       ) : (
-        <ul className="mt-6 space-y-3">
+        <ul className="mt-5 flex flex-col gap-2.5">
           {documents.map((doc) => (
             <li
               key={doc.id}
-              className="rounded-2xl border border-border bg-card p-4 shadow-[var(--myc-shadow-card)]"
+              className="myc-glass flex flex-wrap items-start justify-between gap-3.5 px-5 py-[18px]"
             >
-              <div className="flex flex-wrap items-start justify-between gap-3">
-                <div className="flex min-w-0 items-start gap-3">
-                  <span className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
-                    <FileText className="size-4.5" />
-                  </span>
-                  <div className="min-w-0">
-                    <p className="truncate font-medium text-foreground">{doc.file_name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {doc.type_label}
-                      {doc.size_label ? ` · ${doc.size_label}` : ""} · {doc.created_label}
-                    </p>
+              <div className="flex min-w-0 gap-3.5">
+                <span
+                  aria-hidden
+                  className="flex size-10 shrink-0 items-center justify-center border border-accent/30 bg-accent/12 font-[family-name:var(--font-cormorant)] text-[15px] font-semibold italic text-accent"
+                >
+                  {extToken(doc.file_name, doc.type_label)}
+                </span>
+                <div className="min-w-0">
+                  <p className="truncate font-semibold text-foreground">{doc.file_name}</p>
+                  <p className="text-[12.5px] text-muted-foreground">
+                    {doc.type_label}
+                    {doc.size_label ? ` · ${doc.size_label}` : ""} · {doc.created_label}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
                     {doc.shares.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5">
-                        <ShieldCheck className="size-3.5 text-primary" />
-                        <span className="text-xs text-muted-foreground">Shared with</span>
+                      <>
+                        <ShieldCheck className="size-3.5 text-[var(--myc-pill-green-fg)]" />
+                        Shared with
                         {doc.shares.map((s) => (
                           <span
                             key={s.teacher_id}
-                            className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary"
+                            className="border border-[var(--myc-pill-green-fg)]/40 bg-[var(--myc-pill-green-bg)] px-2 py-[3px] text-[11.5px] font-semibold text-[var(--myc-pill-green-fg)]"
                           >
                             {s.teacher_name}
                           </span>
                         ))}
-                      </div>
+                      </>
                     ) : (
-                      <p className="mt-2 text-xs text-muted-foreground">Private, not shared</p>
+                      "Private, not shared"
                     )}
                   </div>
                 </div>
-                <div className="flex shrink-0 items-center gap-1.5">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 rounded-full px-3 text-xs"
-                    onClick={() => setShareTargetId(doc.id)}
-                  >
-                    <Share2 className="size-3.5" /> Share
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className="h-8 rounded-full px-3 text-xs"
-                    onClick={() => void download(doc)}
-                    disabled={busyId === doc.id}
-                    aria-label={`Download ${doc.file_name}`}
-                  >
-                    {busyId === doc.id ? (
-                      <Loader2 className="size-3.5 animate-spin" />
-                    ) : (
-                      <Download className="size-3.5" />
-                    )}
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-8 rounded-full px-2 text-xs text-muted-foreground hover:text-destructive"
-                    onClick={() => setDeleteTarget(doc)}
-                    aria-label="Delete document"
-                  >
-                    <Trash2 className="size-3.5" />
-                  </Button>
-                </div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3 text-xs"
+                  onClick={() => setShareTargetId(doc.id)}
+                >
+                  <Share2 className="size-3.5" /> Share
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="h-8 px-3 text-xs"
+                  onClick={() => void download(doc)}
+                  disabled={busyId === doc.id}
+                  aria-label={`Download ${doc.file_name}`}
+                >
+                  {busyId === doc.id ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <Download className="size-3.5" />
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-8 px-2 text-xs text-muted-foreground hover:text-destructive"
+                  onClick={() => setDeleteTarget(doc)}
+                  aria-label="Delete document"
+                >
+                  <Trash2 className="size-3.5" />
+                </Button>
               </div>
             </li>
           ))}
@@ -310,12 +321,12 @@ export function MedicalDocuments({
       {/* Access log */}
       {accessLog.length > 0 && (
         <section className="mt-8">
-          <h2 className="flex items-center gap-2 text-sm font-medium text-foreground">
+          <h2 className="flex items-center gap-2 font-[family-name:var(--font-cormorant)] text-2xl font-semibold">
             <History className="size-4 text-muted-foreground" /> Access history
           </h2>
-          <ul className="mt-3 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-card text-sm">
+          <ul className="myc-glass mt-3 divide-y divide-border overflow-hidden text-sm">
             {accessLog.map((l, i) => (
-              <li key={i} className="flex flex-wrap items-center justify-between gap-2 px-4 py-2.5">
+              <li key={i} className="flex flex-wrap items-center justify-between gap-2 px-[18px] py-3">
                 <span className="text-foreground">
                   <strong className="font-medium">{l.accessor_label}</strong> opened{" "}
                   <span className="text-muted-foreground">{l.file_name}</span>
@@ -416,7 +427,7 @@ function ShareDialog({
         </DialogHeader>
 
         {!hasAny ? (
-          <p className="rounded-xl border border-dashed border-border bg-muted/40 px-4 py-6 text-center text-sm text-muted-foreground">
+          <p className="border border-dashed border-border bg-muted/40 px-4 py-6 text-center text-sm text-muted-foreground">
             You can share with a teacher once you&apos;ve booked a session with them.
           </p>
         ) : (
@@ -426,13 +437,13 @@ function ShareDialog({
               return (
                 <li
                   key={t.id}
-                  className="flex items-center justify-between rounded-xl border border-border px-3 py-2"
+                  className="flex items-center justify-between border border-border bg-foreground/4 px-3.5 py-2.5"
                 >
                   <span className="text-sm text-foreground">{t.display_name}</span>
                   <Button
                     size="sm"
                     variant={shared ? "secondary" : "outline"}
-                    className="h-8 rounded-full px-3 text-xs"
+                    className="h-8 px-3 text-xs"
                     onClick={() => void toggle(t.id, shared)}
                     disabled={pending === t.id}
                   >
@@ -452,7 +463,7 @@ function ShareDialog({
             {orphanShares.map((s) => (
               <li
                 key={s.teacher_id}
-                className="flex items-center justify-between rounded-xl border border-border px-3 py-2"
+                className="flex items-center justify-between border border-border bg-foreground/4 px-3.5 py-2.5"
               >
                 <span className="text-sm text-foreground">
                   {s.teacher_name}
@@ -461,7 +472,7 @@ function ShareDialog({
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8 rounded-full px-3 text-xs"
+                  className="h-8 px-3 text-xs"
                   onClick={() => void toggle(s.teacher_id, true)}
                   disabled={pending === s.teacher_id}
                 >

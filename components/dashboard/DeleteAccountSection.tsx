@@ -46,18 +46,18 @@ export function DeleteAccountSection() {
   if (!native) return null;
 
   return (
-    <section className="mt-10 rounded-2xl border border-destructive/30 bg-destructive/5 p-5">
-      <h2 className="flex items-center gap-2 text-sm font-medium text-foreground">
-        <AlertTriangle className="size-4 text-destructive" />
+    <section className="mt-7 border border-destructive/35 bg-destructive/6 px-7 py-6">
+      <h2 className="flex items-center gap-2 font-[family-name:var(--font-cormorant)] text-2xl font-semibold">
+        <AlertTriangle className="size-5 text-destructive" />
         Delete account
       </h2>
-      <p className="mt-1.5 text-sm text-muted-foreground">
+      <p className="mt-2 text-sm text-pretty text-muted-foreground">
         Permanently delete your account and all associated data, including any
         health documents you&apos;ve uploaded. This can&apos;t be undone.
       </p>
       <Button
         variant="destructive"
-        className="mt-4 rounded-full"
+        className="mt-4"
         onClick={() => setOpen(true)}
       >
         Delete my account

@@ -12,18 +12,27 @@ type Props = {
   className?: string;
 };
 
+/**
+ * The sign-out sequence, shared with surfaces that render their own control
+ * instead of this button (the member sidebar's plain text link and its mobile
+ * account menu). The push-token step has to come FIRST, so keep callers on this
+ * function rather than re-implementing the order.
+ */
+export async function performSignOut() {
+  // Remove this device's push token BEFORE signOut(): the DELETE endpoint
+  // authenticates with the session cookie signOut() destroys. Without it the
+  // device keeps receiving the previous user's session reminders. No-op on web.
+  await unregisterPushNotifications().catch(() => {});
+  await createSupabaseBrowserClient().auth.signOut();
+  window.location.href = "/";
+}
+
 export function SignOutButton({ variant = "ghost", size = "sm", className }: Props) {
   const [loading, setLoading] = useState(false);
-  const supabase = createSupabaseBrowserClient();
 
   async function signOut() {
     setLoading(true);
-    // Remove this device's push token BEFORE signOut(): the DELETE endpoint
-    // authenticates with the session cookie signOut() destroys. Without it the
-    // device keeps receiving the previous user's session reminders. No-op on web.
-    await unregisterPushNotifications().catch(() => {});
-    await supabase.auth.signOut();
-    window.location.href = "/";
+    await performSignOut();
   }
 
   return (

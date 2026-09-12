@@ -484,6 +484,42 @@ html:has(.myc-dark) {
   --radius-4xl:               0rem;
 }
 
+/* ---- Sharp geometry opt-in ----
+   The squared-off corners of the design canvases, as a class a wrapper asks for
+   by name rather than something the dark palette drags along. `.myc-theme.myc-dark`
+   above is the marketing surface's own copy of this; the note there ("that
+   geometry was never designed for them") described the app surfaces before the
+   Student Dashboard canvas squared them off too, so /dashboard now opts in here
+   while admin and teacher keep their rounded geometry until their canvases land.
+
+   Same caveat as that block: the whole --radius-* scale has to be restated, not
+   just --radius, because @theme inline derives --radius-md et al. with
+   calc(var(--radius)*n) ON :root, so they compute there and descendants inherit
+   the computed figure.
+
+   Matched on `html:has(.myc-sharp)` as well, for the same reason `.myc-dark` is:
+   dialogs, sheets and popovers portal to document.body, OUTSIDE the wrapper, so
+   a wrapper-only selector leaves every overlay rounded on a squared-off page. */
+.myc-sharp,
+html:has(.myc-sharp) {
+  --radius:                   0rem;
+  --radius-sm:                0rem;
+  --radius-md:                0rem;
+  --radius-lg:                0rem;
+  --radius-xl:                0rem;
+  --radius-2xl:               0rem;
+  --radius-3xl:               0rem;
+  --radius-4xl:               0rem;
+}
+
+/* `rounded-full` is a literal 9999px, not a token, so dots and avatars stay
+   round under .myc-sharp — correct for those, wrong for the status pills, which
+   the canvas draws as squared chips carrying a hairline in their own hue. */
+.myc-sharp .myc-pill {
+  border-radius: 0;
+  border: 1px solid color-mix(in srgb, currentColor 40%, transparent);
+}
+
 /* A dark wrapper paints its own background, but overscroll/rubber-band exposes
    the document behind it — which still carries the light :root cream. Paint the
    root dark whenever ANY dark surface is mounted (marketing, auth or app). */

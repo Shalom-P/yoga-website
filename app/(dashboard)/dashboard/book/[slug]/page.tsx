@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { requireUser } from "@/lib/auth/guards";
@@ -63,15 +64,24 @@ export default async function TeacherBookingPage({
   const creditBalance = credits?.balance ?? 0;
 
   return (
-    <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8 py-10">
-      <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
+    <div className="max-w-[820px]">
+      <Link
+        href="/dashboard/book"
+        className="inline-flex items-center gap-1.5 text-[13.5px] text-muted-foreground transition-colors hover:text-foreground"
+      >
+        ← All teachers
+      </Link>
+      <div className="myc-eyebrow mt-5">
+        <span className="myc-dot" />
         Book a class
       </div>
-      <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-heading)] tracking-tight mt-1">
+      <h1 className="mt-2.5 font-[family-name:var(--font-cormorant)] text-[clamp(2.2rem,3.6vw,3rem)] font-medium leading-[1.05] tracking-[-0.015em]">
         {teacher.display_name}
       </h1>
-      <p className="mt-2 text-muted-foreground">{teacher.headline}</p>
-      {teacher.bio && <p className="mt-3 text-sm text-muted-foreground">{teacher.bio}</p>}
+      <p className="mt-2 text-base text-foreground/70">{teacher.headline}</p>
+      {teacher.bio && (
+        <p className="mt-3 text-[14.5px] text-pretty text-muted-foreground">{teacher.bio}</p>
+      )}
 
       {teacher.intro_video_url && (
         <div className="mt-6 max-w-lg">
@@ -85,6 +95,7 @@ export default async function TeacherBookingPage({
 
       <TeacherSlotPicker
         teacherId={teacher.id}
+        teacherName={teacher.display_name}
         teacherTimezone={teacher.timezone ?? "Asia/Kolkata"}
         customerTimezone={profile?.timezone ?? DEFAULT_CUSTOMER_TZ}
         availability={availability ?? []}

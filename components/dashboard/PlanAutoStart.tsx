@@ -58,8 +58,8 @@ export function PlanAutoStart() {
   return (
     <>
       {planSlug && (
-        <div className="mt-10 rounded-3xl border border-border bg-card p-12 text-center">
-          <Loader2 className="size-8 mx-auto animate-spin text-primary" />
+        <div className="myc-glass mt-8 p-12 text-center">
+          <Loader2 className="size-8 mx-auto animate-spin text-accent" />
           <p className="mt-4 text-sm text-muted-foreground">Opening checkout…</p>
         </div>
       )}
