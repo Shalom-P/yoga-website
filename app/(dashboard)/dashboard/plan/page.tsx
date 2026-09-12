@@ -1,10 +1,9 @@
 import { Suspense } from "react";
 import Link from "next/link";
-import { PartyPopper, CheckCircle2, Ticket } from "lucide-react";
+import { PartyPopper, CheckCircle2 } from "lucide-react";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { PlanAutoStart } from "@/components/dashboard/PlanAutoStart";
 import { PendingBankTransfers } from "@/components/dashboard/PendingBankTransfers";
-import { Button } from "@/components/ui/button";
 import { getPlansWithFeatures } from "@/lib/data/landing";
 import { requireUser } from "@/lib/auth/guards";
 import type { BankTransferIntent } from "@/components/shared/checkout";
@@ -48,26 +47,27 @@ export default async function PlanPage({
   });
 
   return (
-    <div className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-10">
-      <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium">
+    <div>
+      <div className="myc-eyebrow">
+        <span className="myc-dot" />
         Your sessions
       </div>
-      <h1 className="text-3xl md:text-4xl font-[family-name:var(--font-heading)] tracking-tight mt-1">
+      <h1 className="mt-2.5 font-[family-name:var(--font-cormorant)] text-[clamp(2.2rem,3.6vw,3rem)] font-medium leading-[1.05] tracking-[-0.015em]">
         {balance > 0
           ? `${balance} prepaid 1:1 session${balance === 1 ? "" : "s"} ready.`
-          : "You're on the free trial."}
+          : "You're out of sessions."}
       </h1>
-      <p className="mt-2 text-muted-foreground">
+      <p className="mt-2 max-w-[40rem] text-[15px] text-muted-foreground">
         {balance > 0
           ? "Use them to book any paid class. Top up with another pack anytime."
-          : "Upgrade when you're ready: buy a pack of sessions, no subscription."}
+          : "Buy a pack of sessions to keep booking, no subscription."}
       </p>
 
       {booked && (
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
-          <PartyPopper className="mt-0.5 size-5 shrink-0 text-primary" />
+        <div className="mt-6 flex items-start gap-3 border border-accent/40 bg-accent/10 px-5 py-4">
+          <PartyPopper className="mt-0.5 size-5 shrink-0 text-accent" />
           <div className="text-sm">
-            <p className="font-medium text-foreground">Your free 1:1 is booked 🎉</p>
+            <p className="font-medium text-foreground">Your 1:1 is booked 🎉</p>
             <p className="mt-0.5 text-muted-foreground">
               We&apos;ll email your join link. Want to keep practising? Grab a pack below.
             </p>
@@ -76,8 +76,8 @@ export default async function PlanPage({
       )}
 
       {purchased && (
-        <div className="mt-6 flex items-start gap-3 rounded-2xl border border-primary/20 bg-primary/5 px-5 py-4">
-          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-primary" />
+        <div className="mt-6 flex items-start gap-3 border border-accent/40 bg-accent/10 px-5 py-4">
+          <CheckCircle2 className="mt-0.5 size-5 shrink-0 text-accent" />
           <div className="text-sm">
             <p className="font-medium text-foreground">Pack purchased 🎉</p>
             <p className="mt-0.5 text-muted-foreground">
@@ -94,23 +94,29 @@ export default async function PlanPage({
       <PendingBankTransfers transfers={pending} />
 
       {balance > 0 && (
-        <div className="mt-8 rounded-3xl border border-border bg-card p-7">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <Ticket className="size-6 text-primary" />
-              <div>
-                <div className="text-2xl font-[family-name:var(--font-heading)]">
-                  {balance} session{balance === 1 ? "" : "s"} left
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  Your prepaid sessions don&apos;t expire. Book whenever you like.
-                </div>
+        <div className="myc-glass mt-7 flex flex-wrap items-center justify-between gap-[18px] px-7 py-6">
+          <div className="flex items-center gap-[18px]">
+            <span
+              aria-hidden
+              className="font-[family-name:var(--font-cormorant)] text-[56px] italic leading-none text-accent"
+            >
+              {balance}
+            </span>
+            <div>
+              <div className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold leading-[1.1]">
+                {balance} session{balance === 1 ? "" : "s"} left
+              </div>
+              <div className="mt-0.5 text-sm text-muted-foreground">
+                Your prepaid sessions don&apos;t expire. Book whenever you like.
               </div>
             </div>
-            <Button asChild className="rounded-full">
-              <Link href="/dashboard/book">Book a class</Link>
-            </Button>
           </div>
+          <Link
+            href="/dashboard/book"
+            className="inline-flex items-center bg-accent px-[18px] py-[11px] text-sm font-semibold text-accent-foreground transition-colors hover:bg-[var(--myc-accent-hover)]"
+          >
+            Book a class
+          </Link>
         </div>
       )}
 

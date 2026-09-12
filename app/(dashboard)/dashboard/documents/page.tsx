@@ -36,25 +36,31 @@ export default async function DocumentsPage() {
   }));
 
   return (
-    <div data-phi className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
+    <div data-phi className="max-w-[860px]">
       <PhiReplayGuard />
       <div className="myc-eyebrow">
         <span className="myc-dot" />
         Health documents
       </div>
       <div className="mt-2">
-        <h1 className="font-[family-name:var(--font-cormorant)] text-4xl md:text-[2.7rem] leading-[1.05] tracking-tight">
+        <h1 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.2rem,3.6vw,3rem)] font-medium leading-[1.05] tracking-[-0.015em]">
           Your private <span className="italic text-accent">records.</span>
         </h1>
-        <p className="mt-1.5 max-w-2xl text-sm text-muted-foreground">
+        <p className="mt-2 max-w-[40rem] text-[14.5px] text-pretty text-muted-foreground">
           Upload medical reports for your teacher to review before a session. Files
           are private to you. A teacher can only open one after you explicitly
           share it, and you can revoke access any time.
         </p>
       </div>
 
-      <div className="mt-5 flex items-start gap-2.5 rounded-2xl border border-primary/25 bg-primary/5 px-4 py-3 text-[13px] text-foreground">
-        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" />
+      {/* The accent rule is an inline style on purpose: .myc-glass sets `border`
+          as an unlayered shorthand, which outranks Tailwind's layered
+          border-l-* utilities and would swallow it. */}
+      <div
+        style={{ borderLeft: "2px solid var(--accent)" }}
+        className="myc-glass mt-5 flex items-start gap-3 px-[18px] py-3.5 text-[13.5px]"
+      >
+        <ShieldCheck className="mt-0.5 size-4 shrink-0 text-accent" />
         <p>
           Stored encrypted in a private vault. Nobody (not even studio admins)
           can see a document unless you share it. Every time a teacher opens a

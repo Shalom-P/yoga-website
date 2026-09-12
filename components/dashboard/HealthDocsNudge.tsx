@@ -28,17 +28,17 @@ export function HealthDocsNudge({
 }) {
   return (
     <div
-      className={cn("rounded-3xl border border-accent/30 bg-accent/5 p-6 sm:p-7", className)}
+      className={cn("border border-accent/35 bg-accent/10 p-6 sm:p-7", className)}
     >
       <div className="flex flex-wrap items-start gap-4">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-accent/15 text-accent">
+        <span className="flex size-11 shrink-0 items-center justify-center border border-accent/30 bg-accent/15 text-accent">
           <HeartPulse className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
           <div className="text-xs uppercase tracking-[0.2em] text-accent font-medium">
             {startIso ? "Before your class" : "Health documents"}
           </div>
-          <h2 className="mt-1 text-xl font-[family-name:var(--font-heading)] tracking-tight">
+          <h2 className="mt-1 font-[family-name:var(--font-cormorant)] text-2xl font-semibold leading-[1.1]">
             Help your teacher prepare
           </h2>
           <p className="mt-1.5 text-sm text-muted-foreground">
@@ -55,7 +55,7 @@ export function HealthDocsNudge({
             teacher you choose to share with can open it.
           </p>
           <div className="mt-4">
-            <Button asChild className="h-10 rounded-full">
+            <Button asChild className="h-10 bg-accent font-semibold text-accent-foreground hover:bg-[var(--myc-accent-hover)]">
               <Link href="/dashboard/documents">
                 <Upload className="size-4 mr-1.5" />
                 Upload health documents

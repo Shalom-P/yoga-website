@@ -24,7 +24,7 @@ export function PendingBankTransfers({ transfers }: { transfers: BankTransferInt
       {transfers.map((t) => (
         <div
           key={t.paymentId}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4"
+          className="flex flex-wrap items-center justify-between gap-3 border border-amber-500/35 bg-amber-500/10 px-5 py-4"
         >
           <div className="flex items-start gap-3">
             <Landmark className="mt-0.5 size-5 shrink-0 text-[var(--myc-pill-amber-fg)]" />
@@ -40,7 +40,6 @@ export function PendingBankTransfers({ transfers }: { transfers: BankTransferInt
           <Button
             variant="outline"
             size="sm"
-            className="rounded-full"
             onClick={() => setActive(t)}
           >
             View payment instructions

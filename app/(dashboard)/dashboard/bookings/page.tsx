@@ -3,7 +3,6 @@ import { HeartPulse } from "lucide-react";
 import { requireUser } from "@/lib/auth/guards";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { hasMedicalDocuments } from "@/lib/medical/documents";
-import { Button } from "@/components/ui/button";
 import { BookingsList } from "@/components/dashboard/BookingsList";
 import { HealthDocsNudge } from "@/components/dashboard/HealthDocsNudge";
 import { LocalTzLabel } from "@/components/dashboard/local-time";
@@ -66,14 +65,14 @@ export default async function BookingsPage({
   const nextStartIso = upcoming[0]?.session?.start_at ?? null;
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
+    <div>
       <div className="myc-eyebrow">
         <span className="myc-dot" />
         My bookings
       </div>
       <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="font-[family-name:var(--font-cormorant)] text-4xl md:text-[2.7rem] leading-[1.05] tracking-tight">
+          <h1 className="font-[family-name:var(--font-cormorant)] text-[clamp(2.2rem,3.6vw,3rem)] font-medium leading-[1.05] tracking-[-0.015em]">
             Your <span className="italic text-accent">sessions.</span>
           </h1>
           <p className="mt-1.5 text-sm text-muted-foreground">
@@ -83,34 +82,32 @@ export default async function BookingsPage({
         {/* Always reachable from this page, whether or not anything is uploaded:
             a customer who meant to add a report should never have to hunt for it. */}
         <div className="flex flex-wrap items-center gap-2">
-          <Button
-            asChild
-            variant="outline"
+          <Link
+            href="/dashboard/documents"
             className={cn(
-              "rounded-full",
+              "inline-flex items-center gap-2 border px-4 py-2.5 text-sm font-medium transition-colors",
               // Draw more attention to it when there is nothing uploaded yet.
-              !hasDocs &&
-                "border-accent/50 bg-accent/10 text-accent hover:bg-accent/20 hover:text-accent"
+              hasDocs
+                ? "border-border bg-foreground/6 hover:bg-foreground/12"
+                : "border-accent/50 bg-accent/12 hover:bg-accent/20"
             )}
           >
-            <Link href="/dashboard/documents">
-              <HeartPulse className="size-4" />
-              {hasDocs ? "Health documents" : "Upload health documents"}
-            </Link>
-          </Button>
-          <Button
-            asChild
-            className="rounded-full bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)]"
+            <HeartPulse className="size-4" />
+            {hasDocs ? "Health documents" : "Upload health documents"}
+          </Link>
+          <Link
+            href="/dashboard/book"
+            className="inline-flex items-center bg-accent px-4 py-2.5 text-sm font-semibold text-accent-foreground transition-colors hover:bg-[var(--myc-accent-hover)]"
           >
-            <Link href="/dashboard/book">Book a session</Link>
-          </Button>
+            Book a session
+          </Link>
         </div>
       </div>
 
       {booked === "1" && (
         <div
           role="status"
-          className="mt-6 rounded-2xl border border-primary/30 bg-primary/5 px-5 py-4 text-sm text-foreground"
+          className="mt-5 border border-accent/40 bg-accent/10 px-[18px] py-3.5 text-[14.5px] text-foreground"
         >
           <strong className="font-medium">Session booked.</strong> Your join link will
           appear on the booking below shortly. We&apos;ll also email it to you.

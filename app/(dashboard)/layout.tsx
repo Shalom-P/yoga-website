@@ -1,7 +1,5 @@
-import Link from "next/link";
 import { requireUser } from "@/lib/auth/guards";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
-import { SignOutButton } from "@/components/shared/SignOutButton";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 
 export default async function DashboardLayout({
@@ -22,22 +20,35 @@ export default async function DashboardLayout({
   const isAdmin = profile?.role === "admin";
 
   return (
-    <div className="myc-app myc-dark min-h-dvh flex flex-col lg:flex-row">
+    <div className="myc-app myc-dark myc-sharp min-h-dvh flex flex-col lg:flex-row">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:bg-accent focus:px-4 focus:py-2 focus:text-accent-foreground"
       >
         Skip to content
       </a>
       <DashboardSidebar userName={name} userEmail={user.email ?? ""} isAdmin={isAdmin} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="hidden lg:flex border-b border-border bg-background h-14 items-center justify-between px-6">
-          <Link href="/" className="text-xs text-muted-foreground hover:text-foreground">
-            ← Back to site
-          </Link>
-          <SignOutButton />
-        </header>
-        <main id="main-content" className="flex-1 bg-secondary/20">{children}</main>
+      {/* `overflow-clip` contains the atmosphere blob below without creating a
+          scroll container, which would break the sticky confirm bar in the slot
+          picker and the sticky sidebar's scroll sync. */}
+      <div className="relative flex min-w-0 flex-1 flex-col overflow-clip">
+        {/* Soft teal bloom. A radial gradient that fades to transparent, NOT a
+            blurred orb: blur() here is a full-size filter pass repaid on every
+            navigation, for a look the gradient already gives free (see 45dff3e). */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-[15%] -top-[25%] size-[640px]"
+          style={{
+            background:
+              "radial-gradient(closest-side, var(--myc-glow-1), transparent 70%)",
+          }}
+        />
+        <main
+          id="main-content"
+          className="relative mx-auto w-full max-w-[1040px] flex-1 px-5 pb-32 pt-8 sm:px-8 sm:pt-11 lg:px-9"
+        >
+          {children}
+        </main>
       </div>
       <WhatsAppButton />
     </div>
