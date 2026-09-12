@@ -21,7 +21,7 @@ export default function ErrorPage({
   }, [error]);
 
   return (
-    <div className="myc-theme min-h-dvh flex flex-col items-center justify-center px-6 py-16 text-center">
+    <div className="myc-theme myc-dark min-h-dvh flex flex-col items-center justify-center px-6 py-16 text-center">
       <BrandMark className="size-12 [&_svg]:size-6" />
       <h1 className="mt-8 text-4xl md:text-5xl font-[family-name:var(--font-cormorant)] tracking-tight">
         Something went <span className="text-accent italic">out of balance.</span>
@@ -33,7 +33,7 @@ export default function ErrorPage({
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button
           size="lg"
-          className="h-12 rounded-full px-7 bg-accent text-accent-foreground hover:bg-accent/90"
+          className="h-12 rounded-full px-7 bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground"
           onClick={reset}
         >
           Try again

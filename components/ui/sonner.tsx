@@ -1,16 +1,19 @@
 "use client"
 
-import { useTheme } from "next-themes"
 import { Toaster as Sonner, type ToasterProps } from "sonner"
 import { CircleCheckIcon, InfoIcon, TriangleAlertIcon, OctagonXIcon, Loader2Icon } from "lucide-react"
 
 const Toaster = ({ ...props }: ToasterProps) => {
-  const { theme = "system" } = useTheme()
-
   return (
     <Sonner
-      theme={theme as ToasterProps["theme"]}
-      className="toaster group"
+      // The Toaster is mounted in the root layout as a sibling of {children},
+      // so it sits OUTSIDE every `.myc-dark` wrapper and would otherwise read
+      // the light `:root` tokens in the inline style below. Every surface
+      // (marketing, dashboard, admin, teacher, auth, error, not-found) is dark,
+      // so carry `.myc-dark` on the toaster container itself and pin sonner's
+      // own theme to dark so `richColors` picks its dark status variants.
+      theme="dark"
+      className="toaster group myc-dark"
       icons={{
         success: (
           <CircleCheckIcon className="size-4" />

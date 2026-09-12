@@ -98,7 +98,10 @@ export default async function BookingsPage({
               {hasDocs ? "Health documents" : "Upload health documents"}
             </Link>
           </Button>
-          <Button asChild className="rounded-full bg-accent text-white hover:bg-accent/90">
+          <Button
+            asChild
+            className="rounded-full bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)]"
+          >
             <Link href="/dashboard/book">Book a session</Link>
           </Button>
         </div>

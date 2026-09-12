@@ -179,6 +179,18 @@ html.lenis body {
   --myc-line: #e6dfce;
   --myc-primary-hover: #0b463b;
   --myc-accent-hover: #b83218;  /* light-palette counterpart of the dark token */
+
+  /* status pills (dense tables in dashboard + admin) — light palette */
+  --myc-pill-green-bg: rgba(47, 143, 111, 0.14);
+  --myc-pill-green-fg: #2f8f6f;
+  --myc-pill-teal-bg:  rgba(15, 92, 78, 0.12);
+  --myc-pill-teal-fg:  #0f5c4e;
+  --myc-pill-amber-bg: #fbe3d5;
+  --myc-pill-amber-fg: #9a5630;
+  --myc-pill-free-bg:  #f6eccb;
+  --myc-pill-free-fg:  #7a6320;
+  --myc-pill-gray-bg:  #f2ecdd;
+  --myc-pill-gray-fg:  #4c645b;
   --myc-accent-soft: #fbd9c9;   /* peach tint */
   --myc-bg-2: #f2ecdd;
   --myc-mint: #dceae0;
@@ -258,11 +270,14 @@ html.lenis body {
   border-radius: 9999px;
   white-space: nowrap;
 }
-.myc-pill-green { background: rgba(47, 143, 111, 0.14); color: #2f8f6f; }
-.myc-pill-teal  { background: rgba(15, 92, 78, 0.12); color: var(--primary); }
-.myc-pill-amber { background: var(--myc-peach); color: #9a5630; }
-.myc-pill-free  { background: var(--myc-butter); color: #7a6320; }
-.myc-pill-gray  { background: var(--myc-bg-2); color: var(--myc-ink-3); }
+/* Token-driven: these carry booking/session state into dense tables at 11.5px,
+   so they need the 4.5:1 small-text ratio on whichever palette is underneath.
+   The old hardcoded light values were 3.8:1 on the dark background. */
+.myc-pill-green { background: var(--myc-pill-green-bg); color: var(--myc-pill-green-fg); }
+.myc-pill-teal  { background: var(--myc-pill-teal-bg);  color: var(--myc-pill-teal-fg); }
+.myc-pill-amber { background: var(--myc-pill-amber-bg); color: var(--myc-pill-amber-fg); }
+.myc-pill-free  { background: var(--myc-pill-free-bg);  color: var(--myc-pill-free-fg); }
+.myc-pill-gray  { background: var(--myc-pill-gray-bg);  color: var(--myc-pill-gray-fg); }
 
 /* Pastel section blocks */
 .myc-theme .myc-sec-mint { background: var(--myc-mint); }
@@ -350,29 +365,38 @@ html.lenis body {
 }
 
 /* ============================================================
-   Dark teal-glass skin — MARKETING SURFACE ONLY.
+   Dark teal-glass skin — EVERY SURFACE.
 
-   Scoped to `.myc-dark`, NOT `.myc-theme`. `.myc-theme` is the brand layer and
-   is also applied to app/(auth)/layout.tsx, app/error.tsx and app/not-found.tsx
-   — hanging the dark palette off it silently re-skinned the login funnel, the
-   404 and the global error boundary. `.myc-dark` is added only by
-   app/(marketing)/layout.tsx, so the dark skin reaches exactly the pages it was
-   designed for.
+   Carried by an explicit `.myc-dark` class, not by `.myc-theme`: `.myc-theme` is
+   the brand layer (fonts, marketing radius) and the two are composed
+   independently. Every wrapper opts in by name — (marketing), (dashboard),
+   admin, (teacher) (TWO wrappers), (auth), error.tsx and not-found.tsx — so the
+   set of dark surfaces is greppable rather than implied.
+
+   Also matched on `html:has(.myc-dark)`, which is what carries the palette to
+   PORTALLED content. Dialogs, sheets, selects, dropdowns, popovers and tooltips
+   are appended to document.body by base-ui, i.e. OUTSIDE the wrapper div, so a
+   wrapper-only selector left every overlay resolving the light :root palette —
+   a cream dialog opening on top of a dark page.
 
    From the "My Yoga Classes" design canvas (THEMES.dark). Applied as a class
    rather than routed through next-themes on purpose:
-     - .myc-app (dashboard + admin) keeps the light :root palette, so the
-       logged-in product is untouched by this redesign.
      - No ThemeProvider change, so `forcedTheme="light"` in app/layout.tsx
        stays as-is and there is no flash-of-wrong-theme to manage.
-   Declared after the .myc-theme blocks above, and one class deeper, so these
-   win. Contrast against #0a2b26 (all AA or better):
+     - NOTE: `@custom-variant dark` (top of this file) is bound to a `.dark`
+       ancestor that nothing applies, so shadcn's built-in `dark:` utilities are
+       inert. That is deliberate — this skin is done with semantic tokens. Adding
+       `dark:` variants as a fix writes dead CSS; re-pointing that variant at
+       `.myc-dark` would switch on a pile of dormant shadcn styling everywhere at
+       once, so do it only as its own reviewed change.
+   Declared after the .myc-theme blocks above so these win. Contrast against #0a2b26 (all AA or better):
      foreground #fbf7ef 14.2:1 · muted-foreground #9fbdb2 7.5:1
      accent #ff6a4d 5.4:1 · accent-bright #ff9a84 7.4:1 · primary #7fd4bd 8.7:1
    accent-foreground is the design's --on-accent (#16352e), 4.7:1 on coral.
    White on coral is only 2.8:1, so never pair text-white with bg-accent here.
    ============================================================ */
-.myc-dark {
+.myc-dark,
+html:has(.myc-dark) {
   color-scheme: dark;
 
   --background:               #0a2b26;   /* deep pine */
@@ -390,27 +414,25 @@ html.lenis body {
   --accent:                   #ff6a4d;   /* bright coral is the on-dark accent */
   --accent-foreground:        #16352e;   /* design --on-accent */
   --myc-accent-hover:         #ff7f66;   /* design --accent-hover */
+
+  /* status pills — dark palette. Foregrounds verified on #0a2b26:
+     #6ee7b7 9.9:1 · #7fd4bd 8.7:1 · #fbbf77 9.3:1 · #f5e0a3 12.1:1 · #9fbdb2 7.5:1 */
+  --myc-pill-green-bg:        rgba(110, 231, 183, 0.14);
+  --myc-pill-green-fg:        #6ee7b7;
+  --myc-pill-teal-bg:         rgba(127, 212, 189, 0.14);
+  --myc-pill-teal-fg:         #7fd4bd;
+  --myc-pill-amber-bg:        rgba(251, 191, 119, 0.14);
+  --myc-pill-amber-fg:        #fbbf77;
+  --myc-pill-free-bg:         rgba(245, 224, 163, 0.14);
+  --myc-pill-free-fg:         #f5e0a3;
+  --myc-pill-gray-bg:         rgba(159, 189, 178, 0.12);
+  --myc-pill-gray-fg:         #9fbdb2;
   --accent-bright:            #ff9a84;   /* lighter coral for italic flourishes on dark */
   --destructive:              oklch(0.68 0.19 25);
   --border:                   #27433e;   /* = cream at 12% over the bg */
   --input:                    #27433e;
   --ring:                     #ff6a4d;
 
-  /* Sharp corners: the design sets border-radius:0 on every card, button,
-     nav and badge. `rounded-full` is unaffected, so pills, dots and the
-     brand mark stay round.
-     The whole --radius-* scale has to be restated, not just --radius: the
-     @theme inline block derives --radius-md et al. with calc(var(--radius)*n)
-     ON :root, so they compute there (9.6px) and descendants inherit that
-     figure. Re-pointing --radius alone never reaches them. */
-  --radius:                   0rem;
-  --radius-sm:                0rem;
-  --radius-md:                0rem;
-  --radius-lg:                0rem;
-  --radius-xl:                0rem;
-  --radius-2xl:               0rem;
-  --radius-3xl:               0rem;
-  --radius-4xl:               0rem;
 
   /* extra design tokens, re-pointed for dark */
   --myc-ink-2:                #9fbdb2;
@@ -442,9 +464,29 @@ html.lenis body {
   --myc-vid-filter:           saturate(0.85) contrast(1.05) brightness(0.9);
 }
 
-/* The marketing wrapper paints its own background, but overscroll/rubber-band
-   exposes the document behind it — which still carries the light :root cream.
-   Paint the root dark whenever a marketing page is mounted. */
+/* Sharp corners belong to the MARKETING design, not to the dark palette, so
+   they are scoped to the marketing pairing rather than to .myc-dark. The app
+   surfaces (dashboard, admin, teacher) take the colours without having every
+   dense table, input and control squared off — that geometry was never designed
+   for them. `rounded-full` is unaffected either way, so pills and dots stay round.
+   The whole --radius-* scale has to be restated, not just --radius: the
+   @theme inline block derives --radius-md et al. with calc(var(--radius)*n) ON
+   :root, so they compute there (9.6px) and descendants inherit that figure.
+   Re-pointing --radius alone never reaches them. */
+.myc-theme.myc-dark {
+  --radius:                   0rem;
+  --radius-sm:                0rem;
+  --radius-md:                0rem;
+  --radius-lg:                0rem;
+  --radius-xl:                0rem;
+  --radius-2xl:               0rem;
+  --radius-3xl:               0rem;
+  --radius-4xl:               0rem;
+}
+
+/* A dark wrapper paints its own background, but overscroll/rubber-band exposes
+   the document behind it — which still carries the light :root cream. Paint the
+   root dark whenever ANY dark surface is mounted (marketing, auth or app). */
 html:has(.myc-dark),
 html:has(.myc-dark) body {
   background: #0a2b26;

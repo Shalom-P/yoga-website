@@ -26,7 +26,7 @@ export function WhatsAppButton({ className }: { className?: string }) {
       rel="noopener noreferrer"
       aria-label="Chat with us on WhatsApp"
       className={cn(
-        "group fixed bottom-24 right-4 z-40 flex items-center gap-2 rounded-full bg-[#25D366] py-3 pl-3.5 pr-3.5 text-white shadow-lg shadow-black/25 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/40 sm:pr-4 md:bottom-6 md:right-6",
+        "group fixed bottom-24 right-4 z-40 flex items-center gap-2 rounded-full bg-[#25D366] py-3 pl-3.5 pr-3.5 text-white shadow-[var(--myc-shadow-soft)] ring-1 ring-foreground/15 transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#25D366]/40 sm:pr-4 md:bottom-6 md:right-6",
         className,
       )}
     >

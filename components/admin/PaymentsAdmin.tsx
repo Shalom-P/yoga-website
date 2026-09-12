@@ -204,7 +204,7 @@ function StatusBadge({ status }: { status: PaymentStatus }) {
   }
   if (status === "pending") {
     return (
-      <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
+      <span className="inline-flex items-center gap-1 text-[var(--myc-pill-amber-fg)] font-medium">
         <Clock className="size-3.5" /> Awaiting verification
       </span>
     );

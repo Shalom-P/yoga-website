@@ -98,7 +98,7 @@ export function TeacherSidebar({
   return (
     <>
       {/* Desktop: persistent sidebar */}
-      <aside className="hidden lg:flex w-60 shrink-0 flex-col border-r border-border bg-sidebar">
+      <aside className="hidden lg:flex w-60 shrink-0 flex-col border-r border-border bg-card">
         <div className="p-5 border-b border-border">
           <BrandHeader />
         </div>
@@ -107,14 +107,14 @@ export function TeacherSidebar({
       </aside>
 
       {/* Mobile: top bar with hamburger → drawer */}
-      <header className="lg:hidden sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-sidebar/95 px-3 backdrop-blur supports-backdrop-filter:bg-sidebar/80">
+      <header className="lg:hidden sticky top-0 z-30 flex h-14 items-center gap-2 border-b border-border bg-card/95 px-3 backdrop-blur supports-backdrop-filter:bg-card/80">
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger
             render={<Button variant="ghost" size="icon" aria-label="Open menu" />}
           >
             <Menu className="size-5" />
           </SheetTrigger>
-          <SheetContent side="left" className="flex flex-col gap-0 bg-sidebar p-0">
+          <SheetContent side="left" className="flex flex-col gap-0 bg-card p-0">
             <SheetTitle className="sr-only">Teacher menu</SheetTitle>
             <SheetDescription className="sr-only">
               Navigate the teacher dashboard.

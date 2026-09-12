@@ -153,7 +153,7 @@ export default async function AdminDashboard() {
 
       <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
         {stats.map((stat) => (
-          <div key={stat.label} className="rounded-2xl border border-border bg-card p-5 shadow-sm">
+          <div key={stat.label} className="rounded-2xl border border-border bg-card p-5 shadow-[var(--myc-shadow-card)]">
             <div className="flex items-center justify-between">
               <span className="text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
                 {stat.label}
@@ -174,7 +174,7 @@ export default async function AdminDashboard() {
       </div>
 
       <div className="mt-6 grid lg:grid-cols-2 gap-6">
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--myc-shadow-card)]">
           <div className="flex items-center justify-between">
             <h2 className="font-[family-name:var(--font-cormorant)] text-xl">Upcoming sessions</h2>
             <Link href="/admin/sessions" className="text-xs text-primary hover:underline">
@@ -228,7 +228,7 @@ export default async function AdminDashboard() {
           )}
         </div>
 
-        <div className="rounded-2xl border border-border bg-card p-6 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card p-6 shadow-[var(--myc-shadow-card)]">
           <h2 className="font-[family-name:var(--font-cormorant)] text-xl">Recent activity</h2>
           {activity.length === 0 ? (
             <p className="mt-3 text-sm text-muted-foreground">
@@ -255,10 +255,10 @@ export default async function AdminDashboard() {
         </div>
       </div>
 
-      <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="mt-6 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--myc-shadow-card)]">
         <div className="flex items-center justify-between gap-3 border-b border-border px-5 py-4">
           <h2 className="font-[family-name:var(--font-cormorant)] text-xl">Recent bookings</h2>
-          <Button asChild size="sm" className="rounded-full bg-accent text-white hover:bg-accent/90">
+          <Button asChild size="sm" className="rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
             <Link href="/admin/bookings">All bookings →</Link>
           </Button>
         </div>
@@ -327,7 +327,7 @@ function BookingStatusPill({ status }: { status: BookingStatus }) {
 
 function Th({ children }: { children?: React.ReactNode }) {
   return (
-    <th className="bg-background px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
+    <th className="bg-muted px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground">
       {children}
     </th>
   );

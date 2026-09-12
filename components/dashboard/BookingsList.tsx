@@ -114,10 +114,10 @@ export function BookingsList({
 
   if (rows.length === 0) {
     return (
-      <div className="mt-8 rounded-2xl border border-dashed border-border bg-card p-12 text-center shadow-sm">
+      <div className="mt-8 rounded-2xl border border-dashed border-border bg-card p-12 text-center shadow-[var(--myc-shadow-card)]">
         <CalendarDays className="mx-auto mb-4 size-10 text-muted-foreground" />
         <p className="text-muted-foreground">No sessions yet.</p>
-        <Button asChild className="mt-5 rounded-full bg-accent text-white hover:bg-accent/90">
+        <Button asChild className="mt-5 rounded-full bg-accent text-accent-foreground hover:bg-accent/90">
           <Link href="/dashboard/book">Book your first session</Link>
         </Button>
       </div>
@@ -126,7 +126,7 @@ export function BookingsList({
 
   return (
     <>
-      <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="mt-7 overflow-hidden rounded-2xl border border-border bg-card shadow-[var(--myc-shadow-card)]">
         <div className="flex flex-wrap gap-2 border-b border-border px-5 py-3.5">
           {FILTERS.map((f) => (
             <button
@@ -348,7 +348,7 @@ function Th({ children, className }: { children?: React.ReactNode; className?: s
   return (
     <th
       className={cn(
-        "bg-background px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
+        "bg-muted px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
         className
       )}
     >

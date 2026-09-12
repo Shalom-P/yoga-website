@@ -226,7 +226,7 @@ export function MedicalDocuments({
 
       {/* Documents */}
       {documents.length === 0 ? (
-        <div className="mt-6 rounded-2xl border border-border bg-card p-10 text-center shadow-sm">
+        <div className="mt-6 rounded-2xl border border-border bg-card p-10 text-center shadow-[var(--myc-shadow-card)]">
           <FileText className="mx-auto mb-3 size-9 text-muted-foreground" />
           <p className="text-sm text-muted-foreground">
             No documents yet. Upload a report above to get started.
@@ -237,7 +237,7 @@ export function MedicalDocuments({
           {documents.map((doc) => (
             <li
               key={doc.id}
-              className="rounded-2xl border border-border bg-card p-4 shadow-sm"
+              className="rounded-2xl border border-border bg-card p-4 shadow-[var(--myc-shadow-card)]"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div className="flex min-w-0 items-start gap-3">

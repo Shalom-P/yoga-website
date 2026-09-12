@@ -144,7 +144,7 @@ export function YogaAvatar({
       aria-hidden="true"
       className={cn(
         "inline-flex shrink-0 items-center justify-center overflow-hidden rounded-full",
-        "shadow-[inset_0_0_0_1px_rgba(22,53,46,0.07)]",
+        "ring-1 ring-border",
         className
       )}
       style={{ backgroundColor: tint.bg }}

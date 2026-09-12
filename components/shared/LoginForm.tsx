@@ -107,7 +107,11 @@ function OAuthLogin({
       disabled={loading}
       size="lg"
       variant="outline"
-      className="w-full h-12 rounded-full"
+      // `outline` fills with bg-background, which is the same value the
+      // .myc-theme wrapper paints the page with, so the OAuth button loses its
+      // shape entirely and reads as bare text. bg-card is the surface token and
+      // lifts off the page on both palettes (#ffffff on cream, #103a33 on pine).
+      className="w-full h-12 rounded-full bg-card"
     >
       {loading ? (
         <Loader2 className="size-4 animate-spin" />

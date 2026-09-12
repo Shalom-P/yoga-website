@@ -47,7 +47,7 @@ export function TeacherDocumentList({ students }: { students: StudentGroup[] }) 
       {students.map((group) => (
         <section
           key={group.customer_id}
-          className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
+          className="overflow-hidden rounded-2xl border border-border bg-card"
         >
           <div className="flex items-center gap-2 border-b border-border bg-background px-5 py-3">
             <UserRound className="size-4 text-muted-foreground" />

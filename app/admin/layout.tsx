@@ -10,7 +10,7 @@ export default async function AdminLayout({
 }) {
   await requireAdmin();
   return (
-    <div className="myc-app min-h-dvh flex flex-col lg:flex-row">
+    <div className="myc-app myc-dark min-h-dvh flex flex-col lg:flex-row">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"

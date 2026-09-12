@@ -237,7 +237,7 @@ export function SlotOverrides({ teacherId, teacherTimezone, initial }: Props) {
               <input
                 id="override-blocked"
                 type="checkbox"
-                className="size-4 rounded border-border"
+                className="size-4 rounded border-border accent-primary"
                 checked={form.is_blocked}
                 onChange={(e) => setForm((f) => ({ ...f, is_blocked: e.target.checked }))}
               />

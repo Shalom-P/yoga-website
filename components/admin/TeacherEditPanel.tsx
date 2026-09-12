@@ -337,7 +337,7 @@ function MediaPreview({
             src={url}
             controls
             preload="metadata"
-            className={`w-full ${aspect} rounded-lg border border-border bg-black object-cover`}
+            className={`w-full ${aspect} rounded-lg border border-border bg-muted object-cover`}
           />
         ) : (
           // Public Storage URL, plain <img> avoids next/image remotePatterns config.

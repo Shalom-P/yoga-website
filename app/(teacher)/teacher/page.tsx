@@ -38,7 +38,7 @@ export default async function TeacherHome() {
       <div className="grid sm:grid-cols-2 gap-5">
         <Link
           href="/teacher/availability"
-          className="rounded-2xl border border-border bg-card p-6 hover:shadow-md hover:-translate-y-0.5 transition-all"
+          className="rounded-2xl border border-border bg-card p-6 hover:border-primary/40 hover:-translate-y-0.5 transition-all"
         >
           <CalendarRange className="size-6 text-primary mb-3" />
           <div className="font-medium">Manage availability</div>
@@ -48,7 +48,7 @@ export default async function TeacherHome() {
         </Link>
         <Link
           href="/teacher/sessions"
-          className="rounded-2xl border border-border bg-card p-6 hover:shadow-md hover:-translate-y-0.5 transition-all"
+          className="rounded-2xl border border-border bg-card p-6 hover:border-primary/40 hover:-translate-y-0.5 transition-all"
         >
           <Users className="size-6 text-primary mb-3" />
           <div className="font-medium">My schedule</div>

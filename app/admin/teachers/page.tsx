@@ -35,7 +35,7 @@ export default async function AdminTeachersPage() {
               <div className="text-xs text-muted-foreground truncate">{t.headline}</div>
             </div>
             <div className="hidden sm:flex items-center gap-1 text-sm">
-              <Star className="size-3.5 fill-amber-400 text-amber-400" />
+              <Star className="size-3.5 fill-[var(--myc-pill-amber-fg)] text-[var(--myc-pill-amber-fg)]" />
               <span>{Number(t.rating_avg).toFixed(1)}</span>
               <span className="text-muted-foreground text-xs">· {t.rating_count}</span>
             </div>

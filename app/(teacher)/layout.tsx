@@ -21,7 +21,7 @@ export default async function TeacherLayout({
   // flow, but fail soft with a clear message instead of a broken shell.
   if (!teacher) {
     return (
-      <div className="myc-app min-h-dvh flex items-center justify-center p-6">
+      <div className="myc-app myc-dark min-h-dvh flex items-center justify-center p-6">
         <div className="max-w-md rounded-2xl border border-border bg-card p-8 text-center">
           <h1 className="text-xl font-[family-name:var(--font-heading)]">
             Your teacher profile isn&apos;t linked yet
@@ -41,7 +41,7 @@ export default async function TeacherLayout({
   const name = teacher.display_name || user.email || "Teacher";
 
   return (
-    <div className="myc-app min-h-dvh flex flex-col lg:flex-row">
+    <div className="myc-app myc-dark min-h-dvh flex flex-col lg:flex-row">
       <a
         href="#main-content"
         className="sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-primary focus:px-4 focus:py-2 focus:text-primary-foreground"

@@ -79,7 +79,7 @@ function SessionTable({
       <h2 className="text-lg font-[family-name:var(--font-heading)] tracking-tight mb-3">
         {title}
       </h2>
-      <div className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <div className="overflow-hidden rounded-2xl border border-border bg-card">
         <div className="overflow-x-auto">
           <table className="w-full min-w-[640px] text-sm">
             <thead>
@@ -166,7 +166,7 @@ function Th({ children, className }: { children?: React.ReactNode; className?: s
   return (
     <th
       className={cn(
-        "bg-background px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
+        "bg-muted px-5 py-3 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground",
         className
       )}
     >

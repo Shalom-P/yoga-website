@@ -6,7 +6,7 @@ export const metadata = { title: "Page not found" };
 
 export default function NotFound() {
   return (
-    <div className="myc-theme min-h-dvh flex flex-col items-center justify-center px-6 py-16 text-center">
+    <div className="myc-theme myc-dark min-h-dvh flex flex-col items-center justify-center px-6 py-16 text-center">
       <BrandMark className="size-12 [&_svg]:size-6" />
       <p className="myc-eyebrow mt-8 justify-center">
         <span className="myc-dot" aria-hidden="true" />
@@ -19,7 +19,7 @@ export default function NotFound() {
         The page you&apos;re looking for doesn&apos;t exist or has moved.
       </p>
       <div className="mt-8 flex flex-wrap justify-center gap-3">
-        <Button asChild size="lg" className="h-12 rounded-full px-7 bg-accent text-accent-foreground hover:bg-accent/90">
+        <Button asChild size="lg" className="h-12 rounded-full px-7 bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground">
           <Link href="/">Back to home</Link>
         </Button>
         <Button asChild variant="outline" size="lg" className="h-12 rounded-full px-7">

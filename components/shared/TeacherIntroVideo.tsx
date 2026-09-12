@@ -49,7 +49,7 @@ export function TeacherIntroVideo({
   return (
     <div
       className={cn(
-        "relative mx-auto w-full overflow-hidden rounded-[var(--radius)] border border-border bg-black",
+        "relative mx-auto w-full overflow-hidden rounded-[var(--radius)] border border-border bg-muted",
         !ratio && "aspect-video",
         className,
       )}

@@ -178,7 +178,7 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     name: args.name ?? "MYYOGACLASSES",
     description: args.description ?? "Session pack",
     prefill: args.prefill,
-    theme: { color: args.themeColor ?? "#111827" },
+    theme: { color: args.themeColor ?? "#0f5c4e" },
     handler: async (response) => {
       // 4. Verify signature + capture server-side before trusting success.
       try {

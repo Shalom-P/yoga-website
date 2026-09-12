@@ -24,10 +24,10 @@ export function PendingBankTransfers({ transfers }: { transfers: BankTransferInt
       {transfers.map((t) => (
         <div
           key={t.paymentId}
-          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 px-5 py-4"
         >
           <div className="flex items-start gap-3">
-            <Landmark className="mt-0.5 size-5 shrink-0 text-amber-600" />
+            <Landmark className="mt-0.5 size-5 shrink-0 text-[var(--myc-pill-amber-fg)]" />
             <div className="text-sm">
               <p className="font-medium text-foreground">Bank transfer pending verification</p>
               <p className="text-muted-foreground">

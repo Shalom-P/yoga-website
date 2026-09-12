@@ -37,7 +37,7 @@ function StarRating({ rating }: { rating: number }) {
       {Array.from({ length: 5 }, (_, i) => (
         <Star
           key={i}
-          className={`size-3.5 ${i < rating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30"}`}
+          className={`size-3.5 ${i < rating ? "fill-[var(--myc-pill-free-fg)] text-[var(--myc-pill-free-fg)]" : "text-muted-foreground/30"}`}
         />
       ))}
     </span>

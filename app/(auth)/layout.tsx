@@ -3,5 +3,5 @@
 // different product. These pages sit outside the (marketing) layout, so they'd
 // otherwise fall back to the base theme + fonts.
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  return <div className="myc-theme">{children}</div>;
+  return <div className="myc-theme myc-dark">{children}</div>;
 }

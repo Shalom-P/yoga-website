@@ -46,7 +46,7 @@ export default async function BookPage() {
               )}
               {t.rating_count > 0 && (
                 <div className="absolute top-3 left-3 inline-flex items-center gap-1 text-xs bg-background/85 backdrop-blur px-2 py-0.5 rounded-full">
-                  <Star className="size-3 fill-amber-400 text-amber-400" />
+                  <Star className="size-3 fill-[var(--myc-pill-amber-fg)] text-[var(--myc-pill-amber-fg)]" />
                   <span className="font-medium">{Number(t.rating_avg).toFixed(1)}</span>
                 </div>
               )}
