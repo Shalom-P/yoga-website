@@ -31,8 +31,9 @@ export const runtime = "nodejs";
 
 const bodySchema = z.object({
   planSlug: z.string().trim().min(1).max(64),
-  // The visitor's live browser timezone (IANA id). Used for the service-area
-  // purchase gate and as a currency fallback. The price is never client-supplied.
+  // The visitor's live browser timezone (IANA id). Currency fallback only, for
+  // when edge GeoIP is absent (local / off-platform); there is no service-area
+  // gate any more. The price is never client-supplied.
   clientTimezone: z.string().trim().min(1).max(64),
   // Optional promo code. The discount + final amount are computed server-side
   // (see lib/billing/promo.ts). The client only ever sends the raw code string.

@@ -86,7 +86,7 @@ export function Footer() {
       <div className="border-t border-foreground/[0.08]">
         <div className="mx-auto flex max-w-[1200px] flex-col justify-between gap-2 px-6 py-5 text-[12.5px] text-muted-foreground sm:flex-row">
           <span>© {new Date().getFullYear()} My Yoga Classes.{process.env.NEXT_PUBLIC_ABN ? ` ABN ${process.env.NEXT_PUBLIC_ABN}.` : ""}</span>
-          <span>Crafted with care · Teachers in India</span>
+          <span>Teachers in India · Students everywhere</span>
         </div>
       </div>
     </footer>

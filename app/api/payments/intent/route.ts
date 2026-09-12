@@ -37,8 +37,8 @@ export const runtime = "nodejs";
 
 const bodySchema = z.object({
   planSlug: z.string().trim().min(1).max(64),
-  // The visitor's live browser timezone (IANA id) — service-area gate + currency
-  // fallback when GeoIP is absent (local/off-platform). Never a price input.
+  // The visitor's live browser timezone (IANA id) — currency fallback when GeoIP
+  // is absent (local/off-platform); no service-area gate. Never a price input.
   clientTimezone: z.string().trim().min(1).max(64),
   // Optional promo code (applied server-side; never a price input).
   promoCode: z.string().trim().max(64).optional(),
