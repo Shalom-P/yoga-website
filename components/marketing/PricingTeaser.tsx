@@ -68,14 +68,37 @@ export function PricingTeaser({ plans, showHeader = true }: PricingTeaserProps) 
         ? "Couldn't check that code. Please try again."
         : null;
   const promoNeedsSignIn = settled?.kind === "signed_out";
-  // The charged currency is resolved server-side at create-order (GeoIP-first).
-  // For *display* we best-effort detect from the browser timezone. Computed
-  // during render after mount so SSR + first client render both use the default
-  // (INR), no hydration mismatch, then it re-renders with the detected currency.
+  // The charged currency is resolved server-side (GeoIP-first). Ask the server
+  // what it would charge rather than guessing, so the price on the card is the
+  // price taken at checkout; a browser-timezone guess disagrees whenever the
+  // device clock does not match where the device is. Until that answer lands we
+  // show the timezone guess, which is right for most visitors and avoids a
+  // flash of the wrong currency. Computed during render after mount so SSR and
+  // the first client render both use the default (INR), no hydration mismatch.
   const mounted = useHasMounted();
-  const currency: Currency = mounted
+  const [serverCurrency, setServerCurrency] = useState<Currency | null>(null);
+  const guessedCurrency: Currency = mounted
     ? currencyForTimezone(detectBrowserTimezone()) ?? DEFAULT_CURRENCY
     : DEFAULT_CURRENCY;
+  const currency: Currency = serverCurrency ?? guessedCurrency;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/region?tz=${encodeURIComponent(detectBrowserTimezone())}`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { currency?: Currency };
+        if (data?.currency) setServerCurrency(data.currency);
+      } catch {
+        // Offline or aborted: the timezone guess already on screen stands.
+      }
+    })();
+    return () => controller.abort();
+  }, []);
   // Once a preview lands, trust its currency over the local guess: it came from
   // the same GeoIP-first resolution that will decide what the customer is charged.
   const displayCurrency: Currency = preview?.currency ?? currency;
