@@ -6,7 +6,8 @@ import {
   currencyForTimezone,
   localeForCurrency,
   resolveRegion,
-  DEFAULT_CURRENCY,
+  INTERNATIONAL_CURRENCY,
+  SUPPORTED_CURRENCIES,
 } from "@/lib/geo/region";
 
 describe("no service-area gate", () => {
@@ -33,29 +34,46 @@ describe("no service-area gate", () => {
     }
   });
 
-  it("the formerly blocked cases now transact in the fallback currency", () => {
-    for (const [country, timezone] of [
-      ["US", "America/New_York"],
-      ["AU", "Australia/Sydney"],
-      ["GB", "Europe/London"],
-      ["SG", "Asia/Singapore"],
-    ] as const) {
-      expect(resolveRegion({ country, timezone })).toEqual({
-        country: null,
-        currency: DEFAULT_CURRENCY,
-        locale: localeForCurrency(DEFAULT_CURRENCY),
-      });
+  it("the formerly blocked cases all transact, in their own currency or USD", () => {
+    const expected = {
+      US: "USD",
+      GB: "GBP",
+      DE: "EUR",
+      AU: INTERNATIONAL_CURRENCY, // no currency of its own here
+      SG: INTERNATIONAL_CURRENCY,
+    } as const;
+    for (const [country, currency] of Object.entries(expected)) {
+      expect(resolveRegion({ country, timezone: null }).currency).toBe(currency);
+    }
+  });
+
+  it("only ever resolves to a currency the app supports", () => {
+    const supported = new Set<string>(SUPPORTED_CURRENCIES);
+    const A = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for (const a of A) {
+      for (const b of A) {
+        expect(supported.has(resolveRegion({ country: `${a}${b}`, timezone: null }).currency)).toBe(
+          true,
+        );
+      }
+    }
+    for (const z of Intl.supportedValuesOf("timeZone")) {
+      expect(supported.has(resolveRegion({ country: null, timezone: z }).currency)).toBe(true);
     }
   });
 });
 
 describe("isBillingMarket", () => {
-  it("accepts IN and AE, case-insensitive", () => {
+  it("accepts countries with a currency of their own, case-insensitive", () => {
     expect(isBillingMarket("IN")).toBe(true);
     expect(isBillingMarket("ae")).toBe(true);
+    expect(isBillingMarket("US")).toBe(true);
+    expect(isBillingMarket("gb")).toBe(true);
+    expect(isBillingMarket("DE")).toBe(true); // eurozone
   });
-  it("is false elsewhere, which means fallback currency, not blocked", () => {
-    expect(isBillingMarket("US")).toBe(false);
+  it("is false elsewhere, which means the international currency, not blocked", () => {
+    expect(isBillingMarket("AU")).toBe(false);
+    expect(isBillingMarket("SG")).toBe(false);
     expect(isBillingMarket(null)).toBe(false);
     expect(isBillingMarket(undefined)).toBe(false);
   });
@@ -74,13 +92,24 @@ describe("currency resolution", () => {
   it("maps country → currency", () => {
     expect(currencyForCountry("AE")).toBe("AED");
     expect(currencyForCountry("IN")).toBe("INR");
-    expect(currencyForCountry("US")).toBeNull();
+    expect(currencyForCountry("US")).toBe("USD");
+    expect(currencyForCountry("GB")).toBe("GBP");
+    expect(currencyForCountry("AU")).toBeNull(); // no currency of its own
+  });
+
+  it("gives every eurozone member the same EUR price", () => {
+    for (const c of ["DE", "FR", "IT", "ES", "NL", "IE", "PT", "AT", "FI", "GR"]) {
+      expect(currencyForCountry(c)).toBe("EUR");
+    }
   });
 
   it("maps timezone → currency", () => {
     expect(currencyForTimezone("Asia/Dubai")).toBe("AED");
     expect(currencyForTimezone("Asia/Kolkata")).toBe("INR");
-    expect(currencyForTimezone("America/New_York")).toBeNull();
+    expect(currencyForTimezone("Europe/London")).toBe("GBP");
+    expect(currencyForTimezone("America/New_York")).toBe("USD");
+    expect(currencyForTimezone("Europe/Paris")).toBe("EUR");
+    expect(currencyForTimezone("Australia/Sydney")).toBeNull(); // no mapping
   });
 
   it("handles the legacy Asia/Calcutta id that ICU browsers actually report", () => {
@@ -101,10 +130,13 @@ describe("currency resolution", () => {
       currency: "AED",
       locale: "en-AE",
     });
-    // A US visitor cannot claim AED pricing by POSTing Asia/Dubai... they get
-    // the country's answer, which is the fallback.
-    expect(resolveRegion({ country: "US", timezone: "Asia/Dubai" }).currency).toBe(
-      DEFAULT_CURRENCY,
+    // A US visitor cannot claim AED pricing by POSTing Asia/Dubai: they get the
+    // country's answer. This is the whole reason GeoIP outranks the timezone —
+    // the timezone is client-supplied and decides what someone is charged.
+    expect(resolveRegion({ country: "US", timezone: "Asia/Dubai" }).currency).toBe("USD");
+    // ...and an unpriced-country visitor cannot reach into a cheaper currency either.
+    expect(resolveRegion({ country: "AU", timezone: "Asia/Kolkata" }).currency).toBe(
+      INTERNATIONAL_CURRENCY,
     );
   });
 
@@ -117,7 +149,15 @@ describe("currency resolution", () => {
     expect(resolveRegion({ country: null, timezone: "Asia/Dubai" }).currency).toBe("AED");
   });
 
-  it("defaults when nothing resolves", () => {
-    expect(resolveRegion({ country: null, timezone: null }).currency).toBe(DEFAULT_CURRENCY);
+  it("falls back to the international currency when nothing resolves", () => {
+    expect(resolveRegion({ country: null, timezone: null }).currency).toBe(
+      INTERNATIONAL_CURRENCY,
+    );
+  });
+
+  it("gives every supported currency a real locale", () => {
+    for (const c of SUPPORTED_CURRENCIES) {
+      expect(localeForCurrency(c)).toMatch(/^[a-z]{2}-[A-Z]{2}$/);
+    }
   });
 });

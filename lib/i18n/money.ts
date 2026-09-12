@@ -1,9 +1,12 @@
-// Currency formatting. The studio bills UAE customers in AED and India
-// customers in INR (see lib/geo/region.ts); historical rows may still be AUD.
+// Currency formatting. Which currency a customer is billed in is decided by
+// lib/geo/region.ts; historical rows may still be AUD from the pre-2026 market.
 // `Intl` handles each currency's symbol and grouping (en-IN groups in lakh/crore).
 const LOCALE_BY_CURRENCY: Record<string, string> = {
   INR: "en-IN",
   AED: "en-AE",
+  USD: "en-US",
+  GBP: "en-GB",
+  EUR: "en-IE",
   AUD: "en-AU",
 };
 

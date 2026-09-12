@@ -99,9 +99,6 @@ export function PricingTeaser({ plans, showHeader = true }: PricingTeaserProps) 
     })();
     return () => controller.abort();
   }, []);
-  // Once a preview lands, trust its currency over the local guess: it came from
-  // the same GeoIP-first resolution that will decide what the customer is charged.
-  const displayCurrency: Currency = preview?.currency ?? currency;
 
   // Price the typed code across every pack, debounced, so the customer sees what
   // they'd pay before committing to checkout. Read-only server-side: previewing
@@ -148,11 +145,30 @@ export function PricingTeaser({ plans, showHeader = true }: PricingTeaserProps) 
     };
   }, [trimmedPromo]);
 
-  // Pick a plan's price in the active currency, falling back to its base price.
-  // Only used before a preview lands; after that the server's figure wins.
-  function planAmount(p: PlanWithFeatures): number {
-    return p.prices.find((pp) => pp.currency === currency)?.amount_cents ?? p.price_base_cents;
+  // Pick a plan's price in the active currency. `price_base_cents` is an INR
+  // figure, so it is only ever a fallback for INR: using it for another currency
+  // would print the rupee number under a foreign symbol.
+  function amountIn(p: PlanWithFeatures, c: Currency): number | null {
+    const row = p.prices.find((pp) => pp.currency === c)?.amount_cents;
+    return row ?? (c === DEFAULT_CURRENCY ? p.price_base_cents : null);
   }
+
+  // Show a currency only when every pack is priced in it, mirroring the server's
+  // pricedCurrencies() rule. A grid that quotes some packs in GBP and the rest in
+  // rupees is worse than one entirely in rupees. In practice the server has
+  // already applied this, so this is a belt-and-braces against a stale payload.
+  const gridCurrency: Currency = plans.every((p) => amountIn(p, currency) !== null)
+    ? currency
+    : DEFAULT_CURRENCY;
+
+  function planAmount(p: PlanWithFeatures): number {
+    return amountIn(p, gridCurrency) ?? p.price_base_cents;
+  }
+
+  // Once a preview lands, trust its currency over the local guess: it came from
+  // the same GeoIP-first resolution that will decide what the customer is charged.
+  const displayCurrency: Currency = preview?.currency ?? gridCurrency;
+
 
   async function startBuy(planSlug: string) {
     setPending(planSlug);

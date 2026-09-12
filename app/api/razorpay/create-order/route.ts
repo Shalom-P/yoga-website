@@ -4,7 +4,7 @@ import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
 import { getRazorpayClient, isRazorpayConfigured } from "@/lib/razorpay/client";
-import { resolvePackBySlug } from "@/lib/razorpay/catalog";
+import { effectiveCurrency, resolvePackBySlug } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { normalizePromoCode, promoErrorMessage, reserveDiscount } from "@/lib/billing/promo";
@@ -81,7 +81,14 @@ export async function POST(req: Request): Promise<Response> {
 
   // GeoIP country wins over the browser timezone; it decides what the customer
   // is charged, so a caller must not pick their own currency by POSTing a zone.
-  const { currency } = resolveRegion({ country, timezone: parsed.data.clientTimezone });
+  const { currency: preferred } = resolveRegion({
+    country,
+    timezone: parsed.data.clientTimezone,
+  });
+  // Downgrade to the default when the packs are not priced in `preferred` yet,
+  // so a newly-supported currency never blocks a sale or charges an INR figure
+  // under a foreign symbol.
+  const currency = await effectiveCurrency(preferred);
 
   // Trusted price lookup, rejecting anything that isn't an active plan.
   const pack = await resolvePackBySlug(parsed.data.planSlug, currency);

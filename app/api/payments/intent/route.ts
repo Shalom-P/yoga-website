@@ -5,7 +5,7 @@ import crypto from "node:crypto";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
-import { resolvePackBySlug } from "@/lib/razorpay/catalog";
+import { effectiveCurrency, resolvePackBySlug } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { normalizePromoCode, promoErrorMessage, reserveDiscount } from "@/lib/billing/promo";
@@ -82,7 +82,14 @@ export async function POST(req: Request): Promise<Response> {
     .maybeSingle();
   const country = countryFromHeaders(req.headers);
 
-  const { currency } = resolveRegion({ country, timezone: parsed.data.clientTimezone });
+  const { currency: preferred } = resolveRegion({
+    country,
+    timezone: parsed.data.clientTimezone,
+  });
+  // Downgrade to the default when the packs are not priced in `preferred` yet,
+  // so a newly-supported currency never blocks a sale or charges an INR figure
+  // under a foreign symbol.
+  const currency = await effectiveCurrency(preferred);
 
   // India (INR) and anything that isn't UAE → Razorpay. No record is created
   // here; the client proceeds with the untouched create-order → Checkout flow.

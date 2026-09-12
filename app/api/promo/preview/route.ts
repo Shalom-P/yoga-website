@@ -2,7 +2,7 @@ import "server-only";
 
 import { z } from "zod";
 
-import { listActivePacks } from "@/lib/razorpay/catalog";
+import { effectiveCurrency, listActivePacks } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { normalizePromoCode, previewPromoCode, promoErrorMessage } from "@/lib/billing/promo";
@@ -78,10 +78,11 @@ export async function POST(req: Request): Promise<Response> {
 
   // Same GeoIP-first resolution as create-order, so the preview quotes the
   // currency the customer will really be charged in.
-  const { currency } = resolveRegion({
+  const { currency: preferred } = resolveRegion({
     country: countryFromHeaders(req.headers),
     timezone: parsed.data.clientTimezone,
   });
+  const currency = await effectiveCurrency(preferred);
 
   const packs = await listActivePacks(currency);
   if (packs.length === 0) {

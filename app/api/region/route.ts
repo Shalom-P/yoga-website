@@ -2,7 +2,8 @@ import "server-only";
 
 import { NextResponse } from "next/server";
 
-import { countryFromHeaders, resolveRegion } from "@/lib/geo/region";
+import { countryFromHeaders, localeForCurrency, resolveRegion } from "@/lib/geo/region";
+import { effectiveCurrency } from "@/lib/razorpay/catalog";
 
 export const runtime = "nodejs";
 // Depends on the caller's own GeoIP header, so it can never be prerendered.
@@ -42,7 +43,12 @@ export async function GET(req: Request) {
     timezone: tz && tz.length <= 64 ? tz : null,
   });
 
-  return NextResponse.json(region, {
+  // Answer with what we can actually charge, not merely what we would prefer:
+  // this figure drives the price on the card, so it has to survive to checkout.
+  const currency = await effectiveCurrency(region.currency);
+  const body = { ...region, currency, locale: localeForCurrency(currency) };
+
+  return NextResponse.json(body, {
     headers: {
       // Per-visitor by definition: a shared cache would hand one customer
       // another customer's currency.
