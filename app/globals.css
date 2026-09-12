@@ -539,7 +539,29 @@ html:has(.myc-dark) body {
    palette. Deliberately NOT scoped to .myc-dark: PricingTeaser carries these
    classes and also renders on /dashboard/plan, which sits under .myc-app, where
    a .myc-dark-scoped rule would not match and the pack cards would lose their
-   background, border and shadow entirely. */
+   background, border and shadow entirely.
+
+   ⚠️ THE BORDER IS AN UNLAYERED SHORTHAND, AND IT WINS.
+   These rules live outside @layer, and unlayered CSS outranks every layer, so
+   the `border:` shorthand below beats ANY Tailwind border utility on the same
+   element — Tailwind's utilities sit in @layer utilities. Class order in the
+   attribute is irrelevant, and so is tailwind-merge. The shorthand sets width,
+   style AND colour, so all three are swallowed:
+
+     <div class="myc-glass border-accent/45">   -> hairline, not coral
+     <div class="myc-glass border-l-2 border-l-accent"> -> no accent rule
+     <div class="myc-glass border-dashed">      -> still solid
+
+   It fails silently: the element looks fine, just generic, so it survives
+   review. Four spots have hit this across the dashboard and admin canvases.
+   To vary one edge or colour, use an inline style (it beats the shorthand):
+
+     style={{ borderColor: "color-mix(in srgb, var(--accent) 45%, transparent)" }}
+     style={{ borderWidth: "0 1px 0 0" }}
+
+   For a dashed panel, skip the class entirely and spell the border out:
+   `border border-dashed border-border bg-foreground/3`. Same applies to
+   .myc-glass-strong, .myc-glass-bar and .myc-glass-over-media below. */
 .myc-glass {
   background: color-mix(in srgb, var(--foreground) 5%, transparent);
   border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
