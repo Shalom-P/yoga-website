@@ -4,9 +4,15 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics/events";
+import { useViewer, viewerPrimaryCta } from "@/lib/auth/useViewer";
 
 export function StickyMobileCTA() {
   const [show, setShow] = useState(false);
+  const viewer = useViewer();
+  const cta = viewerPrimaryCta(viewer.role);
+  // Someone already signed in goes straight into the flow: /login only bounces
+  // them back out via middleware, which costs a getUser() plus a profiles read.
+  const href = viewer.signedIn ? cta.href : "/login?next=/dashboard/book";
 
   useEffect(() => {
     const onScroll = () => setShow(window.scrollY > 600);
@@ -34,7 +40,9 @@ export function StickyMobileCTA() {
           className="shrink-0 bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground"
           onClick={() => track("cta_click", { position: "sticky_mobile" })}
         >
-          <Link href="/login?next=/dashboard/book">Book now</Link>
+          <Link href={href}>
+            {viewer.signedIn && viewer.role === "teacher" ? "My schedule" : "Book now"}
+          </Link>
         </Button>
       </div>
     </div>
