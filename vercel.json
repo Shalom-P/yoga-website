@@ -2,12 +2,5 @@
   "$schema": "https://openapi.vercel.sh/vercel.json",
   "git": {
     "deploymentEnabled": false
-  },
-  "crons": [
-    { "path": "/api/cron/reminders", "schedule": "*/15 * * * *" },
-    { "path": "/api/cron/meet-retry", "schedule": "*/10 * * * *" },
-    { "path": "/api/cron/no-show-sweep", "schedule": "20 * * * *" },
-    { "path": "/api/cron/discount-reservation-sweep", "schedule": "40 * * * *" },
-    { "path": "/api/cron/medical-orphan-sweep", "schedule": "30 3 * * *" }
-  ]
+  }
 }
