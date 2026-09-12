@@ -108,6 +108,15 @@ export default function RootLayout({
 }: Readonly<{ children: React.ReactNode }>) {
   return (
     <html
+      // globals.css sets `scroll-behavior: smooth` on <html>. Without this
+      // attribute Next.js ANIMATES the scroll-to-top on every route change, so
+      // each navigation takes hundreds of ms of visible scrolling before the new
+      // page settles — it reads as lag. Lenis masks this on the marketing pages
+      // (it forces scroll-behavior: auto while mounted) but nothing does on
+      // dashboard, admin, teacher or auth, which is exactly where navigation
+      // felt slow. This opts route transitions back into an instant jump while
+      // leaving in-page anchor scrolling smooth.
+      data-scroll-behavior="smooth"
       lang="en"
       suppressHydrationWarning
       className={`${inter.variable} ${fraunces.variable} ${geistMono.variable} ${cormorant.variable} ${hanken.variable} h-full antialiased`}

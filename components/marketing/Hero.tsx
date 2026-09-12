@@ -25,7 +25,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
       <div aria-hidden="true" className="myc-hero-wash absolute inset-0" />
       <div
         aria-hidden="true"
-        className="myc-breathe-glow pointer-events-none absolute inset-0 blur-[30px]"
+        className="myc-breathe-glow pointer-events-none absolute inset-0"
         style={{
           background:
             "radial-gradient(ellipse 45% 65% at 76% 58%, var(--myc-glow-white), transparent 70%)",
@@ -33,7 +33,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
       />
       <div
         aria-hidden="true"
-        className="myc-mist pointer-events-none absolute -inset-[20%] blur-[40px]"
+        className="myc-mist pointer-events-none absolute -inset-[20%]"
         style={{
           background:
             "radial-gradient(ellipse 40% 30% at 30% 80%, var(--myc-glow-2), transparent 70%), radial-gradient(ellipse 50% 25% at 70% 90%, var(--myc-glow-3), transparent 70%)",

@@ -12,7 +12,7 @@ export function TestimonialWall({ reviews }: { reviews: ReviewWithTeacher[] }) {
     <section id="reviews" className="relative overflow-hidden px-6 pb-[110px] pt-[60px]">
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute -right-[15%] top-[10%] size-[700px] rounded-full blur-[160px]"
+        className="pointer-events-none absolute -right-[15%] top-[10%] size-[700px] rounded-full"
         style={{ background: "var(--myc-glow-2)" }}
       />
       <div className="relative mx-auto max-w-[1200px]">

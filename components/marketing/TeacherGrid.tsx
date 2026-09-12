@@ -27,7 +27,7 @@ export function TeacherGrid({ teachers, showHeader = true }: TeacherGridProps) {
     >
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute left-1/2 top-[20%] h-[500px] w-[900px] -translate-x-1/2 rounded-full blur-[140px]"
+        className="pointer-events-none absolute left-1/2 top-[20%] h-[500px] w-[900px] -translate-x-1/2 rounded-full"
         style={{ background: "var(--myc-glow-1)" }}
       />
 

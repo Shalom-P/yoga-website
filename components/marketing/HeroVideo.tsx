@@ -111,14 +111,11 @@ export function HeroVideo({ className }: { className?: string }) {
     <>
       {/* Always painted: the video's own backdrop, and the only visual for
           mobile, reduced-motion and save-data visitors. */}
+      {/* The colour grade is baked into this JPEG at encode time, so it needs no
+          CSS filter. It used to carry `--myc-vid-filter`, which meant the page
+          ran TWO full-viewport filter passes (this and the video) instead of one. */}
       {/* eslint-disable-next-line @next/next/no-img-element -- decorative backdrop behind a scrim; next/image adds a transform hop for no benefit */}
-      <img
-        src={POSTER_SRC}
-        alt=""
-        aria-hidden="true"
-        className={className}
-        style={{ filter: "var(--myc-vid-filter)" }}
-      />
+      <img src={POSTER_SRC} alt="" aria-hidden="true" className={className} />
       {enabled && (
         <video
           ref={videoRef}

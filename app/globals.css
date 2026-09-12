@@ -507,7 +507,12 @@ html:has(.myc-dark) body {
 .myc-glass {
   background: color-mix(in srgb, var(--foreground) 5%, transparent);
   border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
-  backdrop-filter: blur(18px);
+  /* No backdrop-filter here on purpose. These panels sit on the page background,
+     so there is nothing behind them worth blurring — but each instance would
+     still force its own compositing pass, and there are ~20 of them on the
+     landing page alone, repaid on every navigation. The tinted wash + hairline
+     carry the look on their own. Blur is kept only where content actually
+     passes underneath: .myc-glass-bar, -strong and -over-media. */
   box-shadow: 0 30px 80px -50px rgba(0, 0, 0, 0.55),
     inset 0 1px 0 color-mix(in srgb, var(--foreground) 10%, transparent);
 }
