@@ -28,6 +28,7 @@ import {
 import { toast } from "sonner";
 import { formatCustomerTime } from "@/lib/timezone";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 type SessionRow = {
   id: string;
@@ -199,47 +200,45 @@ export function SessionsAdmin({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-            Sessions
-          </h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Schedule classes. Join links are auto-created.
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <Button variant="outline" className="rounded-full" onClick={toggleShowPast}>
+      <AdminPageHeader
+        eyebrow="Operations"
+        title="Sessions"
+        sub="Schedule classes. Join links are auto-created."
+        className="mb-7"
+        actions={
+        <>
+          <Button variant="outline" onClick={toggleShowPast}>
             {showPast ? "Show upcoming" : "Show past sessions"}
           </Button>
-          <Button className="rounded-full" onClick={() => setOpen(true)}>
+          <Button onClick={() => setOpen(true)}>
             <Plus className="size-4 mr-1" />
             Schedule session
           </Button>
-        </div>
-      </div>
+        </>
+        }
+      />
 
       {sessions.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-muted-foreground">
+        <div className="border border-dashed border-border bg-foreground/3 p-12 text-center text-muted-foreground">
           No sessions yet. Click <b>Schedule session</b> to create one.
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card overflow-x-auto">
+        <div className="myc-glass overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-muted/40">
+            <thead>
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Start</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Teacher</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Class</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Capacity</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Link</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3 font-medium text-muted-foreground text-left">Actions</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Start</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Teacher</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Class</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Capacity</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Link</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Status</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Actions</th>
               </tr>
             </thead>
             <tbody>
               {sessions.map((s) => (
-                <tr key={s.id} className="border-t border-border">
+                <tr key={s.id} className="border-t border-border transition-colors hover:bg-foreground/4">
                   <td className="px-4 py-3 whitespace-nowrap">
                     {formatCustomerTime(s.start_at)}
                   </td>

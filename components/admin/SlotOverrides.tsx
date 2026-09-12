@@ -136,7 +136,7 @@ export function SlotOverrides({ teacherId, teacherTimezone, initial }: Props) {
     <div className="mt-10">
       <div className="flex items-center justify-between mb-3">
         <div>
-          <h2 className="text-lg font-[family-name:var(--font-heading)] tracking-tight">
+          <h2 className="font-[family-name:var(--font-cormorant)] text-2xl font-semibold">
             Date overrides
           </h2>
           <p className="text-xs text-muted-foreground mt-0.5">
@@ -154,20 +154,20 @@ export function SlotOverrides({ teacherId, teacherTimezone, initial }: Props) {
           No overrides yet. Use &quot;Add override&quot; to block a date or add an extra window.
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="myc-glass overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-muted/40">
+            <thead>
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Date</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Window</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Type</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Reason</th>
-                <th className="px-4 py-3"></th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Date</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Window</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Type</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Reason</th>
+                <th className="bg-foreground/4 px-4 py-2.5"></th>
               </tr>
             </thead>
             <tbody>
               {sorted.map((r) => (
-                <tr key={r.id} className="border-t border-border">
+                <tr key={r.id} className="border-t border-border transition-colors hover:bg-foreground/4">
                   <td className="px-4 py-3 font-medium tabular-nums">{r.date}</td>
                   <td className="px-4 py-3 text-muted-foreground tabular-nums">
                     {r.start_time && r.end_time

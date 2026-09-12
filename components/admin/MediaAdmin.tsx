@@ -26,6 +26,7 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import type { PromotionalMedia, MediaKind } from "@/lib/supabase/types";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 const BUCKET = "promotional-media";
 
@@ -216,15 +217,17 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-          Promotional media
-        </h1>
-        <Button className="rounded-full" onClick={() => setOpen(true)}>
-          <Upload className="size-4 mr-1" />
-          Upload
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Catalog"
+        title="Promotional media"
+        className="mb-4"
+        actions={
+          <Button onClick={() => setOpen(true)}>
+            <Upload className="size-4 mr-1" />
+            Upload
+          </Button>
+        }
+      />
 
       <p className="mb-6 max-w-3xl text-sm text-muted-foreground">
         Upload images and videos that the marketing pages pull in by{" "}
@@ -242,7 +245,7 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
       </p>
 
       {media.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-muted-foreground">
+        <div className="border border-dashed border-border bg-foreground/3 p-12 text-center text-muted-foreground">
           No media yet. Click <b>Upload</b> to add your first asset.
           <div className="mt-3 text-xs">
             First upload failing with an RLS error? Apply{" "}
@@ -255,7 +258,7 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
           {media.map((m) => (
-            <div key={m.id} className="rounded-2xl border border-border bg-card overflow-hidden">
+            <div key={m.id} className="myc-glass overflow-hidden">
               <div className="aspect-video bg-muted relative">
                 {m.kind === "hero_video" ? (
                   <video src={m.url} className="size-full object-cover" muted playsInline />

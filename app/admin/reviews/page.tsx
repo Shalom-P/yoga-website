@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { ReviewsAdmin, type ReviewRow } from "@/components/admin/ReviewsAdmin";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 export default async function AdminReviewsPage() {
   const { supabase } = await requireAdmin();
@@ -15,13 +16,12 @@ export default async function AdminReviewsPage() {
   const rows: ReviewRow[] = reviews ?? [];
 
   return (
-    <div className="p-8 max-w-7xl">
-      <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-        Reviews
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Approve, feature, or remove customer reviews.
-      </p>
+    <div>
+      <AdminPageHeader
+        eyebrow="Catalog"
+        title="Reviews"
+        sub="Approve, feature, or remove customer reviews."
+      />
       <div className="mt-6">
         <ReviewsAdmin rows={rows} />
       </div>

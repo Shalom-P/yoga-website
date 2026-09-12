@@ -1,15 +1,19 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { requireAdmin } from "@/lib/auth/guards";
 import { AdminSettingsForm } from "@/components/admin/AdminSettingsForm";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 export default async function AdminSettingsPage() {
   await requireAdmin();
 
   return (
-    <div className="p-8 max-w-3xl">
-      <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight mb-6">
-        Settings
-      </h1>
+    <div className="max-w-3xl">
+      <AdminPageHeader
+        eyebrow="Settings"
+        title="Settings"
+        sub="Landing copy, brand details, email and legal text. Changes reach the live site within a minute."
+        className="mb-7"
+      />
       <Tabs defaultValue="landing" className="w-full">
         <TabsList className="h-auto flex-wrap">
           <TabsTrigger value="landing">Landing copy</TabsTrigger>

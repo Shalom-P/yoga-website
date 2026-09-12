@@ -30,6 +30,7 @@ import { formatMoney } from "@/lib/i18n/money";
 import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, type Currency } from "@/lib/geo/region";
 import { toast } from "sonner";
 import type { Plan, PlanFeature, PlanPrice, BillingInterval } from "@/lib/supabase/types";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 type PlanWithFeatures = Plan & { features: PlanFeature[]; prices: PlanPrice[] };
 
@@ -267,19 +268,22 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-          Plans
-        </h1>
-        <Button className="rounded-full" onClick={openAdd}>
-          <Plus className="size-4 mr-1" />
-          Add plan
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Catalog"
+        title="Plans"
+        sub="Session packs and their per-currency prices. A currency is only offered once every active pack has a price in it."
+        className="mb-7"
+        actions={
+          <Button onClick={openAdd}>
+            <Plus className="size-4 mr-1" />
+            Add plan
+          </Button>
+        }
+      />
 
       <div className="grid md:grid-cols-3 gap-5">
         {plans.map((p) => (
-          <div key={p.id} className="rounded-2xl border border-border bg-card p-6">
+          <div key={p.id} className="myc-glass p-6">
             <div className="flex items-start justify-between">
               <div>
                 <h2 className="font-medium text-lg">{p.name}</h2>
@@ -290,7 +294,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
                 {!p.is_active && <Badge variant="outline">Hidden</Badge>}
               </div>
             </div>
-            <div className="mt-3 text-2xl font-[family-name:var(--font-heading)]">
+            <div className="mt-3 font-[family-name:var(--font-cormorant)] text-[32px] font-medium leading-none tracking-[-0.02em]">
               {formatMoney(priceFor(p.prices, DEFAULT_CURRENCY, p.price_base_cents), DEFAULT_CURRENCY)}
               {SUPPORTED_CURRENCIES.filter(
                 (c) => c !== DEFAULT_CURRENCY && p.prices.some((pp) => pp.currency === c),
@@ -319,7 +323,7 @@ export function PlansAdmin({ plans }: { plans: PlanWithFeatures[] }) {
               ))}
             </ul>
             <div className="mt-5 flex flex-wrap gap-2">
-              <Button size="sm" variant="outline" className="rounded-full" onClick={() => openEdit(p)}>
+              <Button size="sm" variant="outline" onClick={() => openEdit(p)}>
                 Edit
               </Button>
             </div>

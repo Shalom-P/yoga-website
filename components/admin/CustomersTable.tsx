@@ -126,27 +126,27 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
 
   return (
     <>
-      <div className="rounded-2xl border border-border bg-card overflow-x-auto">
+      <div className="myc-glass overflow-x-auto">
         <table className="w-full min-w-max text-sm">
-          <thead className="bg-muted/40">
+          <thead>
             <tr>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Name</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Email</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Phone</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Timezone</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Level</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Goals</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Referral</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Mktg</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Credits</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Role</th>
-              <th className="text-left px-4 py-3 font-medium text-muted-foreground">Joined</th>
-              <th className="px-4 py-3"></th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Name</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Email</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Phone</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Timezone</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Level</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Goals</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Referral</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Mktg</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Credits</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Role</th>
+              <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Joined</th>
+              <th className="bg-foreground/4 px-4 py-2.5"></th>
             </tr>
           </thead>
           <tbody>
             {rows.map((c) => (
-              <tr key={c.id} className="border-t border-border">
+              <tr key={c.id} className="border-t border-border transition-colors hover:bg-foreground/4">
                 <td className="px-4 py-3">{c.full_name ?? "-"}</td>
                 <td className="px-4 py-3 text-muted-foreground">{c.email ?? "-"}</td>
                 {/* Stored E.164, so it is dialable as-is. Profiles created

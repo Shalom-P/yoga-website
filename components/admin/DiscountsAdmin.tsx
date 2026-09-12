@@ -28,6 +28,7 @@ import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { SUPPORTED_CURRENCIES } from "@/lib/geo/region";
 import type { DiscountCode, DiscountType, Plan } from "@/lib/supabase/types";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 type Draft = {
   id?: string;
@@ -170,36 +171,39 @@ export function DiscountsAdmin({
 
   return (
     <>
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-          Discount codes
-        </h1>
-        <Button className="rounded-full" onClick={openAdd}>
-          <Plus className="size-4 mr-1" />
-          New code
-        </Button>
-      </div>
+      <AdminPageHeader
+        eyebrow="Catalog"
+        title="Discount codes"
+        sub="Codes customers can apply at checkout, with per-email and total caps."
+        className="mb-7"
+        actions={
+          <Button onClick={openAdd}>
+            <Plus className="size-4 mr-1" />
+            New code
+          </Button>
+        }
+      />
 
       {discounts.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-card p-12 text-center text-muted-foreground">
+        <div className="border border-dashed border-border bg-foreground/3 p-12 text-center text-muted-foreground">
           No discount codes yet. Click <b>New code</b> to create one.
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+        <div className="myc-glass overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-muted/40">
+            <thead>
               <tr>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Code</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Discount</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Uses</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Valid until</th>
-                <th className="text-left px-4 py-3 font-medium text-muted-foreground">Status</th>
-                <th className="px-4 py-3"></th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Code</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Discount</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Uses</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Valid until</th>
+                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Status</th>
+                <th className="bg-foreground/4 px-4 py-2.5"></th>
               </tr>
             </thead>
             <tbody>
               {discounts.map((c) => (
-                <tr key={c.id} className="border-t border-border">
+                <tr key={c.id} className="border-t border-border transition-colors hover:bg-foreground/4">
                   <td className="px-4 py-3 font-mono">{c.code}</td>
                   <td className="px-4 py-3">{renderValue(c)}</td>
                   <td className="px-4 py-3 text-muted-foreground">

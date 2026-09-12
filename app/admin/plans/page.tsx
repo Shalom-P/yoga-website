@@ -14,7 +14,7 @@ export default async function AdminPlansPage() {
     prices: (prices ?? []).filter((pp) => pp.plan_id === p.id),
   }));
   return (
-    <div className="p-8 max-w-6xl">
+    <div>
       <PlansAdmin plans={planList} />
     </div>
   );

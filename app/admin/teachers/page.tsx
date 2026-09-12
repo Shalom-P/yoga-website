@@ -3,6 +3,7 @@ import { Star } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { requireAdmin } from "@/lib/auth/guards";
 import { AddTeacherButton } from "@/components/admin/AddTeacherButton";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 export default async function AdminTeachersPage() {
   const { supabase } = await requireAdmin();
@@ -12,15 +13,16 @@ export default async function AdminTeachersPage() {
     .order("sort_order");
 
   return (
-    <div className="p-8 max-w-7xl">
-      <div className="flex items-center justify-between mb-6">
-        <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-          Teachers
-        </h1>
-        <AddTeacherButton />
-      </div>
+    <div>
+      <AdminPageHeader
+        eyebrow="Catalog"
+        title="Teachers"
+        sub="Profiles shown on the marketing site, and the logins attached to them."
+        actions={<AddTeacherButton />}
+        className="mb-7"
+      />
 
-      <div className="rounded-2xl border border-border bg-card divide-y divide-border">
+      <div className="myc-glass divide-y divide-border">
         {(teachers ?? []).map((t) => (
           <Link
             key={t.id}

@@ -1,5 +1,6 @@
 import { requireAdmin } from "@/lib/auth/guards";
 import { CustomersTable } from "@/components/admin/CustomersTable";
+import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 export default async function AdminCustomersPage() {
   const { supabase } = await requireAdmin();
@@ -21,10 +22,12 @@ export default async function AdminCustomersPage() {
   }));
 
   return (
-    <div className="p-8 max-w-7xl">
-      <h1 className="text-2xl font-[family-name:var(--font-heading)] tracking-tight">
-        Customers
-      </h1>
+    <div>
+      <AdminPageHeader
+        eyebrow="People"
+        title="Customers"
+        sub="Everyone who has signed up. Open a row to grant sessions or change a role."
+      />
       <div className="mt-6">
         <CustomersTable rows={rows} />
       </div>

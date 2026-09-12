@@ -45,7 +45,7 @@ export default async function AdminBookingsPage({
   const rows: Row[] = data ?? [];
 
   return (
-    <div className="p-8 max-w-7xl">
+    <div>
       <BookingsAdmin rows={rows} />
       {totalPages > 1 && (
         <div className="mt-6 flex items-center gap-3">
