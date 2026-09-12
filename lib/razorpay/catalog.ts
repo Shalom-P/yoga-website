@@ -1,7 +1,7 @@
 import "server-only";
 
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
-import { DEFAULT_CURRENCY, type Currency } from "@/lib/geo/region";
+import { DEFAULT_CURRENCY, SUPPORTED_CURRENCIES, type Currency } from "@/lib/geo/region";
 
 /**
  * Trusted, server-side resolution of what a Razorpay one-time order should cost
@@ -11,10 +11,15 @@ import { DEFAULT_CURRENCY, type Currency } from "@/lib/geo/region";
  * `plan_prices` tables.
  *
  * A "pack" = a plan row: a per-currency price + how many session-credits it
- * grants. The price is per (plan, currency): UAE customers pay AED, India INR
- * (see lib/geo/region.ts). `plan_prices` holds the per-currency amount; when a
- * currency row is missing we fall back to `plans.price_base_cents`. Amounts are
- * in the smallest currency unit (paise for INR, fils for AED).
+ * grants. The price is per (plan, currency); `plan_prices` holds the amount in
+ * the smallest currency unit (paise for INR, fils for AED, cents for USD/EUR).
+ *
+ * `plans.price_base_cents` is an INR figure and is ONLY ever a fallback for INR.
+ * It used to be the fallback for every currency, which meant a plan missing its
+ * row for a currency was billed the rupee number in that currency — 99900 paise
+ * (a ~12 USD pack) would have been charged as USD 999.00. A missing row now
+ * means "not sold in this currency" and the pack is withheld; `effectiveCurrency`
+ * keeps that from ever reaching a customer by downgrading first.
  */
 export type RazorpayPack = {
   planId: string;
@@ -27,8 +32,8 @@ export type RazorpayPack = {
 
 /**
  * Resolve a purchasable pack by slug in a specific currency — only active plans
- * (used at checkout start). Falls back to the base price if the currency has no
- * dedicated `plan_prices` row.
+ * (used at checkout start). Returns null when the plan has no price in that
+ * currency, so an unpriced currency refuses the sale instead of mispricing it.
  */
 export async function resolvePackBySlug(
   slug: string,
@@ -50,11 +55,17 @@ export async function resolvePackBySlug(
     .eq("currency", currency)
     .maybeSingle();
 
+  // INR is the one currency price_base_cents is denominated in, so it is the
+  // only currency that may fall back to it.
+  const amount =
+    price?.amount_cents ?? (currency === DEFAULT_CURRENCY ? plan.price_base_cents : null);
+  if (amount === null) return null;
+
   return {
     planId: plan.id,
     slug: plan.slug,
     name: plan.name,
-    amount: price?.amount_cents ?? plan.price_base_cents,
+    amount,
     currency,
     sessionCredits: plan.session_credits,
   };
@@ -66,7 +77,8 @@ export async function resolvePackBySlug(
  * (a code may be restricted to some of them via `applies_to_plan_ids`).
  *
  * Same trusted-price rule as resolvePackBySlug: amounts come from the DB, never
- * from the client, and a missing per-currency row falls back to the base price.
+ * from the client, and a plan with no price in this currency is omitted rather
+ * than priced from the INR base.
  */
 export async function listActivePacks(currency: Currency): Promise<RazorpayPack[]> {
   const svc = createSupabaseServiceClient();
@@ -87,14 +99,104 @@ export async function listActivePacks(currency: Currency): Promise<RazorpayPack[
     );
   const amountByPlan = new Map((prices ?? []).map((p) => [p.plan_id, p.amount_cents]));
 
-  return plans.map((plan) => ({
-    planId: plan.id,
-    slug: plan.slug,
-    name: plan.name,
-    amount: amountByPlan.get(plan.id) ?? plan.price_base_cents,
-    currency,
-    sessionCredits: plan.session_credits,
-  }));
+  return plans.flatMap((plan) => {
+    const amount =
+      amountByPlan.get(plan.id) ??
+      (currency === DEFAULT_CURRENCY ? plan.price_base_cents : null);
+    if (amount === null) return [];
+    return [
+      {
+        planId: plan.id,
+        slug: plan.slug,
+        name: plan.name,
+        amount,
+        currency,
+        sessionCredits: plan.session_credits,
+      },
+    ];
+  });
+}
+
+/**
+ * Currencies every active pack is priced in, and therefore the ones we can
+ * actually sell in today.
+ *
+ * DEFAULT_CURRENCY is always included: `plans.price_base_cents` is INR, so INR
+ * is priced by construction even with no `plan_prices` rows at all.
+ *
+ * This is what makes adding a currency to SUPPORTED_CURRENCIES inert until
+ * somebody prices it in /admin/plans — a half-priced currency (say three packs
+ * with GBP rows and a fourth without) is deliberately NOT offered, because a
+ * pricing grid that silently drops a pack is worse than one in rupees.
+ */
+/**
+ * The answer is a property of the pack catalogue, not of the caller, and only
+ * changes when an admin edits prices — but /api/region is public and calls this
+ * on every visit, so without a cache each page view costs two service-role reads
+ * against the same Postgres the booking flow depends on.
+ */
+const PRICED_TTL_MS = 60_000;
+let pricedCache: { at: number; value: Set<Currency> } | null = null;
+
+export async function pricedCurrencies(): Promise<Set<Currency>> {
+  const now = Date.now();
+  if (pricedCache && now - pricedCache.at < PRICED_TTL_MS) return pricedCache.value;
+
+  const svc = createSupabaseServiceClient();
+  // Both reads THROW rather than coalescing to []. A failed read is not the same
+  // fact as "this currency has no prices": swallowing it silently downgraded
+  // every non-INR customer for the duration of a blip, logged nothing, and then
+  // self-healed. Failing loud keeps a transient outage out of people's invoices.
+  const { data: plans, error: plansErr } = await svc
+    .from("plans")
+    .select("id")
+    .eq("is_active", true);
+  if (plansErr) {
+    throw new Error(`pricedCurrencies: could not read plans — ${plansErr.message}`);
+  }
+  const activeIds = new Set((plans ?? []).map((p) => p.id));
+  const priced = new Set<Currency>([DEFAULT_CURRENCY]);
+  if (activeIds.size === 0) {
+    pricedCache = { at: now, value: priced };
+    return priced;
+  }
+
+  const { data: prices, error: pricesErr } = await svc
+    .from("plan_prices")
+    .select("plan_id, currency")
+    .in("plan_id", [...activeIds]);
+  if (pricesErr) {
+    throw new Error(`pricedCurrencies: could not read plan_prices — ${pricesErr.message}`);
+  }
+
+  const byCurrency = new Map<string, Set<string>>();
+  for (const row of prices ?? []) {
+    if (!byCurrency.has(row.currency)) byCurrency.set(row.currency, new Set());
+    byCurrency.get(row.currency)!.add(row.plan_id);
+  }
+  for (const currency of SUPPORTED_CURRENCIES) {
+    const covered = byCurrency.get(currency);
+    if (covered && activeIds.size > 0 && [...activeIds].every((id) => covered.has(id))) {
+      priced.add(currency);
+    }
+  }
+  pricedCache = { at: now, value: priced };
+  return priced;
+}
+
+/**
+ * The currency to actually transact in for a visitor we would LIKE to bill in
+ * `candidate`. Downgrades to DEFAULT_CURRENCY when the packs are not priced in
+ * the candidate yet, so a new currency never blocks a sale or mis-states a price
+ * — it simply does not appear until it is priced.
+ *
+ * Every path that shows or takes money goes through this, so the pricing grid
+ * and checkout can never disagree about which currency is in play.
+ */
+export async function effectiveCurrency(candidate: Currency): Promise<Currency> {
+  if (candidate === DEFAULT_CURRENCY) return candidate;
+  const priced = await pricedCurrencies();
+  return priced.has(candidate) ? candidate : DEFAULT_CURRENCY;
 }
 
 /**

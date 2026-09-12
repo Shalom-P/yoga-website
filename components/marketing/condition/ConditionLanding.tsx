@@ -268,7 +268,7 @@ export function ConditionLanding({ data: d }: { data: ConditionPage }) {
       <section className="px-7 pb-20">
         <Reveal className="mx-auto flex max-w-3xl items-start gap-4 rounded-3xl bg-accent/10 p-7">
           <span
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-white"
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground"
             aria-hidden="true"
           >
             <Plus className="size-5" />

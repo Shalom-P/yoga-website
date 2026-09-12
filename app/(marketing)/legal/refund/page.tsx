@@ -18,8 +18,9 @@ export default function RefundPage() {
 
         <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
           <strong>Pending legal review.</strong> This is a good-faith draft for a service
-          operating across the UAE and India. It has not yet been reviewed by a qualified lawyer
-          in either jurisdiction and must be verified before launch.
+          that accepts students worldwide, operated from India with payments settled in INR and
+          AED. It has not yet been reviewed by a qualified lawyer in any relevant jurisdiction
+          and must be verified before launch.
         </div>
 
         <div className="mt-10 space-y-10 text-foreground/85 text-pretty">

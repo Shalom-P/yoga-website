@@ -18,8 +18,8 @@ export default function PrivacyPage() {
 
         <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
           <strong>Pending legal review.</strong> This policy is a good-faith draft written for
-          a service operating across the UAE and India. It has not yet been reviewed by a
-          qualified lawyer in either jurisdiction and must be verified before launch.
+          a service that accepts students worldwide. It has not yet been reviewed by a qualified
+          lawyer in any relevant jurisdiction and must be verified before launch.
         </div>
 
         <div className="mt-10 space-y-10 text-foreground/85 text-pretty">
@@ -30,9 +30,9 @@ export default function PrivacyPage() {
             <p>
               My Yoga Classes (registration / trade-licence details to be inserted)
               (“<strong>we</strong>”, “<strong>us</strong>”, “<strong>our</strong>”) operates{" "}
-              <strong>myyogaclasses.fit</strong>, an online platform that connects students in the
-              United Arab Emirates and India with yoga teachers based in India for live 1:1
-              sessions conducted over online video conferencing.
+              <strong>myyogaclasses.fit</strong>, an online platform that connects students
+              anywhere in the world with yoga teachers based in India for live 1:1 sessions
+              conducted over online video conferencing.
             </p>
             <p>
               We aim to handle your personal data in line with the{" "}

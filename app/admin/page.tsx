@@ -4,6 +4,7 @@ import { Users, Calendar, TrendingUp, Video, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { YogaAvatar } from "@/components/shared/YogaAvatar";
 import { formatMoney } from "@/lib/i18n/money";
+import { DEFAULT_CURRENCY } from "@/lib/geo/region";
 import { formatCustomerTime, formatInTz, tzShort, DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 import type { BookingStatus } from "@/lib/supabase/types";
@@ -81,6 +82,25 @@ export default async function AdminDashboard() {
   const recentBookings: RecentBooking[] =
     bookingsRes.status === "fulfilled" ? (bookingsRes.value.data ?? []) : [];
 
+  // Currencies with revenue this month, plus the ones we always price in, so a
+
+  // newly-enabled currency appears the moment its first payment lands.
+
+  const revenueCurrencies = Array.from(
+
+    new Set([
+
+      DEFAULT_CURRENCY,
+
+      "AED",
+
+      ...Object.keys(kpis?.revenue_mtd_by_currency ?? {}),
+
+    ]),
+
+  );
+
+
   const stats = [
     {
       label: "Signups today",
@@ -96,20 +116,18 @@ export default async function AdminDashboard() {
       highlight: true,
       note: "free 1:1s booked",
     },
-    {
-      label: "Revenue MTD (INR)",
-      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.INR ?? 0, "INR") : "-",
-      icon: TrendingUp,
+    // One tile per currency actually taken, rather than two hardcoded keys:
+    // admin_kpis() returns revenue keyed dynamically, so hardcoding INR and AED
+    // made every other currency's revenue invisible with nothing to hint at it.
+    // The default currencies are always shown so an empty month still reads as
+    // zero rather than as a missing tile.
+    ...revenueCurrencies.map((currency) => ({
+      label: `Revenue MTD (${currency})`,
+      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.[currency] ?? 0, currency) : "-",
+      icon: currency === DEFAULT_CURRENCY ? TrendingUp : Video,
       highlight: true,
-      note: "India, this month",
-    },
-    {
-      label: "Revenue MTD (AED)",
-      value: kpis ? formatMoney(kpis.revenue_mtd_by_currency?.AED ?? 0, "AED") : "-",
-      icon: Video,
-      highlight: true,
-      note: "UAE, this month",
-    },
+      note: "this month",
+    })),
   ];
 
   const today = formatInTz(nowIso, DEFAULT_CUSTOMER_TZ, "EEEE, d MMMM");

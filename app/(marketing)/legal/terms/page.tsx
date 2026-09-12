@@ -20,8 +20,9 @@ export default function TermsPage() {
 
         <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
           <strong>Pending legal review.</strong> This is a good-faith draft for a service
-          operating across the UAE and India. It has not yet been reviewed by a qualified lawyer
-          in either jurisdiction and must be verified before launch.
+          that accepts students worldwide, operated from India with payments settled in INR and
+          AED. It has not yet been reviewed by a qualified lawyer in any relevant jurisdiction
+          and must be verified before launch.
         </div>
 
         <div className="mt-10 space-y-10 text-foreground/85 text-pretty">
@@ -52,9 +53,9 @@ export default function TermsPage() {
           <section className="space-y-3">
             <h2 className="text-xl font-semibold text-foreground">2. Service description</h2>
             <p>
-              My Yoga Classes is an online platform connecting students in the United Arab
-              Emirates and India with qualified yoga teachers based in India. Sessions are
-              delivered live online on a one-to-one basis, paid for with a session pack.
+              My Yoga Classes is an online platform connecting students anywhere in the world
+              with qualified yoga teachers based in India. Sessions are delivered live online on
+              a one-to-one basis, paid for with a session pack.
             </p>
             <p>
               We act as the platform operator and are responsible for scheduling, billing, and
@@ -121,8 +122,13 @@ export default function TermsPage() {
               Paid access is sold as <strong>one-time packs of live 1:1 sessions</strong>, priced
               in{" "}
               <strong>UAE Dirhams (AED) or Indian Rupees (INR) depending on your region</strong>{" "}
-              and paid via Razorpay or, for UAE customers, by bank transfer. There is no
-              subscription and no automatic recurring charge.
+              and paid via Razorpay or, for UAE customers, by bank transfer. Elsewhere we bill
+              in the currency shown on the pack before you pay, which may be your own or, where
+              we do not price in it, another currency. The exact amount and currency are always
+              displayed at checkout before you confirm, and that figure is what you are charged.
+              Your bank or card issuer may apply its own conversion rate and a foreign-transaction
+              fee, which we do not receive and cannot control. There is no subscription and no
+              automatic recurring charge.
             </p>
             <ul className="list-disc pl-6 space-y-1">
               <li>

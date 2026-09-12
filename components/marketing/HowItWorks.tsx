@@ -29,27 +29,27 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" className="myc-sec-cream py-[68px] md:py-[104px]">
-      <div className="mx-auto max-w-[1240px] px-7">
+    <section id="how-it-works" className="px-6 py-[110px]">
+      <div className="mx-auto max-w-[1200px]">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, amount: 0.5 }}
           transition={{ duration: 0.6 }}
-          className="mb-14 grid items-end gap-6 md:grid-cols-2 md:gap-14"
+          className="mb-14 grid items-end gap-8 md:grid-cols-2"
         >
           <div>
-            <div className="myc-eyebrow mb-4">
+            <div className="myc-eyebrow mb-4 text-muted-foreground">
               <span className="myc-dot" aria-hidden="true" />
               How it works
             </div>
-            <h2 className="text-[clamp(2.25rem,5vw,4rem)] tracking-tight text-balance">
+            <h2 className="text-[clamp(2.2rem,4.6vw,3.8rem)] font-medium leading-[1.06] tracking-[-0.015em] text-balance">
               From sign-up to <span className="myc-accent">savasana</span> in three steps.
             </h2>
           </div>
           <p className="text-lg text-muted-foreground text-pretty">
-            No app to download. No equipment beyond your mat. Just you and a teacher who&apos;s
-            fully focused on you, pay only for the sessions you book.
+            No app to download. Nothing beyond your mat. A teacher whose full attention is on
+            you.
           </p>
         </motion.div>
 
@@ -67,16 +67,16 @@ export function HowItWorks() {
                 hidden: { opacity: 0, y: 24 },
                 show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" } },
               }}
-              className="flex min-h-[300px] flex-col gap-4 rounded-[var(--radius)] border border-border bg-card p-8 shadow-[var(--myc-shadow-card)]"
+              className="myc-glass flex min-h-[280px] flex-col gap-3.5 p-8 transition-[transform,background] duration-500 ease-[cubic-bezier(.2,.7,.2,1)] hover:-translate-y-1.5 hover:bg-foreground/[0.08]"
             >
-              <div className="font-[family-name:var(--font-cormorant)] text-5xl font-medium italic leading-none text-accent">
+              <div className="font-[family-name:var(--font-cormorant)] text-[56px] font-medium italic leading-none text-accent">
                 {n}
               </div>
-              <h3 className="text-2xl">{title}</h3>
-              <p className="text-[15px] text-muted-foreground text-pretty">{body}</p>
+              <h3 className="mt-1.5 text-[28px] font-semibold leading-[1.15]">{title}</h3>
+              <p className="text-[15.5px] text-muted-foreground text-pretty">{body}</p>
               <Link
                 href={href}
-                className="mt-auto self-start text-sm font-semibold text-primary hover:text-accent"
+                className="mt-auto self-start text-sm font-semibold text-accent hover:text-[var(--accent-bright)]"
               >
                 {cta}
               </Link>

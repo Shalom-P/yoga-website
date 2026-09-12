@@ -37,7 +37,13 @@ type PromoOutcome =
   | { kind: "signed_out" }
   | { kind: "failed" };
 
-export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
+type PricingTeaserProps = {
+  plans: PlanWithFeatures[];
+  /** Landing needs the section header; /pricing has its own PageHeader above. */
+  showHeader?: boolean;
+};
+
+export function PricingTeaser({ plans, showHeader = true }: PricingTeaserProps) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [promo, setPromo] = useState("");
@@ -62,17 +68,37 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
         ? "Couldn't check that code. Please try again."
         : null;
   const promoNeedsSignIn = settled?.kind === "signed_out";
-  // The charged currency is resolved server-side at create-order (GeoIP-first).
-  // For *display* we best-effort detect from the browser timezone. Computed
-  // during render after mount so SSR + first client render both use the default
-  // (INR), no hydration mismatch, then it re-renders with the detected currency.
+  // The charged currency is resolved server-side (GeoIP-first). Ask the server
+  // what it would charge rather than guessing, so the price on the card is the
+  // price taken at checkout; a browser-timezone guess disagrees whenever the
+  // device clock does not match where the device is. Until that answer lands we
+  // show the timezone guess, which is right for most visitors and avoids a
+  // flash of the wrong currency. Computed during render after mount so SSR and
+  // the first client render both use the default (INR), no hydration mismatch.
   const mounted = useHasMounted();
-  const currency: Currency = mounted
+  const [serverCurrency, setServerCurrency] = useState<Currency | null>(null);
+  const guessedCurrency: Currency = mounted
     ? currencyForTimezone(detectBrowserTimezone()) ?? DEFAULT_CURRENCY
     : DEFAULT_CURRENCY;
-  // Once a preview lands, trust its currency over the local guess: it came from
-  // the same GeoIP-first resolution that will decide what the customer is charged.
-  const displayCurrency: Currency = preview?.currency ?? currency;
+  const currency: Currency = serverCurrency ?? guessedCurrency;
+
+  useEffect(() => {
+    const controller = new AbortController();
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/region?tz=${encodeURIComponent(detectBrowserTimezone())}`,
+          { signal: controller.signal },
+        );
+        if (!res.ok) return;
+        const data = (await res.json()) as { currency?: Currency };
+        if (data?.currency) setServerCurrency(data.currency);
+      } catch {
+        // Offline or aborted: the timezone guess already on screen stands.
+      }
+    })();
+    return () => controller.abort();
+  }, []);
 
   // Price the typed code across every pack, debounced, so the customer sees what
   // they'd pay before committing to checkout. Read-only server-side: previewing
@@ -119,11 +145,30 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
     };
   }, [trimmedPromo]);
 
-  // Pick a plan's price in the active currency, falling back to its base price.
-  // Only used before a preview lands; after that the server's figure wins.
-  function planAmount(p: PlanWithFeatures): number {
-    return p.prices.find((pp) => pp.currency === currency)?.amount_cents ?? p.price_base_cents;
+  // Pick a plan's price in the active currency. `price_base_cents` is an INR
+  // figure, so it is only ever a fallback for INR: using it for another currency
+  // would print the rupee number under a foreign symbol.
+  function amountIn(p: PlanWithFeatures, c: Currency): number | null {
+    const row = p.prices.find((pp) => pp.currency === c)?.amount_cents;
+    return row ?? (c === DEFAULT_CURRENCY ? p.price_base_cents : null);
   }
+
+  // Show a currency only when every pack is priced in it, mirroring the server's
+  // pricedCurrencies() rule. A grid that quotes some packs in GBP and the rest in
+  // rupees is worse than one entirely in rupees. In practice the server has
+  // already applied this, so this is a belt-and-braces against a stale payload.
+  const gridCurrency: Currency = plans.every((p) => amountIn(p, currency) !== null)
+    ? currency
+    : DEFAULT_CURRENCY;
+
+  function planAmount(p: PlanWithFeatures): number {
+    return amountIn(p, gridCurrency) ?? p.price_base_cents;
+  }
+
+  // Once a preview lands, trust its currency over the local guess: it came from
+  // the same GeoIP-first resolution that will decide what the customer is charged.
+  const displayCurrency: Currency = preview?.currency ?? gridCurrency;
+
 
   async function startBuy(planSlug: string) {
     setPending(planSlug);
@@ -171,8 +216,8 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
   }
 
   return (
-    <section id="pricing" className="py-24 md:py-32">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <section id="pricing" className="px-6 pb-[110px] pt-[60px]">
+      <div className="mx-auto max-w-[1200px]">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -180,15 +225,20 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
           transition={{ duration: 0.5 }}
           className="text-center mb-10"
         >
-          <div className="text-xs uppercase tracking-[0.2em] text-primary font-medium mb-3">
-            Session packs
-          </div>
-          <h2 className="text-3xl md:text-5xl tracking-tight text-balance max-w-2xl mx-auto">
-            Pay as you go. No lock-ins.
-          </h2>
-          <p className="mt-4 text-muted-foreground">
-            Buy a one-time pack of 1:1 sessions, no subscription, and your sessions never expire.
-          </p>
+          {showHeader && (
+            <>
+              <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Session packs
+              </div>
+              <h2 className="mx-auto max-w-2xl text-[clamp(2.2rem,4.6vw,3.8rem)] font-medium leading-[1.06] tracking-[-0.015em] text-balance">
+                Pay as you go. No lock-ins.
+              </h2>
+              <p className="mx-auto mt-4 max-w-[32rem] text-[17px] text-muted-foreground">
+                Buy a one-time pack of 1:1 sessions, no subscription, and your sessions never
+                expire.
+              </p>
+            </>
+          )}
 
           <div className="mx-auto mt-6 flex max-w-xs flex-col items-center">
             <label htmlFor="promo-code" className="sr-only">
@@ -248,7 +298,7 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
           whileInView="show"
           viewport={{ once: true, amount: 0.15 }}
           variants={{ hidden: {}, show: { transition: { staggerChildren: 0.1 } } }}
-          className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto"
+          className="mx-auto grid max-w-[1080px] items-stretch gap-5 [grid-template-columns:repeat(auto-fit,minmax(280px,1fr))]"
         >
           {plans.map((p) => {
             // Server-priced line for this pack, if a code is currently applied.
@@ -264,26 +314,25 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
                   show: { opacity: 1, y: 0, transition: { duration: 0.5 } },
                 }}
                 className={cn(
-                  "relative rounded-3xl border bg-card p-7 flex flex-col",
-                  p.is_featured
-                    ? "border-primary/60 ring-2 ring-primary/30 shadow-xl shadow-primary/15"
-                    : "border-border"
+                  "myc-glass relative flex flex-col px-[30px] py-[34px] transition-transform duration-500 ease-[cubic-bezier(.2,.7,.2,1)] hover:-translate-y-1.5",
+                  p.is_featured &&
+                    "border-accent/60 shadow-[0_40px_100px_-40px_color-mix(in_srgb,var(--accent)_40%,transparent)]",
                 )}
               >
                 {p.is_featured && (
-                  <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-accent text-accent-foreground">
+                  <Badge className="absolute -top-[13px] left-1/2 -translate-x-1/2 whitespace-nowrap rounded-none px-3.5 py-[5px] text-xs font-semibold tracking-[0.04em] bg-accent text-accent-foreground">
                     Most popular
                   </Badge>
                 )}
                 <div>
-                  <h3 className="text-xl font-medium">{p.name}</h3>
-                  <p className="mt-1.5 text-sm text-muted-foreground">{p.description}</p>
+                  <h3 className="font-[family-name:var(--font-cormorant)] text-[26px] font-semibold leading-[1.1]">{p.name}</h3>
+                  <p className="mt-1.5 text-[14.5px] text-muted-foreground">{p.description}</p>
                 </div>
                 <div className="mt-6">
                   {discounted ? (
                     <>
                       <div className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                        <div className="text-4xl font-[family-name:var(--font-heading)] text-primary">
+                        <div className="font-[family-name:var(--font-cormorant)] text-[54px] font-medium leading-none tracking-[-0.02em] text-accent">
                           <span className="sr-only">New price </span>
                           {formatMoney(discounted.finalAmountCents, displayCurrency)}
                         </div>
@@ -292,13 +341,13 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
                           {formatMoney(listPrice, displayCurrency)}
                         </div>
                       </div>
-                      <div className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                      <div className="mt-2 inline-flex items-center gap-1.5 bg-accent/15 px-2.5 py-1 text-xs font-medium text-accent">
                         <Tag className="size-3" />
                         You save {formatMoney(discounted.discountAmountCents, displayCurrency)}
                       </div>
                     </>
                   ) : (
-                    <div className="text-4xl font-[family-name:var(--font-heading)]">
+                    <div className="font-[family-name:var(--font-cormorant)] text-[54px] font-medium leading-none tracking-[-0.02em]">
                       {formatMoney(listPrice, displayCurrency)}
                     </div>
                   )}
@@ -315,11 +364,11 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
                   )}
                 </div>
 
-                <ul className="mt-7 space-y-3 flex-1">
+                <ul className="mt-[26px] flex flex-1 flex-col gap-[11px]">
                   {p.features?.map((f) => (
-                    <li key={f.id} className="flex gap-2.5 text-sm">
+                    <li key={f.id} className="flex gap-2.5 text-[15px]">
                       {f.is_included ? (
-                        <Check className="size-4 text-primary mt-0.5 shrink-0" />
+                        <Check className="mt-0.5 size-4 shrink-0 text-accent" />
                       ) : (
                         <X className="size-4 text-muted-foreground/60 mt-0.5 shrink-0" />
                       )}
@@ -332,8 +381,13 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
 
                 <Button
                   size="lg"
-                  variant={p.is_featured ? "default" : "outline"}
-                  className="mt-7 h-11 rounded-full"
+                  variant="ghost"
+                  className={cn(
+                    "mt-7 h-auto py-3.5 text-[15px] font-semibold",
+                    p.is_featured
+                      ? "bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground"
+                      : "border border-foreground/18 bg-foreground/[0.07] text-foreground hover:bg-foreground/12 hover:text-foreground",
+                  )}
                   disabled={pending !== null}
                   onClick={() => startBuy(p.slug)}
                 >
@@ -353,10 +407,10 @@ export function PricingTeaser({ plans }: { plans: PlanWithFeatures[] }) {
           })}
         </motion.div>
 
-        <p className="mt-10 text-center text-sm text-muted-foreground">
+        <p className="mx-auto mt-9 max-w-[44rem] text-center text-sm text-muted-foreground">
           Prices shown in {displayCurrency}. One-time payment, no subscription. Book from
           anywhere in the world.{" "}
-          <Link href="/faq" className="text-primary hover:underline">
+          <Link href="/faq" className="text-accent hover:underline">
             Read the FAQ →
           </Link>
         </p>

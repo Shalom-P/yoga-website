@@ -20,9 +20,11 @@ const schema = z.object({
   startAt: z.string().datetime({ offset: true }),
   durationMinutes: z.number().int().min(15).max(180).default(60),
   isFreeTrial: z.boolean().default(true),
-  // The booker's live browser timezone (IANA id), for the service-area
-  // free-trial gate below.
-  clientTimezone: z.string().trim().min(1).max(64),
+  // The booker's live browser timezone (IANA id). Retained for compatibility
+  // with clients that still send it: the service-area gate it fed is gone (any
+  // country can book), so nothing reads it here. Optional so an omitted value
+  // is not a 400.
+  clientTimezone: z.string().trim().min(1).max(64).optional(),
 });
 
 /**

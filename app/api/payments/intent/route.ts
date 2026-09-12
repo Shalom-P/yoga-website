@@ -5,12 +5,13 @@ import crypto from "node:crypto";
 import * as Sentry from "@sentry/nextjs";
 import { z } from "zod";
 
-import { resolvePackBySlug } from "@/lib/razorpay/catalog";
+import { effectiveCurrency, resolvePackBySlug } from "@/lib/razorpay/catalog";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { normalizePromoCode, promoErrorMessage, reserveDiscount } from "@/lib/billing/promo";
 import {
   countryFromHeaders,
+  DEFAULT_CURRENCY,
   resolveRegion,
 } from "@/lib/geo/region";
 
@@ -37,8 +38,8 @@ export const runtime = "nodejs";
 
 const bodySchema = z.object({
   planSlug: z.string().trim().min(1).max(64),
-  // The visitor's live browser timezone (IANA id) — service-area gate + currency
-  // fallback when GeoIP is absent (local/off-platform). Never a price input.
+  // The visitor's live browser timezone (IANA id) — currency fallback when GeoIP
+  // is absent (local/off-platform); no service-area gate. Never a price input.
   clientTimezone: z.string().trim().min(1).max(64),
   // Optional promo code (applied server-side; never a price input).
   promoCode: z.string().trim().max(64).optional(),
@@ -82,17 +83,35 @@ export async function POST(req: Request): Promise<Response> {
     .maybeSingle();
   const country = countryFromHeaders(req.headers);
 
-  const { currency } = resolveRegion({ country, timezone: parsed.data.clientTimezone });
+  const { currency: preferred } = resolveRegion({
+    country,
+    timezone: parsed.data.clientTimezone,
+  });
 
+  // The RAIL is chosen from the un-downgraded currency on purpose. effectiveCurrency
+  // answers "which currency should we quote", which is a different question from
+  // "which rail can serve this customer": routing the rail through it meant one
+  // active plan missing its AED row dropped AED out of pricedCurrencies() and
+  // silently pushed every UAE customer onto an INR Razorpay order — on an account
+  // that has no International/AED acceptance — while making the explicit
+  // "AED price not configured" guard below unreachable.
+  //
   // India (INR) and anything that isn't UAE → Razorpay. No record is created
   // here; the client proceeds with the untouched create-order → Checkout flow.
-  if (currency !== "AED") {
+  if (preferred !== "AED") {
+    // Downgrade only the quoted currency, so a newly-supported currency never
+    // blocks a sale or charges an INR figure under a foreign symbol.
+    const currency = await effectiveCurrency(preferred);
     return Response.json({ method: "razorpay", currency });
   }
 
   // UAE (AED) → manual SWIFT transfer (temporary rail). Resolve the pack for its
-  // plan id + credit count.
-  const pack = await resolvePackBySlug(parsed.data.planSlug, "AED");
+  // plan id + credit count only; the amount comes from the explicit AED lookup
+  // below. Resolved in DEFAULT_CURRENCY (always priced) rather than "AED" so a
+  // missing AED row surfaces as the specific "AED price not configured" error
+  // plus a Sentry warning, instead of resolvePackBySlug returning null and this
+  // reporting a misleading "Unknown plan" for a plan that exists.
+  const pack = await resolvePackBySlug(parsed.data.planSlug, DEFAULT_CURRENCY);
   if (!pack) {
     return Response.json({ error: "Unknown plan" }, { status: 400 });
   }

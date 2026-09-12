@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics/events";
+import { HeroVideo } from "@/components/marketing/HeroVideo";
 
 type HeroProps = {
   headline: string;
@@ -15,170 +16,200 @@ type HeroProps = {
 
 export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) {
   return (
-    <section id="hero" className="relative overflow-hidden pt-10 md:pt-16 pb-12 md:pb-20">
-      <div className="mx-auto max-w-[1240px] px-7">
-        <div className="grid items-center gap-9 lg:gap-14 lg:grid-cols-[1.05fr_0.95fr]">
-          {/* ---------- Left: copy ---------- */}
-          <div>
-            <motion.div
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="myc-eyebrow mb-6"
-            >
-              <span className="myc-dot" aria-hidden="true" />
-              Personalised 1:1 · Live online
-            </motion.div>
+    <section
+      id="hero"
+      // -mt-16 cancels the marketing layout's pt-16: the nav floats over the hero.
+      className="relative -mt-16 flex min-h-[100svh] items-center overflow-hidden"
+    >
+      {/* ---------- Atmosphere ---------- */}
+      <div aria-hidden="true" className="myc-hero-wash absolute inset-0" />
+      <div
+        aria-hidden="true"
+        className="myc-breathe-glow pointer-events-none absolute inset-0 blur-[30px]"
+        style={{
+          background:
+            "radial-gradient(ellipse 45% 65% at 76% 58%, var(--myc-glow-white), transparent 70%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="myc-mist pointer-events-none absolute -inset-[20%] blur-[40px]"
+        style={{
+          background:
+            "radial-gradient(ellipse 40% 30% at 30% 80%, var(--myc-glow-2), transparent 70%), radial-gradient(ellipse 50% 25% at 70% 90%, var(--myc-glow-3), transparent 70%)",
+        }}
+      />
 
-            <motion.h1
-              initial={{ opacity: 0, y: 22 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.65, delay: 0.05 }}
-              className="text-[clamp(2.75rem,6vw,5rem)] leading-[1.08] tracking-[-0.01em] text-balance"
-            >
-              {headline}
-            </motion.h1>
+      {/* ---------- Video plate ----------
+          Full-bleed on mobile (the copy sits over it behind a heavier scrim),
+          inset to the right 62% from md up, which is the design's split. */}
+      <div
+        className="myc-hero-plate absolute inset-0 overflow-hidden md:left-[38%]"
+        style={{
+          // Feathered on md+ only; full-bleed on mobile has no edge to hide.
+          maskImage:
+            "linear-gradient(90deg, transparent 0%, #000 18%, #000 100%)",
+          WebkitMaskImage:
+            "linear-gradient(90deg, transparent 0%, #000 18%, #000 100%)",
+        }}
+      >
+        <HeroVideo className="absolute inset-0 size-full origin-[50%_25%] scale-[1.22] object-cover object-[50%_30%]" />
 
-            <motion.p
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="mt-7 max-w-[34rem] text-lg md:text-xl text-muted-foreground text-pretty"
-            >
-              {subhead}
-            </motion.p>
+        {/* Colour grade: pushes the footage into the teal palette */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: "var(--myc-vid-tint)",
+            mixBlendMode: "var(--myc-vid-blend)" as React.CSSProperties["mixBlendMode"],
+            opacity: "var(--myc-vid-op)",
+          }}
+        />
+        {/* Top + bottom fade into the page */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background:
+              "linear-gradient(180deg, color-mix(in srgb, var(--background) 35%, transparent), transparent 30%, transparent 55%, color-mix(in srgb, var(--background) 95%, transparent) 100%)",
+          }}
+        />
+        {/* Bottom-right corner sink */}
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute bottom-0 right-0 h-[26%] w-[38%]"
+          style={{
+            background:
+              "radial-gradient(ellipse at 100% 100%, var(--background) 45%, transparent 100%)",
+          }}
+        />
+      </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.35 }}
-              className="mt-8 flex flex-col sm:flex-row gap-3 items-stretch sm:items-center"
-            >
-              <Button
-                asChild
-                size="lg"
-                className="h-12 px-7 rounded-full text-base font-semibold bg-accent text-white shadow-[var(--myc-shadow-soft)] hover:bg-accent/90"
-                onClick={() =>
-                  track("hero_cta_click", {
-                    cta_text: "Book a session",
-                    position: "hero",
-                  })
-                }
-              >
-                <Link href="/login?next=/dashboard/book">
-                  Book a 1:1 session
-                  <ArrowRight className="size-4 ml-1" />
-                </Link>
-              </Button>
+      {/* Scrim over the whole hero so the copy always clears AA against the
+          footage. Heavier on mobile, where the video sits directly behind text.
+          The horizontal stops are pushed further right than the design's
+          (97/93/55/12 vs 95/80/25): this clip swings from a dim wide shot to a
+          blown-out window across its 10s, and the copy column has to stay
+          readable on every frame, not just the average one. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 md:hidden"
+        style={{
+          background:
+            "linear-gradient(180deg, color-mix(in srgb, var(--background) 92%, transparent) 0%, color-mix(in srgb, var(--background) 78%, transparent) 55%, var(--background) 100%)",
+        }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 hidden md:block"
+        style={{
+          background:
+            "linear-gradient(90deg, color-mix(in srgb, var(--background) 97%, transparent) 0%, color-mix(in srgb, var(--background) 93%, transparent) 42%, color-mix(in srgb, var(--background) 55%, transparent) 56%, color-mix(in srgb, var(--background) 12%, transparent) 74%, transparent 88%), linear-gradient(180deg, color-mix(in srgb, var(--background) 45%, transparent), transparent 25%, transparent 72%, var(--background) 100%)",
+        }}
+      />
 
-              <Button
-                asChild
-                variant="ghost"
-                size="lg"
-                className="h-12 px-4 rounded-full text-base underline underline-offset-[6px] decoration-1 decoration-muted-foreground/40 hover:text-accent hover:decoration-accent hover:bg-transparent"
-              >
-                <Link href="/teachers">See today&apos;s teachers</Link>
-              </Button>
-            </motion.div>
-
-            {/* Trust row */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.55 }}
-              className="mt-9 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-border pt-7"
-            >
-              <div className="flex items-center" aria-hidden="true">
-                {[
-                  "from-[var(--myc-accent-soft)] to-accent",
-                  "from-[var(--myc-mint)] to-primary",
-                  "from-[var(--myc-butter)] to-accent",
-                  "from-[var(--myc-sky)] to-primary",
-                ].map((g, i) => (
-                  <span
-                    key={i}
-                    className={`size-9 rounded-full border-2 border-background bg-gradient-to-br ${g} ${
-                      i === 0 ? "" : "-ml-2.5"
-                    }`}
-                  />
-                ))}
-              </div>
-              <Link
-                href="/reviews"
-                className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
-              >
-                {trustRating && (
-                  <span className="tracking-[1px] text-accent" aria-hidden="true">
-                    ★★★★★
-                  </span>
-                )}
-                <span>
-                  {trustRating && (
-                    <><strong className="text-foreground">{trustRating}</strong> · </>
-                  )}
-                  {trustCount}
-                </span>
-              </Link>
-            </motion.div>
+      {/* ---------- Content ---------- */}
+      <div className="relative z-[2] mx-auto grid w-full max-w-[1200px] gap-10 px-6 pb-24 pt-32 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:items-end md:pb-[100px] md:pt-[140px]">
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.2, 0.7, 0.2, 1] }}
+        >
+          <div className="myc-glass mb-7 inline-flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-semibold uppercase tracking-[0.16em] text-foreground/75">
+            <span className="myc-pulse-dot" aria-hidden="true" />
+            Live 1:1 · Certified teachers
           </div>
 
-          {/* ---------- Right: visual ---------- */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.8, delay: 0.15 }}
-            className="relative mx-auto aspect-[1/1.04] w-full max-w-[520px]"
-          >
-            {/* Morphing pastel blob */}
-            <div
-              aria-hidden="true"
-              className="myc-blob absolute inset-0"
-              style={{
-                background:
-                  "radial-gradient(circle at 30% 25%, var(--myc-peach), transparent 55%), radial-gradient(circle at 75% 70%, var(--myc-mint), transparent 55%), var(--myc-butter)",
-              }}
-            />
+          <h1 className="text-[clamp(2.8rem,6.4vw,5.6rem)] font-medium leading-[1.02] tracking-[-0.015em] text-balance">
+            {headline}
+          </h1>
 
-            {/* Photo placeholder (rounded-arch) */}
-            <div className="absolute inset-[14%_12%_8%_12%] overflow-hidden rounded-t-[200px] rounded-b-[28px] border border-border bg-card/40 backdrop-blur-[1px]">
-              <svg viewBox="0 0 300 360" className="absolute inset-0 size-full text-primary">
-                <g transform="translate(150,190)">
-                  <circle cx="0" cy="-58" r="30" fill="currentColor" opacity="0.8" />
-                  <path
-                    d="M -72 56 Q 0 -8 72 56 Q 82 92 54 92 Q 0 64 -54 92 Q -82 92 -72 56 Z"
-                    fill="currentColor"
-                    opacity="0.7"
-                  />
-                  <ellipse cx="0" cy="104" rx="96" ry="20" fill="currentColor" opacity="0.35" />
-                </g>
-              </svg>
-              <span className="absolute bottom-3 left-1/2 -translate-x-1/2 whitespace-nowrap rounded-full border border-border bg-card px-3 py-1 text-[11px] text-muted-foreground">
-                Your personalised session
+          <p className="mt-7 max-w-[34rem] text-[19px] text-muted-foreground text-pretty">
+            {subhead}
+          </p>
+
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <Button
+              asChild
+              size="lg"
+              className="h-auto px-7 py-4 text-base font-semibold bg-accent text-accent-foreground shadow-[0_20px_50px_-18px_color-mix(in_srgb,var(--accent)_45%,transparent)] hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground"
+              onClick={() =>
+                track("hero_cta_click", {
+                  cta_text: "Book a session",
+                  position: "hero",
+                })
+              }
+            >
+              <Link href="/login?next=/dashboard/book">
+                Book a 1:1 session
+                <ArrowRight className="ml-1 size-4" />
+              </Link>
+            </Button>
+
+            <Button
+              asChild
+              size="lg"
+              variant="ghost"
+              className="myc-glass h-auto px-6 py-[15px] text-base font-medium text-foreground hover:bg-foreground/12 hover:text-foreground"
+            >
+              <Link href="/teachers">Meet the teachers</Link>
+            </Button>
+          </div>
+
+          {/* Trust row — rating and count are admin-editable (admin_settings) */}
+          <div className="mt-10 flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm text-muted-foreground">
+            {trustRating && (
+              <span className="tracking-[2px] text-accent" aria-hidden="true">
+                ★★★★★
               </span>
-            </div>
+            )}
+            <Link href="/reviews" className="transition-colors hover:text-foreground">
+              {trustRating && (
+                <>
+                  <strong className="font-semibold text-foreground">{trustRating}</strong> ·{" "}
+                </>
+              )}
+              {trustCount}
+            </Link>
+            <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
+            <span>No subscription</span>
+          </div>
+        </motion.div>
 
-            {/* Floating "personalised" live card */}
-            <div className="myc-float absolute left-[-14px] top-[18%] flex items-center gap-2.5 rounded-2xl border border-border bg-card px-4 py-3 text-sm shadow-[var(--myc-shadow-soft)]">
-              <span className="myc-pulse-dot" aria-hidden="true" />
-              <span>
-                <strong>100% personalised</strong> · just you &amp; your teacher
+        {/* ---------- Floating "next available" card ---------- */}
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, delay: 0.15, ease: [0.2, 0.7, 0.2, 1] }}
+          className="flex justify-start md:justify-end"
+        >
+          <div className="myc-float myc-glass-over-media w-[300px] max-w-full px-[22px] py-5">
+            <div className="mb-2.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+              Next available
+            </div>
+            <div className="font-[family-name:var(--font-cormorant)] text-[26px] font-semibold leading-tight">
+              Gentle Hatha with Aarti
+            </div>
+            <div className="mt-1.5 text-sm text-muted-foreground">
+              Today · 7:00 PM your time · 60 min
+            </div>
+            <div className="mt-4 flex items-center justify-between border-t border-foreground/12 pt-3.5">
+              <span className="inline-flex items-center gap-2 text-[13px] text-muted-foreground">
+                <span
+                  aria-hidden="true"
+                  className="size-[7px] rounded-full bg-accent"
+                />
+                Just you &amp; your teacher
               </span>
+              <Link
+                href="/login?next=/dashboard/book"
+                className="text-[13px] font-semibold text-accent hover:text-[var(--accent-bright)]"
+              >
+                Book →
+              </Link>
             </div>
-
-            {/* Floating "next session" card */}
-            <div className="myc-float2 absolute bottom-[8%] right-[-18px] max-w-[230px] rounded-2xl border border-border bg-card px-4 py-3 shadow-[var(--myc-shadow-soft)]">
-              <div className="mb-1 text-[11px] uppercase tracking-[0.1em] text-muted-foreground">
-                Example session
-              </div>
-              <div className="font-[family-name:var(--font-cormorant)] text-xl font-semibold leading-tight">
-                Gentle Hatha with Aarti
-              </div>
-              <div className="mt-0.5 text-[13px] text-muted-foreground">
-                Your chosen time · 60 min
-              </div>
-            </div>
-          </motion.div>
-        </div>
+          </div>
+        </motion.div>
       </div>
     </section>
   );

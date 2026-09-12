@@ -58,14 +58,15 @@ export function MarketingNav() {
       initial={{ y: -24, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
       transition={{ duration: 0.5, ease: "easeOut" }}
-      className={cn(
-        "fixed inset-x-0 top-0 z-40 transition-colors duration-300",
-        scrolled
-          ? "border-b border-border/60 bg-background/85 backdrop-blur-md"
-          : "bg-transparent",
-      )}
+      className="pointer-events-none fixed inset-x-0 top-0 z-40 px-5 py-3.5"
     >
-      <div className="mx-auto flex h-16 max-w-[1240px] items-center justify-between gap-6 px-7">
+      <div
+        className={cn(
+          "pointer-events-auto mx-auto flex max-w-[1200px] items-center justify-between gap-5 py-2.5 pl-[18px] pr-3 transition-colors duration-300",
+          // Transparent over the hero, frosted once the page scrolls under it.
+          scrolled ? "myc-glass-bar" : "border border-transparent",
+        )}
+      >
         <Link href="/" className="flex items-center gap-3" aria-label="My Yoga Classes home">
           <BrandMark breathe />
           <span className="font-[family-name:var(--font-cormorant)] text-[1.55rem] font-semibold leading-none tracking-[-0.01em]">
@@ -78,7 +79,7 @@ export function MarketingNav() {
             <Link
               key={l.href}
               href={l.href}
-              className="text-[15px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+              className="text-[15px] font-medium text-foreground/78 transition-colors hover:text-foreground"
             >
               {l.label}
             </Link>
@@ -91,7 +92,7 @@ export function MarketingNav() {
               <Button asChild variant="ghost" size="sm" className="hover:text-accent hover:bg-transparent">
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-              <Button asChild size="sm" className="rounded-full px-5 bg-accent text-white hover:bg-accent/90">
+              <Button asChild size="sm" className="px-5 bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground">
                 <Link href="/dashboard/book">Book a session</Link>
               </Button>
             </>
@@ -100,7 +101,7 @@ export function MarketingNav() {
               <Button asChild variant="ghost" size="sm" className="hover:text-accent hover:bg-transparent">
                 <Link href="/login">Log in</Link>
               </Button>
-              <Button asChild size="sm" className="rounded-full px-5 bg-accent text-white hover:bg-accent/90">
+              <Button asChild size="sm" className="px-5 bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground">
                 <Link href="/login?next=/dashboard/book">Book a session</Link>
               </Button>
             </>
@@ -123,7 +124,7 @@ export function MarketingNav() {
           id="mobile-nav-menu"
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="border-t border-border bg-background md:hidden"
+          className="myc-glass-bar pointer-events-auto mx-auto mt-2 max-w-[1200px] md:hidden"
         >
           <div className="flex flex-col gap-3 px-7 py-4">
             {NAV_LINKS.map((l) => (
@@ -142,7 +143,7 @@ export function MarketingNav() {
                   <Button asChild variant="outline" className="flex-1">
                     <Link href="/dashboard">Dashboard</Link>
                   </Button>
-                  <Button asChild className="flex-1 bg-accent text-white hover:bg-accent/90">
+                  <Button asChild className="flex-1 bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground">
                     <Link href="/dashboard/book">Book</Link>
                   </Button>
                 </>
@@ -151,7 +152,7 @@ export function MarketingNav() {
                   <Button asChild variant="outline" className="flex-1">
                     <Link href="/login">Log in</Link>
                   </Button>
-                  <Button asChild className="flex-1 bg-accent text-white hover:bg-accent/90">
+                  <Button asChild className="flex-1 bg-accent text-accent-foreground hover:bg-[var(--myc-accent-hover)] hover:text-accent-foreground">
                     <Link href="/login?next=/dashboard/book">Book</Link>
                   </Button>
                 </>

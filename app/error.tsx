@@ -33,7 +33,7 @@ export default function ErrorPage({
       <div className="mt-8 flex flex-wrap justify-center gap-3">
         <Button
           size="lg"
-          className="h-12 rounded-full px-7 bg-accent text-white hover:bg-accent/90"
+          className="h-12 rounded-full px-7 bg-accent text-accent-foreground hover:bg-accent/90"
           onClick={reset}
         >
           Try again

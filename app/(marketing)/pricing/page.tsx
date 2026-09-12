@@ -24,7 +24,7 @@ export default async function PricingPage() {
         title={<>Pay only when <em>you&apos;re ready.</em></>}
         subhead="Buy a one-time pack of 1:1 sessions, no subscription, and your sessions never expire."
       />
-      <PricingTeaser plans={plans} />
+      <PricingTeaser plans={plans} showHeader={false} />
       <FAQ />
       <FinalCTA headline="Book your first 1:1 session." />
     </>

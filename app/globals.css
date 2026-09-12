@@ -178,6 +178,7 @@ html.lenis body {
   --myc-ink-3: #8a9a90;
   --myc-line: #e6dfce;
   --myc-primary-hover: #0b463b;
+  --myc-accent-hover: #b83218;  /* light-palette counterpart of the dark token */
   --myc-accent-soft: #fbd9c9;   /* peach tint */
   --myc-bg-2: #f2ecdd;
   --myc-mint: #dceae0;
@@ -344,6 +345,189 @@ html.lenis body {
   .myc-float2,
   .myc-breathe,
   .myc-pulse-dot {
+    animation: none;
+  }
+}
+
+/* ============================================================
+   Dark teal-glass skin — MARKETING SURFACE ONLY.
+
+   Scoped to `.myc-dark`, NOT `.myc-theme`. `.myc-theme` is the brand layer and
+   is also applied to app/(auth)/layout.tsx, app/error.tsx and app/not-found.tsx
+   — hanging the dark palette off it silently re-skinned the login funnel, the
+   404 and the global error boundary. `.myc-dark` is added only by
+   app/(marketing)/layout.tsx, so the dark skin reaches exactly the pages it was
+   designed for.
+
+   From the "My Yoga Classes" design canvas (THEMES.dark). Applied as a class
+   rather than routed through next-themes on purpose:
+     - .myc-app (dashboard + admin) keeps the light :root palette, so the
+       logged-in product is untouched by this redesign.
+     - No ThemeProvider change, so `forcedTheme="light"` in app/layout.tsx
+       stays as-is and there is no flash-of-wrong-theme to manage.
+   Declared after the .myc-theme blocks above, and one class deeper, so these
+   win. Contrast against #0a2b26 (all AA or better):
+     foreground #fbf7ef 14.2:1 · muted-foreground #9fbdb2 7.5:1
+     accent #ff6a4d 5.4:1 · accent-bright #ff9a84 7.4:1 · primary #7fd4bd 8.7:1
+   accent-foreground is the design's --on-accent (#16352e), 4.7:1 on coral.
+   White on coral is only 2.8:1, so never pair text-white with bg-accent here.
+   ============================================================ */
+.myc-dark {
+  color-scheme: dark;
+
+  --background:               #0a2b26;   /* deep pine */
+  --foreground:               #fbf7ef;   /* warm cream text */
+  --card:                     #103a33;
+  --card-foreground:          #fbf7ef;
+  --popover:                  #103a33;
+  --popover-foreground:       #fbf7ef;
+  --primary:                  #7fd4bd;   /* light mint — primary must be light on dark */
+  --primary-foreground:       #06211d;
+  --secondary:                #14433b;
+  --secondary-foreground:     #fbf7ef;
+  --muted:                    #14433b;
+  --muted-foreground:         #9fbdb2;
+  --accent:                   #ff6a4d;   /* bright coral is the on-dark accent */
+  --accent-foreground:        #16352e;   /* design --on-accent */
+  --myc-accent-hover:         #ff7f66;   /* design --accent-hover */
+  --accent-bright:            #ff9a84;   /* lighter coral for italic flourishes on dark */
+  --destructive:              oklch(0.68 0.19 25);
+  --border:                   #27433e;   /* = cream at 12% over the bg */
+  --input:                    #27433e;
+  --ring:                     #ff6a4d;
+
+  /* Sharp corners: the design sets border-radius:0 on every card, button,
+     nav and badge. `rounded-full` is unaffected, so pills, dots and the
+     brand mark stay round.
+     The whole --radius-* scale has to be restated, not just --radius: the
+     @theme inline block derives --radius-md et al. with calc(var(--radius)*n)
+     ON :root, so they compute there (9.6px) and descendants inherit that
+     figure. Re-pointing --radius alone never reaches them. */
+  --radius:                   0rem;
+  --radius-sm:                0rem;
+  --radius-md:                0rem;
+  --radius-lg:                0rem;
+  --radius-xl:                0rem;
+  --radius-2xl:               0rem;
+  --radius-3xl:               0rem;
+  --radius-4xl:               0rem;
+
+  /* extra design tokens, re-pointed for dark */
+  --myc-ink-2:                #9fbdb2;
+  --myc-ink-3:                #6d8f84;
+  --myc-line:                 #27433e;
+  --myc-primary-hover:        #a7e3d0;
+  --myc-accent-soft:          rgba(255, 106, 77, 0.18);
+  --myc-bg-2:                 #0d3f37;
+  --myc-mint:                 #16665a;
+  --myc-peach:                rgba(255, 106, 77, 0.18);
+  --myc-butter:               #125a4c;
+  --myc-sky:                  #0f4f46;
+  --myc-shadow-soft:          0 24px 60px -32px rgba(0, 0, 0, 0.6);
+  --myc-shadow-card:          0 2px 0 rgba(0, 0, 0, 0.15),
+                              0 14px 40px -28px rgba(0, 0, 0, 0.5);
+
+  /* hero atmosphere + video grade (design hero, glow and vid tokens) */
+  --myc-hero-1:               #16665a;
+  --myc-hero-2:               #0d3f37;
+  --myc-glow-1:               rgba(15, 92, 78, 0.6);
+  --myc-glow-2:               rgba(255, 106, 77, 0.18);
+  --myc-glow-3:               rgba(251, 247, 239, 0.08);
+  --myc-glow-white:           rgba(251, 247, 239, 0.22);
+  --myc-card-1:               #125a4c;
+  --myc-card-2:               #0a2b26;
+  --myc-vid-tint:             #0f5c4e;
+  --myc-vid-blend:            multiply;
+  --myc-vid-op:               0.55;
+  --myc-vid-filter:           saturate(0.85) contrast(1.05) brightness(0.9);
+}
+
+/* The marketing wrapper paints its own background, but overscroll/rubber-band
+   exposes the document behind it — which still carries the light :root cream.
+   Paint the root dark whenever a marketing page is mounted. */
+html:has(.myc-dark),
+html:has(.myc-dark) body {
+  background: #0a2b26;
+}
+
+/* ---- Glass surfaces ----
+   Author `backdrop-filter` UNPREFIXED only. Tailwind 4 runs Lightning CSS,
+   which prefixes from the project's browser targets; when the source also
+   carries a hand-written -webkit- copy it collapses the pair and emits ONLY
+   the -webkit- one, so the standard property silently vanishes and the blur
+   never lands in browsers that want it unprefixed.
+   The design's repeated recipe: a faint ink wash, a hairline, and a blur.
+   Using color-mix against --foreground keeps one definition working on either
+   palette. Deliberately NOT scoped to .myc-dark: PricingTeaser carries these
+   classes and also renders on /dashboard/plan, which sits under .myc-app, where
+   a .myc-dark-scoped rule would not match and the pack cards would lose their
+   background, border and shadow entirely. */
+.myc-glass {
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 12%, transparent);
+  backdrop-filter: blur(18px);
+  box-shadow: 0 30px 80px -50px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+.myc-glass-strong {
+  background: color-mix(in srgb, var(--foreground) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 16%, transparent);
+  backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 color-mix(in srgb, var(--foreground) 14%, transparent);
+}
+/* Nav bar + sticky CTA: tinted by the page background rather than the ink, so
+   content scrolling underneath reads as frosted rather than washed out. */
+.myc-glass-bar {
+  background: color-mix(in srgb, var(--background) 62%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 14%, transparent);
+  backdrop-filter: blur(20px) saturate(140%);
+  box-shadow: 0 20px 60px -30px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 color-mix(in srgb, var(--foreground) 10%, transparent);
+}
+
+/* Frosted panel for content sitting directly over the hero footage, where the
+   lighter --glass tints cannot be relied on to hold contrast. */
+.myc-glass-over-media {
+  background: color-mix(in srgb, var(--background) 88%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  backdrop-filter: blur(22px) saturate(140%);
+  box-shadow: 0 40px 90px -40px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 color-mix(in srgb, var(--foreground) 14%, transparent);
+}
+
+/* ---- Hero atmosphere ---- */
+/* The hero video plate is full-bleed below md, where a feathered left edge
+   would just eat the image; the inline mask is cancelled at that width. */
+@media (max-width: 767px) {
+  .myc-dark .myc-hero-plate {
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
+}
+.myc-dark .myc-hero-wash {
+  background: radial-gradient(
+    ellipse 70% 80% at 78% 50%,
+    var(--myc-hero-1) 0%,
+    var(--myc-hero-2) 45%,
+    var(--background) 75%
+  );
+}
+.myc-breathe-glow { animation: myc-breathe-glow 4.8s ease-in-out infinite; }
+.myc-mist { animation: myc-mist 26s ease-in-out infinite alternate; }
+
+@keyframes myc-breathe-glow {
+  0%, 100% { opacity: 0.6; transform: scale(1); }
+  50%      { opacity: 1;   transform: scale(1.06); }
+}
+@keyframes myc-mist {
+  from { transform: translate3d(-4%, 2%, 0) rotate(-2deg); }
+  to   { transform: translate3d(4%, -3%, 0) rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .myc-breathe-glow,
+  .myc-mist {
     animation: none;
   }
 }
