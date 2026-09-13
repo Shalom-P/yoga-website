@@ -6,6 +6,18 @@
 // The ordering below is load-bearing and was worked out once; keeping it in one
 // place is what stops the two paths from drifting apart. Server-only (service
 // role + Supabase Admin API).
+//
+// ============================================================================
+// A THIRD CALLER EXISTS AND IS A SEPARATE COPY OF THIS CASCADE.
+// ============================================================================
+// supabase/functions/delete-account/index.ts is the native iOS app's self-delete.
+// It cannot import this module (server-only, @/ aliases and the Vercel-OIDC
+// Google client are all unavailable to Deno), so the ordering below is
+// duplicated there by hand. IF YOU CHANGE THE CASCADE HERE, CHANGE IT THERE TOO.
+// The one deliberate difference is step 2's Meet teardown: Deno cannot mint
+// Vercel OIDC, so the Edge Function flags meet_status='release_pending' for
+// cron/meet-retry instead of calling releaseSessionMeet(). That divergence is
+// marked in its source; anything else that drifts is a bug.
 
 import "server-only";
 
