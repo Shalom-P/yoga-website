@@ -89,6 +89,16 @@ export async function POST(req: Request) {
         // capture event arrives separately and will fulfil then.
         return NextResponse.json({ ok: true, skipped: result.reason });
       }
+      if (
+        !result.ok &&
+        (result.reason === "manual_entry_conflict" || result.reason === "payment_detached")
+      ) {
+        // A human already recorded this payment against a different customer or
+        // plan, or the payer's account was deleted. Neither is fixable by
+        // retrying, and fulfillment.ts has already raised the conflict to Sentry
+        // and audit_log with both attributions, so ack and stop the retry storm.
+        return NextResponse.json({ ok: true, skipped: result.reason });
+      }
       if (!result.ok) {
         Sentry.captureMessage(`razorpay webhook fulfil failed: ${result.reason}`, "warning");
         return NextResponse.json({ error: result.reason }, { status: 500 });
@@ -113,6 +123,16 @@ export async function POST(req: Request) {
       if (!result.ok && result.reason === "partial_refund_manual") {
         Sentry.captureMessage(
           `razorpay partial refund needs manual credit review: payment=${refund.payment_id}`,
+          "warning",
+        );
+        return NextResponse.json({ ok: true, skipped: result.reason });
+      }
+      if (!result.ok && result.reason === "payment_detached") {
+        // The buyer deleted their account, so the payment row no longer names a
+        // customer and there is no balance to claw back from. Retrying cannot
+        // change that; flag it for the books and ack.
+        Sentry.captureMessage(
+          `razorpay refund on a detached payment, credits not clawed back: ${refund.payment_id}`,
           "warning",
         );
         return NextResponse.json({ ok: true, skipped: result.reason });

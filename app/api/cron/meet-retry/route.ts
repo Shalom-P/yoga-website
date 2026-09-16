@@ -2,6 +2,7 @@ import "server-only";
 
 import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { deleteMeetEvent } from "@/lib/google/calendar";
 import { provisionSessionMeet, releaseSessionMeet } from "@/lib/google/provisionMeet";
 
 // provisionSessionMeet -> lib/google/calendar.ts uses @vercel/oidc (Node only).
@@ -24,6 +25,18 @@ const BATCH_SIZE = 50;
  * The booked customer's email is added as a Calendar attendee so they receive
  * a Google Calendar invite (same behaviour as the booking confirm handler).
  *
+ * Two teardown sweeps run alongside it: sweepReleases() for sessions marked
+ * 'release_pending', and sweepOrphans() for events parked by a reschedule.
+ *
+ * ORDER MATTERS: sweepOrphans() runs BEFORE the forward pass, not after. A
+ * reschedule parks the OLD event in meet_orphan_events and puts the session back
+ * to 'pending', and the forward pass provisions with recover:true, whose lookup
+ * (findMeetEventBySession) matches on the session id with NO time check. Run the
+ * other way round, the forward pass adopts the parked event and writes
+ * meet_status='created' with its link, and then the orphan sweep deletes that
+ * very event in the same request — leaving a dead join link that nothing
+ * revisits, because the forward pass only selects 'pending'/'failed'.
+ *
  * Schedule: run every ~15–30 minutes so the customer receives their link well
  * before the session start.
  */
@@ -32,6 +45,9 @@ export async function POST(req: Request): Promise<Response> {
   if (authError) return authError;
 
   const svc = createSupabaseServiceClient();
+
+  // Teardown first, for the reason in the docblock above.
+  const { orphansDeleted, orphansRemaining } = await sweepOrphans(svc);
 
   // Sessions that need a Meet link and haven't started yet, bounded by BATCH_SIZE.
   const { data: sessions, error: sessionsErr } = await svc
@@ -47,13 +63,29 @@ export async function POST(req: Request): Promise<Response> {
     return Response.json({ ok: false, error: sessionsErr.message }, { status: 500 });
   }
 
-  if (!sessions || sessions.length === 0) {
-    return Response.json({ ok: true, processed: 0 });
-  }
-
+  // No early return when this set is empty. The sweeps sharing this run are
+  // separate jobs, and "nothing needs a link right now" is the normal state, so
+  // returning here would have left teardown work undone on almost every
+  // invocation.
   let processed = 0;
+  let skippedParked = 0;
 
-  for (const session of sessions) {
+  // Belt and braces for the adopt-then-delete cycle the docblock describes. The
+  // sweep above is bounded and best effort, so a parked event whose delete just
+  // failed (Google outage, rate limit) is still live on the calendar and still
+  // adoptable by recover:true. Leave those sessions for a later run, once the
+  // old event is actually gone.
+  const parkedSessionIds = await sessionIdsWithLiveOrphans(
+    svc,
+    (sessions ?? []).map((s) => s.id),
+  );
+
+  for (const session of sessions ?? []) {
+    if (parkedSessionIds.has(session.id)) {
+      skippedParked++;
+      continue;
+    }
+
     // Look up the teacher for the calendar event summary + their own calendar.
     const { data: teacher } = await svc
       .from("teachers")
@@ -92,7 +124,10 @@ export async function POST(req: Request): Promise<Response> {
         summary: `Yoga${teacher?.display_name ? ` with ${teacher.display_name}` : ""}`,
         attendeeEmails,
         calendarId: teacher?.google_calendar_id,
-        recover: true, // retry path: adopt an orphaned event instead of duplicating
+        // Retry path: adopt this session's own earlier event instead of minting
+        // a duplicate. Safe here because any event parked by a reschedule has
+        // either been deleted above or excluded this session from the loop.
+        recover: true,
       },
     );
     if (meetLink) processed++;
@@ -100,7 +135,36 @@ export async function POST(req: Request): Promise<Response> {
 
   const released = await sweepReleases(svc);
 
-  return Response.json({ ok: true, processed, released });
+  return Response.json({
+    ok: true,
+    processed,
+    skippedParked,
+    released,
+    orphansDeleted,
+    orphansRemaining,
+  });
+}
+
+/**
+ * Which of these sessions still has an un-deleted meet_orphan_events row, i.e. a
+ * pre-reschedule event that is still live on the calendar and would be adopted
+ * by a recover:true provision.
+ */
+async function sessionIdsWithLiveOrphans(
+  svc: ReturnType<typeof createSupabaseServiceClient>,
+  sessionIds: string[],
+): Promise<Set<string>> {
+  if (sessionIds.length === 0) return new Set();
+  const { data } = await svc
+    .from("meet_orphan_events")
+    .select("session_id")
+    .is("deleted_at", null)
+    .in("session_id", sessionIds);
+  return new Set(
+    (data ?? [])
+      .map((row) => row.session_id)
+      .filter((id): id is string => Boolean(id)),
+  );
 }
 
 /**
@@ -154,6 +218,61 @@ async function sweepReleases(
   }
 
   return released;
+}
+
+/**
+ * The third direction: Calendar events that outlived the session row pointing at
+ * them.
+ *
+ * When an admin reschedules a class, `admin_update_session` parks the old event
+ * in `meet_orphan_events` inside its transaction and clears the session's meet_*
+ * columns, because Postgres has no Google credentials and the session row is
+ * about to describe a different time. The route normally drains that row
+ * immediately; this sweep is what catches the ones it could not, which is any
+ * run where Google was down, the request was cut short, or the delete returned
+ * an error worth retrying.
+ *
+ * Without it a student holds a join link to a class at the old time, and the
+ * teacher keeps a phantom hour on their calendar.
+ */
+async function sweepOrphans(
+  svc: ReturnType<typeof createSupabaseServiceClient>,
+): Promise<{ orphansDeleted: number; orphansRemaining: number }> {
+  const { data: orphans } = await svc
+    .from("meet_orphan_events")
+    .select("id, event_id, calendar_id, attempts")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: true })
+    .limit(BATCH_SIZE);
+
+  if (!orphans || orphans.length === 0) {
+    return { orphansDeleted: 0, orphansRemaining: 0 };
+  }
+
+  let orphansDeleted = 0;
+  for (const orphan of orphans) {
+    try {
+      // deleteMeetEvent treats 410 (already gone) as success, so an event some
+      // other path already removed still closes its row rather than retrying
+      // forever.
+      await deleteMeetEvent(orphan.event_id, orphan.calendar_id ?? undefined);
+      await svc
+        .from("meet_orphan_events")
+        .update({ deleted_at: new Date().toISOString(), attempts: orphan.attempts + 1 })
+        .eq("id", orphan.id)
+        .is("deleted_at", null); // idempotent against a concurrent run
+      orphansDeleted++;
+    } catch (err) {
+      // Count the attempt and leave deleted_at null so the next run tries again.
+      console.error(`[cron/meet-retry] orphan ${orphan.event_id} delete failed:`, err);
+      await svc
+        .from("meet_orphan_events")
+        .update({ attempts: orphan.attempts + 1 })
+        .eq("id", orphan.id);
+    }
+  }
+
+  return { orphansDeleted, orphansRemaining: orphans.length - orphansDeleted };
 }
 
 /**

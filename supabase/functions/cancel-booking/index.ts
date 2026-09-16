@@ -16,7 +16,9 @@
 //   3. the flip to 'cancelled' carries .eq('status','confirmed') so two
 //      concurrent cancels cannot both win and refund twice,
 //   4. a paid booking is refunded through refund_session_credit, which is
-//      idempotent on booking_id (credit_ledger_refund_once, migration 0021).
+//      idempotent on booking_id (credit_ledger_refund_once, migration 0021) —
+//      and a booking that never spent a credit (free trial, or `comped` by an
+//      admin) is not refunded at all.
 //
 // WHAT THIS DELIBERATELY DOES NOT DO
 //
@@ -90,7 +92,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: booking } = await svc
     .from("bookings")
-    .select("id, session_id, customer_id, status, is_free_trial")
+    .select("id, session_id, customer_id, status, is_free_trial, comped, credit_refunded")
     .eq("id", parsed.bookingId)
     .maybeSingle();
 
@@ -116,10 +118,15 @@ Deno.serve(async (req: Request) => {
   // A concurrent request already cancelled this booking — don't refund twice.
   if (!cancelled || cancelled.length === 0) return fail("not_cancellable", 409);
 
-  // Refund the session credit for a paid booking (the free trial never spent
-  // one). Idempotent, so even reached twice the credit is granted once.
-  if (!booking.is_free_trial) {
-    const { error: refundErr } = await svc.rpc("refund_session_credit", {
+  // Refund the session credit for a paid booking. Two kinds never spent one and
+  // must never be refunded, or the cancel mints a credit from nothing: the free
+  // trial, and a `comped` booking (0039 — an admin enrolled the student without
+  // charging, so no booking_spend ledger row exists for it). admin_cancel_booking
+  // applies the same two-part test; keep them in step. refund_session_credit is
+  // idempotent, so even reached twice the credit is granted once, and it returns
+  // true only for the call that actually refunded.
+  if (!booking.is_free_trial && !booking.comped) {
+    const { data: refunded, error: refundErr } = await svc.rpc("refund_session_credit", {
       p_customer: user.id,
       p_booking_id: booking.id,
     });
@@ -129,6 +136,17 @@ Deno.serve(async (req: Request) => {
       // request: the customer's slot is released either way, and telling them
       // the cancel failed would invite a second attempt that cannot succeed.
       console.error("[cancel-booking] credit refund failed:", refundErr.message);
+    } else if (refunded === true) {
+      // Mirror the ledger onto the booking row: the admin UI reads
+      // bookings.credit_refunded to tell a deliberate no-refund cancel from a
+      // refunded one, and without this a self-cancel is badged "No refund".
+      const { error: markErr } = await svc
+        .from("bookings")
+        .update({ credit_refunded: true })
+        .eq("id", booking.id);
+      if (markErr) {
+        console.error("[cancel-booking] could not mark credit_refunded:", markErr.message);
+      }
     }
   }
 

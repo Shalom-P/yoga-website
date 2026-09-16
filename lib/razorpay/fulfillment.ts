@@ -110,7 +110,64 @@ export async function fulfillRazorpayPayment(
     }
   }
 
-  // Record the payment (idempotent on razorpay_payment_id).
+  // Read the row we may be about to overwrite. The upsert below conflicts on a
+  // TOTAL unique index (0033), so it is an in-place UPDATE whenever this payment
+  // is already on file — including when an admin put it there by hand.
+  const { data: existing } = await svc
+    .from("payments")
+    .select("id, entry_source, customer_id, plan_id, paid_at")
+    .eq("razorpay_payment_id", paymentId)
+    .maybeSingle();
+
+  // The commonest reason a payment is hand-entered is that the webhook missed
+  // it, so the webhook arriving LATER is the expected case, not the exotic one.
+  // The upsert writes customer_id from the ORDER NOTES: if the admin attributed
+  // this payment to a different customer (or a different pack), the row would
+  // silently flip to the notes customer while the credits stayed with the
+  // admin's pick. Money and credits would then name different people, with no
+  // error raised anywhere. Refuse, and make a human look.
+  if (existing && existing.entry_source === "admin_manual") {
+    const planMismatch = existing.plan_id != null && existing.plan_id !== planId;
+    if (existing.customer_id !== customerId || planMismatch) {
+      Sentry.captureException(
+        new Error(`manual payment attribution conflict on ${paymentId}`),
+        {
+          tags: { module: "fulfillment" },
+          extra: {
+            manualCustomer: existing.customer_id,
+            notesCustomer: customerId,
+            manualPlan: existing.plan_id,
+            notesPlan: planId,
+          },
+        },
+      );
+      await svc.from("audit_log").insert({
+        actor_id: null,
+        action: "manual_payment_attribution_conflict",
+        entity_type: "payment",
+        entity_id: existing.id,
+        payload: {
+          razorpay_payment_id: paymentId,
+          manual_customer_id: existing.customer_id,
+          notes_customer_id: customerId,
+          manual_plan_id: existing.plan_id,
+          notes_plan_id: planId,
+        },
+      });
+      return { ok: false, reason: "manual_entry_conflict" };
+    }
+  }
+
+  // Attributions agree, so this is a reconciliation rather than a first write.
+  // Keep the capture time the admin recorded (admin_kpis buckets revenue on
+  // paid_at), and let the row say it was later confirmed by Razorpay.
+  const isManualReconcile = existing?.entry_source === "admin_manual";
+  const paidAt =
+    isManualReconcile && existing?.paid_at ? existing.paid_at : new Date().toISOString();
+
+  // Record the payment (idempotent on razorpay_payment_id). plan_id, method,
+  // reference, recorded_by and admin_note are absent from this object on
+  // purpose, so a hand-entered row keeps them.
   const { data: paymentRow, error: payErr } = await svc
     .from("payments")
     .upsert(
@@ -125,7 +182,13 @@ export async function fulfillRazorpayPayment(
         status: "completed",
         discount_code_id: discountCodeId,
         discount_amount_cents: discountAmountCents,
-        paid_at: new Date().toISOString(),
+        paid_at: paidAt,
+        ...(isManualReconcile
+          ? {
+              entry_source: "admin_manual_reconciled" as const,
+              reconciled_at: new Date().toISOString(),
+            }
+          : {}),
       },
       { onConflict: "razorpay_payment_id" },
     )
@@ -192,6 +255,11 @@ export async function reverseRazorpayPayment(
     .eq("razorpay_payment_id", paymentId)
     .maybeSingle();
   if (!paymentRow) return { ok: false, reason: "payment_not_found" };
+  // 0035 made payments.customer_id nullable: a self-deleted account detaches its
+  // financial history (VAT/GST retention) instead of destroying it. There is
+  // nobody left to claw credits back from, and clawback_session_credits would
+  // receive a null customer. The caller acks rather than retrying forever.
+  if (!paymentRow.customer_id) return { ok: false, reason: "payment_detached" };
 
   // Only auto-clawback a FULL refund.
   const rzp = getRazorpayClient();

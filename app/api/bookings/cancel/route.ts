@@ -22,7 +22,7 @@ export async function POST(req: Request) {
 
   const { data: booking } = await supabase
     .from("bookings")
-    .select("id, session_id, customer_id, status, is_free_trial")
+    .select("id, session_id, customer_id, status, is_free_trial, comped, credit_refunded")
     .eq("id", parsed.data.bookingId)
     .single();
   if (!booking || booking.customer_id !== user.id) {
@@ -54,11 +54,16 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "not_cancellable" }, { status: 409 });
   }
 
-  // Refund the session-credit for a paid booking (the free trial never spent one).
-  // refund_session_credit is idempotent (credit_ledger_refund_once on booking_id),
-  // so even if this path is somehow reached twice the credit is granted once.
-  if (!booking.is_free_trial) {
-    const { error: refundErr } = await svc.rpc("refund_session_credit", {
+  // Refund the session-credit for a paid booking. Two kinds of booking never
+  // spent one and must never be refunded, or the cancel mints a credit from
+  // nothing: the free trial, and a `comped` booking (0039 — an admin enrolled
+  // the student without charging, so no booking_spend ledger row exists for it).
+  // admin_cancel_booking applies the same two-part test; keep them in step.
+  // refund_session_credit is idempotent (credit_ledger_booking_refund_once on
+  // booking_id), so even if this path is somehow reached twice the credit is
+  // granted once, and it returns true only for the call that actually refunded.
+  if (!booking.is_free_trial && !booking.comped) {
+    const { data: refunded, error: refundErr } = await svc.rpc("refund_session_credit", {
       p_customer: user.id,
       p_booking_id: booking.id,
     });
@@ -66,6 +71,17 @@ export async function POST(req: Request) {
       // The booking is already cancelled; surface the refund failure so it can be
       // reconciled rather than silently swallowing a lost credit.
       console.error("[bookings/cancel] credit refund failed:", refundErr.message);
+    } else if (refunded === true) {
+      // Mirror the ledger onto the booking row: the admin UI reads
+      // bookings.credit_refunded to tell a deliberate no-refund cancel from a
+      // refunded one, and without this a self-cancel is badged "No refund".
+      const { error: markErr } = await svc
+        .from("bookings")
+        .update({ credit_refunded: true })
+        .eq("id", booking.id);
+      if (markErr) {
+        console.error("[bookings/cancel] could not mark credit_refunded:", markErr.message);
+      }
     }
   }
 

@@ -44,7 +44,7 @@ const NAV_GROUPS: {
     items: [
       { href: "/admin/sessions", label: "Sessions" },
       { href: "/admin/bookings", label: "Bookings" },
-      { href: "/admin/payments", label: "Bank transfers" },
+      { href: "/admin/payments", label: "Payments" },
       { href: "/admin/customers", label: "Customers" },
       { href: "/admin/reviews", label: "Reviews" },
     ],

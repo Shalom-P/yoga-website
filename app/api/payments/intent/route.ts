@@ -191,6 +191,10 @@ export async function POST(req: Request): Promise<Response> {
         customer_id: user.id,
         plan_id: pack.planId,
         method: "bank_transfer",
+        // 0039. The column defaults to 'razorpay_auto' (right for fulfillment.ts's
+        // upsert, wrong here), so without this every live wire would be badged as
+        // an automatic Razorpay row on /admin/payments.
+        entry_source: "bank_transfer",
         status: "pending",
         amount_cents: amountCents,
         currency: "AED",

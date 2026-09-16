@@ -40,6 +40,7 @@
     "node_modules",
     "supabase/functions/book-session",
     "supabase/functions/cancel-booking",
-    "supabase/functions/document-url"
+    "supabase/functions/document-url",
+    "supabase/functions/delete-account"
   ]
 }

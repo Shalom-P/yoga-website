@@ -2,7 +2,17 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { Plus, Loader2, Video, Ban, PlayCircle, CheckCircle2, Link2 } from "lucide-react";
+import {
+  Plus,
+  Loader2,
+  Video,
+  Ban,
+  PlayCircle,
+  CheckCircle2,
+  Link2,
+  Pencil,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
@@ -29,9 +39,18 @@ import { toast } from "sonner";
 import { formatCustomerTime } from "@/lib/timezone";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AdminPageHeader } from "@/components/admin/AdminPage";
+import { SessionEditDialog, type EditableSession } from "@/components/admin/SessionEditDialog";
+import {
+  SessionRosterDrawer,
+  type RosterEntry,
+  type RosterSession,
+} from "@/components/admin/SessionRosterDrawer";
+import type { MoveTarget } from "@/components/admin/MoveBookingDialog";
+import { friendlyAdminError } from "@/lib/ui/errors";
+import type { AdminErrorBody, SessionCancelResponse } from "@/lib/admin/contracts";
 import type { MeetStatus } from "@/lib/supabase/types";
 
-type SessionRow = {
+export type AdminSessionRow = {
   id: string;
   start_at: string;
   end_at: string;
@@ -41,12 +60,25 @@ type SessionRow = {
   meet_link: string | null;
   meet_status: MeetStatus | null;
   recording_url: string | null;
+  notes: string | null;
+  teacher_id: string;
+  class_category_id: string | null;
   teacher: { id: string; display_name: string } | null;
   category: { id: string; name: string } | null;
+  /** Non-cancelled bookings, counted server-side. */
+  live_count: number;
+};
+
+export type SessionFilters = {
+  past: boolean;
+  /** Teacher id, or "" for every teacher. */
+  teacher: string;
+  /** Session status, or "" for every status. */
+  status: string;
 };
 
 type Teacher = { id: string; display_name: string };
-type Category = { id: string; name: string };
+type Category = { id: string; name: string; is_active: boolean };
 
 type Draft = {
   teacherId: string;
@@ -68,27 +100,53 @@ const EMPTY: Draft = {
   notes: "",
 };
 
+const TH =
+  "bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap";
+
 export function SessionsAdmin({
   sessions,
   teachers,
   categories,
-  showPast,
+  filters,
+  rosterSession,
+  roster,
+  moveTargets,
 }: {
-  sessions: SessionRow[];
+  sessions: AdminSessionRow[];
   teachers: Teacher[];
   categories: Category[];
-  showPast: boolean;
+  filters: SessionFilters;
+  rosterSession: RosterSession | null;
+  roster: RosterEntry[];
+  moveTargets: MoveTarget[];
 }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [draft, setDraft] = useState<Draft>(EMPTY);
   const [saving, setSaving] = useState(false);
-  const [cancelling, setCancelling] = useState<string | null>(null);
   const [transitioning, setTransitioning] = useState<string | null>(null);
-  const [recordingSession, setRecordingSession] = useState<SessionRow | null>(null);
+  const [recordingSession, setRecordingSession] = useState<AdminSessionRow | null>(null);
   const [recordingUrl, setRecordingUrl] = useState("");
   const [recordingSaving, setRecordingSaving] = useState(false);
+  const [editSession, setEditSession] = useState<EditableSession | null>(null);
+  const [cancelTarget, setCancelTarget] = useState<AdminSessionRow | null>(null);
+  const [cancelRefund, setCancelRefund] = useState(true);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelling, setCancelling] = useState(false);
   const supabase = createSupabaseBrowserClient();
+
+  // Every filter lives in the URL so the roster drawer, the Prev/Next of a
+  // future page and a browser refresh all land on the same view.
+  function hrefWith(next: Partial<SessionFilters & { session: string }>): string {
+    const merged = { ...filters, session: "", ...next };
+    const params = new URLSearchParams();
+    if (merged.past) params.set("past", "1");
+    if (merged.teacher) params.set("teacher", merged.teacher);
+    if (merged.status) params.set("status", merged.status);
+    if (merged.session) params.set("session", merged.session);
+    const qs = params.toString();
+    return qs ? `/admin/sessions?${qs}` : "/admin/sessions";
+  }
 
   function handleOpenChange(next: boolean) {
     if (!next) setDraft(EMPTY);
@@ -120,63 +178,82 @@ export function SessionsAdmin({
           notes: draft.notes || undefined,
         }),
       });
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      const body = (await res.json().catch(() => ({}))) as AdminErrorBody;
       if (!res.ok) {
-        toast.error(
-          body.error === "slot_taken"
-            ? "That teacher already has a session at this time."
-            : `Couldn't schedule: ${body.error ?? "unknown"}`
-        );
+        toast.error(friendlyAdminError(body.error));
         return;
       }
       toast.success("Session scheduled. Join link will appear shortly.");
       handleOpenChange(false);
       router.refresh();
     } catch {
-      toast.error("Network error.");
+      toast.error("Network error. Please try again.");
     } finally {
       setSaving(false);
     }
   }
 
-  async function cancelSession(id: string) {
-    setCancelling(id);
+  function openCancelDialog(s: AdminSessionRow) {
+    setCancelTarget(s);
+    setCancelRefund(true);
+    setCancelReason("");
+  }
+
+  async function confirmCancelSession() {
+    if (!cancelTarget) return;
+    setCancelling(true);
     try {
-      // Goes through DELETE /api/admin/sessions so bookings are cancelled and
-      // the Meet event is removed; a direct sessions.update would leave both
+      // Goes through DELETE /api/admin/sessions so every booking is cancelled,
+      // prepaid sessions are returned according to the choice below, and the
+      // Meet event is torn down. A direct sessions.update would leave all three
       // dangling.
       const res = await fetch("/api/admin/sessions", {
         method: "DELETE",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ sessionId: id }),
+        body: JSON.stringify({
+          sessionId: cancelTarget.id,
+          refundCredits: cancelRefund,
+          reason: cancelReason.trim() || undefined,
+        }),
       });
-      const body = (await res.json().catch(() => ({}))) as { error?: string };
+      const body = (await res.json().catch(() => ({}))) as
+        | SessionCancelResponse
+        | AdminErrorBody;
       if (!res.ok) {
-        toast.error(`Couldn't cancel: ${body.error ?? "unknown"}`);
+        toast.error(friendlyAdminError((body as AdminErrorBody).error));
         return;
       }
-      toast.success("Session cancelled. Customers' bookings updated.");
+      const ok = body as SessionCancelResponse;
+      toast.success(
+        `Class cancelled. ${ok.cancelledBookings} ${
+          ok.cancelledBookings === 1 ? "student" : "students"
+        } removed, ${ok.refundedBookings} prepaid ${
+          ok.refundedBookings === 1 ? "session" : "sessions"
+        } returned.`,
+      );
+      setCancelTarget(null);
       router.refresh();
     } catch {
-      toast.error("Network error.");
+      toast.error("Network error. Please try again.");
     } finally {
-      setCancelling(null);
+      setCancelling(false);
     }
   }
 
+  // Status transitions and the recording URL stay direct browser writes: both
+  // are single-column updates with no credit, booking or calendar side effects,
+  // which is exactly where the line sits. Cancellation is on the other side of
+  // it and goes through the route above.
   async function transitionStatus(id: string, status: "live" | "completed") {
     setTransitioning(id);
-    const { error } = await supabase
-      .from("sessions")
-      .update({ status })
-      .eq("id", id);
+    const { error } = await supabase.from("sessions").update({ status }).eq("id", id);
     setTransitioning(null);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyAdminError("update_failed"));
     toast.success(`Session marked as ${status}.`);
     router.refresh();
   }
 
-  function openRecordingDialog(s: SessionRow) {
+  function openRecordingDialog(s: AdminSessionRow) {
     setRecordingSession(s);
     setRecordingUrl(s.recording_url ?? "");
   }
@@ -189,14 +266,10 @@ export function SessionsAdmin({
       .update({ recording_url: recordingUrl || null })
       .eq("id", recordingSession.id);
     setRecordingSaving(false);
-    if (error) return toast.error(error.message);
+    if (error) return toast.error(friendlyAdminError("update_failed"));
     toast.success("Recording URL saved.");
     setRecordingSession(null);
     router.refresh();
-  }
-
-  function toggleShowPast() {
-    router.push(showPast ? "/admin/sessions" : "/admin/sessions?past=1");
   }
 
   return (
@@ -204,48 +277,91 @@ export function SessionsAdmin({
       <AdminPageHeader
         eyebrow="Operations"
         title="Sessions"
-        sub="Schedule classes. Join links are auto-created."
+        sub="Schedule classes, manage who is in them, and mark attendance."
         className="mb-7"
         actions={
-        <>
-          <Button variant="outline" onClick={toggleShowPast}>
-            {showPast ? "Show upcoming" : "Show past sessions"}
-          </Button>
-          <Button onClick={() => setOpen(true)}>
-            <Plus className="size-4 mr-1" />
-            Schedule session
-          </Button>
-        </>
+          <>
+            <Button
+              variant="outline"
+              onClick={() => router.push(hrefWith({ past: !filters.past }))}
+            >
+              {filters.past ? "Show upcoming" : "Show past sessions"}
+            </Button>
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="size-4 mr-1" />
+              Schedule session
+            </Button>
+          </>
         }
       />
 
+      <div className="mb-5 flex flex-wrap items-center gap-3">
+        <Select
+          value={filters.teacher || "__all__"}
+          onValueChange={(v) => v && router.push(hrefWith({ teacher: v === "__all__" ? "" : v }))}
+        >
+          <SelectTrigger className="w-52">
+            <SelectValue placeholder="All teachers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All teachers</SelectItem>
+            {teachers.map((t) => (
+              <SelectItem key={t.id} value={t.id}>
+                {t.display_name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <Select
+          value={filters.status || "__all__"}
+          onValueChange={(v) => v && router.push(hrefWith({ status: v === "__all__" ? "" : v }))}
+        >
+          <SelectTrigger className="w-44">
+            <SelectValue placeholder="All statuses" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="__all__">All statuses</SelectItem>
+            <SelectItem value="scheduled">Scheduled</SelectItem>
+            <SelectItem value="live">Live</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+            <SelectItem value="cancelled">Cancelled</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
       {sessions.length === 0 ? (
         <div className="border border-dashed border-border bg-foreground/3 p-12 text-center text-muted-foreground">
-          No sessions yet. Click <b>Schedule session</b> to create one.
+          {filters.teacher || filters.status
+            ? "No sessions match the current filters."
+            : "No sessions yet. Click Schedule session to create one."}
         </div>
       ) : (
         <div className="myc-glass overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr>
-                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Start</th>
-                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Teacher</th>
-                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Class</th>
-                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Capacity</th>
-                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Link</th>
-                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Status</th>
-                <th className="bg-foreground/4 px-4 py-2.5 text-left text-[11px] font-semibold uppercase tracking-[0.08em] text-muted-foreground whitespace-nowrap">Actions</th>
+                <th className={TH}>Start</th>
+                <th className={TH}>Teacher</th>
+                <th className={TH}>Class</th>
+                <th className={TH}>Students</th>
+                <th className={TH}>Link</th>
+                <th className={TH}>Status</th>
+                <th className={TH}>Actions</th>
               </tr>
             </thead>
             <tbody>
               {sessions.map((s) => (
-                <tr key={s.id} className="border-t border-border transition-colors hover:bg-foreground/4">
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    {formatCustomerTime(s.start_at)}
-                  </td>
+                <tr
+                  key={s.id}
+                  className="border-t border-border transition-colors hover:bg-foreground/4"
+                >
+                  <td className="px-4 py-3 whitespace-nowrap">{formatCustomerTime(s.start_at)}</td>
                   <td className="px-4 py-3">{s.teacher?.display_name ?? "-"}</td>
                   <td className="px-4 py-3 text-muted-foreground">{s.category?.name ?? "1:1"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.capacity}</td>
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                    {s.live_count} / {s.capacity}
+                  </td>
                   <td className="px-4 py-3">
                     {s.meet_link ? (
                       <a
@@ -269,8 +385,8 @@ export function SessionsAdmin({
                         s.status === "scheduled"
                           ? "secondary"
                           : s.status === "live"
-                          ? "default"
-                          : "outline"
+                            ? "default"
+                            : "outline"
                       }
                     >
                       {s.status}
@@ -279,6 +395,36 @@ export function SessionsAdmin({
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => router.push(hrefWith({ session: s.id }), { scroll: false })}
+                        title="Open the roster"
+                      >
+                        <Users className="size-3.5 mr-1" />
+                        Roster ({s.live_count}/{s.capacity})
+                      </Button>
+                      {s.status !== "cancelled" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() =>
+                            setEditSession({
+                              id: s.id,
+                              teacher_id: s.teacher_id,
+                              class_category_id: s.class_category_id,
+                              start_at: s.start_at,
+                              end_at: s.end_at,
+                              capacity: s.capacity,
+                              notes: s.notes,
+                              teacher_name: s.teacher?.display_name ?? null,
+                            })
+                          }
+                        >
+                          <Pencil className="size-3.5 mr-1" />
+                          Edit
+                        </Button>
+                      )}
                       {s.status === "scheduled" && (
                         <>
                           <Button
@@ -294,11 +440,11 @@ export function SessionsAdmin({
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => cancelSession(s.id)}
-                            disabled={cancelling === s.id}
+                            className="text-destructive hover:text-destructive"
+                            onClick={() => openCancelDialog(s)}
                           >
                             <Ban className="size-3.5 mr-1" />
-                            {cancelling === s.id ? "…" : "Cancel"}
+                            Cancel
                           </Button>
                         </>
                       )}
@@ -334,13 +480,88 @@ export function SessionsAdmin({
         </div>
       )}
 
+      {/* Keyed on the session id so opening a different class REMOUNTS the
+          drawer. That is what resets its add-student form, rather than an
+          effect inside it that would re-render every open a second time. */}
+      <SessionRosterDrawer
+        key={rosterSession?.id ?? "no-session"}
+        session={rosterSession}
+        roster={roster}
+        moveTargets={moveTargets}
+        onClose={() => router.push(hrefWith({}), { scroll: false })}
+      />
+
+      {/* Keyed on the session id: remounting is what re-seeds the draft when a
+          different class is opened, instead of a reset effect inside. */}
+      <SessionEditDialog
+        key={editSession?.id ?? "no-session"}
+        session={editSession}
+        teachers={teachers}
+        categories={categories}
+        onClose={() => setEditSession(null)}
+      />
+
+      {/* Cancel a whole class. The refund choice is explicit, defaulted on: a
+          studio-side cancellation is not the student's fault, so the seat goes
+          back unless somebody decides otherwise. */}
+      <Dialog open={cancelTarget !== null} onOpenChange={(o) => !o && setCancelTarget(null)}>
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Cancel this class?</DialogTitle>
+            <DialogDescription>
+              Cancelling returns every student&apos;s prepaid session and removes the join link.
+              Nobody is emailed automatically, so let them know yourself.
+            </DialogDescription>
+          </DialogHeader>
+
+          <Label className="flex items-start gap-2 text-sm font-normal">
+            <Checkbox
+              checked={cancelRefund}
+              onCheckedChange={(v) => setCancelRefund(v === true)}
+              className="mt-0.5"
+            />
+            <span>
+              Return every student&apos;s prepaid session
+              <FieldHint>
+                Leave this unchecked only when the sessions have already been returned another way.
+                Introductory 1:1 and comped bookings never spent one, so they are unaffected.
+              </FieldHint>
+            </span>
+          </Label>
+
+          <div className="space-y-2">
+            <Label htmlFor="cancel_session_reason">Reason (optional)</Label>
+            <Textarea
+              id="cancel_session_reason"
+              value={cancelReason}
+              onChange={(e) => setCancelReason(e.target.value)}
+              rows={2}
+              placeholder="e.g. Teacher unwell"
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCancelTarget(null)} disabled={cancelling}>
+              Back
+            </Button>
+            <Button variant="destructive" onClick={confirmCancelSession} disabled={cancelling}>
+              {cancelling ? <Loader2 className="size-4 animate-spin" /> : "Cancel class"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Recording URL dialog */}
-      <Dialog open={recordingSession !== null} onOpenChange={(o) => !o && setRecordingSession(null)}>
-        <DialogContent className="max-w-md">
+      <Dialog
+        open={recordingSession !== null}
+        onOpenChange={(o) => !o && setRecordingSession(null)}
+      >
+        <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Recording URL</DialogTitle>
             <DialogDescription>
-              Paste the recording link (Google Drive, Vimeo, etc.). Customers with a booking can see this from their dashboard.
+              Paste the recording link (Google Drive, Vimeo, etc.). Customers with a booking can see
+              this from their dashboard.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-2">
@@ -353,7 +574,11 @@ export function SessionsAdmin({
             />
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRecordingSession(null)} disabled={recordingSaving}>
+            <Button
+              variant="outline"
+              onClick={() => setRecordingSession(null)}
+              disabled={recordingSaving}
+            >
               Cancel
             </Button>
             <Button onClick={saveRecordingUrl} disabled={recordingSaving}>
@@ -368,7 +593,8 @@ export function SessionsAdmin({
           <DialogHeader>
             <DialogTitle>Schedule session</DialogTitle>
             <DialogDescription>
-              Time is interpreted in your browser timezone, stored as UTC, and shown to each customer in their own timezone.
+              Time is interpreted in your browser timezone, stored as UTC, and shown to each
+              customer in their own timezone.
             </DialogDescription>
           </DialogHeader>
 
@@ -409,11 +635,16 @@ export function SessionsAdmin({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">1:1 private session</SelectItem>
-                  {categories.map((c) => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {c.name}
-                    </SelectItem>
-                  ))}
+                  {/* A new class never goes onto one of the categories retired by
+                      0023; the edit dialog still offers them so an existing
+                      session can keep the one it is on. */}
+                  {categories
+                    .filter((c) => c.is_active)
+                    .map((c) => (
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
+                      </SelectItem>
+                    ))}
                 </SelectContent>
               </Select>
             </div>

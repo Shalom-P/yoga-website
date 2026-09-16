@@ -76,7 +76,7 @@ export async function getCustomerDocumentData(
   supabase: Db,
   uid: string,
 ): Promise<CustomerDocumentData> {
-  const [docsRes, sharesRes, bookingsRes, logRes] = await Promise.all([
+  const [docsRes, sharesRes, teachersRes, logRes] = await Promise.all([
     supabase
       .from("medical_documents")
       .select("id, file_name, mime_type, size_bytes, note, created_at")
@@ -87,10 +87,15 @@ export async function getCustomerDocumentData(
       .from("medical_document_shares")
       .select("document_id, teacher_id, created_at, teacher:teachers(display_name)")
       .is("revoked_at", null),
-    supabase
-      .from("bookings")
-      .select("session:sessions(teacher:teachers(id, display_name))")
-      .eq("customer_id", uid),
+    // Teachers this customer may share with. Deliberately an RPC and not a
+    // bookings -> sessions join: this list must match the share GATE,
+    // customer_booked_teacher (0027), which has no booking-status filter. Read
+    // through RLS, the join could only ever see non-cancelled bookings
+    // (sessions_booked_customer_read), so before 0039 it silently leaned on the
+    // anon-readable sessions policy to cover the cancelled ones. That policy is
+    // gone; list_booked_teachers (0039) returns the teacher columns alone, so
+    // the dropdown matches the gate without handing out session rows.
+    supabase.rpc("list_booked_teachers"),
     supabase
       .from("medical_document_access_log")
       .select("document_id, accessed_by, created_at")
@@ -119,15 +124,12 @@ export async function getCustomerDocumentData(
     shares: sharesByDoc.get(d.id) ?? [],
   }));
 
-  // Distinct teachers this customer has booked — the only people they may share with.
-  const bookedMap = new Map<string, string>();
-  for (const b of bookingsRes.data ?? []) {
-    const t = b.session?.teacher;
-    if (t?.id) bookedMap.set(t.id, t.display_name);
-  }
-  const bookedTeachers: BookedTeacher[] = [...bookedMap.entries()]
-    .map(([id, display_name]) => ({ id, display_name }))
-    .sort((a, b) => a.display_name.localeCompare(b.display_name));
+  // Distinct teachers this customer has booked — the only people they may share
+  // with. The RPC already returns one row per teacher, ordered by name.
+  const bookedTeachers: BookedTeacher[] = (teachersRes.data ?? []).map((t) => ({
+    id: t.teacher_id,
+    display_name: t.display_name,
+  }));
 
   // Resolve accessor labels: self → "You"; otherwise map the auth id to a teacher
   // display name (teachers is public-read), else a generic label.

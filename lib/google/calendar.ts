@@ -267,6 +267,156 @@ export async function findMeetEventBySession(
   return { meetLink, eventId: event.id };
 }
 
+/**
+ * Add attendees to an EXISTING Meet event without moving it.
+ *
+ * Needed because a student an admin drops into a class whose meet_status is
+ * already 'created' would otherwise never appear on the teacher's calendar and
+ * would never get the invite: there is no patch helper otherwise, only create /
+ * find / delete, and re-creating the event would change the join link for
+ * everybody already holding it.
+ *
+ * Merges rather than replaces. It reads the event's current attendee list first,
+ * so an existing attendee is never dropped, and PATCHes with sendUpdates=all so
+ * the newcomer is actually invited. Returns false on any failure (never throws);
+ * the caller reports the `attendee_not_invited` warning and the class still
+ * happens, because a missing calendar invite is not a reason to fail an enrol.
+ */
+export async function patchMeetEventAttendees(
+  eventId: string,
+  calendarId: string | null | undefined,
+  attendeeEmails: string[],
+): Promise<boolean> {
+  if (attendeeEmails.length === 0) return true;
+  try {
+    const token = await getAccessToken();
+    const id = calendarId || process.env.GOOGLE_SYSTEM_CALENDAR_ID || "primary";
+    const base = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(id)}/events/${eventId}`;
+
+    const readRes = await fetch(base, { headers: { Authorization: `Bearer ${token}` } });
+    if (!readRes.ok) {
+      console.warn(`[calendar] patchMeetEventAttendees read failed: ${readRes.status} (event ${eventId})`);
+      return false;
+    }
+    const event = (await readRes.json()) as { attendees?: { email?: string }[] };
+
+    // Case-insensitive union: Google echoes the address as stored, which may
+    // differ in case from what the profile row holds.
+    const seen = new Set(
+      (event.attendees ?? [])
+        .map((a) => a.email?.toLowerCase())
+        .filter((e): e is string => Boolean(e)),
+    );
+    const merged = [...(event.attendees ?? [])];
+    for (const email of attendeeEmails) {
+      if (seen.has(email.toLowerCase())) continue;
+      seen.add(email.toLowerCase());
+      merged.push({ email });
+    }
+    if (merged.length === (event.attendees?.length ?? 0)) return true; // nothing new
+
+    const patchRes = await fetch(`${base}?sendUpdates=all`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ attendees: merged }),
+    });
+    if (!patchRes.ok) {
+      console.warn(
+        `[calendar] patchMeetEventAttendees failed: ${patchRes.status} ${await errBody(patchRes)} (event ${eventId})`,
+      );
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn(`[calendar] patchMeetEventAttendees threw (event ${eventId}):`, err);
+    return false;
+  }
+}
+
+/**
+ * Replace an existing Meet event's attendee list with exactly `attendeeEmails`,
+ * without moving the event or changing its join URL.
+ *
+ * The counterpart to patchMeetEventAttendees, which merges by construction and
+ * so can never take somebody OFF an invite. Teardown only happens when a session
+ * loses its LAST booking, so a student removed from (or moved out of) a class
+ * that keeps running would otherwise keep the event on their own calendar, keep
+ * Google's reminders for it, and keep a working join link to a class they have
+ * been refunded for.
+ *
+ * Attendee objects for the addresses that stay are reused as-is, so nobody's
+ * RSVP is reset. An attendee Google flags as the organizer or as a resource (a
+ * room) is always kept: the list handed in is the confirmed student roster, not
+ * the whole invite, and this helper must not evict anyone it does not know
+ * about.
+ *
+ * PATCHes with sendUpdates=all so the departing student actually receives the
+ * cancellation. Returns false on any failure and never throws: the booking
+ * change has already committed, and a calendar that lags is not a reason to
+ * fail it.
+ */
+export async function setMeetEventAttendees(
+  eventId: string,
+  calendarId: string | null | undefined,
+  attendeeEmails: string[],
+): Promise<boolean> {
+  try {
+    const token = await getAccessToken();
+    const id = calendarId || process.env.GOOGLE_SYSTEM_CALENDAR_ID || "primary";
+    const base = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(id)}/events/${eventId}`;
+
+    const readRes = await fetch(base, { headers: { Authorization: `Bearer ${token}` } });
+    if (!readRes.ok) {
+      console.warn(`[calendar] setMeetEventAttendees read failed: ${readRes.status} (event ${eventId})`);
+      return false;
+    }
+    const event = (await readRes.json()) as {
+      attendees?: { email?: string; organizer?: boolean; resource?: boolean }[];
+    };
+
+    // Case-insensitive throughout: Google echoes the address as stored, which
+    // may differ in case from what the profile row holds.
+    const wanted = new Set(attendeeEmails.map((email) => email.toLowerCase()));
+    const current = event.attendees ?? [];
+    const kept = current.filter(
+      (a) =>
+        a.organizer === true ||
+        a.resource === true ||
+        (a.email ? wanted.has(a.email.toLowerCase()) : false),
+    );
+
+    const present = new Set(
+      kept.map((a) => a.email?.toLowerCase()).filter((e): e is string => Boolean(e)),
+    );
+    const next = [...kept];
+    for (const email of attendeeEmails) {
+      if (present.has(email.toLowerCase())) continue;
+      present.add(email.toLowerCase());
+      next.push({ email });
+    }
+
+    // Nobody dropped and nobody added: skip the PATCH rather than mail every
+    // attendee an update that changes nothing.
+    if (kept.length === current.length && next.length === current.length) return true;
+
+    const patchRes = await fetch(`${base}?sendUpdates=all`, {
+      method: "PATCH",
+      headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ attendees: next }),
+    });
+    if (!patchRes.ok) {
+      console.warn(
+        `[calendar] setMeetEventAttendees failed: ${patchRes.status} ${await errBody(patchRes)} (event ${eventId})`,
+      );
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn(`[calendar] setMeetEventAttendees threw (event ${eventId}):`, err);
+    return false;
+  }
+}
+
 export async function deleteMeetEvent(eventId: string, calendarId?: string) {
   const token = await getAccessToken();
   const id = calendarId ?? process.env.GOOGLE_SYSTEM_CALENDAR_ID ?? "primary";

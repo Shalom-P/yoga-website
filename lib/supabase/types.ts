@@ -137,6 +137,14 @@ export type Booking = {
   cancelled_at: string | null;
   reminded_at_24h: string | null;
   reminded_at_1h: string | null;
+  // 0039: admin-override provenance. `comped` means an admin added this student
+  // without spending a credit (so cancelling must never refund one);
+  // `credit_refunded` records that a refund ledger row actually landed, which is
+  // what lets the roster show a deliberate no-refund cancel as deliberate.
+  comped: boolean;
+  credit_refunded: boolean;
+  moved_from_session_id: string | null;
+  enrolled_by: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -195,7 +203,9 @@ export type DiscountRedemptionStatus = "reserved" | "committed" | "released" | "
 export type DiscountRedemption = {
   id: string;
   discount_code_id: string;
-  customer_id: string;
+  // Nullable since 0035, same reason as payments.customer_id: the redemption
+  // survives the account so its email keeps holding the per_email_max slot.
+  customer_id: string | null;
   email: string;
   razorpay_order_id: string | null;
   payment_id: string | null;
@@ -223,10 +233,23 @@ export type Subscription = {
   created_at: string;
   updated_at: string;
 }
-export type PaymentMethod = "razorpay" | "bank_transfer" | "paypal";
+// 0039 adds 'manual': an offline receipt (cash, a UPI transfer reconciled
+// elsewhere) that carries no Razorpay id at all. A hand-entered RAZORPAY payment
+// stays method='razorpay' and is distinguished by entry_source instead, so the
+// 0030 bank-transfer indexes keep their meaning.
+export type PaymentMethod = "razorpay" | "bank_transfer" | "paypal" | "manual";
+/** How the row got here, as opposed to how the money moved (that is `method`). */
+export type PaymentEntrySource =
+  | "razorpay_auto"
+  | "bank_transfer"
+  | "admin_manual"
+  | "admin_manual_reconciled"
+  | "legacy";
 export type Payment = {
   id: string;
-  customer_id: string;
+  // Nullable since 0035: a self-deleted account detaches its financial history
+  // (VAT/GST retention) instead of destroying it.
+  customer_id: string | null;
   subscription_id: string | null;
   paypal_capture_id: string | null;
   razorpay_order_id: string | null;
@@ -243,6 +266,12 @@ export type Payment = {
   // 0032: the promo code applied to this purchase (if any) + how much it took off.
   discount_code_id: string | null;
   discount_amount_cents: number | null;
+  // 0039: provenance for a hand-entered row. recorded_by is whoever typed it in,
+  // which is deliberately distinct from verified_by (whoever released credits).
+  entry_source: PaymentEntrySource;
+  recorded_by: string | null;
+  admin_note: string | null;
+  reconciled_at: string | null;
   paid_at: string | null;
   created_at: string;
 }
@@ -312,7 +341,24 @@ export type CreditLedger = {
   reason: CreditReason;
   payment_id: string | null;
   booking_id: string | null;
+  // 0019: the Razorpay refund id a clawback was deduped on.
+  external_ref: string | null;
   created_at: string;
+}
+/**
+ * A Google Calendar event that outlived the session row pointing at it, parked
+ * by admin_update_session inside its transaction so a reschedule cannot strand
+ * a live join link on a teacher's calendar. Swept by cron/meet-retry. 0039.
+ */
+export type MeetOrphanEvent = {
+  id: string;
+  event_id: string;
+  calendar_id: string | null;
+  session_id: string | null;
+  reason: string | null;
+  created_at: string;
+  deleted_at: string | null;
+  attempts: number;
 }
 export type RazorpayWebhookEvent = {
   event_id: string;
@@ -450,6 +496,9 @@ export type Database = {
         { foreignKeyName: "medical_document_access_log_document_id_fkey"; columns: ["document_id"]; isOneToOne: false; referencedRelation: "medical_documents"; referencedColumns: ["id"] },
         { foreignKeyName: "medical_document_access_log_accessed_by_fkey"; columns: ["accessed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
       ]>;
+      meet_orphan_events: Table<MeetOrphanEvent, Partial<MeetOrphanEvent> & { event_id: string }, Partial<MeetOrphanEvent>, [
+        { foreignKeyName: "meet_orphan_events_session_id_fkey"; columns: ["session_id"]; isOneToOne: false; referencedRelation: "sessions"; referencedColumns: ["id"] },
+      ]>;
     };
     Views: { [_ in never]: never };
     Functions: {
@@ -472,6 +521,14 @@ export type Database = {
           // Never summed across currencies.
           revenue_mtd_by_currency: Record<string, number>;
         };
+      };
+      // Teachers the calling customer has ever booked, any booking status.
+      // Scoped by auth.uid() inside the function, so it takes no arguments and
+      // is granted to `authenticated` (0039). Mirrors the share gate
+      // customer_booked_teacher so the two cannot drift.
+      list_booked_teachers: {
+        Args: Record<string, never>;
+        Returns: { teacher_id: string; display_name: string }[];
       };
       promote_to_admin: { Args: { target_user_id: string }; Returns: null };
       demote_from_admin: { Args: { target_user_id: string }; Returns: null };
@@ -545,6 +602,98 @@ export type Database = {
       release_discount_redemption: { Args: { p_payment_id: string }; Returns: null };
       release_discount_reservation: { Args: { p_redemption_id: string }; Returns: null };
       release_stale_discount_reservations: { Args: { p_older_than?: string; p_limit?: number }; Returns: number };
+      // --- 0039 admin overrides -------------------------------------------
+      // All service-role only (EXECUTE revoked from authenticated), and all take
+      // the acting admin EXPLICITLY: auth.uid() is NULL on the service client,
+      // so the function cannot discover the actor by itself. Each writes its own
+      // audit_log row, so callers must not write a second one.
+      admin_enrol_booking: {
+        Args: {
+          p_session: string;
+          p_customer: string;
+          p_is_free_trial?: boolean;
+          p_charge_credit?: boolean;
+          p_acting_admin?: string | null;
+          p_reason?: string | null;
+        };
+        Returns: { booking_id: string; charged: boolean; comped: boolean }[];
+      };
+      admin_cancel_booking: {
+        Args: {
+          p_booking: string;
+          p_refund: boolean;
+          p_acting_admin?: string | null;
+          p_reason?: string | null;
+        };
+        Returns: {
+          customer_id: string;
+          session_id: string;
+          refunded: boolean;
+          session_now_empty: boolean;
+        }[];
+      };
+      admin_set_booking_attendance: {
+        Args: {
+          p_booking: string;
+          p_status: BookingStatus;
+          p_expected_status?: BookingStatus | null;
+          p_acting_admin?: string | null;
+          p_reason?: string | null;
+        };
+        Returns: null;
+      };
+      admin_move_booking: {
+        Args: {
+          p_booking: string;
+          p_target_session: string;
+          p_acting_admin?: string | null;
+          p_reason?: string | null;
+        };
+        Returns: {
+          booking_id: string;
+          customer_id: string;
+          source_session: string;
+          source_now_empty: boolean;
+        }[];
+      };
+      admin_update_session: {
+        Args: {
+          p_session: string;
+          p_teacher?: string | null;
+          p_class_category_id?: string | null;
+          p_clear_category?: boolean;
+          p_start?: string | null;
+          p_end?: string | null;
+          p_capacity?: number | null;
+          p_notes?: string | null;
+          p_set_notes?: boolean;
+          p_revoke_phi_shares?: boolean;
+          p_acting_admin?: string | null;
+          p_reason?: string | null;
+        };
+        Returns: {
+          meet_action: string;
+          phi_shares_revoked: number;
+          phi_shares_affected: number;
+          reminders_reset: number;
+          enrolled: number;
+        }[];
+      };
+      admin_cancel_session: {
+        Args: {
+          p_session: string;
+          p_refund?: boolean;
+          p_acting_admin?: string | null;
+          p_reason?: string | null;
+        };
+        Returns: {
+          cancelled_bookings: number;
+          refunded_bookings: number;
+          meet_event_id: string | null;
+          meet_calendar_id: string | null;
+          starts_in_future: boolean;
+        }[];
+      };
       share_medical_document: {
         Args: { p_document_id: string; p_teacher_id: string };
         Returns: string;
