@@ -12,6 +12,7 @@ import {
   Link2,
   Pencil,
   Users,
+  Archive,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -69,8 +70,15 @@ export type AdminSessionRow = {
   live_count: number;
 };
 
+/**
+ * Which slice of the schedule the table is showing. "archived" is every session
+ * whose end time has already passed - there is no archived flag on the row, the
+ * clock alone decides, so a class drops out of "upcoming" the moment it ends.
+ */
+export type SessionView = "upcoming" | "archived" | "all";
+
 export type SessionFilters = {
-  past: boolean;
+  view: SessionView;
   /** Teacher id, or "" for every teacher. */
   teacher: string;
   /** Session status, or "" for every status. */
@@ -105,6 +113,7 @@ const TH =
 
 export function SessionsAdmin({
   sessions,
+  nowMs,
   teachers,
   categories,
   filters,
@@ -113,6 +122,12 @@ export function SessionsAdmin({
   moveTargets,
 }: {
   sessions: AdminSessionRow[];
+  /**
+   * Request time, resolved on the server. Passed in rather than read from a
+   * fresh Date() during render so the archived/live split is identical either
+   * side of hydration.
+   */
+  nowMs: number;
   teachers: Teacher[];
   categories: Category[];
   filters: SessionFilters;
@@ -140,7 +155,7 @@ export function SessionsAdmin({
   function hrefWith(next: Partial<SessionFilters & { session: string }>): string {
     const merged = { ...filters, session: "", ...next };
     const params = new URLSearchParams();
-    if (merged.past) params.set("past", "1");
+    if (merged.view !== "upcoming") params.set("view", merged.view);
     if (merged.teacher) params.set("teacher", merged.teacher);
     if (merged.status) params.set("status", merged.status);
     if (merged.session) params.set("session", merged.session);
@@ -280,22 +295,31 @@ export function SessionsAdmin({
         sub="Schedule classes, manage who is in them, and mark attendance."
         className="mb-7"
         actions={
-          <>
-            <Button
-              variant="outline"
-              onClick={() => router.push(hrefWith({ past: !filters.past }))}
-            >
-              {filters.past ? "Show upcoming" : "Show past sessions"}
-            </Button>
-            <Button onClick={() => setOpen(true)}>
-              <Plus className="size-4 mr-1" />
-              Schedule session
-            </Button>
-          </>
+          <Button onClick={() => setOpen(true)}>
+            <Plus className="size-4 mr-1" />
+            Schedule session
+          </Button>
         }
       />
 
       <div className="mb-5 flex flex-wrap items-center gap-3">
+        <Select
+          value={filters.view}
+          onValueChange={(v) => v && router.push(hrefWith({ view: v as SessionView }))}
+        >
+          <SelectTrigger className="w-52">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="upcoming">Upcoming</SelectItem>
+            <SelectItem value="archived">
+              <Archive className="size-3.5" />
+              Archive (past sessions)
+            </SelectItem>
+            <SelectItem value="all">All sessions</SelectItem>
+          </SelectContent>
+        </Select>
+
         <Select
           value={filters.teacher || "__all__"}
           onValueChange={(v) => v && router.push(hrefWith({ teacher: v === "__all__" ? "" : v }))}
@@ -334,7 +358,11 @@ export function SessionsAdmin({
         <div className="border border-dashed border-border bg-foreground/3 p-12 text-center text-muted-foreground">
           {filters.teacher || filters.status
             ? "No sessions match the current filters."
-            : "No sessions yet. Click Schedule session to create one."}
+            : filters.view === "archived"
+              ? "Nothing archived yet. Sessions land here once their end time passes."
+              : filters.view === "upcoming"
+                ? "No upcoming sessions. Click Schedule session to create one, or switch to Archive to see past ones."
+                : "No sessions yet. Click Schedule session to create one."}
         </div>
       ) : (
         <div className="myc-glass overflow-x-auto">
@@ -351,130 +379,146 @@ export function SessionsAdmin({
               </tr>
             </thead>
             <tbody>
-              {sessions.map((s) => (
-                <tr
-                  key={s.id}
-                  className="border-t border-border transition-colors hover:bg-foreground/4"
-                >
-                  <td className="px-4 py-3 whitespace-nowrap">{formatCustomerTime(s.start_at)}</td>
-                  <td className="px-4 py-3">{s.teacher?.display_name ?? "-"}</td>
-                  <td className="px-4 py-3 text-muted-foreground">{s.category?.name ?? "1:1"}</td>
-                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
-                    {s.live_count} / {s.capacity}
-                  </td>
-                  <td className="px-4 py-3">
-                    {s.meet_link ? (
-                      <a
-                        href={s.meet_link}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary hover:underline inline-flex items-center gap-1"
-                      >
-                        <Video className="size-3.5" />
-                        Join
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">
-                        {s.meet_status === "failed" ? "failed (retry)" : "pending"}
-                      </span>
-                    )}
-                  </td>
-                  <td className="px-4 py-3">
-                    <Badge
-                      variant={
-                        s.status === "scheduled"
-                          ? "secondary"
-                          : s.status === "live"
-                            ? "default"
-                            : "outline"
-                      }
+              {sessions.map((s) => {
+                const archived = Date.parse(s.end_at) < nowMs;
+                return (
+                  <tr
+                    key={s.id}
+                    className="border-t border-border transition-colors hover:bg-foreground/4"
+                  >
+                    <td
+                      className={`px-4 py-3 whitespace-nowrap${
+                        archived ? " text-muted-foreground" : ""
+                      }`}
                     >
-                      {s.status}
-                      {s.is_free_trial && " · trial"}
-                    </Badge>
-                  </td>
-                  <td className="px-4 py-3">
-                    <div className="flex flex-wrap gap-1">
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => router.push(hrefWith({ session: s.id }), { scroll: false })}
-                        title="Open the roster"
+                      {formatCustomerTime(s.start_at)}
+                    </td>
+                    <td className="px-4 py-3">{s.teacher?.display_name ?? "-"}</td>
+                    <td className="px-4 py-3 text-muted-foreground">{s.category?.name ?? "1:1"}</td>
+                    <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                      {s.live_count} / {s.capacity}
+                    </td>
+                    <td className="px-4 py-3">
+                      {s.meet_link ? (
+                        <a
+                          href={s.meet_link}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline inline-flex items-center gap-1"
+                        >
+                          <Video className="size-3.5" />
+                          Join
+                        </a>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          {s.meet_status === "failed" ? "failed (retry)" : "pending"}
+                        </span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <Badge
+                        variant={
+                          s.status === "scheduled"
+                            ? "secondary"
+                            : s.status === "live"
+                              ? "default"
+                              : "outline"
+                        }
                       >
-                        <Users className="size-3.5 mr-1" />
-                        Roster ({s.live_count}/{s.capacity})
-                      </Button>
-                      {s.status !== "cancelled" && (
+                        {s.status}
+                        {s.is_free_trial && " · trial"}
+                      </Badge>
+                      {/* Redundant in the Archive view, where every row is one, so
+                          it only shows where the two are mixed together. */}
+                      {archived && filters.view === "all" && (
+                        <Badge variant="outline" className="ml-1.5">
+                          archived
+                        </Badge>
+                      )}
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex flex-wrap gap-1">
                         <Button
                           size="sm"
                           variant="ghost"
-                          onClick={() =>
-                            setEditSession({
-                              id: s.id,
-                              teacher_id: s.teacher_id,
-                              class_category_id: s.class_category_id,
-                              start_at: s.start_at,
-                              end_at: s.end_at,
-                              capacity: s.capacity,
-                              notes: s.notes,
-                              teacher_name: s.teacher?.display_name ?? null,
-                            })
-                          }
+                          onClick={() => router.push(hrefWith({ session: s.id }), { scroll: false })}
+                          title="Open the roster"
                         >
-                          <Pencil className="size-3.5 mr-1" />
-                          Edit
+                          <Users className="size-3.5 mr-1" />
+                          Roster ({s.live_count}/{s.capacity})
                         </Button>
-                      )}
-                      {s.status === "scheduled" && (
-                        <>
+                        {s.status !== "cancelled" && (
                           <Button
                             size="sm"
                             variant="ghost"
-                            onClick={() => transitionStatus(s.id, "live")}
+                            onClick={() =>
+                              setEditSession({
+                                id: s.id,
+                                teacher_id: s.teacher_id,
+                                class_category_id: s.class_category_id,
+                                start_at: s.start_at,
+                                end_at: s.end_at,
+                                capacity: s.capacity,
+                                notes: s.notes,
+                                teacher_name: s.teacher?.display_name ?? null,
+                              })
+                            }
+                          >
+                            <Pencil className="size-3.5 mr-1" />
+                            Edit
+                          </Button>
+                        )}
+                        {s.status === "scheduled" && (
+                          <>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => transitionStatus(s.id, "live")}
+                              disabled={transitioning === s.id}
+                              title="Mark as live"
+                            >
+                              <PlayCircle className="size-3.5 mr-1" />
+                              {transitioning === s.id ? "…" : "Go live"}
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-destructive hover:text-destructive"
+                              onClick={() => openCancelDialog(s)}
+                            >
+                              <Ban className="size-3.5 mr-1" />
+                              Cancel
+                            </Button>
+                          </>
+                        )}
+                        {s.status === "live" && (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => transitionStatus(s.id, "completed")}
                             disabled={transitioning === s.id}
-                            title="Mark as live"
+                            title="Mark as completed"
                           >
-                            <PlayCircle className="size-3.5 mr-1" />
-                            {transitioning === s.id ? "…" : "Go live"}
+                            <CheckCircle2 className="size-3.5 mr-1" />
+                            {transitioning === s.id ? "…" : "Complete"}
                           </Button>
+                        )}
+                        {(s.status === "completed" || archived) && (
                           <Button
                             size="sm"
                             variant="ghost"
-                            className="text-destructive hover:text-destructive"
-                            onClick={() => openCancelDialog(s)}
+                            onClick={() => openRecordingDialog(s)}
+                            title={s.recording_url ? "Edit recording URL" : "Add recording URL"}
                           >
-                            <Ban className="size-3.5 mr-1" />
-                            Cancel
+                            <Link2 className="size-3.5 mr-1" />
+                            {s.recording_url ? "Recording" : "Add recording"}
                           </Button>
-                        </>
-                      )}
-                      {s.status === "live" && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => transitionStatus(s.id, "completed")}
-                          disabled={transitioning === s.id}
-                          title="Mark as completed"
-                        >
-                          <CheckCircle2 className="size-3.5 mr-1" />
-                          {transitioning === s.id ? "…" : "Complete"}
-                        </Button>
-                      )}
-                      {(s.status === "completed" || new Date(s.end_at) < new Date()) && (
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => openRecordingDialog(s)}
-                          title={s.recording_url ? "Edit recording URL" : "Add recording URL"}
-                        >
-                          <Link2 className="size-3.5 mr-1" />
-                          {s.recording_url ? "Recording" : "Add recording"}
-                        </Button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>

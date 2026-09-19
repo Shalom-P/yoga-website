@@ -3,12 +3,15 @@ import {
   SessionsAdmin,
   type AdminSessionRow,
   type SessionFilters,
+  type SessionView,
 } from "@/components/admin/SessionsAdmin";
 import type { RosterEntry, RosterSession } from "@/components/admin/SessionRosterDrawer";
 import type { MoveTarget } from "@/components/admin/MoveBookingDialog";
 import type { SessionStatus } from "@/lib/supabase/types";
 
 const SESSION_STATUSES: SessionStatus[] = ["scheduled", "live", "completed", "cancelled"];
+
+const SESSION_VIEWS: SessionView[] = ["upcoming", "archived", "all"];
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -19,6 +22,9 @@ const SESSION_SELECT = `id, start_at, end_at, capacity, status, is_free_trial, m
    category:class_categories(id, name)`;
 
 type SearchParams = {
+  /** "upcoming" (default), "archived", or "all". */
+  view?: string;
+  /** Legacy toggle: ?past=1 was the old archived view. Kept so old links land. */
   past?: string;
   /** Session id whose roster drawer should be open. */
   session?: string;
@@ -34,26 +40,32 @@ export default async function AdminSessionsPage({
   const { supabase } = await requireAdmin();
   const sp = await searchParams;
 
-  const showPast = sp.past === "1";
+  const view: SessionView = SESSION_VIEWS.includes(sp.view as SessionView)
+    ? (sp.view as SessionView)
+    : sp.past === "1"
+      ? "archived"
+      : "upcoming";
   const teacherFilter = sp.teacher && UUID_RE.test(sp.teacher) ? sp.teacher : "";
   const statusFilter: SessionStatus | "" = SESSION_STATUSES.includes(sp.status as SessionStatus)
     ? (sp.status as SessionStatus)
     : "";
   const openSessionId = sp.session && UUID_RE.test(sp.session) ? sp.session : "";
 
-  // In "upcoming" mode show from 7 days ago (to catch recently-started sessions);
-  // in "past" mode show everything older than that window, up to 90 days back.
-  const cutoff = new Date(new Date().getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const nowIso = new Date().toISOString();
 
+  // A session archives itself the moment its END time passes, the same boundary
+  // splitByTime() uses in lib/teacher/sessions.ts: a class that has started but
+  // not yet finished is still today's work, not history. There is no archived
+  // column - the clock is the only thing that decides, so nothing can drift out
+  // of sync with the schedule.
   let sessionQuery = supabase
     .from("sessions")
     .select(SESSION_SELECT)
-    .order("start_at", { ascending: !showPast })
+    .order("start_at", { ascending: view === "upcoming" })
     .limit(200);
 
-  if (showPast) sessionQuery = sessionQuery.lt("start_at", cutoff);
-  else sessionQuery = sessionQuery.gte("start_at", cutoff);
+  if (view === "upcoming") sessionQuery = sessionQuery.gte("end_at", nowIso);
+  else if (view === "archived") sessionQuery = sessionQuery.lt("end_at", nowIso);
   if (teacherFilter) sessionQuery = sessionQuery.eq("teacher_id", teacherFilter);
   if (statusFilter) sessionQuery = sessionQuery.eq("status", statusFilter);
 
@@ -154,7 +166,7 @@ export default async function AdminSessionsPage({
   }));
 
   const filters: SessionFilters = {
-    past: showPast,
+    view,
     teacher: teacherFilter,
     status: statusFilter,
   };
@@ -163,6 +175,7 @@ export default async function AdminSessionsPage({
     <div>
       <SessionsAdmin
         sessions={rows}
+        nowMs={Date.parse(nowIso)}
         teachers={teachers ?? []}
         categories={categories ?? []}
         filters={filters}
