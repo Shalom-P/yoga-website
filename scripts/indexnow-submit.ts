@@ -5,7 +5,15 @@
  * whole site. Day-to-day, admin saves ping IndexNow automatically through
  * /api/admin/revalidate.
  *
- *   npx tsx scripts/indexnow-submit.ts
+ * `lib/seo/indexnow.ts` imports `server-only`, which is a Next.js bundler alias
+ * and NOT an installed package, so plain tsx dies with MODULE_NOT_FOUND. Stub it
+ * for the run:
+ *
+ *   mkdir -p node_modules/server-only
+ *   printf '{"name":"server-only","version":"0.0.0-local-stub","main":"index.js"}\n' > node_modules/server-only/package.json
+ *   printf 'module.exports = {};\n' > node_modules/server-only/index.js
+ *   npx tsx --env-file=.env.local scripts/indexnow-submit.ts
+ *   rm -rf node_modules/server-only
  */
 import { submitToIndexNow } from "../lib/seo/indexnow";
 
