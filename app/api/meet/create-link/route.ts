@@ -3,6 +3,7 @@ import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
+import { teacherInviteEmail, sessionAttendees } from "@/lib/google/teacherInvite";
 
 // provisionSessionMeet -> lib/google/calendar.ts uses @vercel/oidc (Node only).
 export const runtime = "nodejs";
@@ -35,7 +36,7 @@ export async function POST(req: Request) {
 
   const { data: session } = await supabase
     .from("sessions")
-    .select("id, start_at, end_at, meet_link, teacher_id, teachers:teachers(display_name, google_calendar_id)")
+    .select("id, start_at, end_at, meet_link, teacher_id, teachers:teachers(display_name, google_calendar_id, contact_email, profile:profiles(email))")
     .eq("id", parsed.data.sessionId)
     .single();
   if (!session) return NextResponse.json({ error: "session not found" }, { status: 404 });
@@ -43,7 +44,12 @@ export async function POST(req: Request) {
   if (session.meet_link) return NextResponse.json({ meetLink: session.meet_link });
 
   const teacher = session.teachers as
-    | { display_name?: string; google_calendar_id?: string | null }
+    | {
+        display_name?: string;
+        google_calendar_id?: string | null;
+        contact_email?: string | null;
+        profile?: { email?: string | null } | { email?: string | null }[] | null;
+      }
     | null;
   // Persist with service role (RLS blocks customer UPDATE on sessions).
   const svc = createSupabaseServiceClient();
@@ -52,7 +58,14 @@ export async function POST(req: Request) {
     { id: session.id, start_at: session.start_at, end_at: session.end_at },
     {
       summary: `Yoga with ${teacher?.display_name ?? "Teacher"}`,
-      attendeeEmails: user.email ? [user.email] : [],
+      // Teacher included, so the session reaches their own calendar too.
+      attendeeEmails: sessionAttendees(
+        [user.email],
+        teacherInviteEmail({
+          contact_email: teacher?.contact_email,
+          profile: Array.isArray(teacher?.profile) ? teacher?.profile[0] : teacher?.profile,
+        }),
+      ),
       calendarId: teacher?.google_calendar_id,
       recover: true, // manual recovery: adopt an orphaned event instead of duplicating
     },

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { teacherInviteEmail, sessionAttendees } from "@/lib/google/teacherInvite";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
@@ -57,6 +58,8 @@ async function finishBooking(args: {
   teacherId: string;
   teacherName: string;
   calendarId: string | null;
+  /** Teacher's invite address, or null when unresolved (then only students are invited). */
+  teacherEmail?: string | null;
   userId: string;
   userEmail: string | null;
   customerTz: string;
@@ -67,7 +70,7 @@ async function finishBooking(args: {
     { id: args.sessionId, start_at: args.start.toISOString(), end_at: args.end.toISOString() },
     {
       summary: `Yoga with ${args.teacherName}`,
-      attendeeEmails: args.userEmail ? [args.userEmail] : [],
+      attendeeEmails: sessionAttendees([args.userEmail], args.teacherEmail ?? null),
       calendarId: args.calendarId,
     },
   );
@@ -148,7 +151,7 @@ export async function POST(req: Request) {
     const svcAfter = createSupabaseServiceClient();
     const { data: t } = await svcAfter
       .from("teachers")
-      .select("google_calendar_id")
+      .select("google_calendar_id, contact_email, profile:profiles(email)")
       .eq("id", parsed.data.teacherId)
       .single();
 
@@ -160,6 +163,11 @@ export async function POST(req: Request) {
       teacherId: parsed.data.teacherId,
       teacherName: body.teacherName ?? "your teacher",
       calendarId: t?.google_calendar_id ?? null,
+      // Invite the teacher too, so the session lands in their own calendar.
+      teacherEmail: teacherInviteEmail({
+        contact_email: t?.contact_email,
+        profile: Array.isArray(t?.profile) ? t?.profile[0] : t?.profile,
+      }),
       userId: user.id,
       userEmail: user.email ?? null,
       customerTz,
@@ -184,7 +192,7 @@ export async function POST(req: Request) {
 
   const { data: teacher } = await svc
     .from("teachers")
-    .select("id, display_name, timezone, is_active, google_calendar_id")
+    .select("id, display_name, timezone, is_active, google_calendar_id, contact_email, profile:profiles(email)")
     .eq("id", parsed.data.teacherId)
     .single();
   if (!teacher || !teacher.is_active) {
@@ -261,7 +269,15 @@ export async function POST(req: Request) {
     { id: session.id, start_at: start.toISOString(), end_at: end.toISOString() },
     {
       summary: `Yoga with ${teacher.display_name}`,
-      attendeeEmails: user.email ? [user.email] : [],
+      // Teacher included: the event used to invite the student only, so it
+      // never reached the teacher's own calendar.
+      attendeeEmails: sessionAttendees(
+        [user.email],
+        teacherInviteEmail({
+          contact_email: teacher.contact_email,
+          profile: Array.isArray(teacher.profile) ? teacher.profile[0] : teacher.profile,
+        }),
+      ),
       calendarId: teacher.google_calendar_id,
     },
   );

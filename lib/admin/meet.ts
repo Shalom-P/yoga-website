@@ -9,6 +9,7 @@ import "server-only";
 
 import { deleteMeetEvent } from "@/lib/google/calendar";
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
+import { teacherInviteEmail, sessionAttendees } from "@/lib/google/teacherInvite";
 import type { createSupabaseServiceClient } from "@/lib/supabase/service";
 
 type ServiceClient = ReturnType<typeof createSupabaseServiceClient>;
@@ -152,31 +153,64 @@ export async function clearReleasedMeet(
 }
 
 /**
- * The confirmed attendees' emails for a session, for a Calendar invite. Uses the
- * service client because it reads profiles, which is self/admin-only under RLS.
- * Mirrors the collection in cron/meet-retry.
+ * Everyone who should receive the Calendar invite for a session: the confirmed
+ * students AND the teacher. Uses the service client because it reads profiles,
+ * which is self/admin-only under RLS. Mirrors the collection in cron/meet-retry.
+ *
+ * The teacher was missing from this list entirely, on every path, so no teacher
+ * had ever received an invite and sessions never appeared in their own Google
+ * Calendar; they were identifiable only as text in the event summary. Inviting
+ * them works even on a personal address, unlike hosting the event on one.
+ *
+ * Note this no longer short-circuits on "no confirmed bookings": an empty class
+ * is still the teacher's appointment and they should still hold the slot.
  */
 export async function attendeeEmailsForSession(
   svc: ServiceClient,
   sessionId: string,
 ): Promise<string[]> {
-  const { data: bookings } = await svc
-    .from("bookings")
-    .select("customer_id")
-    .eq("session_id", sessionId)
-    .eq("status", "confirmed");
-  if (!bookings || bookings.length === 0) return [];
+  const [{ data: bookings }, { data: session }] = await Promise.all([
+    svc
+      .from("bookings")
+      .select("customer_id")
+      .eq("session_id", sessionId)
+      .eq("status", "confirmed"),
+    svc.from("sessions").select("teacher_id").eq("id", sessionId).maybeSingle(),
+  ]);
 
-  const { data: profiles } = await svc
-    .from("profiles")
-    .select("email")
-    .in(
-      "id",
-      bookings.map((b) => b.customer_id),
-    );
-  if (!profiles) return [];
+  let studentEmails: string[] = [];
+  if (bookings && bookings.length > 0) {
+    const { data: profiles } = await svc
+      .from("profiles")
+      .select("email")
+      .in(
+        "id",
+        bookings.map((b) => b.customer_id),
+      );
+    studentEmails = (profiles ?? [])
+      .map((p) => p.email)
+      .filter((email): email is string => Boolean(email));
+  }
 
-  return profiles
-    .map((p) => p.email)
-    .filter((email): email is string => Boolean(email));
+  return sessionAttendees(studentEmails, await teacherEmailForSession(svc, session?.teacher_id));
+}
+
+/**
+ * Invite address for a session's teacher, or null. Never throws: a missing
+ * invite must not fail the booking or the event insert that triggered it.
+ */
+export async function teacherEmailForSession(
+  svc: ServiceClient,
+  teacherId: string | null | undefined,
+): Promise<string | null> {
+  if (!teacherId) return null;
+  const { data } = await svc
+    .from("teachers")
+    .select("contact_email, profile:profiles(email)")
+    .eq("id", teacherId)
+    .maybeSingle();
+  if (!data) return null;
+  // PostgREST types an embedded to-one as an array in some shapes; normalise.
+  const profile = Array.isArray(data.profile) ? data.profile[0] : data.profile;
+  return teacherInviteEmail({ contact_email: data.contact_email, profile });
 }

@@ -90,6 +90,8 @@ export const teachers = pgTable(
     rating_count: integer("rating_count").default(0),
     timezone: text("timezone").notNull().default("Asia/Kolkata"),
     google_calendar_id: text("google_calendar_id"),
+    // Invite address only, not an auth identity (0040).
+    contact_email: text("contact_email"),
     is_active: boolean("is_active").notNull().default(true),
     sort_order: integer("sort_order").default(0),
     created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
