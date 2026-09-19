@@ -11,7 +11,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/components/shared/AnalyticsProvider";
 import { NativeBridge } from "@/components/shared/NativeBridge";
 import type { Organization, WithContext } from "schema-dts";
-import { INSTAGRAM_URL } from "@/lib/seo/structuredData";
+import { INSTAGRAM_URL, ORG_ID } from "@/lib/seo/structuredData";
 import "./globals.css";
 
 const inter = Inter({
@@ -85,6 +85,9 @@ export const metadata: Metadata = {
 const orgJsonLd: WithContext<Organization> = {
   "@context": "https://schema.org",
   "@type": "Organization",
+  // Stable id so the Course and Person nodes on other pages resolve to THIS
+  // organisation instead of each declaring an anonymous one. See ORG_ID.
+  "@id": ORG_ID,
   name: "My Yoga Classes",
   url: siteUrl,
   logo: `${siteUrl}/icon.svg`,

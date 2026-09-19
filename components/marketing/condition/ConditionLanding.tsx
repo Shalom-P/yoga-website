@@ -228,15 +228,19 @@ export function ConditionLanding({ data: d }: { data: ConditionPage }) {
         </div>
       </section>
 
-      {/* 8 · TESTIMONIAL */}
-      <section className="myc-sec-cream px-7 py-20">
-        <Reveal className="mx-auto max-w-3xl text-center">
-          <blockquote className="font-[family-name:var(--font-heading)] text-[clamp(1.5rem,3.4vw,2rem)] italic leading-snug text-balance">
-            &ldquo;{d.testimonialQuote}&rdquo;
-          </blockquote>
-          <TestimonialWho html={d.testimonialWho} />
-        </Reveal>
-      </section>
+      {/* 8 · TESTIMONIAL — only renders for a real, attributable review. These
+          are absent today; the section is skipped rather than showing a
+          placeholder quote as if a customer had said it. */}
+      {d.testimonialQuote && d.testimonialWho && (
+        <section className="myc-sec-cream px-7 py-20">
+          <Reveal className="mx-auto max-w-3xl text-center">
+            <blockquote className="font-[family-name:var(--font-heading)] text-[clamp(1.5rem,3.4vw,2rem)] italic leading-snug text-balance">
+              &ldquo;{d.testimonialQuote}&rdquo;
+            </blockquote>
+            <TestimonialWho html={d.testimonialWho} />
+          </Reveal>
+        </section>
+      )}
 
       {/* 9 · FAQ */}
       <section className="px-7 py-24">

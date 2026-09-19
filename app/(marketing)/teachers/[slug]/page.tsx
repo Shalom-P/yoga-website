@@ -12,6 +12,19 @@ const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.f
 
 export const revalidate = 300;
 
+// display_name carries an honorific for every teacher on the roster ("Dr
+// Sangeeta"), so a bare split(" ")[0] rendered "Meet Dr , a quick hello." and
+// "Book a 1:1 with Dr" on all three profiles. Drop a leading honorific before
+// taking the first token, and fall back to the full name if nothing is left.
+const HONORIFICS = new Set(["dr", "dr.", "mr", "mr.", "mrs", "mrs.", "ms", "ms.", "prof", "prof."]);
+
+function firstName(displayName: string): string {
+  const parts = displayName.trim().split(/\s+/);
+  const rest = parts.length > 1 && HONORIFICS.has(parts[0].toLowerCase()) ? parts.slice(1) : parts;
+  return rest[0] ?? displayName;
+}
+
+
 // Without this, `revalidate` above is inert: a dynamic segment with no known
 // params is server-rendered on every request and never enters the ISR cache.
 // The roster is small, so prerender it all. dynamicParams stays on (default),
@@ -53,7 +66,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
             <div className="space-y-2">
               <TeacherIntroVideo src={t.intro_video_url} poster={t.avatar_url} name={t.display_name} />
               <p className="text-center text-xs text-muted-foreground">
-                Meet {t.display_name.split(" ")[0]}, a quick hello.
+                Meet {firstName(t.display_name)}, a quick hello.
               </p>
             </div>
           ) : (
@@ -123,7 +136,7 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
               className="h-12 rounded-full bg-accent px-6 font-semibold text-accent-foreground shadow-[var(--myc-shadow-soft)] hover:bg-accent/90"
             >
               <Link href={`/login?next=${encodeURIComponent(`/dashboard/book/${t.slug}`)}`}>
-                Book a 1:1 with {t.display_name.split(" ")[0]}
+                Book a 1:1 with {firstName(t.display_name)}
                 <ArrowRight className="size-4 ml-1" />
               </Link>
             </Button>

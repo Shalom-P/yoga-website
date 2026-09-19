@@ -49,9 +49,15 @@ export type ConditionPage = {
   whoForText: string;
   propsTitle: string;
   props: string[];
-  testimonialQuote: string;
+  /**
+   * Optional, and absent on every page today. These held placeholder copy that
+   * shipped to production as if it were a real customer quote. Keep them
+   * optional and only populate from a real, attributable review: the section is
+   * gated on both being present (see ConditionLanding section 8).
+   */
+  testimonialQuote?: string;
   /** May contain a leading "<strong>…</strong>" — rendered bold by the component. */
-  testimonialWho: string;
+  testimonialWho?: string;
   faqH2: string;
   faqs: Faq[];
   safetyTitle: string;

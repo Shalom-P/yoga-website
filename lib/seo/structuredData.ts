@@ -14,6 +14,22 @@ import type { Teacher, ClassCategory } from "@/lib/supabase/types";
 
 const ORG_NAME = "My Yoga Classes";
 
+/**
+ * Stable node id for the one Organization this site describes.
+ *
+ * Every page emits an Organization node (app/layout.tsx). Without an @id each
+ * one is an anonymous node, so a crawler sees 23 unrelated organisations that
+ * happen to share a name, and the Course/Person nodes reference none of them.
+ * Anchoring all of them to this id is what makes the site resolve to a single
+ * entity. Must stay byte-identical to the @id in app/layout.tsx.
+ */
+export const ORG_ID = `${
+  process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit"
+}/#organization`;
+
+/** Reference to the Organization above, for use in provider/worksFor slots. */
+const ORG_REF = { "@type": "Organization", "@id": ORG_ID, name: ORG_NAME } as const;
+
 // Official social profiles. Referenced by the Organization JSON-LD `sameAs`
 // (how Google ties the domain to these accounts) and the footer links —
 // keep both in sync through this constant.
@@ -40,7 +56,7 @@ export function personJsonLd(t: Teacher, url: string): WithContext<Person> {
     name: t.display_name,
     url,
     jobTitle: "Yoga Teacher",
-    worksFor: { "@type": "Organization", name: ORG_NAME },
+    worksFor: ORG_REF,
     knowsAbout: t.specialties?.length ? t.specialties : undefined,
     knowsLanguage: t.languages?.length ? t.languages : undefined,
     image: t.avatar_url ?? undefined,
@@ -55,7 +71,10 @@ export function courseJsonLd(cat: ClassCategory, url: string): WithContext<Cours
     name: cat.name.toLowerCase().includes("yoga") ? `1:1 ${cat.name}` : `1:1 Yoga: ${cat.name} focus`,
     description: cat.description ?? undefined,
     url,
-    provider: { "@type": "Organization", name: ORG_NAME, sameAs: url },
+    // `sameAs` used to point at this class page, which asserts "this URL is
+    // another identity for the Organization". It is not: it is a page the
+    // Organization provides. Reference the shared Organization node instead.
+    provider: ORG_REF,
     // Live 1:1 sessions delivered online.
     hasCourseInstance: {
       "@type": "CourseInstance",
