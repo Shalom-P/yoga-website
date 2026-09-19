@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "motion/react";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { track } from "@/lib/analytics/events";
@@ -110,11 +109,10 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
 
       {/* ---------- Content ---------- */}
       <div className="relative z-[2] mx-auto grid w-full max-w-[1200px] gap-10 px-6 pb-24 pt-32 md:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] md:items-end md:pb-[100px] md:pt-[140px]">
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, ease: [0.2, 0.7, 0.2, 1] }}
-        >
+        {/* CSS entrance, not Motion: see .myc-rise in globals.css. Motion's
+            `initial` prop is server-rendered as inline opacity:0, which hid the
+            H1 and the primary CTA until hydration. */}
+        <div className="myc-rise">
           <div className="myc-glass mb-7 inline-flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-semibold uppercase tracking-[0.16em] text-foreground/75">
             <span className="myc-pulse-dot" aria-hidden="true" />
             Live 1:1 · Certified teachers
@@ -175,15 +173,10 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
             )}
             <span>No subscription</span>
           </div>
-        </motion.div>
+        </div>
 
-        {/* ---------- Floating "next available" card ---------- */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.9, delay: 0.15, ease: [0.2, 0.7, 0.2, 1] }}
-          className="flex justify-start md:justify-end"
-        >
+        {/* ---------- Floating availability card ---------- */}
+        <div className="myc-rise-delayed flex justify-start md:justify-end">
           {/* Static by design. This card used to name a teacher ("Aarti") who is
               not on the roster and promise a 7:00 PM slot to every visitor in
               every timezone. Copy now states only what is true for everyone.
@@ -214,7 +207,7 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
               </Link>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

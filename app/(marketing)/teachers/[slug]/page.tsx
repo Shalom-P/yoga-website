@@ -6,9 +6,12 @@ import { Button } from "@/components/ui/button";
 import { TeacherIntroVideo } from "@/components/shared/TeacherIntroVideo";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { personJsonLd, breadcrumbJsonLd } from "@/lib/seo/structuredData";
-import { getTeacherBySlug, getAllActiveTeachers } from "@/lib/data/landing";
+import { getTeacherBySlug, getAllActiveTeachers, getClassCategories } from "@/lib/data/landing";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
+
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { TEACHER_CONDITIONS } from "@/lib/data/condition-links";
 
 export const revalidate = 300;
 
@@ -37,9 +40,23 @@ export async function generateStaticParams() {
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const t = await getTeacherBySlug(slug);
+  if (!t) {
+    return { title: "Teacher", alternates: { canonical: `/teachers/${slug}` } };
+  }
+  // The raw `headline` alone is far too short to work as a snippet (as little
+  // as 27 characters, e.g. "Yoga and Naturopathy Doctor"). Compose the pieces
+  // we already hold into something that reads as a result and states the offer.
+  const specialties = (t.specialties ?? []).slice(0, 3).join(", ");
+  const description = [
+    t.headline ? `${t.display_name}, ${t.headline}.` : `${t.display_name}, yoga teacher.`,
+    specialties ? `Works with ${specialties}.` : "",
+    "Book a live 1:1 online session, 60 minutes, in your local time.",
+  ]
+    .filter(Boolean)
+    .join(" ");
   return {
-    title: t ? `${t.display_name}: Yoga Teacher` : "Teacher",
-    description: t?.headline ?? undefined,
+    title: `${t.display_name}: Private Yoga Teacher`,
+    description,
     alternates: { canonical: `/teachers/${slug}` },
   };
 }
@@ -49,9 +66,29 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
   const t = await getTeacherBySlug(slug);
   if (!t) notFound();
 
+  // Conditions this teacher actually works with, plus the rest of the roster.
+  // Both were missing entirely: teacher pages linked only nav, footer and CTA.
+  const wanted = new Set(TEACHER_CONDITIONS[slug] ?? []);
+  const categories = await getClassCategories();
+  const worksWith = categories
+    .filter((c) => wanted.has(c.slug))
+    .map((c) => ({
+      href: `/classes/${c.slug}`,
+      label: `1:1 yoga for ${c.name.toLowerCase()}`,
+      note: c.description ?? undefined,
+    }));
+  const peers = (await getAllActiveTeachers())
+    .filter((x) => x.slug !== slug)
+    .map((x) => ({
+      href: `/teachers/${x.slug}`,
+      label: x.display_name,
+      note: x.headline ?? undefined,
+    }));
+
   const teacherUrl = `${siteUrl}/teachers/${t.slug}`;
 
   return (
+    <>
     <article className="px-7 pt-32 pb-24">
       <JsonLd data={personJsonLd(t, teacherUrl)} />
       <JsonLd
@@ -147,5 +184,19 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
     </article>
+    {worksWith.length > 0 && (
+      <RelatedLinks
+        title={`What ${firstName(t.display_name)} works with.`}
+        items={worksWith}
+      />
+    )}
+    {peers.length > 0 && (
+      <RelatedLinks
+        title="Other teachers on the roster."
+        items={peers}
+        cta={{ href: "/classes", label: "Browse every class type we teach" }}
+      />
+    )}
+    </>
   );
 }

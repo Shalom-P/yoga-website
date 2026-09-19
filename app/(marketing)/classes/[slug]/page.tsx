@@ -3,7 +3,10 @@ import { notFound } from "next/navigation";
 import { ArrowRight, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { JsonLd } from "@/components/shared/JsonLd";
-import { courseJsonLd } from "@/lib/seo/structuredData";
+import { courseJsonLd, breadcrumbJsonLd, faqPageJsonLd } from "@/lib/seo/structuredData";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
+import { RELATED_CONDITIONS, teachersForCondition } from "@/lib/data/condition-links";
+import { getAllActiveTeachers } from "@/lib/data/landing";
 import { getClassCategories } from "@/lib/data/landing";
 import { getConditionPage } from "@/lib/data/condition-pages";
 import { ConditionLanding } from "@/components/marketing/condition/ConditionLanding";
@@ -29,7 +32,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const c = categories.find((x) => x.slug === slug);
   const rich = getConditionPage(slug);
   return {
-    title: c?.name ?? "Class",
+    // Prefer the hand-written search title over the DB category name, which is
+    // a bare clinical label ("Diabetes", "Geriatric Yoga") carrying no
+    // commercial modifier. Same precedence the description already uses.
+    title: rich?.seoTitle ?? c?.name ?? "Class",
     description: rich?.metaDescription ?? c?.long_description ?? c?.description ?? undefined,
     alternates: { canonical: `/classes/${slug}` },
   };
@@ -43,10 +49,58 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
 
   const rich = getConditionPage(slug);
 
+  const bySlug = new Map(categories.map((x) => [x.slug, x]));
+  const related = (RELATED_CONDITIONS[slug] ?? [])
+    .map((s) => bySlug.get(s))
+    .filter((x) => x !== undefined)
+    .map((x) => ({
+      href: `/classes/${x.slug}`,
+      label: `1:1 yoga for ${x.name.toLowerCase()}`,
+      note: x.description ?? undefined,
+    }));
+
+  const teacherSlugs = new Set(teachersForCondition(slug));
+  const conditionTeachers = (await getAllActiveTeachers())
+    .filter((t) => teacherSlugs.has(t.slug))
+    .map((t) => ({
+      href: `/teachers/${t.slug}`,
+      label: t.display_name,
+      note: t.headline ?? undefined,
+    }));
+
   return (
     <>
       <JsonLd data={courseJsonLd(c, `${siteUrl}/classes/${c.slug}`)} />
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Home", url: `${siteUrl}/` },
+          { name: "Class types", url: `${siteUrl}/classes` },
+          { name: c.name, url: `${siteUrl}/classes/${c.slug}` },
+        ])}
+      />
+      {/* Google removed FAQ rich results in 2026, so this earns no SERP
+          treatment. It is emitted as a machine-readable copy of the five
+          answers each page already renders, which is what an AI assistant or a
+          non-Google engine can actually extract. Two lines, no downside. */}
+      {rich && rich.faqs.length > 0 && (
+        <JsonLd data={faqPageJsonLd(rich.faqs.map((f) => ({ q: f.q, a: f.a })))} />
+      )}
       {rich ? <ConditionLanding data={rich} /> : <SimpleDetail c={c} />}
+      {related.length > 0 && (
+        <RelatedLinks
+          title="Other things people bring to a 1:1 session."
+          items={related}
+        />
+      )}
+      <RelatedLinks
+        title={
+          conditionTeachers.length > 0
+            ? `Teachers who work with ${c.name.toLowerCase()}.`
+            : "Meet the teachers."
+        }
+        items={conditionTeachers}
+        cta={{ href: "/teachers", label: "See all teachers and what they work with" }}
+      />
     </>
   );
 }

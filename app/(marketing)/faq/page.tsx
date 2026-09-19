@@ -7,9 +7,9 @@ import { FAQS } from "@/lib/data/faqs";
 
 export const revalidate = 300;
 export const metadata = {
-  title: "FAQ",
+  title: "1:1 Online Yoga: Common Questions",
   description:
-    "Common questions about 1:1 yoga sessions, pricing, scheduling, and how online classes work.",
+    "How live 1:1 online yoga works: booking and rescheduling, what a session looks like, what you need at home, session packs, and practising across time zones.",
   alternates: { canonical: "/faq" },
 };
 

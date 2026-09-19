@@ -54,6 +54,46 @@ const nextConfig: NextConfig = {
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
+  // Permanent redirects for URLs that have moved.
+  //
+  // There was no redirect layer at all, while `slug` is a free-text field in
+  // /admin/classes. Renaming a category slug, or deactivating a category, drops
+  // an indexed URL to a 404 with nothing pointing anywhere. Add an entry here
+  // BEFORE changing any slug that is live.
+  //
+  // These are static, so they do not force the (marketing) group dynamic the
+  // way a middleware lookup would.
+  async redirects() {
+    return [
+      // Pre-registered for the re-slugging the SEO plan calls for, so the old
+      // URLs keep their equity when the new ones land. Harmless until then:
+      // none of these source paths is a real route today.
+      {
+        source: "/classes/chair-yoga-for-seniors",
+        destination: "/classes/geriatric",
+        permanent: true,
+      },
+      {
+        source: "/classes/pcos",
+        destination: "/classes/hormonal-health",
+        permanent: true,
+      },
+      {
+        source: "/classes/kids",
+        destination: "/classes/kids-yoga",
+        permanent: true,
+      },
+      // Common hand-typed variants.
+      //
+      // Deliberately NOT redirecting /teacher/:slug -> /teachers/:slug: the
+      // (teacher) route group owns /teacher/availability, /teacher/sessions,
+      // /teacher/profile and /teacher/documents, so that rule would hijack the
+      // private teacher surface and bounce signed-in teachers into marketing
+      // 404s. The two namespaces are one character apart on purpose; leave them.
+      { source: "/class/:slug", destination: "/classes/:slug", permanent: true },
+      { source: "/prices", destination: "/pricing", permanent: true },
+    ];
+  },
   images: {
     // Supabase Storage public buckets (teacher-media, promotional-media) serve
     // avatar/cover images rendered via next/image. Allow that host so

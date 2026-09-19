@@ -49,11 +49,18 @@ function AccordionTrigger({
 function AccordionContent({
   className,
   children,
+  hiddenUntilFound = true,
   ...props
 }: AccordionPrimitive.Panel.Props) {
   return (
     <AccordionPrimitive.Panel
       data-slot="accordion-content"
+      // `hidden="until-found"` keeps collapsed answers in the DOM, so crawlers
+      // and in-page find both see them, and the browser auto-expands on a
+      // find-in-page hit. Without it every FAQ answer on /faq, /pricing and the
+      // nine condition pages was absent from the server HTML: ~1,191 words with
+      // nowhere else to live, since Google removed FAQ rich results in 2026.
+      hiddenUntilFound={hiddenUntilFound}
       className="overflow-hidden text-sm data-open:animate-accordion-down data-closed:animate-accordion-up"
       {...props}
     >

@@ -3,7 +3,15 @@ import { Suspense } from "react";
 import { LoginForm } from "@/components/shared/LoginForm";
 import { BrandMark } from "@/components/shared/BrandMark";
 
-export const metadata = { title: "Log in" };
+// noindex, not a robots.txt Disallow: /login is linked from the nav on all 23
+// public URLs, so Google must be able to crawl it to see this directive. It is
+// also a gate with no unique content, and it inherited the root layout's
+// canonical pointing at "/" before this.
+export const metadata = {
+  title: "Log in",
+  robots: { index: false, follow: true },
+  alternates: { canonical: "/login" },
+};
 
 // Already-signed-in visitors never reach this page: the middleware redirects
 // them (through onboarding if incomplete), keeping this statically prerendered.
