@@ -156,22 +156,23 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
             </Button>
           </div>
 
-          {/* Trust row — rating and count are admin-editable (admin_settings) */}
+          {/* Trust row — rating and count are admin-editable (admin_settings).
+              The rating/count half only renders when BOTH are set, so we never
+              publish a star rating or a review count we cannot substantiate.
+              "No subscription" is a fact about the product and always shows. */}
           <div className="mt-10 flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm text-muted-foreground">
-            {trustRating && (
-              <span className="tracking-[2px] text-accent" aria-hidden="true">
-                ★★★★★
-              </span>
-            )}
-            <Link href="/reviews" className="transition-colors hover:text-foreground">
-              {trustRating && (
-                <>
+            {trustRating && trustCount && (
+              <>
+                <span className="tracking-[2px] text-accent" aria-hidden="true">
+                  ★★★★★
+                </span>
+                <Link href="/reviews" className="transition-colors hover:text-foreground">
                   <strong className="font-semibold text-foreground">{trustRating}</strong> ·{" "}
-                </>
-              )}
-              {trustCount}
-            </Link>
-            <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
+                  {trustCount}
+                </Link>
+                <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
+              </>
+            )}
             <span>No subscription</span>
           </div>
         </motion.div>
@@ -183,15 +184,19 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
           transition={{ duration: 0.9, delay: 0.15, ease: [0.2, 0.7, 0.2, 1] }}
           className="flex justify-start md:justify-end"
         >
+          {/* Static by design. This card used to name a teacher ("Aarti") who is
+              not on the roster and promise a 7:00 PM slot to every visitor in
+              every timezone. Copy now states only what is true for everyone.
+              Swap in a real next-open-slot render if this ever becomes live. */}
           <div className="myc-float myc-glass-over-media w-[300px] max-w-full px-[22px] py-5">
             <div className="mb-2.5 text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-              Next available
+              Session times
             </div>
             <div className="font-[family-name:var(--font-cormorant)] text-[26px] font-semibold leading-tight">
-              Gentle Hatha with Aarti
+              Early morning to late evening
             </div>
             <div className="mt-1.5 text-sm text-muted-foreground">
-              Today · 7:00 PM your time · 60 min
+              Shown in your time zone · 60 min
             </div>
             <div className="mt-4 flex items-center justify-between border-t border-foreground/12 pt-3.5">
               <span className="inline-flex items-center gap-2 text-[13px] text-muted-foreground">

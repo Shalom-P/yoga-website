@@ -267,10 +267,12 @@ const MOCK_PLANS: PlanWithFeatures[] = [
   },
 ];
 
-// These are the zero-data fallback testimonials (used when the `reviews` table
-// is empty — see getFeaturedReviews). Bodies are intentionally written without
-// naming a specific teacher, so they stay coherent whatever the live roster is
-// (an earlier version praised teachers who weren't actually bookable).
+// Zero-ENV placeholder testimonials. These are invented and must NEVER render
+// against a real database: they are reachable only from the
+// `!isSupabaseConfigured` branch, which is the local/preview story where no
+// Supabase project is wired up at all. An empty `reviews` table on a configured
+// project returns [], not these. Bodies are intentionally written without
+// naming a specific teacher, so they stay coherent whatever the live roster is.
 const MOCK_REVIEWS: (Review & { teacher_name?: string })[] = [
   { id: "r1", customer_id: "", teacher_id: "t1", session_id: null, rating: 5, body: "After three weeks of 1:1 sessions my chronic back pain is gone. The personalised attention made all the difference.", is_featured: true, is_approved: true, display_name_override: "Emma R.", display_location: "Dubai, AE", created_at: "", updated_at: "" },
   { id: "r2", customer_id: "", teacher_id: "t2", session_id: null, rating: 5, body: "The flow sessions are exactly the strength + mobility combo I needed. I look forward to every 7am class.", is_featured: true, is_approved: true, display_name_override: "James P.", display_location: "Abu Dhabi, AE", created_at: "", updated_at: "" },
@@ -285,8 +287,9 @@ const MOCK_SETTINGS: Record<string, unknown> = {
   "landing.hero_headline": "Find your 1:1 yoga teacher.",
   "landing.hero_subhead":
     "A 60-minute personalised session, live online and shown in your local time. Pick your teacher, pick your time.",
-  "landing.trust_count": "1,200+ reviews",
-  "landing.trust_rating": "4.9",
+  // Empty on purpose: we have no published reviews, so the trust row hides.
+  "landing.trust_count": "",
+  "landing.trust_rating": "",
   "landing.final_headline": "Book your 1:1 session today.",
 };
 
@@ -381,7 +384,10 @@ export async function getFeaturedReviews(): Promise<(Review & { teacher_name?: s
     .eq("is_featured", true)
     .eq("is_approved", true)
     .limit(9);
-  if (!data || data.length === 0) return MOCK_REVIEWS;
+  // An empty `reviews` table means we have no reviews, so say nothing. Falling
+  // back to MOCK_REVIEWS here published six invented customers as real
+  // testimonials on / and /reviews. TestimonialWall renders null on [].
+  if (!data || data.length === 0) return [];
   return data.map((r) => ({
     ...r,
     teacher_name: r.teacher?.display_name,

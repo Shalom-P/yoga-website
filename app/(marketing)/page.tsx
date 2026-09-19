@@ -40,8 +40,13 @@ export default async function LandingPage() {
 
   const headline = landingSetting(settings, "landing.hero_headline", "Find your 1:1 yoga teacher.");
   const subhead = landingSetting(settings, "landing.hero_subhead", "A 60-minute personalised session, live online, shown in your local time. Pick your teacher, pick your time.");
-  const trustRating = landingSetting(settings, "landing.trust_rating", "4.9");
-  const trustCount = landingSetting(settings, "landing.trust_count", "1,200+ reviews");
+  // Empty fallbacks, deliberately. landingSetting() treats an empty admin value
+  // as unset and returns the fallback, so a non-empty literal here would keep
+  // republishing an unsubstantiated review count even after an admin cleared it.
+  // Hero hides the whole trust row when these are blank. Set them from
+  // /admin/settings once there are real reviews to count.
+  const trustRating = landingSetting(settings, "landing.trust_rating", "");
+  const trustCount = landingSetting(settings, "landing.trust_count", "");
   const finalHeadline = landingSetting(settings, "landing.final_headline", "Book your 1:1 session today.");
 
   return (
