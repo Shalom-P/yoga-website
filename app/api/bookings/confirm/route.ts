@@ -192,10 +192,15 @@ export async function POST(req: Request) {
 
   const { data: teacher } = await svc
     .from("teachers")
-    .select("id, display_name, timezone, is_active, google_calendar_id, contact_email, profile:profiles(email)")
+    .select("id, display_name, timezone, is_active, is_public, google_calendar_id, contact_email, profile:profiles(email)")
     .eq("id", parsed.data.teacherId)
     .single();
-  if (!teacher || !teacher.is_active) {
+  // is_public is enforced here, not just in the UI. A hidden teacher is absent
+  // from the booking picker, but the picker is a list in a page: without this
+  // check a customer who knows the id could still self-book, which is exactly
+  // what hiding is meant to prevent. Admin-scheduled sessions do not come
+  // through this route, so they are unaffected.
+  if (!teacher || !teacher.is_active || !teacher.is_public) {
     return NextResponse.json({ error: "teacher_not_found" }, { status: 404 });
   }
 

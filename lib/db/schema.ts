@@ -93,6 +93,8 @@ export const teachers = pgTable(
     // Invite address only, not an auth identity (0040).
     contact_email: text("contact_email"),
     is_active: boolean("is_active").notNull().default(true),
+    // Advertised publicly? Hidden teachers stay admin-schedulable (0041).
+    is_public: boolean("is_public").notNull().default(true),
     sort_order: integer("sort_order").default(0),
     created_at: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updated_at: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),

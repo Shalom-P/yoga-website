@@ -30,7 +30,7 @@ const MOCK_TEACHERS: Teacher[] = [
     specialties: ["Hatha", "Pain Relief", "Beginners"],
     languages: ["English", "Hindi", "Marathi"],
     years_experience: 14, certifications: [], rating_avg: 0, rating_count: 0,
-    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null,
+    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null, is_public: true,
     is_active: true, sort_order: 1,
     created_at: "", updated_at: "",
   },
@@ -43,7 +43,7 @@ const MOCK_TEACHERS: Teacher[] = [
     specialties: ["Vinyasa", "Strength", "Athletes"],
     languages: ["English", "Hindi", "Gujarati"],
     years_experience: 9, certifications: [], rating_avg: 0, rating_count: 0,
-    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null,
+    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null, is_public: true,
     is_active: true, sort_order: 2,
     created_at: "", updated_at: "",
   },
@@ -56,7 +56,7 @@ const MOCK_TEACHERS: Teacher[] = [
     specialties: ["Prenatal", "Restorative", "Pelvic floor"],
     languages: ["English", "Tamil", "Hindi"],
     years_experience: 11, certifications: [], rating_avg: 0, rating_count: 0,
-    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null,
+    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null, is_public: true,
     is_active: true, sort_order: 3,
     created_at: "", updated_at: "",
   },
@@ -69,7 +69,7 @@ const MOCK_TEACHERS: Teacher[] = [
     specialties: ["Yin", "Meditation", "Stress relief"],
     languages: ["English", "Hindi", "Punjabi"],
     years_experience: 7, certifications: [], rating_avg: 0, rating_count: 0,
-    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null,
+    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null, is_public: true,
     is_active: true, sort_order: 4,
     created_at: "", updated_at: "",
   },
@@ -82,7 +82,7 @@ const MOCK_TEACHERS: Teacher[] = [
     specialties: ["Hatha", "Seniors", "Mobility"],
     languages: ["English", "Malayalam", "Hindi"],
     years_experience: 17, certifications: [], rating_avg: 0, rating_count: 0,
-    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null,
+    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null, is_public: true,
     is_active: true, sort_order: 5,
     created_at: "", updated_at: "",
   },
@@ -95,7 +95,7 @@ const MOCK_TEACHERS: Teacher[] = [
     specialties: ["Vinyasa", "Beginners", "Backbends"],
     languages: ["English", "Telugu", "Hindi"],
     years_experience: 6, certifications: [], rating_avg: 0, rating_count: 0,
-    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null,
+    timezone: "Asia/Kolkata", google_calendar_id: null, contact_email: null, is_public: true,
     is_active: true, sort_order: 6,
     created_at: "", updated_at: "",
   },
@@ -306,13 +306,21 @@ export async function getFeaturedTeachers(): Promise<Teacher[]> {
     .from("teachers")
     .select("*")
     .eq("is_active", true)
+    // Hidden teachers (is_public = false) are schedulable by an admin but must
+    // not be advertised: this feeds the homepage grid.
+    .eq("is_public", true)
     .order("sort_order")
     .limit(8);
   return data && data.length ? data : MOCK_TEACHERS;
 }
 
-// Uncapped active-teacher list for the public /teachers grid and the dashboard
-// booking grid.
+// Uncapped list of teachers that may be ADVERTISED: the public /teachers grid,
+// condition-page teacher links, and the customer's own booking picker.
+//
+// Excludes is_public = false on purpose, and that covers the booking picker as
+// well as the marketing pages: a hidden teacher must not be self-bookable, only
+// scheduled by an admin. app/api/bookings/confirm enforces the same rule, since
+// hiding a teacher from the UI is not a control if the API still accepts them.
 export async function getAllActiveTeachers(): Promise<Teacher[]> {
   if (!isSupabaseConfigured) return MOCK_TEACHERS;
   const supabase = createSupabaseAnonClient();
@@ -320,6 +328,7 @@ export async function getAllActiveTeachers(): Promise<Teacher[]> {
     .from("teachers")
     .select("*")
     .eq("is_active", true)
+    .eq("is_public", true)
     .order("sort_order");
   return data && data.length ? data : MOCK_TEACHERS;
 }
@@ -335,6 +344,10 @@ export const getTeacherBySlug = cache(async (slug: string): Promise<Teacher | nu
     .select("*")
     .eq("slug", slug)
     .eq("is_active", true)
+    // Hidden teachers 404 here. Nothing in the customer dashboard links to this
+    // page, so this breaks no booked-student flow, and it is what makes
+    // "hidden" mean hidden rather than merely unlisted.
+    .eq("is_public", true)
     .maybeSingle();
   return data ?? null;
 });
