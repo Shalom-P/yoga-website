@@ -100,10 +100,15 @@ Deno.serve(async (req: Request) => {
 
   const { data: teacher } = await svc
     .from("teachers")
-    .select("id, display_name, timezone, is_active")
+    .select("id, display_name, timezone, is_active, is_public")
     .eq("id", parsed.teacherId)
     .single();
-  if (!teacher || !teacher.is_active) return fail("teacher_not_found", 404);
+  // Mirrors app/api/bookings/confirm: a hidden teacher (is_public = false) is
+  // admin-schedulable but never self-bookable. This is the native app's booking
+  // path, so omitting the check here would leave the hole open on iOS only.
+  if (!teacher || !teacher.is_active || !teacher.is_public) {
+    return fail("teacher_not_found", 404);
+  }
 
   const teacherTz = teacher.timezone || "Asia/Kolkata";
 

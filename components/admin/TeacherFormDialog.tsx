@@ -41,6 +41,7 @@ type Draft = {
   cover_image_url: string | null;
   intro_video_url: string | null;
   is_active: boolean;
+  is_public: boolean;
 };
 
 function toDraft(t: Teacher | null): Draft {
@@ -67,6 +68,7 @@ function toDraft(t: Teacher | null): Draft {
     cover_image_url: t?.cover_image_url ?? null,
     intro_video_url: t?.intro_video_url ?? null,
     is_active: t?.is_active ?? true,
+    is_public: t?.is_public ?? true,
   };
 }
 
@@ -155,6 +157,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
       cover_image_url: draft.cover_image_url,
       intro_video_url: draft.intro_video_url,
       is_active: draft.is_active,
+      is_public: draft.is_public,
     };
 
     if (draft.id) {
@@ -430,12 +433,35 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
           <Label className="flex items-center gap-2 text-sm font-normal">
             <Checkbox
               checked={draft.is_active}
-              onCheckedChange={(v) => setDraft({ ...draft, is_active: v === true })}
+              onCheckedChange={(v) =>
+                setDraft({
+                  ...draft,
+                  is_active: v === true,
+                  // Retiring a teacher also drops them from public listings, so
+                  // the two states cannot disagree in a confusing way.
+                  is_public: v === true ? draft.is_public : false,
+                })
+              }
             />
-            Active and visible on the marketing site
+            Active
             <FieldHint>
-              Uncheck to hide this teacher from the public site and the booking flow without
-              deleting the record.
+              Uncheck to retire this teacher: removed from the site and no longer schedulable,
+              without deleting the record. Existing sessions are left alone.
+            </FieldHint>
+          </Label>
+
+          <Label className="flex items-center gap-2 text-sm font-normal">
+            <Checkbox
+              checked={draft.is_public}
+              disabled={!draft.is_active}
+              onCheckedChange={(v) => setDraft({ ...draft, is_public: v === true })}
+            />
+            Show publicly
+            <FieldHint>
+              Uncheck to hide this teacher from the website, the teacher list, class pages, the
+              sitemap and the customer&apos;s own booking screen. You can still schedule sessions
+              with them yourself, and those students keep their classes and Meet links as normal.
+              Use this for a teacher who only takes students you assign.
             </FieldHint>
           </Label>
         </div>

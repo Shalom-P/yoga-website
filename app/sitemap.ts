@@ -56,7 +56,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     const supabase = createSupabaseAnonClient();
 
     const [teachersResult, categoriesResult] = await Promise.all([
-      supabase.from("teachers").select("slug, updated_at").eq("is_active", true),
+      supabase.from("teachers").select("slug, updated_at").eq("is_active", true).eq("is_public", true),
       supabase.from("class_categories").select("slug, updated_at").eq("is_active", true),
     ]);
 

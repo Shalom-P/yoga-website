@@ -9,7 +9,7 @@ export default async function AdminTeachersPage() {
   const { supabase } = await requireAdmin();
   const { data: teachers } = await supabase
     .from("teachers")
-    .select("id, display_name, headline, rating_avg, rating_count, is_active, sort_order")
+    .select("id, display_name, headline, rating_avg, rating_count, is_active, is_public, sort_order")
     .order("sort_order");
 
   return (
@@ -41,8 +41,10 @@ export default async function AdminTeachersPage() {
               <span>{Number(t.rating_avg).toFixed(1)}</span>
               <span className="text-muted-foreground text-xs">· {t.rating_count}</span>
             </div>
+            {/* Three states, not two: a hidden teacher is still working, just
+                not advertised, and that has to be visible at a glance. */}
             <Badge variant={t.is_active ? "secondary" : "outline"}>
-              {t.is_active ? "Active" : "Inactive"}
+              {!t.is_active ? "Inactive" : t.is_public ? "Active" : "Hidden"}
             </Badge>
           </Link>
         ))}

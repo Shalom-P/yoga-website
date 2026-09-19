@@ -64,6 +64,13 @@ export type Teacher = {
    */
   contact_email: string | null;
   is_active: boolean;
+  /**
+   * Advertised publicly? false hides the teacher from every public listing,
+   * their detail page, the sitemap and the customer's booking picker, while
+   * leaving them schedulable by an admin (0041). Retiring outright is
+   * is_active = false.
+   */
+  is_public: boolean;
   sort_order: number;
   created_at: string;
   updated_at: string;

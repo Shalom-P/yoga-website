@@ -126,7 +126,7 @@ export function TeacherEditPanel({
               disabled={!teacher.is_active}
             >
               <Trash2 className="size-3.5 mr-1" />
-              {teacher.is_active ? "Hide" : "Hidden"}
+              {teacher.is_active ? "Retire" : "Retired"}
             </Button>
           </div>
         </div>
@@ -144,6 +144,17 @@ export function TeacherEditPanel({
             value={teacher.languages.length ? teacher.languages.join(", ") : "-"}
           />
           <Detail label="Google Calendar ID" value={teacher.google_calendar_id ?? "(system calendar)"} />
+          <Detail label="Calendar invites to" value={teacher.contact_email ?? "(not set)"} />
+          <Detail
+            label="Public listing"
+            value={
+              !teacher.is_active
+                ? "Retired"
+                : teacher.is_public
+                  ? "Shown on the site"
+                  : "Hidden, admin-scheduled only"
+            }
+          />
         </dl>
 
         {teacher.bio && (
