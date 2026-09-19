@@ -4,6 +4,7 @@ import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { deleteMeetEvent } from "@/lib/google/calendar";
 import { provisionSessionMeet, releaseSessionMeet } from "@/lib/google/provisionMeet";
+import { teacherInviteEmail, sessionAttendees } from "@/lib/google/teacherInvite";
 
 // provisionSessionMeet -> lib/google/calendar.ts uses @vercel/oidc (Node only).
 export const runtime = "nodejs";
@@ -22,7 +23,7 @@ const BATCH_SIZE = 50;
  * On success  → meet_link, meet_event_id, meet_status='created' are written.
  * On failure  → meet_status stays 'failed'; the next run will retry.
  *
- * The booked customer's email is added as a Calendar attendee so they receive
+ * The booked customer's email AND the teacher's are added as Calendar attendees so they receive
  * a Google Calendar invite (same behaviour as the booking confirm handler).
  *
  * Two teardown sweeps run alongside it: sweepReleases() for sessions marked
@@ -89,7 +90,7 @@ export async function POST(req: Request): Promise<Response> {
     // Look up the teacher for the calendar event summary + their own calendar.
     const { data: teacher } = await svc
       .from("teachers")
-      .select("display_name, google_calendar_id")
+      .select("display_name, google_calendar_id, contact_email, profile:profiles(email)")
       .eq("id", session.teacher_id)
       .maybeSingle();
 
@@ -122,7 +123,16 @@ export async function POST(req: Request): Promise<Response> {
       { id: session.id, start_at: session.start_at, end_at: session.end_at },
       {
         summary: `Yoga${teacher?.display_name ? ` with ${teacher.display_name}` : ""}`,
-        attendeeEmails,
+        // Teacher included, matching attendeeEmailsForSession. Without this the
+        // retry would re-create the event with the student only, silently
+        // dropping the teacher from a link the booking path had invited them to.
+        attendeeEmails: sessionAttendees(
+          attendeeEmails,
+          teacherInviteEmail({
+            contact_email: teacher?.contact_email,
+            profile: Array.isArray(teacher?.profile) ? teacher?.profile[0] : teacher?.profile,
+          }),
+        ),
         calendarId: teacher?.google_calendar_id,
         // Retry path: adopt this session's own earlier event instead of minting
         // a duplicate. Safe here because any event parked by a reschedule has

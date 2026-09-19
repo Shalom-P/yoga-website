@@ -57,6 +57,12 @@ export type Teacher = {
   rating_count: number;
   timezone: string;
   google_calendar_id: string | null;
+  /**
+   * Where this teacher receives Google Calendar invites for their sessions.
+   * NOT an auth identity: logins live on profiles and are created through
+   * promote_to_teacher(). Resolution order is profiles.email then this (0040).
+   */
+  contact_email: string | null;
   is_active: boolean;
   sort_order: number;
   created_at: string;
