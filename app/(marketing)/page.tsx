@@ -23,6 +23,19 @@ import {
 // ISR: admin edits to landing copy go live within ~60s
 export const revalidate = 60;
 
+// Carries the social copy that used to sit in the root layout's openGraph
+// object, where it leaked onto all 23 URLs. Scoped to the homepage now.
+export const metadata = {
+  openGraph: {
+    type: "website" as const,
+    siteName: "My Yoga Classes",
+    locale: "en_US",
+    title: "My Yoga Classes: Live 1:1 online yoga teacher",
+    description:
+      "Find your 1:1 yoga teacher. 60-minute personalised session. Pick your teacher. Pick your time. Meets live online.",
+  },
+};
+
 export default async function LandingPage() {
   const [teachers, categories, plans, reviews, settings] = await Promise.all([
     getFeaturedTeachers(),

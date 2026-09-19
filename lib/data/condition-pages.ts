@@ -62,6 +62,14 @@ export type ConditionPage = {
   faqs: Faq[];
   safetyTitle: string;
   safetyText: string;
+  /**
+   * <title> for the page, WITHOUT the "· My Yoga Classes" suffix the root
+   * layout template appends (18 chars, so keep this <= 42). Lives here rather
+   * than in the DB because the DB column is `class_categories.name`, a clinical
+   * category label an admin edits for the admin UI, not a search title.
+   * Every term used here is present in that page's own body copy.
+   */
+  seoTitle: string;
   metaDescription: string;
 };
 
@@ -80,6 +88,13 @@ const PAGES = [
 const BY_SLUG: Record<string, ConditionPage> = Object.fromEntries(
   PAGES.map((p) => [p.slug, p]),
 );
+
+/**
+ * Every condition slug we ship a rich page for. These are prerendered by
+ * generateStaticParams, so they always exist regardless of what the DB says,
+ * which makes them a safe floor for the sitemap.
+ */
+export const CONDITION_SLUGS: string[] = PAGES.map((p) => p.slug);
 
 /** Returns the rich landing content for a class-category slug, or null if none. */
 export function getConditionPage(slug: string): ConditionPage | null {

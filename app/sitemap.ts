@@ -1,122 +1,93 @@
 import type { MetadataRoute } from "next";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAnonClient } from "@/lib/supabase/anon";
+import { CONDITION_SLUGS } from "@/lib/data/condition-pages";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
 
-const STATIC_ROUTES: MetadataRoute.Sitemap = [
-  {
-    url: `${BASE_URL}/`,
-    changeFrequency: "daily",
-    priority: 1.0,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/about`,
-    changeFrequency: "monthly",
-    priority: 0.8,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/classes`,
-    changeFrequency: "weekly",
-    priority: 0.9,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/pricing`,
-    changeFrequency: "weekly",
-    priority: 0.9,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/teachers`,
-    changeFrequency: "weekly",
-    priority: 0.9,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/reviews`,
-    changeFrequency: "weekly",
-    priority: 0.7,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/faq`,
-    changeFrequency: "monthly",
-    priority: 0.6,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/contact`,
-    changeFrequency: "monthly",
-    priority: 0.6,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/legal/privacy`,
-    changeFrequency: "yearly",
-    priority: 0.3,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/legal/terms`,
-    changeFrequency: "yearly",
-    priority: 0.3,
-    lastModified: new Date(),
-  },
-  {
-    url: `${BASE_URL}/legal/refund`,
-    changeFrequency: "yearly",
-    priority: 0.3,
-    lastModified: new Date(),
-  },
+// Regenerate on the same cadence as the marketing pages rather than on every
+// request. This route previously used the cookie-bound Supabase client, which
+// forced it dynamic (x-vercel-cache: MISS on every Googlebot fetch).
+export const revalidate = 3600;
+
+// `changeFrequency` and `priority` are deliberately omitted: Google has stated
+// for years that it ignores both, and Bing treats them as hints at best. They
+// were also actively misleading here, claiming "daily" for pages that change
+// a few times a year.
+//
+// `lastModified` is likewise omitted for static routes. It used to be
+// `new Date()` evaluated at module scope, so it reported the serverless
+// instance's cold-start time and varied between instances for content that had
+// not changed. An inconsistent lastmod is worse than none: it is the specific
+// pattern that makes Google discard the signal for the whole file. Dynamic
+// routes below keep a real `updated_at`, which is a true modification time.
+const STATIC_PATHS = [
+  "/",
+  "/about",
+  "/classes",
+  "/pricing",
+  "/teachers",
+  "/reviews",
+  "/faq",
+  "/contact",
+  "/legal/privacy",
+  "/legal/terms",
+  "/legal/refund",
 ];
 
+const STATIC_ROUTES: MetadataRoute.Sitemap = STATIC_PATHS.map((path) => ({
+  url: `${BASE_URL}${path}`,
+}));
+
+// Build-time fallback for the condition pages. If the Supabase query fails we
+// still emit all nine, because they are prerendered from this same constant
+// (generateStaticParams) and therefore always exist. The previous bare
+// `catch {}` returned static routes only, silently shrinking the sitemap from
+// 23 URLs to 11 on a single failed round trip, with nothing to alert on.
+const CONDITION_FALLBACK: MetadataRoute.Sitemap = CONDITION_SLUGS.map((slug) => ({
+  url: `${BASE_URL}/classes/${slug}`,
+}));
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const dynamicRoutes: MetadataRoute.Sitemap = [];
+  const teachers: MetadataRoute.Sitemap = [];
+  let categories: MetadataRoute.Sitemap = [];
 
   try {
-    const supabase = await createSupabaseServerClient();
+    const supabase = createSupabaseAnonClient();
 
     const [teachersResult, categoriesResult] = await Promise.all([
-      supabase
-        .from("teachers")
-        .select("slug, updated_at")
-        .eq("is_active", true),
-      supabase
-        .from("class_categories")
-        .select("slug, updated_at")
-        .eq("is_active", true),
+      supabase.from("teachers").select("slug, updated_at").eq("is_active", true),
+      supabase.from("class_categories").select("slug, updated_at").eq("is_active", true),
     ]);
 
-    const teachers = teachersResult.data ?? [];
-    const categories = categoriesResult.data ?? [];
+    if (teachersResult.error) throw teachersResult.error;
+    if (categoriesResult.error) throw categoriesResult.error;
 
-    for (const teacher of teachers) {
-      if (teacher.slug) {
-        dynamicRoutes.push({
-          url: `${BASE_URL}/teachers/${teacher.slug}`,
-          changeFrequency: "monthly",
-          priority: 0.7,
-          lastModified: teacher.updated_at ? new Date(teacher.updated_at) : new Date(),
-        });
-      }
+    for (const teacher of teachersResult.data ?? []) {
+      if (!teacher.slug) continue;
+      teachers.push({
+        url: `${BASE_URL}/teachers/${teacher.slug}`,
+        lastModified: teacher.updated_at ? new Date(teacher.updated_at) : undefined,
+      });
     }
 
-    for (const category of categories) {
-      if (category.slug) {
-        dynamicRoutes.push({
-          url: `${BASE_URL}/classes/${category.slug}`,
-          changeFrequency: "monthly",
-          priority: 0.7,
-          lastModified: category.updated_at ? new Date(category.updated_at) : new Date(),
-        });
-      }
-    }
-  } catch {
-    // Supabase not configured or query failed — return static routes only.
+    categories = (categoriesResult.data ?? [])
+      .filter((c) => c.slug)
+      .map((c) => ({
+        url: `${BASE_URL}/classes/${c.slug}`,
+        lastModified: c.updated_at ? new Date(c.updated_at) : undefined,
+      }));
+  } catch (err) {
+    // Surface it: a shrinking sitemap is invisible in production otherwise, and
+    // there is no Sentry on this route today.
+    console.error("[sitemap] Supabase query failed, using static fallback", err);
   }
 
-  return [...STATIC_ROUTES, ...dynamicRoutes];
+  // Never emit fewer condition URLs than we prerender, whatever the DB says.
+  if (categories.length < CONDITION_FALLBACK.length) {
+    const seen = new Set(categories.map((c) => c.url));
+    categories = [...categories, ...CONDITION_FALLBACK.filter((c) => !seen.has(c.url))];
+  }
+
+  return [...STATIC_ROUTES, ...categories, ...teachers];
 }

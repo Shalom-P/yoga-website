@@ -5,7 +5,7 @@ import { FinalCTA } from "@/components/marketing/FinalCTA";
 
 export const revalidate = 300;
 export const metadata = {
-  title: "Teachers",
+  title: "Certified Yoga Teachers from India",
   description:
     "Meet our certified yoga teachers from India. Every one is Yoga Alliance trained and teaches live 1:1 sessions to students around the world.",
   alternates: { canonical: "/teachers" },

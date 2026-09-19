@@ -69,15 +69,32 @@ export const metadata: Metadata = {
     "Live online yoga with expert teachers from India. Book a 60-minute personalised 1:1 session, shown in your local time.",
   applicationName: "My Yoga Classes",
   alternates: { canonical: "/" },
+  // Next.js does not merge `openGraph` field by field: a page that sets its own
+  // openGraph replaces this whole object, and a page that sets none inherits it
+  // verbatim. A literal title/description here therefore stamped the homepage's
+  // social copy onto all 23 URLs. Leaving them out lets each page's own
+  // title/description flow into og:title/og:description instead.
   openGraph: {
     type: "website",
     siteName: "My Yoga Classes",
-    locale: "en",
-    title: "My Yoga Classes: Live 1:1 online yoga teacher",
-    description:
-      "Find your 1:1 yoga teacher. 60-minute personalised session. Pick your teacher. Pick your time. Meets live online.",
+    // Open Graph wants language_TERRITORY; a bare "en" is dropped.
+    locale: "en_US",
   },
   twitter: { card: "summary_large_image" },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      // Required for a large thumbnail in mobile results and for Google
+      // Discover eligibility. Without it Google caps previews at a barren
+      // default, which for a visual category like yoga is a real cost.
+      "max-image-preview": "large",
+      "max-snippet": -1,
+      "max-video-preview": -1,
+    },
+  },
 };
 
 // Site-wide Organization structured data (uses the schema-dts types that were

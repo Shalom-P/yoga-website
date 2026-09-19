@@ -2,8 +2,9 @@ import { PageHeader } from "@/components/marketing/PageHeader";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
 
 export const metadata = {
-  title: "About",
-  description: "Why My Yoga Classes exists, and how we work.",
+  title: "About Our Online 1:1 Yoga Studio",
+  description:
+    "We pair you with a certified yoga teacher in India for live 1:1 sessions, built around your body and shown in your local time. Here is how we work.",
   alternates: { canonical: "/about" },
 };
 

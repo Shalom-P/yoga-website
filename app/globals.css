@@ -621,6 +621,37 @@ html:has(.myc-dark) body {
 .myc-breathe-glow { animation: myc-breathe-glow 4.8s ease-in-out infinite; }
 .myc-mist { animation: myc-mist 26s ease-in-out infinite alternate; }
 
+/* Hero entrance. This used to be a Motion `initial`/`animate` pair, which
+   server-renders style="opacity:0;transform:translateY(24px)" and leaves the
+   H1, the subhead and the primary CTA invisible until ~446 KB of JS hydrates.
+   As CSS it runs on first paint with no JS at all, so the content is readable
+   immediately and the page still works with scripting off. */
+@keyframes myc-rise {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.myc-rise {
+  animation: myc-rise 0.75s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+.myc-rise-delayed {
+  animation: myc-rise 0.75s cubic-bezier(0.2, 0.7, 0.2, 1) 0.12s both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .myc-rise,
+  .myc-rise-delayed {
+    animation: none;
+  }
+}
+
 @keyframes myc-breathe-glow {
   0%, 100% { opacity: 0.6; transform: scale(1); }
   50%      { opacity: 1;   transform: scale(1.06); }
