@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { submitToIndexNow } from "@/lib/seo/indexnow";
 
 // The marketing pages that render teacher avatars / cover images / intro videos
 // (`/`, `/teachers`, `/teachers/[slug]`) are ISR-cached with `revalidate = 300`.
@@ -42,5 +43,16 @@ export async function POST(req: Request) {
   revalidatePath("/teachers"); // teachers listing
   if (slug) revalidatePath(`/teachers/${slug}`); // teacher detail page
 
-  return NextResponse.json({ ok: true, revalidated: true });
+  // Tell IndexNow the same pages changed. Busting our own ISR cache only fixes
+  // what visitors see; without this the search engines keep serving whatever
+  // they last crawled, which for a site this new can be nothing at all.
+  // Best-effort and never throws, so a failed ping cannot fail an admin save.
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
+  const indexNow = await submitToIndexNow([
+    `${siteUrl}/`,
+    `${siteUrl}/teachers`,
+    ...(slug ? [`${siteUrl}/teachers/${slug}`] : []),
+  ]);
+
+  return NextResponse.json({ ok: true, revalidated: true, indexNow });
 }
