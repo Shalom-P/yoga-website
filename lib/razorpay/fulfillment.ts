@@ -5,6 +5,8 @@ import * as Sentry from "@sentry/nextjs";
 import { getRazorpayClient } from "./client";
 import { resolvePackById } from "./catalog";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { isMetaCapiConfigured, queueMetaEvent } from "@/lib/meta/capi";
+import { metaContextFromNotes } from "@/lib/meta/shared";
 
 /**
  * Idempotent fulfilment for a Razorpay one-time payment. Safe to call from BOTH
@@ -196,6 +198,21 @@ export async function fulfillRazorpayPayment(
     .single();
   if (payErr || !paymentRow) return { ok: false, reason: "payment_record_failed" };
 
+  // Was this payment already granted by an earlier call? Read before the grant
+  // so we know whether THIS call is the one that fulfils it (decides the Meta
+  // Purchase below). payments.status can't answer that: the upsert above has
+  // already written 'completed', including on an attempt whose grant then failed.
+  const metaContext = metaContextFromNotes(notes);
+  const reportToMeta = isMetaCapiConfigured() && !metaContext.optOut;
+  const { data: priorGrant } = reportToMeta
+    ? await svc
+        .from("credit_ledger")
+        .select("id")
+        .eq("payment_id", paymentRow.id)
+        .eq("reason", "purchase")
+        .maybeSingle()
+    : { data: null };
+
   // Grant the pack's credits — idempotent on the payment row (a replay is a no-op).
   const { error: grantErr } = await svc.rpc("grant_session_credits", {
     p_customer: customerId,
@@ -220,6 +237,32 @@ export async function fulfillRazorpayPayment(
         "warning",
       );
     }
+  }
+
+  // Report the sale to Meta once: only when this call's grant is the one that
+  // fulfilled the payment. A replay or an admin resync days later would
+  // otherwise land outside Meta's 48h dedupe window and count the purchase
+  // twice, while a retry after a failed grant still reports it. A verify/webhook
+  // race can send the same event_id twice, which Meta collapses.
+  if (reportToMeta && !priorGrant) {
+    const { data: buyer } = await svc
+      .from("profiles")
+      .select("email")
+      .eq("id", customerId)
+      .maybeSingle();
+    queueMetaEvent({
+      name: "Purchase",
+      eventId: `purchase_${paymentId}`,
+      context: metaContext,
+      user: { email: buyer?.email, externalId: customerId },
+      custom: {
+        value: Number(settled.amount) / 100,
+        currency: settled.currency ?? "INR",
+        contentIds: [pack.slug],
+        contentType: "product",
+        numItems: 1,
+      },
+    });
   }
 
   const { data: bal } = await svc

@@ -109,6 +109,8 @@ export function OnboardingForm({
       return toast.error("We couldn't save your profile. Please try again or contact support.");
     }
     track("onboarding_completed", { experience_level: level, goals_count: goals.length, timezone: tz });
+    // Server-side Meta CompleteRegistration. Best-effort: never blocks onboarding.
+    void fetch("/api/meta/complete-registration", { method: "POST", keepalive: true }).catch(() => {});
     toast.success("All set. Now pick a teacher.");
     router.push(next);
   }
