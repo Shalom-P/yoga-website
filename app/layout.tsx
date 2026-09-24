@@ -146,12 +146,16 @@ export default function RootLayout({
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(orgJsonLd) }}
         />
-        {/* Force light: the brand skin is light-only (no .dark token set in
-            globals.css), so enabling system dark would force-light the page
-            tokens while shadcn's dark: variants still fired on form controls,
-            a broken half-dark state. Re-enable system/toggle only once a real
-            `.dark .myc-theme` / `.dark .myc-app` skin exists. */}
-        <ThemeProvider attribute="class" forcedTheme="light">
+        {/* next-themes does not choose the look: every surface is dark through
+            the `.myc-dark` class in globals.css, not through a theme.
+            forcedTheme="light" stops next-themes putting `.dark` on <html> under
+            OS dark mode, which would switch on shadcn's dormant `dark:` utilities
+            (`@custom-variant dark` is bound to `.dark`) on top of the skin.
+            enableColorScheme={false} because globals.css owns color-scheme. Left
+            on, next-themes writes an inline `color-scheme: light` on <html> that
+            beats the stylesheet, so the page scrollbar and the native controls in
+            every portalled overlay rendered light on the dark page. */}
+        <ThemeProvider attribute="class" forcedTheme="light" enableColorScheme={false}>
           {/* Lenis smooth-scroll is scoped to the marketing layout; the app,
               admin and auth surfaces use native scrolling (see (marketing)/layout). */}
           <AnalyticsProvider>{children}</AnalyticsProvider>
