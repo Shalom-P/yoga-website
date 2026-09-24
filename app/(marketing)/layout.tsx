@@ -1,16 +1,11 @@
-import type { Viewport } from "next";
 import { MotionConfig } from "motion/react";
 import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Footer } from "@/components/marketing/Footer";
 import { LenisProvider } from "@/components/shared/LenisProvider";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 
-// Only this route group wears the dark skin, so the browser-chrome tint is set
-// here rather than in the root layout — /login, the dashboard and admin keep the
-// root's cream. Nested viewport exports override the root's per route.
-export const viewport: Viewport = {
-  themeColor: "#0a2b26",
-};
+// The browser-chrome tint (viewport themeColor) comes from the root layout, which
+// every route group shares now that they all wear the same dark skin.
 
 // No auth read here on purpose: awaiting cookies() (via getCurrentUser) would
 // opt the whole (marketing) group into dynamic rendering and disable every

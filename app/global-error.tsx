@@ -12,6 +12,12 @@ import * as Sentry from "@sentry/nextjs";
 // They are the only literal colours in the app that are allowed to be literal.
 //   #0a2b26 --background · #fbf7ef --foreground · #9fbdb2 --muted-foreground
 //   #ff6a4d --accent      · #16352e --accent-foreground
+//
+// The root layout's `viewport` export does not survive either: Next renders the
+// viewport/metadata <meta> tags inside the boundary this component replaces, so
+// they unmount with it, and a Client Component cannot export `viewport` itself.
+// Hence the hand-written theme-color below, equal to the root's themeColor, so
+// the browser chrome stays dark instead of falling back to the browser default.
 export default function GlobalError({
   error,
   reset,
@@ -26,6 +32,9 @@ export default function GlobalError({
 
   return (
     <html lang="en">
+      <head>
+        <meta name="theme-color" content="#0a2b26" />
+      </head>
       <body
         style={{
           minHeight: "100dvh",
