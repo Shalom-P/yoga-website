@@ -1,4 +1,4 @@
-import { format, formatInTimeZone, toDate } from "date-fns-tz";
+import { format, formatInTimeZone, getTimezoneOffset, toDate } from "date-fns-tz";
 
 // Default fallback only — the onboarding/profile picker stores the customer's
 // real device-detected IANA zone. India is the larger of the two served markets
@@ -81,7 +81,33 @@ export function teacherLocalToUtc(date: string, time: string): Date {
   return toDate(`${date}T${time}:00`, { timeZone: TEACHER_TZ });
 }
 
-/** Short ISO marker e.g. "GST" / "IST" for a timezone, useful in slot pickers. */
+/**
+ * Short zone name e.g. "GST" / "IST" / "GMT+4", useful in slot pickers.
+ *
+ * Intl picks the name from the runtime's default locale, so the en-US server
+ * and the browser can disagree: Asia/Dubai is "GMT+4" in en-US but "GST" in
+ * en-GB or en-AE, and Asia/Kolkata is "IST" in en-IN. Safe in a Server
+ * Component, which renders once. A client component must not render it until
+ * mounted, or hydration fails: use tzOffsetLabel before then (LocalTzLabel).
+ */
 export function tzShort(timeZone: string, at: Date = new Date()) {
   return format(at, "zzz", { timeZone });
+}
+
+/**
+ * The zone's UTC offset as "GMT+4" / "GMT+5:30" / "GMT-3:30", or "GMT" at zero.
+ * Plain arithmetic on the offset rather than an Intl name, so the server and
+ * every browser produce the same text. Throws a RangeError for an unknown zone,
+ * like tzShort.
+ */
+export function tzOffsetLabel(timeZone: string, at: Date = new Date()) {
+  const offsetMs = getTimezoneOffset(timeZone, at);
+  if (Number.isNaN(offsetMs)) throw new RangeError(`Invalid time zone specified: ${timeZone}`);
+  const offsetMin = Math.round(offsetMs / 60_000);
+  if (offsetMin === 0) return "GMT";
+  const abs = Math.abs(offsetMin);
+  const minutes = abs % 60;
+  return `GMT${offsetMin < 0 ? "-" : "+"}${Math.floor(abs / 60)}${
+    minutes ? `:${String(minutes).padStart(2, "0")}` : ""
+  }`;
 }
