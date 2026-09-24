@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { formatMoney } from "@/lib/i18n/money";
-import { DEFAULT_CUSTOMER_TZ, formatInTz } from "@/lib/timezone";
+import { dayInIst } from "@/lib/timezone";
 import { friendlyAdminError } from "@/lib/ui/errors";
 import type { PaymentActionResponse } from "@/lib/admin/contracts";
 import type { PaymentEntrySource, PaymentMethod, PaymentStatus } from "@/lib/supabase/types";
@@ -77,17 +77,6 @@ function safeMoney(cents: number, currency: string): string {
   } catch {
     return `${(cents / 100).toFixed(2)} ${currency}`;
   }
-}
-
-/**
- * Dates render in IST, the timezone the studio actually operates in. The old
- * `new Date(x).toLocaleDateString("en-GB")` used whatever zone the admin's
- * laptop was in, so a late-evening IST capture displayed a day early for anyone
- * looking from the UAE.
- */
-function dayInIst(iso: string | null): string {
-  if (!iso) return "-";
-  return formatInTz(iso, DEFAULT_CUSTOMER_TZ, "d MMM yyyy");
 }
 
 export function PaymentsAdmin({

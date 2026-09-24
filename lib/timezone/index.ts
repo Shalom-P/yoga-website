@@ -65,6 +65,19 @@ export function formatTeacherTime(iso: string) {
   return `${formatInTimeZone(iso, TEACHER_TZ, "EEE d MMM, h:mm a")} IST`;
 }
 
+/**
+ * The calendar day a timestamp falls on in IST, the zone the studio operates
+ * in: "4 Jun 2026", or "-" when there is none. Admin tables use this instead of
+ * `toLocaleDateString`, which formats in the runtime's own zone: UTC on the
+ * server, the admin's zone in the browser. The two disagree for anything
+ * stamped between 00:00 and 05:30 IST, which fails hydration and shows a day
+ * that depends on where the admin is sitting.
+ */
+export function dayInIst(at: string | Date | null | undefined): string {
+  if (!at) return "-";
+  return formatInTimeZone(at, DEFAULT_CUSTOMER_TZ, "d MMM yyyy");
+}
+
 /** Returns the user's best-guess TZ from the browser. SSR safe. */
 export function detectBrowserTimezone(): string {
   if (typeof Intl === "undefined") return DEFAULT_CUSTOMER_TZ;
@@ -79,6 +92,21 @@ export function detectBrowserTimezone(): string {
 export function teacherLocalToUtc(date: string, time: string): Date {
   // date "2026-06-04", time "07:00" → Date interpreted in TEACHER_TZ
   return toDate(`${date}T${time}:00`, { timeZone: TEACHER_TZ });
+}
+
+/**
+ * First instant of an IST calendar day ("2026-06-04"). With `istDayEnd`, this
+ * turns a date-only admin input into the timestamps the backend compares. Both
+ * read back as that same day through `dayInIst` or `formatInTz(at,
+ * DEFAULT_CUSTOMER_TZ, "yyyy-MM-dd")`, whatever zone the admin's browser is in.
+ */
+export function istDayStart(date: string): Date {
+  return toDate(`${date}T00:00:00`, { timeZone: DEFAULT_CUSTOMER_TZ });
+}
+
+/** Last instant (23:59:59.999) of an IST calendar day. See `istDayStart`. */
+export function istDayEnd(date: string): Date {
+  return toDate(`${date}T23:59:59.999`, { timeZone: DEFAULT_CUSTOMER_TZ });
 }
 
 /**
