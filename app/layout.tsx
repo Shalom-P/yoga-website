@@ -50,11 +50,14 @@ const hanken = Hanken_Grotesk({
   display: "swap",
 });
 
-// The site is intentionally light-only (warm cream brand skin). Advertise a
-// single light theme-colour so the browser chrome matches the forced-light UI;
-// a dark variant here would clash with the light page under OS dark mode.
+// Every surface wears the dark .myc-dark skin ((marketing), (auth), (dashboard),
+// admin, (teacher), error.tsx, not-found.tsx), so the browser-chrome tint is
+// its --background and is set once here for all of them. A single value, not a
+// light/dark media pair: the page is dark under either OS setting. No route
+// group overrides it. global-error.tsx replaces this layout and loses this
+// export, so it carries its own <meta name="theme-color">; keep the two equal.
 export const viewport: Viewport = {
-  themeColor: "#fbf7ef",
+  themeColor: "#0a2b26",
 };
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
