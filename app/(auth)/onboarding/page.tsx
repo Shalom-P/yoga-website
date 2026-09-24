@@ -1,6 +1,9 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/guards";
 import { isOnboardingPath, postAuthTarget, safeNext } from "@/lib/auth/redirects";
+import { countryFromHeaders } from "@/lib/geo/region";
+import { toPhoneCountry } from "@/lib/validation/phone";
 import { OnboardingForm } from "@/components/shared/OnboardingForm";
 
 export const metadata = { title: "Welcome" };
@@ -30,6 +33,10 @@ export default async function OnboardingPage({
     redirect(postAuthTarget(safeNext(rawNext, "/dashboard"), true));
   }
 
+  // Pre-select the visitor's calling code so they only type their local number.
+  // A blank country is not a safe default (see lib/validation/phone.ts).
+  const defaultPhoneCountry = toPhoneCountry(countryFromHeaders(await headers()));
+
   return (
     <div className="min-h-dvh px-6 py-12">
       <div className="mx-auto max-w-xl">
@@ -46,6 +53,7 @@ export default async function OnboardingPage({
         <OnboardingForm
           initialFullName={profile?.full_name ?? ""}
           initialPhone={profile?.phone ?? ""}
+          defaultPhoneCountry={defaultPhoneCountry}
           next={next}
         />
       </div>

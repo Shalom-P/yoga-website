@@ -9,7 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { TimezoneSelect } from "@/components/ui/timezone-select";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { toE164, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
+import { toE164, phoneErrorMessage } from "@/lib/validation/phone";
+import type { CountryCode } from "libphonenumber-js";
 import { friendlyFormError } from "@/lib/ui/errors";
 import { toast } from "sonner";
 
@@ -22,7 +23,14 @@ type Initial = {
   marketing_opt_in: boolean;
 };
 
-export function ProfileForm({ initial }: { initial: Initial }) {
+export function ProfileForm({
+  initial,
+  defaultPhoneCountry,
+}: {
+  initial: Initial;
+  /** The visitor's GeoIP country, pre-selected while no number is saved yet. */
+  defaultPhoneCountry?: CountryCode;
+}) {
   const [state, setState] = useState(initial);
   const [loading, setLoading] = useState(false);
   const phoneRef = useRef<HTMLInputElement>(null);
@@ -36,7 +44,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
     const e164 = toE164(state.phone);
     if (!e164) {
       phoneRef.current?.focus();
-      toast.error(state.phone.trim() ? PHONE_ERROR_MESSAGE : "Please enter your mobile number.");
+      toast.error(state.phone.trim() ? phoneErrorMessage(defaultPhoneCountry) : "Please enter your mobile number.");
       return;
     }
     setLoading(true);
@@ -112,6 +120,7 @@ export function ProfileForm({ initial }: { initial: Initial }) {
           inputRef={phoneRef}
           value={state.phone ?? ""}
           onChange={(v) => set("phone", v)}
+          defaultCountry={defaultPhoneCountry}
         />
       </Field>
 

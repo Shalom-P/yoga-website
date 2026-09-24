@@ -69,7 +69,11 @@ type PhoneFieldProps = {
   inputRef?: React.Ref<HTMLInputElement>;
   /** Restrict the dropdown to these ISO codes. Defaults to every country. */
   countries?: Country[];
-  /** Pre-selected country. Defaults to none, so the customer picks their own. */
+  /**
+   * Pre-selected country. Pass the visitor's own (`toPhoneCountry` in
+   * lib/validation/phone.ts): with none, whatever they type gets a "+" in front
+   * and a local number is read as another country's.
+   */
   defaultCountry?: Country;
 };
 
@@ -95,12 +99,12 @@ export function PhoneField({
       countries={countries}
       defaultCountry={defaultCountry}
       flagComponent={FlagGlyph}
-      // With no `defaultCountry` the field starts empty rather than seeded with a
-      // calling code, so a customer types or picks their own from anywhere. The
-      // calling code stays editable for the same reason: nothing is pre-chosen
-      // for them to be stuck with. aria-required is what reaches assistive tech;
-      // the real enforcement stays in the submit handler, which validates and
-      // focuses this input via inputRef.
+      // `defaultCountry` seeds the calling code ("+91"), so a customer only types
+      // their local number. It stays editable: GeoIP can be wrong (a VPN, someone
+      // travelling), and the flag menu offers every country. A seeded code also
+      // satisfies a native `required` check, so aria-required is what reaches
+      // assistive tech; the real enforcement stays in the submit handler, which
+      // validates and focuses this input via inputRef.
       aria-required={required || undefined}
       // Must go through `ref`, not the library's `inputRef` prop: PhoneInput's
       // forwardRef wrapper spreads `{inputRef: ref}` last, so a caller-supplied

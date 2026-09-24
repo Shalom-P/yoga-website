@@ -1,7 +1,10 @@
+import { headers } from "next/headers";
 import { requireUser } from "@/lib/auth/guards";
 import { ProfileForm } from "@/components/dashboard/ProfileForm";
 import { DeleteAccountSection } from "@/components/dashboard/DeleteAccountSection";
+import { countryFromHeaders } from "@/lib/geo/region";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
+import { toPhoneCountry } from "@/lib/validation/phone";
 
 export default async function ProfilePage() {
   const { user, supabase } = await requireUser();
@@ -10,6 +13,9 @@ export default async function ProfilePage() {
     .select("full_name, email, phone, timezone, experience_level, marketing_opt_in")
     .eq("id", user.id)
     .single();
+  // Customers who signed up before the phone was required fill it in here on
+  // their first save, so pre-select their calling code the way onboarding does.
+  const defaultPhoneCountry = toPhoneCountry(countryFromHeaders(await headers()));
 
   return (
     <div className="max-w-[640px]">
@@ -29,6 +35,7 @@ export default async function ProfilePage() {
           experience_level: profile?.experience_level ?? "beginner",
           marketing_opt_in: profile?.marketing_opt_in ?? false,
         }}
+        defaultPhoneCountry={defaultPhoneCountry}
       />
       <DeleteAccountSection />
     </div>

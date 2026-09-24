@@ -13,7 +13,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { detectBrowserTimezone } from "@/lib/timezone";
-import { toE164, PHONE_ERROR_MESSAGE } from "@/lib/validation/phone";
+import { toE164, phoneErrorMessage } from "@/lib/validation/phone";
+import type { CountryCode } from "libphonenumber-js";
 import { friendlyFormError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
 
@@ -30,10 +31,13 @@ const GOALS = [
 export function OnboardingForm({
   initialFullName = "",
   initialPhone = "",
+  defaultPhoneCountry,
   next = "/dashboard/book",
 }: {
   initialFullName?: string;
   initialPhone?: string;
+  /** The visitor's GeoIP country, pre-selected in the phone field. */
+  defaultPhoneCountry?: CountryCode;
   next?: string;
 }) {
   const router = useRouter();
@@ -74,7 +78,7 @@ export function OnboardingForm({
       // native `required` check can't fire here (see PhoneField), so focus is
       // what actually tells a keyboard or screen-reader user where the problem is.
       phoneRef.current?.focus();
-      toast.error(phone.trim() ? PHONE_ERROR_MESSAGE : "Please enter your mobile number.");
+      toast.error(phone.trim() ? phoneErrorMessage(defaultPhoneCountry) : "Please enter your mobile number.");
       return;
     }
     setLoading(true);
@@ -141,7 +145,7 @@ export function OnboardingForm({
         <LabelWithHint
           htmlFor="phone"
           className="mb-2"
-          hint="We use this only to reach you about your sessions, never for marketing. Pick your country, then type the number."
+          hint="We use this only to reach you about your sessions, never for marketing. If the country code isn't yours, change it with the flag."
         >
           Mobile number <span aria-hidden="true" className="text-destructive">*</span>
         </LabelWithHint>
@@ -152,6 +156,7 @@ export function OnboardingForm({
           inputRef={phoneRef}
           value={phone}
           onChange={setPhone}
+          defaultCountry={defaultPhoneCountry}
           className="h-11"
         />
       </div>
