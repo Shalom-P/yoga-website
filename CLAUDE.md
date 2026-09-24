@@ -128,7 +128,7 @@ Invariants: amounts are always derived server-side (the client sends only a raw 
 ### Timezones — critical, easy to get wrong
 
 - All DB timestamps are `timestamptz` (UTC). Never store wall-clock times.
-- `lib/timezone/index.ts` is the only place that formats: `formatCustomerTime` (default `DEFAULT_CUSTOMER_TZ` = `Asia/Kolkata`), `formatTeacherTime` (always `Asia/Kolkata`, suffixed "IST"). Use these instead of `date-fns` `format` directly so DST is handled. Customers store their real device-detected IANA zone (global picker in `components/ui/timezone-select.tsx`).
+- `lib/timezone/index.ts` is the only place that formats: `formatCustomerTime` (default `DEFAULT_CUSTOMER_TZ` = `Asia/Kolkata`), `formatTeacherTime` (always `Asia/Kolkata`, suffixed "IST"), and `formatInTz` for any zone and pattern. Use these instead of `date-fns` `format` directly so DST is handled. Don't call date-fns-tz's `formatInTimeZone` directly either: it rebuilds the wall time with the runtime's local setters, so a time inside a DST browser's own spring-forward hour prints an hour late (and fails hydration against the UTC server). `formatInTz` reads the fields through `TZDate` from `@date-fns/tz` instead; `lib/timezone/formatInTz.test.ts` pins it. Customers store their real device-detected IANA zone (global picker in `components/ui/timezone-select.tsx`).
 - Booking-availability checks compare strings — see `slotInsideAvailability` in `app/api/bookings/confirm/route.ts`. Postgres `day_of_week` is 0=Sun..6=Sat, date-fns `i` is 1=Mon..7=Sun — the helper normalises. Slots crossing midnight in the teacher TZ are currently rejected.
 
 ### Bookings + Meet flow

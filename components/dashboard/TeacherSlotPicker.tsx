@@ -3,11 +3,12 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatInTimeZone, getTimezoneOffset } from "date-fns-tz";
+import { getTimezoneOffset } from "date-fns-tz";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBrowserTz, useHasMounted } from "@/components/dashboard/local-time";
 import { generateSlots, type Availability, type Slot } from "@/lib/booking/slots";
+import { formatInTz } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -74,7 +75,7 @@ export function TeacherSlotPicker({
     const slots = generateSlots(availability, teacherTimezone, now, blockedDates ?? []);
     const buckets = new Map<string, Slot[]>();
     for (const s of slots) {
-      const dayKey = formatInTimeZone(s.at, customerTz, "yyyy-MM-dd");
+      const dayKey = formatInTz(s.at, customerTz, "yyyy-MM-dd");
       const arr = buckets.get(dayKey) ?? [];
       arr.push(s);
       buckets.set(dayKey, arr);
@@ -203,15 +204,15 @@ export function TeacherSlotPicker({
             className="grid items-start gap-4 border-t border-border pt-4 [grid-template-columns:minmax(0,1fr)] sm:[grid-template-columns:minmax(0,140px)_minmax(0,1fr)]"
           >
             <div className="pt-1.5 text-[14.5px] font-semibold">
-              {formatInTimeZone(slots[0].at, customerTz, "EEE, d LLL")}
+              {formatInTz(slots[0].at, customerTz, "EEE, d LLL")}
               <span className="mt-0.5 block text-xs font-normal text-muted-foreground">
                 {slots.length} slot{slots.length === 1 ? "" : "s"}
               </span>
             </div>
             <div className="flex flex-wrap gap-2">
               {slots.map((s) => {
-                const label = formatInTimeZone(s.at, customerTz, "h:mm a");
-                const teacherLabel = formatInTimeZone(s.at, teacherTimezone, "h:mm a");
+                const label = formatInTz(s.at, customerTz, "h:mm a");
+                const teacherLabel = formatInTz(s.at, teacherTimezone, "h:mm a");
                 const id = s.at.toISOString();
                 const on = selected?.at.getTime() === s.at.getTime();
                 return (
@@ -250,12 +251,12 @@ export function TeacherSlotPicker({
               Selected
             </div>
             <div className="mt-0.5 font-[family-name:var(--font-cormorant)] text-[22px] font-semibold">
-              {formatInTimeZone(selected.at, customerTz, "EEE d MMM")},{" "}
-              {formatInTimeZone(selected.at, customerTz, "h:mm a")} with {teacherFirstName}
+              {formatInTz(selected.at, customerTz, "EEE d MMM")},{" "}
+              {formatInTz(selected.at, customerTz, "h:mm a")} with {teacherFirstName}
             </div>
             <div className="text-[13px] text-muted-foreground">
               {selected.durationMinutes} min ·{" "}
-              {formatInTimeZone(selected.at, teacherTimezone, "h:mm a")} for {teacherFirstName}
+              {formatInTz(selected.at, teacherTimezone, "h:mm a")} for {teacherFirstName}
               {isPaid ? " · uses 1 session" : ""}
             </div>
           </div>

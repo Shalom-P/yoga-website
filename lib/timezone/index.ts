@@ -1,4 +1,5 @@
-import { format, formatInTimeZone, getTimezoneOffset, toDate } from "date-fns-tz";
+import { TZDate } from "@date-fns/tz";
+import { format, getTimezoneOffset, toDate } from "date-fns-tz";
 
 // Default fallback only — the onboarding/profile picker stores the customer's
 // real device-detected IANA zone. India is the larger of the two served markets
@@ -46,23 +47,35 @@ export function getTimezoneOptions(): { value: string; label: string }[] {
   ];
 }
 
-/** Format a UTC timestamp in a given IANA timezone. */
+/**
+ * Format a UTC timestamp in a given IANA timezone.
+ *
+ * Not `formatInTimeZone`: date-fns-tz rebuilds the zone's wall time with the
+ * runtime's local setters, so a wall time the runtime's own clock skips comes
+ * out an hour late. IST 02:30 on 8 Mar 2026 read 03:30 in a Los Angeles
+ * browser, where that night jumps from 02:00 to 03:00. UTC, IST and Dubai have
+ * no such gap, so the server was right and hydration failed. A TZDate reads
+ * the zone's fields from the instant itself, whatever zone the runtime is in.
+ * Parsing and the zone-name tokens (`zzz`, `xxx`) stay with date-fns-tz.
+ */
 export function formatInTz(
   isoOrDate: string | Date,
   timeZone: string,
   pattern = "EEE d MMM, h:mm a"
 ) {
-  return formatInTimeZone(isoOrDate, timeZone, pattern);
+  const at = toDate(isoOrDate, { timeZone });
+  // formatInTimeZone treated a blank zone as UTC; keep that rather than throw.
+  return format(new TZDate(at, timeZone || "UTC"), pattern, { timeZone, originalDate: at });
 }
 
 /** "Tuesday 4 Jun, 7:30 PM" in the customer's TZ. */
 export function formatCustomerTime(iso: string, customerTz = DEFAULT_CUSTOMER_TZ) {
-  return formatInTimeZone(iso, customerTz, "EEEE d MMM, h:mm a");
+  return formatInTz(iso, customerTz, "EEEE d MMM, h:mm a");
 }
 
 /** "Tue 4 Jun, 3:00 PM IST" — the teacher-side display. */
 export function formatTeacherTime(iso: string) {
-  return `${formatInTimeZone(iso, TEACHER_TZ, "EEE d MMM, h:mm a")} IST`;
+  return `${formatInTz(iso, TEACHER_TZ, "EEE d MMM, h:mm a")} IST`;
 }
 
 /**
@@ -75,7 +88,7 @@ export function formatTeacherTime(iso: string) {
  */
 export function dayInIst(at: string | Date | null | undefined): string {
   if (!at) return "-";
-  return formatInTimeZone(at, DEFAULT_CUSTOMER_TZ, "d MMM yyyy");
+  return formatInTz(at, DEFAULT_CUSTOMER_TZ, "d MMM yyyy");
 }
 
 /** Returns the user's best-guess TZ from the browser. SSR safe. */
