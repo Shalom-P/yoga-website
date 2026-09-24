@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <h1 className="text-[clamp(2.25rem,4vw,3rem)] leading-[1.1] tracking-tight">
           Privacy policy
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 21 June 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 24 September 2026</p>
 
         <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
           <strong>Pending legal review.</strong> This policy is a good-faith draft written for
@@ -104,6 +104,10 @@ export default function PrivacyPage() {
               <li>Improve our platform and personalise your experience.</li>
               <li>Comply with applicable laws and enforce our terms.</li>
               <li>Send you marketing communications about our services (you may opt out at any time).</li>
+              <li>
+                Measure whether our advertising on Meta (Facebook and Instagram) leads to sign-ups,
+                bookings and purchases (see Sections 4 and 6).
+              </li>
             </ul>
             <p>
               We will not use your personal information for a purpose that is unrelated to why
@@ -157,6 +161,16 @@ export default function PrivacyPage() {
                     <td className="py-2">USA / EU</td>
                   </tr>
                   <tr>
+                    <td className="py-2 pr-4">Meta Platforms</td>
+                    <td className="py-2 pr-4">
+                      Advertising measurement: when you complete sign-up, book a session or buy a
+                      session pack, we send Meta a hashed (scrambled) copy of your email and account
+                      ID, your IP address, browser type, and the purchase amount. We never send
+                      your health information, class choices, teacher, or messages.
+                    </td>
+                    <td className="py-2">USA / Ireland</td>
+                  </tr>
+                  <tr>
                     <td className="py-2 pr-4">Sentry</td>
                     <td className="py-2 pr-4">Application error monitoring</td>
                     <td className="py-2">USA</td>
@@ -202,6 +216,14 @@ export default function PrivacyPage() {
               We use cookies and similar tracking technologies to keep you signed in, remember
               your preferences, and understand how our site is used. Our analytics provider
               PostHog may set cookies and collect pseudonymous identifiers.
+            </p>
+            <p>
+              We also set two first-party advertising cookies, <code>_fbp</code> and{" "}
+              <code>_fbc</code>, which last up to 90 days. They let Meta tell whether a visit
+              came from one of our ads, so we can measure which ads work. We do not run the Meta
+              Pixel, and these cookies are read only by our own servers. If your browser sends a
+              Global Privacy Control signal, we do not set these cookies or share any of your
+              activity with Meta. Our iOS app never shares your activity with Meta.
             </p>
             <p>
               You can control cookies through your browser settings. Disabling cookies may

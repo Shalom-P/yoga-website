@@ -12,6 +12,8 @@ import {
   countryFromHeaders,
   resolveRegion,
 } from "@/lib/geo/region";
+import { metaContextFromRequest, queueMetaEvent } from "@/lib/meta/capi";
+import { metaContextToNotes } from "@/lib/meta/shared";
 
 // The Razorpay SDK requires the Node runtime.
 export const runtime = "nodejs";
@@ -130,6 +132,8 @@ export async function POST(req: Request): Promise<Response> {
     chargeAmount = result.finalAmountCents;
   }
 
+  const metaContext = metaContextFromRequest(req, "/dashboard/plan");
+
   try {
     const order = await getRazorpayClient().orders.create({
       amount: chargeAmount,
@@ -147,6 +151,23 @@ export async function POST(req: Request): Promise<Response> {
         ...(reservation
           ? { discountRedemptionId: reservation.redemptionId, discountCodeId: reservation.discountCodeId }
           : {}),
+        // The Meta Purchase fires from fulfilment, which the webhook can reach
+        // with no browser attached, so the browser signals ride on the order.
+        ...metaContextToNotes(metaContext),
+      },
+    });
+
+    queueMetaEvent({
+      name: "InitiateCheckout",
+      eventId: `checkout_${order.id}`,
+      context: metaContext,
+      user: { email: user.email ?? profile?.email, externalId: user.id, country },
+      custom: {
+        value: chargeAmount / 100,
+        currency: pack.currency,
+        contentIds: [pack.slug],
+        contentType: "product",
+        numItems: 1,
       },
     });
 

@@ -6,6 +6,7 @@ import { teacherInviteEmail, sessionAttendees } from "@/lib/google/teacherInvite
 import { provisionSessionMeet } from "@/lib/google/provisionMeet";
 import { sendBookingConfirmation } from "@/lib/email";
 import { trackServer } from "@/lib/analytics/server";
+import { metaContextFromRequest, queueMetaEvent } from "@/lib/meta/capi";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import {
   slotInsideAvailability,
@@ -174,6 +175,7 @@ export async function POST(req: Request) {
       isFreeTrial: parsed.data.isFreeTrial,
     });
 
+    queueScheduleEvent(req, user, body.bookingId);
     return NextResponse.json({ bookingId: body.bookingId, sessionId: body.sessionId });
   }
 
@@ -307,5 +309,18 @@ export async function POST(req: Request) {
     session_id: session.id,
   });
 
+  queueScheduleEvent(req, user, booking.id);
   return NextResponse.json({ bookingId: booking.id, sessionId: session.id });
+}
+
+// Meta "Schedule". Deliberately carries no teacher or class detail, and a fixed
+// page path rather than the Referer (/dashboard/book/<teacher-slug>): which
+// teacher someone booked can imply a health condition.
+function queueScheduleEvent(req: Request, user: { id: string; email?: string }, bookingId: string) {
+  queueMetaEvent({
+    name: "Schedule",
+    eventId: `schedule_${bookingId}`,
+    context: metaContextFromRequest(req, "/dashboard/book"),
+    user: { email: user.email, externalId: user.id },
+  });
 }
