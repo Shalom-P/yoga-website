@@ -377,12 +377,17 @@ html.lenis body {
    PORTALLED content. Dialogs, sheets, selects, dropdowns, popovers and tooltips
    are appended to document.body by base-ui, i.e. OUTSIDE the wrapper div, so a
    wrapper-only selector left every overlay resolving the light :root palette —
-   a cream dialog opening on top of a dark page.
+   a cream dialog opening on top of a dark page. `color-scheme` is the one
+   property that must NOT reach all of <body> this way; the rules right after
+   this block carve it back (third-party iframes, Razorpay Checkout).
 
    From the "My Yoga Classes" design canvas (THEMES.dark). Applied as a class
    rather than routed through next-themes on purpose:
-     - No ThemeProvider change, so `forcedTheme="light"` in app/layout.tsx
-       stays as-is and there is no flash-of-wrong-theme to manage.
+     - The ThemeProvider in app/layout.tsx keeps `forcedTheme="light"`, so there
+       is no flash-of-wrong-theme to manage. It does set
+       `enableColorScheme={false}`: otherwise next-themes writes an inline
+       `color-scheme: light` on <html>, which outranks the `color-scheme: dark`
+       below and left the page scrollbar and every overlay's native controls light.
      - NOTE: `@custom-variant dark` (top of this file) is bound to a `.dark`
        ancestor that nothing applies, so shadcn's built-in `dark:` utilities are
        inert. That is deliberate — this skin is done with semantic tokens. Adding
@@ -462,6 +467,33 @@ html:has(.myc-dark) {
   --myc-vid-blend:            multiply;
   --myc-vid-op:               0.55;
   --myc-vid-filter:           saturate(0.85) contrast(1.05) brightness(0.9);
+}
+
+/* ---- color-scheme: dark for <html> and our own overlays, NOT for <body> ----
+   The block above makes <html> dark, and that is what darkens the page
+   scrollbar (Chrome on Windows and Linux draws a classic one that follows
+   color-scheme). But color-scheme inherits, so every third-party widget that
+   appends itself to <body> would go dark with it. Razorpay Checkout does exactly
+   that: a full-screen transparent iframe over an rgba(0,0,0,.6) backdrop, and
+   its own document is color-scheme: normal. When an iframe element's color
+   scheme (dark) differs from its document's (light), Chrome paints an OPAQUE
+   canvas behind the frame (CSS Color Adjust), so the dimmed backdrop turned
+   solid white and the page vanished mid-payment. Verified in Chromium 153.
+
+   So <body> stays light, which is exactly what it computed while next-themes
+   was pinning <html> light, and dark is opted back in only for content we
+   render: the `.myc-dark` wrappers (block above) and base-ui's portal nodes.
+   Every Dialog, Sheet, Select, Combobox, Popover, Menu and Tooltip mounts in a
+   `<div data-base-ui-portal>` on <body>, so their scrollbars and native
+   date/time/number inputs match the dark tokens. If base-ui ever renames that
+   attribute, overlays fall back to light native controls (the old look), not to
+   a whited-out checkout. Don't widen the dark rule to `body` or `body > *`. */
+html:has(.myc-dark) body {
+  color-scheme: light;
+}
+
+html:has(.myc-dark) [data-base-ui-portal] {
+  color-scheme: dark;
 }
 
 /* Sharp corners belong to the MARKETING design, not to the dark palette, so
