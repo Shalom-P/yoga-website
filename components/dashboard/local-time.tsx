@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import { formatInTz, tzShort, detectBrowserTimezone } from "@/lib/timezone";
+import { formatInTz, tzShort, tzOffsetLabel, detectBrowserTimezone } from "@/lib/timezone";
 
 // The timezone never changes during a session, so the store has no updates.
 const subscribe = () => () => {};
@@ -48,10 +48,19 @@ export function LocalTime({
   return <>{formatInTz(iso, tz, pattern)}</>;
 }
 
-/** Short label for the viewer's local timezone, e.g. "GMT+11" / "AWST". */
+/**
+ * Short label for the viewer's local timezone, e.g. "GST" / "GMT+5:30".
+ *
+ * The Intl name (tzShort) follows the runtime's locale: the en-US server says
+ * "GMT+4" for Asia/Dubai where an en-GB or en-AE browser says "GST". Rendering
+ * it in the hydration pass fails React's text check and throws the page away,
+ * so the server and hydration renders show the plain GMT offset, and the Intl
+ * name takes over once mounted.
+ */
 export function LocalTzLabel({ fallbackTz }: { fallbackTz: string }) {
   const tz = useBrowserTz(fallbackTz);
-  return <>{tzShort(tz)}</>;
+  const mounted = useHasMounted();
+  return <>{mounted ? tzShort(tz) : tzOffsetLabel(tz)}</>;
 }
 
 /** The viewer's local timezone name, e.g. "Asia/Dubai". */

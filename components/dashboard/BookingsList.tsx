@@ -15,8 +15,8 @@ import {
 } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { formatInTz, tzShort } from "@/lib/timezone";
-import { useBrowserTz } from "@/components/dashboard/local-time";
+import { formatInTz } from "@/lib/timezone";
+import { LocalTzLabel, useBrowserTz } from "@/components/dashboard/local-time";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import type { BookingStatus, MeetStatus } from "@/lib/supabase/types";
@@ -159,7 +159,8 @@ export function BookingsList({
           <table className="w-full min-w-[680px] text-sm">
             <thead>
               <tr>
-                <Th>When ({tzShort(tz)})</Th>
+                {/* Not tzShort(tz): its Intl name differs server vs browser and fails hydration. */}
+                <Th>When (<LocalTzLabel fallbackTz={customerTimezone} />)</Th>
                 <Th>Session</Th>
                 <Th>Teacher</Th>
                 <Th>Status</Th>
