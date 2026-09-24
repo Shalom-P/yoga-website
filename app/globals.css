@@ -109,6 +109,21 @@
     @apply font-[family-name:var(--font-heading)];
     letter-spacing: -0.02em;
   }
+  /* Native <select> menus (today only the phone field's country picker). On
+     Windows, Linux and ChromeOS, Chrome and Edge draw the open list as a page
+     of their own whose body is hard-coded white, copying colours across from
+     the <select> and each <option>. Preflight makes those a transparent
+     background with inherited text, so on the dark skin every row but the
+     highlighted one came out cream on white. Giving the rows the popover
+     colours makes the list match our own dropdowns in either palette, and
+     Firefox on Windows copies them too. macOS, iOS and Android draw the list
+     with the OS menu and ignore all of this, which is why it never showed up
+     on a Mac. */
+  option,
+  optgroup {
+    background-color: var(--popover);
+    color: var(--popover-foreground);
+  }
 }
 
 /* Lenis smooth scroll (components/shared/LenisProvider.tsx). Lenis drives the
