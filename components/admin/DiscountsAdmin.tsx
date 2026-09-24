@@ -27,6 +27,13 @@ import {
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
 import { SUPPORTED_CURRENCIES } from "@/lib/geo/region";
+import {
+  DEFAULT_CUSTOMER_TZ,
+  dayInIst,
+  formatInTz,
+  istDayEnd,
+  istDayStart,
+} from "@/lib/timezone";
 import type { DiscountCode, DiscountType, Plan } from "@/lib/supabase/types";
 import { AdminPageHeader } from "@/components/admin/AdminPage";
 
@@ -46,6 +53,16 @@ type Draft = {
   is_active: boolean;
 };
 
+/**
+ * Validity dates are IST calendar days, the zone the studio runs on. They
+ * used to be written as the admin's local midnight but read back with
+ * `.slice(0, 10)`, the UTC date, so IST midnight (18:30Z the day before) came
+ * back a day early and every re-save moved `valid_from` back another day.
+ */
+function istDateInput(at: string | Date): string {
+  return formatInTz(at, DEFAULT_CUSTOMER_TZ, "yyyy-MM-dd");
+}
+
 const EMPTY: Draft = {
   code: "",
   discount_type: "percentage",
@@ -55,7 +72,7 @@ const EMPTY: Draft = {
   max_uses: "",
   per_email_max: "",
   currency: "",
-  valid_from: new Date().toISOString().slice(0, 10),
+  valid_from: "", // today in IST, filled in when the dialog opens
   valid_until: "",
   is_active: true,
 };
@@ -74,8 +91,8 @@ function toDraft(c: DiscountCode): Draft {
     max_uses: c.max_uses === null ? "" : String(c.max_uses),
     per_email_max: c.per_email_max === null ? "" : String(c.per_email_max),
     currency: c.currency ?? "",
-    valid_from: c.valid_from.slice(0, 10),
-    valid_until: c.valid_until ? c.valid_until.slice(0, 10) : "",
+    valid_from: istDateInput(c.valid_from),
+    valid_until: c.valid_until ? istDateInput(c.valid_until) : "",
     is_active: c.is_active,
   };
 }
@@ -100,7 +117,7 @@ export function DiscountsAdmin({
   const [saving, setSaving] = useState(false);
 
   function openAdd() {
-    setDraft(EMPTY);
+    setDraft({ ...EMPTY, valid_from: istDateInput(new Date()) });
     setOpen(true);
   }
   function openEdit(c: DiscountCode) {
@@ -129,6 +146,10 @@ export function DiscountsAdmin({
         return;
       }
     }
+    if (!draft.valid_from) {
+      toast.error("Valid from date is required.");
+      return;
+    }
 
     const payload = {
       code: draft.code.toUpperCase().trim(),
@@ -139,13 +160,11 @@ export function DiscountsAdmin({
       max_uses: draft.max_uses === "" ? null : Number(draft.max_uses),
       per_email_max: draft.per_email_max === "" ? null : Number(draft.per_email_max),
       currency: draft.currency === "" ? null : draft.currency,
-      // Append T00:00:00 so the date-only input is parsed as LOCAL midnight, not
-      // UTC midnight. Otherwise an AU admin's "valid from 1 June" lands ~10h
-      // early (31 May 14:00Z) and the code activates a day sooner than intended.
-      valid_from: new Date(`${draft.valid_from}T00:00:00`).toISOString(),
-      valid_until: draft.valid_until
-        ? new Date(`${draft.valid_until}T23:59:59`).toISOString()
-        : null,
+      // Whole IST days, whatever zone the admin's browser is in. The backend
+      // compares instants (valid_from <= now() < valid_until), so "until 1 Oct"
+      // means through the end of 1 Oct IST, which is the day the table shows.
+      valid_from: istDayStart(draft.valid_from).toISOString(),
+      valid_until: draft.valid_until ? istDayEnd(draft.valid_until).toISOString() : null,
       is_active: draft.is_active,
     };
 
@@ -210,8 +229,8 @@ export function DiscountsAdmin({
                     {c.times_used}
                     {c.max_uses !== null && ` / ${c.max_uses}`}
                   </td>
-                  <td className="px-4 py-3 text-muted-foreground">
-                    {c.valid_until ? new Date(c.valid_until).toLocaleDateString("en-GB") : "-"}
+                  <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                    {dayInIst(c.valid_until)}
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={c.is_active ? "secondary" : "outline"}>
@@ -365,9 +384,9 @@ export function DiscountsAdmin({
               <div>
                 <LabelWithHint
                   htmlFor="from"
-                  hint="Earliest date the code can be redeemed. Defaults to today."
+                  hint="First day the code works, from the start of the day in IST. Defaults to today."
                 >
-                  Valid from
+                  Valid from (IST)
                 </LabelWithHint>
                 <Input
                   id="from"
@@ -380,9 +399,9 @@ export function DiscountsAdmin({
               <div>
                 <LabelWithHint
                   htmlFor="until"
-                  hint="Code stops working at midnight UTC on this date. Leave blank for no end."
+                  hint="Last day the code works, up to the end of the day in IST. Leave blank for no end."
                 >
-                  Valid until (optional)
+                  Valid until (IST, optional)
                 </LabelWithHint>
                 <Input
                   id="until"

@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { dayInIst } from "@/lib/timezone";
 import { toast } from "sonner";
 import type { UserRole } from "@/lib/supabase/types";
 
@@ -182,8 +183,8 @@ export function CustomersTable({ rows }: { rows: Row[] }) {
                     {c.role}
                   </span>
                 </td>
-                <td className="px-4 py-3 text-muted-foreground">
-                  {new Date(c.created_at).toLocaleDateString("en-GB")}
+                <td className="px-4 py-3 text-muted-foreground whitespace-nowrap">
+                  {dayInIst(c.created_at)}
                 </td>
                 <td className="px-4 py-3 text-right whitespace-nowrap">
                   <Button size="sm" variant="ghost" onClick={() => setCreditTarget(c)}>
