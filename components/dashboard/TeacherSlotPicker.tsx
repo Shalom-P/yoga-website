@@ -3,12 +3,11 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getTimezoneOffset } from "date-fns-tz";
 import { Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useBrowserTz, useHasMounted } from "@/components/dashboard/local-time";
 import { generateSlots, type Availability, type Slot } from "@/lib/booking/slots";
-import { formatInTz } from "@/lib/timezone";
+import { formatInTz, tzDiffLabel } from "@/lib/timezone";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -26,16 +25,6 @@ type Props = {
   /** Admins skip the wait for browser-timezone resolution below. */
   isAdmin: boolean;
 };
-
-/** "+1:30" / "-4:00" — how far ahead of the customer the teacher's clock runs. */
-function offsetLabel(teacherTz: string, customerTz: string, at: Date) {
-  const diffMin =
-    (getTimezoneOffset(teacherTz, at) - getTimezoneOffset(customerTz, at)) / 60000;
-  if (diffMin === 0) return "same time";
-  const sign = diffMin > 0 ? "+" : "-";
-  const abs = Math.abs(diffMin);
-  return `${sign}${Math.floor(abs / 60)}:${String(abs % 60).padStart(2, "0")}`;
-}
 
 function Chip({ children }: { children: React.ReactNode }) {
   return (
@@ -180,7 +169,7 @@ export function TeacherSlotPicker({
       <div className="flex flex-wrap items-center gap-2.5 text-[13px] text-muted-foreground">
         <Chip>Your time · {customerTz}</Chip>
         <Chip>
-          Teacher · {teacherTimezone} ({offsetLabel(teacherTimezone, customerTz, new Date())})
+          Teacher · {teacherTimezone} ({tzDiffLabel(teacherTimezone, customerTz)})
         </Chip>
         {isPaid && creditBalance > 0 && (
           <Chip>
