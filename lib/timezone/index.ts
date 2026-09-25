@@ -1,5 +1,5 @@
-import { TZDate } from "@date-fns/tz";
-import { format, getTimezoneOffset, toDate } from "date-fns-tz";
+import { TZDate, tzOffset } from "@date-fns/tz";
+import { format, toDate } from "date-fns-tz";
 
 // Default fallback only — the onboarding/profile picker stores the customer's
 // real device-detected IANA zone. India is the larger of the two served markets
@@ -136,19 +136,49 @@ export function tzShort(timeZone: string, at: Date = new Date()) {
 }
 
 /**
+ * The zone's UTC offset at the instant `at`, in minutes. Throws a RangeError
+ * for an unknown zone.
+ *
+ * Not date-fns-tz's getTimezoneOffset: it reads the Date's fields as a wall
+ * time in the zone, so for the hours around the zone's own clock change it
+ * returns the offset from the other side. At 06:30Z on 8 Mar 2026 New York was
+ * still on EST (GMT-5), but 06:30 on its wall clock is after the jump, so it
+ * said GMT-4. Which side it landed on also depended on the runtime's zone, so
+ * the UTC server and a browser could disagree. tzOffset asks Intl for the
+ * offset at the instant itself.
+ */
+function offsetMinutes(timeZone: string, at: Date) {
+  // getTimezoneOffset treated a blank zone as UTC; keep that rather than throw.
+  const offset = tzOffset(timeZone || "UTC", at);
+  if (Number.isNaN(offset)) throw new RangeError(`Invalid time zone specified: ${timeZone}`);
+  return Math.round(offset);
+}
+
+/**
  * The zone's UTC offset as "GMT+4" / "GMT+5:30" / "GMT-3:30", or "GMT" at zero.
  * Plain arithmetic on the offset rather than an Intl name, so the server and
  * every browser produce the same text. Throws a RangeError for an unknown zone,
  * like tzShort.
  */
 export function tzOffsetLabel(timeZone: string, at: Date = new Date()) {
-  const offsetMs = getTimezoneOffset(timeZone, at);
-  if (Number.isNaN(offsetMs)) throw new RangeError(`Invalid time zone specified: ${timeZone}`);
-  const offsetMin = Math.round(offsetMs / 60_000);
+  const offsetMin = offsetMinutes(timeZone, at);
   if (offsetMin === 0) return "GMT";
   const abs = Math.abs(offsetMin);
   const minutes = abs % 60;
   return `GMT${offsetMin < 0 ? "-" : "+"}${Math.floor(abs / 60)}${
     minutes ? `:${String(minutes).padStart(2, "0")}` : ""
   }`;
+}
+
+/**
+ * "+1:30" / "-4:00": how far `timeZone`'s clock runs ahead of `relativeTo`'s at
+ * the instant `at`, or "same time". The slot picker's teacher chip. Throws a
+ * RangeError for an unknown zone on either side.
+ */
+export function tzDiffLabel(timeZone: string, relativeTo: string, at: Date = new Date()) {
+  const diffMin = offsetMinutes(timeZone, at) - offsetMinutes(relativeTo, at);
+  if (diffMin === 0) return "same time";
+  const sign = diffMin > 0 ? "+" : "-";
+  const abs = Math.abs(diffMin);
+  return `${sign}${Math.floor(abs / 60)}:${String(abs % 60).padStart(2, "0")}`;
 }
