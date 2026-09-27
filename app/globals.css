@@ -48,6 +48,68 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* Brand font stacks. app/fonts/index.ts loads each family as a latin file plus
+   a latin-ext companion (₹, accented names) with its own unicode-range, and the
+   classes on <html> define both halves. The companion goes first: its range
+   keeps it out of the way for everything else, while the fallback face behind
+   the latin family would otherwise draw the ₹ itself.
+
+   The fallback faces are the size-adjusted stand-ins shown until a font has
+   loaded. Their metrics are the ones next/font/google generated for these
+   families, so pages also load looking exactly as before. */
+:root {
+  --font-inter: var(--font-inter-latin-ext), var(--font-inter-latin), "Inter Fallback";
+  --font-fraunces: var(--font-fraunces-latin-ext), var(--font-fraunces-latin), "Fraunces Fallback";
+  --font-geist-mono: var(--font-geist-mono-latin-ext), var(--font-geist-mono-latin), "Geist Mono Fallback";
+  --font-cormorant: var(--font-cormorant-latin-ext), var(--font-cormorant-latin), "Cormorant Garamond Fallback";
+  --font-hanken: var(--font-hanken-latin-ext), var(--font-hanken-latin), "Hanken Grotesk Fallback";
+}
+
+@font-face {
+  font-family: "Inter Fallback";
+  src: local("Arial");
+  ascent-override: 90.44%;
+  descent-override: 22.52%;
+  line-gap-override: 0%;
+  size-adjust: 107.12%;
+}
+
+@font-face {
+  font-family: "Fraunces Fallback";
+  src: local("Times New Roman");
+  ascent-override: 84.71%;
+  descent-override: 22.09%;
+  line-gap-override: 0%;
+  size-adjust: 115.45%;
+}
+
+@font-face {
+  font-family: "Geist Mono Fallback";
+  src: local("Arial");
+  ascent-override: 74.67%;
+  descent-override: 21.92%;
+  line-gap-override: 0%;
+  size-adjust: 134.59%;
+}
+
+@font-face {
+  font-family: "Cormorant Garamond Fallback";
+  src: local("Times New Roman");
+  ascent-override: 95.27%;
+  descent-override: 29.59%;
+  line-gap-override: 0%;
+  size-adjust: 96.98%;
+}
+
+@font-face {
+  font-family: "Hanken Grotesk Fallback";
+  src: local("Arial");
+  ascent-override: 99.07%;
+  descent-override: 30.02%;
+  line-gap-override: 0%;
+  size-adjust: 100.94%;
+}
+
 /* Brand palette — single source of truth: teal & coral on warm cream.
    .myc-theme / .myc-app layer on brand fonts, radius and extra tokens only.
    The site is intentionally light-only (see ThemeProvider forcedTheme="light"

@@ -1,11 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import {
-  Fraunces,
-  Inter,
-  Geist_Mono,
-  Cormorant_Garamond,
-  Hanken_Grotesk,
-} from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/components/shared/AnalyticsProvider";
@@ -13,43 +6,8 @@ import { NativeBridge } from "@/components/shared/NativeBridge";
 import { GoogleTag } from "@/components/shared/GoogleTag";
 import type { Organization, WithContext } from "schema-dts";
 import { INSTAGRAM_URL, ORG_ID } from "@/lib/seo/structuredData";
+import { fontVariables } from "./fonts";
 import "./globals.css";
-
-const inter = Inter({
-  subsets: ["latin"],
-  variable: "--font-inter",
-  display: "swap",
-});
-
-const fraunces = Fraunces({
-  subsets: ["latin"],
-  variable: "--font-fraunces",
-  display: "swap",
-  axes: ["opsz", "SOFT"],
-});
-
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-  display: "swap",
-});
-
-// Marketing-surface fonts (My Yoga Classes design handoff): elegant display
-// serif + clean grotesk body. Scoped to .myc-theme in globals.css.
-const cormorant = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  style: ["normal", "italic"],
-  variable: "--font-cormorant",
-  display: "swap",
-});
-
-const hanken = Hanken_Grotesk({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-hanken",
-  display: "swap",
-});
 
 // Every surface wears the dark .myc-dark skin ((marketing), (auth), (dashboard),
 // admin, (teacher), error.tsx, not-found.tsx), so the browser-chrome tint is
@@ -143,7 +101,7 @@ export default function RootLayout({
       data-scroll-behavior="smooth"
       lang="en"
       suppressHydrationWarning
-      className={`${inter.variable} ${fraunces.variable} ${geistMono.variable} ${cormorant.variable} ${hanken.variable} h-full antialiased`}
+      className={`${fontVariables} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-background text-foreground">
         <script
