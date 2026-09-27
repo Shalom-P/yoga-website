@@ -66,8 +66,8 @@ export default async function AdminDashboard() {
       .from("bookings")
       .select(
         `id, status, is_free_trial,
-         customer:profiles(full_name),
-         session:sessions(start_at, teacher:teachers(display_name))`
+         customer:profiles!customer_id(full_name),
+         session:sessions!session_id(start_at, teacher:teachers(display_name))`
       )
       .order("created_at", { ascending: false })
       .limit(5),

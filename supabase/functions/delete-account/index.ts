@@ -155,9 +155,11 @@ Deno.serve(async (req: Request) => {
 async function cancelFutureSessions(svc: ReturnType<typeof createClient>, userId: string): Promise<void> {
   try {
     const nowIso = new Date().toISOString();
+    // `!session_id` is required: bookings also points at sessions through
+    // moved_from_session_id (0039), and an unhinted embed fails the whole query.
     const { data: futureBookings } = await svc
       .from("bookings")
-      .select("session_id, sessions!inner(id, status, start_at, meet_event_id)")
+      .select("session_id, sessions!session_id!inner(id, status, start_at, meet_event_id)")
       .eq("customer_id", userId)
       .neq("status", "cancelled")
       .gt("sessions.start_at", nowIso);

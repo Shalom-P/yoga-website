@@ -29,7 +29,7 @@ export default async function DashboardHome() {
         .from("bookings")
         .select(
           `id, is_free_trial,
-         session:sessions(id, start_at, end_at, meet_link, meet_status,
+         session:sessions!session_id(id, start_at, end_at, meet_link, meet_status,
            teacher:teachers(display_name),
            class_category:class_categories(name))`,
         )

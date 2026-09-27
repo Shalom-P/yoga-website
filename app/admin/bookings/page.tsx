@@ -70,8 +70,8 @@ export default async function AdminBookingsPage({
     .select(
       `id, status, is_free_trial, comped, credit_refunded, moved_from_session_id,
        cancellation_reason, created_at,
-       customer:profiles(id, full_name, email),
-       session:sessions(id, start_at, capacity, status, teacher:teachers(id, display_name))`,
+       customer:profiles!customer_id(id, full_name, email),
+       session:sessions!session_id(id, start_at, capacity, status, teacher:teachers(id, display_name))`,
       { count: "exact" },
     );
 

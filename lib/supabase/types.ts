@@ -449,6 +449,17 @@ export type Database = {
         { foreignKeyName: "bookings_session_id_fkey"; columns: ["session_id"]; isOneToOne: false; referencedRelation: "sessions"; referencedColumns: ["id"] },
         { foreignKeyName: "bookings_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
         { foreignKeyName: "bookings_payment_fk"; columns: ["payment_id"]; isOneToOne: false; referencedRelation: "payments"; referencedColumns: ["id"] },
+        // 0039 gave bookings a SECOND foreign key to sessions and to profiles, so
+        // PostgREST can no longer pick one on its own: an unhinted
+        // `sessions(...)` / `profiles(...)` embed in either direction fails the
+        // whole request (HTTP 300, PGRST201) and supabase-js hands back
+        // data: null. Always embed through the hint, e.g.
+        // `session:sessions!session_id(...)`, `customer:profiles!customer_id(...)`,
+        // `sessions!session_id!inner(...)`, and from sessions `bookings!session_id(...)`.
+        // Listing both keys here makes the typed select parser reject an unhinted
+        // embed at compile time instead of in production.
+        { foreignKeyName: "bookings_moved_from_session_id_fkey"; columns: ["moved_from_session_id"]; isOneToOne: false; referencedRelation: "sessions"; referencedColumns: ["id"] },
+        { foreignKeyName: "bookings_enrolled_by_fkey"; columns: ["enrolled_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
       ]>;
       plans: Table<Plan, Partial<Plan> & { slug: string; name: string; price_base_cents: number }>;
       plan_features: Table<PlanFeature, Partial<PlanFeature> & { plan_id: string; feature_text: string }, Partial<PlanFeature>, [
@@ -473,6 +484,10 @@ export type Database = {
         { foreignKeyName: "payments_subscription_id_fkey"; columns: ["subscription_id"]; isOneToOne: false; referencedRelation: "subscriptions"; referencedColumns: ["id"] },
         { foreignKeyName: "payments_plan_id_fkey"; columns: ["plan_id"]; isOneToOne: false; referencedRelation: "plans"; referencedColumns: ["id"] },
         { foreignKeyName: "payments_verified_by_fkey"; columns: ["verified_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        { foreignKeyName: "payments_discount_code_id_fkey"; columns: ["discount_code_id"]; isOneToOne: false; referencedRelation: "discount_codes"; referencedColumns: ["id"] },
+        // Three keys to profiles (customer_id, verified_by, recorded_by): any
+        // payments -> profiles embed needs a hint such as `profiles!customer_id`.
+        { foreignKeyName: "payments_recorded_by_fkey"; columns: ["recorded_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
       ]>;
       reviews: Table<Review, Partial<Review> & { customer_id: string; rating: number }, Partial<Review>, [
         { foreignKeyName: "reviews_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },

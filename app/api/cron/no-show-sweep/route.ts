@@ -42,10 +42,12 @@ export async function POST(req: Request): Promise<Response> {
   // Select the bookings to flip directly (not the sessions): this way an
   // already-swept session whose bookings are all non-confirmed doesn't consume a
   // slot in the BATCH_SIZE cap, so a backlog always makes forward progress.
-  // Ordered oldest-first for a deterministic, fair selection.
+  // Ordered oldest-first for a deterministic, fair selection. The `!session_id`
+  // hint is required: since 0039 bookings has a second key to sessions
+  // (moved_from_session_id), and an unhinted embed fails the whole request.
   const { data: dueBookings, error: queryErr } = await svc
     .from("bookings")
-    .select("id, sessions!inner(end_at, status, meet_status)")
+    .select("id, sessions!session_id!inner(end_at, status, meet_status)")
     .eq("status", "confirmed")
     .lt("sessions.end_at", cutoff)
     .neq("sessions.status", "cancelled")

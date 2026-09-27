@@ -59,7 +59,7 @@ export async function POST(req: Request): Promise<Response> {
     const { data: bookings, error: bookingsErr } = await svc
       .from("bookings")
       .select(
-        "id, customer_id, session_id, sessions!inner(start_at, end_at, meet_link, status, teacher_id)"
+        "id, customer_id, session_id, sessions!session_id!inner(start_at, end_at, meet_link, status, teacher_id)"
       )
       .eq("status", "confirmed")
       .filter("sessions.status", "neq", "cancelled")
@@ -76,7 +76,7 @@ export async function POST(req: Request): Promise<Response> {
     if (list.length === 0) continue;
 
     for (const booking of list) {
-      // `sessions!inner` resolves to a single related row.
+      // `sessions!session_id!inner` resolves to a single related row.
       const session = booking.sessions;
       if (!session) continue;
 

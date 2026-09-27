@@ -32,7 +32,7 @@ export async function getTeacherSessions(teacherId: string): Promise<TeacherSess
     .select(
       `id, start_at, end_at, status, meet_link, meet_status, is_free_trial,
        class_category:class_categories(name),
-       bookings(status, customer:profiles(full_name, timezone))`
+       bookings!session_id(status, customer:profiles!customer_id(full_name, timezone))`
     )
     .eq("teacher_id", teacherId)
     .neq("status", "cancelled")
