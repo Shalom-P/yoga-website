@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  bookingConversion,
   CONSENT_REQUIRED_REGIONS,
   googlePageUrl,
   googleReferrer,
@@ -108,6 +109,26 @@ describe("purchaseConversion", () => {
     expect(purchaseConversion("AW-1", "L", { ...paid, transactionId: "" })).toBeNull();
     expect(purchaseConversion("AW-1", "L", { ...paid, amountMinor: Number.NaN })).toBeNull();
     expect(purchaseConversion("AW-1", "L", { ...paid, amountMinor: -1 })).toBeNull();
+  });
+});
+
+describe("bookingConversion", () => {
+  const booking = { bookingId: "6d0f3d6e-1b2c-4a5e-9f70-0c1d2e3f4a5b" };
+
+  it("sends the booking id as the transaction id and nothing else", () => {
+    const params = bookingConversion("AW-18466176637", "AbCdEfGhIjKlMnOpQrSt", booking);
+    expect(params).toEqual({
+      send_to: "AW-18466176637/AbCdEfGhIjKlMnOpQrSt",
+      transaction_id: booking.bookingId,
+    });
+    // No value, currency, teacher or time: the label alone says a 1:1 was booked.
+    expect(Object.keys(params ?? {}).sort()).toEqual(["send_to", "transaction_id"]);
+  });
+
+  it("sends nothing when unconfigured or without a booking id", () => {
+    expect(bookingConversion(undefined, "L", booking)).toBeNull();
+    expect(bookingConversion("AW-1", undefined, booking)).toBeNull();
+    expect(bookingConversion("AW-1", "L", { bookingId: "" })).toBeNull();
   });
 });
 
