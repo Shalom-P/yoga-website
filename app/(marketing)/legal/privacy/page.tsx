@@ -106,8 +106,8 @@ export default function PrivacyPage() {
               <li>Send you marketing communications about our services (you may opt out at any time).</li>
               <li>
                 Measure whether our advertising on Meta (Facebook and Instagram) leads to sign-ups,
-                bookings and purchases, and whether our Google ads lead to purchases (see Sections
-                4 and 6).
+                bookings and purchases, and whether our Google ads lead to bookings and purchases
+                (see Sections 4 and 6).
               </li>
             </ul>
             <p>
@@ -177,10 +177,11 @@ export default function PrivacyPage() {
                       Advertising measurement: the Google tag runs on our home, pricing and plan
                       pages, and on the page you land on from one of our Google ads. It sends Google
                       that page&apos;s address and title, your IP address and browser type, and,
-                      when you buy a session pack, the amount, currency and payment reference. It
+                      when you buy a session pack, the amount, currency and payment reference. When
+                      you book your first 1:1 session, it sends Google a booking reference and
+                      nothing else: not the teacher, the time or the reason for the session. It
                       sends nothing from our other pages, so Google does not see which classes or
-                      teachers you browse. We never send your health information, bookings, or
-                      messages.
+                      teachers you browse. We never send your health information or messages.
                     </td>
                     <td className="py-2">USA</td>
                   </tr>
@@ -242,7 +243,8 @@ export default function PrivacyPage() {
             <p>
               Where the Google tag runs (see Section 4), Google Ads sets first-party cookies such
               as <code>_gcl_au</code> and <code>_gcl_aw</code>, which last up to 90 days, so we can
-              tell whether a purchase followed a click on one of our Google ads. Google may also
+              tell whether a booking or a purchase followed a click on one of our Google ads.
+              Google may also
               read its own cookies. The tag does not run in our iOS app or when your browser sends
               a Global Privacy Control signal. For visitors in the European Economic Area, the UK
               and Switzerland it sets no advertising cookies and sends Google only cookieless

@@ -4,6 +4,7 @@ import { PartyPopper, CheckCircle2 } from "lucide-react";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { PlanAutoStart } from "@/components/dashboard/PlanAutoStart";
 import { PendingBankTransfers } from "@/components/dashboard/PendingBankTransfers";
+import { BookedConversion } from "@/components/dashboard/BookedConversion";
 import { getPlansWithFeatures } from "@/lib/data/landing";
 import { requireUser } from "@/lib/auth/guards";
 import type { BankTransferIntent } from "@/components/shared/checkout";
@@ -15,7 +16,7 @@ export default async function PlanPage({
 }) {
   const { booked, purchased } = await searchParams;
   const { user, supabase } = await requireUser("/dashboard/plan");
-  const [{ data: credits }, plans, { data: pendingTransfers }] = await Promise.all([
+  const [{ data: credits }, plans, { data: pendingTransfers }, latestBooking] = await Promise.all([
     supabase
       .from("customer_credits")
       .select("balance")
@@ -29,8 +30,22 @@ export default async function PlanPage({
       .eq("method", "bank_transfer")
       .eq("status", "pending")
       .order("created_at", { ascending: false }),
+    // The booking flow lands here with ?booked=1 the moment a first 1:1 commits.
+    // Its id keys the Google Ads booking conversion (one count per id). Not
+    // fatal when it can't be read back: only the ad conversion is skipped.
+    booked
+      ? supabase
+          .from("bookings")
+          .select("id")
+          .eq("customer_id", user.id)
+          .eq("status", "confirmed")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle()
+      : null,
   ]);
   const balance = credits?.balance ?? 0;
+  const bookedId: string | null = latestBooking?.data?.id ?? null;
 
   // Pair each pending transfer with its pack so the reopenable instructions
   // dialog can show the plan name + credits without another round trip.
@@ -63,6 +78,7 @@ export default async function PlanPage({
           : "Buy a pack of sessions to keep booking, no subscription."}
       </p>
 
+      {booked && bookedId && <BookedConversion bookingId={bookedId} />}
       {booked && (
         <div className="mt-6 flex items-start gap-3 border border-accent/40 bg-accent/10 px-5 py-4">
           <PartyPopper className="mt-0.5 size-5 shrink-0 text-accent" />

@@ -25,8 +25,10 @@ import { NATIVE_APP_UA_TOKEN } from "@/lib/meta/shared";
  * remarketing lists (forbidden by Google's personalised-ads policy) impossible
  * to build. Once loaded the tag sends nothing on client-side navigation, and
  * Referrer-Policy: strict-origin (next.config.ts) keeps our page URLs out of
- * document.referrer. The conversion carries the amount, currency and Razorpay
- * payment id, nothing about the customer.
+ * document.referrer. The Purchase conversion carries the amount, currency and
+ * Razorpay payment id; the booking conversion carries only our booking id.
+ * Neither says anything about the customer, the teacher, the time or the
+ * condition.
  */
 
 declare global {
@@ -50,6 +52,7 @@ export function parseConversionLabel(raw: string | undefined): string | undefine
 
 const GOOGLE_ADS_ID = parseGoogleAdsId(process.env.NEXT_PUBLIC_GOOGLE_ADS_ID);
 const PURCHASE_LABEL = parseConversionLabel(process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL);
+const BOOKING_LABEL = parseConversionLabel(process.env.NEXT_PUBLIC_GOOGLE_ADS_BOOKING_LABEL);
 
 /**
  * Where Google's EU user consent policy requires consent before ad cookies: the
@@ -73,8 +76,11 @@ const NO_TAG_AREAS = ["/admin", "/teacher", "/dashboard/documents"];
 /**
  * Where a pack can be bought: the pricing grid on the home page and /pricing,
  * and /dashboard/plan. The tag loads here for everyone, so a purchase is
- * reported whichever device or visit it happens on. A new place that can
- * complete a purchase (or another conversion) has to be added here.
+ * reported whichever device or visit it happens on. /dashboard/plan is also
+ * where the booking flow sends a customer once their first 1:1 is booked, so
+ * that conversion is reported here too, rather than from the teacher's booking
+ * page. A new place that can complete a purchase (or another conversion) has
+ * to be added here.
  */
 const CHECKOUT_PAGES = new Set(["/", "/pricing", "/dashboard/plan"]);
 
@@ -148,6 +154,25 @@ export function purchaseConversion(
   };
 }
 
+export interface GoogleBooking {
+  /** Our booking id. Google counts one conversion per id, so a reload of the confirmation can't double count. */
+  bookingId: string;
+}
+
+/**
+ * Parameters for the booking conversion event, or null when it can't be sent.
+ * Deliberately no value, currency or anything else: the label alone says a
+ * first 1:1 was booked.
+ */
+export function bookingConversion(
+  adsId: string | undefined,
+  label: string | undefined,
+  b: GoogleBooking,
+) {
+  if (!adsId || !label || !b.bookingId) return null;
+  return { send_to: `${adsId}/${label}`, transaction_id: b.bookingId };
+}
+
 let loaded = false;
 
 /**
@@ -203,12 +228,37 @@ export function syncGoogleTag(pathname: string): void {
 }
 
 /**
+ * gtag once the tag has loaded in this tab, loading it first when this page
+ * wants it: a page's own effects run before the root <GoogleTag>'s, so a
+ * conversion sent as a page opens would otherwise find no tag yet. Undefined
+ * where the tag isn't wanted or allowed, and the conversion is then dropped.
+ */
+function tag(): ((...args: unknown[]) => void) | undefined {
+  if (typeof window === "undefined") return undefined;
+  if (!loaded) syncGoogleTag(window.location.pathname);
+  return loaded ? window.gtag : undefined;
+}
+
+/**
  * Report a pack purchase as the Google Ads "Purchase" conversion. Call only once
- * the server has confirmed the payment. No-op unless the tag loaded in this tab
- * and NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL is set.
+ * the server has confirmed the payment. No-op unless the tag is allowed in this
+ * tab and NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL is set.
  */
 export function reportGoogleAdsPurchase(p: GooglePurchase): void {
-  if (!loaded || !window.gtag) return;
+  const gtag = tag();
   const params = purchaseConversion(GOOGLE_ADS_ID, PURCHASE_LABEL, p);
-  if (params) window.gtag("event", "conversion", params);
+  if (gtag && params) gtag("event", "conversion", params);
+}
+
+/**
+ * Report a customer's first 1:1 booking as the Google Ads booking conversion.
+ * Call from the confirmation the booking flow lands on (/dashboard/plan, one of
+ * CHECKOUT_PAGES), never from the booking page itself, whose path names the
+ * teacher. No-op unless the tag is allowed in this tab and
+ * NEXT_PUBLIC_GOOGLE_ADS_BOOKING_LABEL is set.
+ */
+export function reportGoogleAdsBooking(b: GoogleBooking): void {
+  const gtag = tag();
+  const params = bookingConversion(GOOGLE_ADS_ID, BOOKING_LABEL, b);
+  if (gtag && params) gtag("event", "conversion", params);
 }
