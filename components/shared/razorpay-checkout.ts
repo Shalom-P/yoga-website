@@ -13,6 +13,7 @@
 
 import { detectBrowserTimezone } from "@/lib/timezone";
 import { track } from "@/lib/analytics/events";
+import { reportGoogleAdsPurchase } from "@/lib/analytics/googleAds";
 
 const CHECKOUT_SCRIPT_SRC = "https://checkout.razorpay.com/v1/checkout.js";
 const SCRIPT_TIMEOUT_MS = 10_000;
@@ -169,6 +170,10 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
     return;
   }
 
+  // What this order charges, for the ad conversion once it's paid. Fulfilment
+  // refuses a capture that doesn't match the order amount and currency.
+  const charged = { amountMinor: order.amount, currency: order.currency };
+
   // 3. Open the modal against the order we just created.
   const rzp = new window.Razorpay({
     key: args.keyId,
@@ -195,6 +200,7 @@ export async function startRazorpayCheckout(args: StartCheckoutArgs): Promise<vo
           reason?: string;
         };
         if (verifyRes.ok && verify.verified) {
+          reportGoogleAdsPurchase({ ...charged, transactionId: response.razorpay_payment_id });
           args.onPaid({
             orderId: response.razorpay_order_id,
             paymentId: response.razorpay_payment_id,

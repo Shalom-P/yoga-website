@@ -2,7 +2,7 @@ import type { NextConfig } from "next";
 
 // Content-Security-Policy scoped to the third-party origins this app actually
 // loads: Razorpay Checkout, Supabase (REST + realtime websockets), PostHog,
-// Sentry ingest, and Google OAuth.
+// Sentry ingest, Google OAuth, and the Google Ads tag.
 //
 // 'unsafe-inline' stays for scripts because Next emits an inline bootstrap and we
 // keep static/ISR rendering (a per-request nonce would force every page dynamic).
@@ -10,10 +10,20 @@ import type { NextConfig } from "next";
 // production. The value also constrains script/connect/frame HOSTS and blocks
 // framing + object/base hijacks.
 const isDev = process.env.NODE_ENV !== "production";
+// Google Ads tag (lib/analytics/googleAds.ts), per Google's CSP guide for Ads
+// conversions and remarketing. Some pings go to the visitor's local Google
+// domain, which CSP can't wildcard: add www.google.<TLD> for each new country
+// the ads target (co.in is India, ae is the UAE). adservice.google.com is not in
+// the guide either; the served gtag.js registers ad clicks there (/pagead/regclk).
+const googleAdsHosts =
+  "https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://www.google.co.in https://www.google.ae https://adservice.google.com";
 const scriptSrc = [
   "script-src 'self' 'unsafe-inline'",
   isDev ? "'unsafe-eval'" : "",
   "https://checkout.razorpay.com https://*.posthog.com",
+  // googleads.g.doubleclick.net is missing from Google's guide, but the tag's
+  // remarketing ping loads from it as a script and was blocked without it.
+  "https://www.googletagmanager.com https://www.googleadservices.com https://www.google.com https://googleads.g.doubleclick.net",
 ]
   .filter(Boolean)
   .join(" ");
@@ -25,12 +35,12 @@ const csp = [
   "form-action 'self' https://*.razorpay.com",
   scriptSrc,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://*.razorpay.com",
+  `img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://*.razorpay.com ${googleAdsHosts}`,
   "font-src 'self' data:",
   "media-src 'self' blob: https://*.supabase.co",
   "worker-src 'self' blob:",
-  "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.i.posthog.com https://api.razorpay.com https://lumberjack.razorpay.com https://*.ingest.sentry.io https://*.sentry.io",
-  "frame-src https://*.razorpay.com https://accounts.google.com",
+  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.i.posthog.com https://api.razorpay.com https://lumberjack.razorpay.com https://*.ingest.sentry.io https://*.sentry.io ${googleAdsHosts} https://ad.doubleclick.net`,
+  "frame-src https://*.razorpay.com https://accounts.google.com https://www.googletagmanager.com",
 ].join("; ");
 
 const securityHeaders = [
@@ -39,7 +49,12 @@ const securityHeaders = [
   { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains; preload" },
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
-  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  // strict-origin, not the browser default strict-origin-when-cross-origin: the
+  // latter hands the full URL to the next page on our own site, so a page the
+  // Google tag loads on would see document.referrer = /classes/<condition> after
+  // a full page load (new tab, login redirect), and the tag reports referrers to
+  // Google. Other origins get exactly what they got before.
+  { key: "Referrer-Policy", value: "strict-origin" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
 ];
 

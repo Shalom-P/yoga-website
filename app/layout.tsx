@@ -10,6 +10,7 @@ import { ThemeProvider } from "next-themes";
 import { Toaster } from "@/components/ui/sonner";
 import { AnalyticsProvider } from "@/components/shared/AnalyticsProvider";
 import { NativeBridge } from "@/components/shared/NativeBridge";
+import { GoogleTag } from "@/components/shared/GoogleTag";
 import type { Organization, WithContext } from "schema-dts";
 import { INSTAGRAM_URL, ORG_ID } from "@/lib/seo/structuredData";
 import "./globals.css";
@@ -163,6 +164,7 @@ export default function RootLayout({
               admin and auth surfaces use native scrolling (see (marketing)/layout). */}
           <AnalyticsProvider>{children}</AnalyticsProvider>
           <NativeBridge />
+          <GoogleTag />
           <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>
