@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <h1 className="text-[clamp(2.25rem,4vw,3rem)] leading-[1.1] tracking-tight">
           Privacy policy
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 24 September 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 27 September 2026</p>
 
         <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
           <strong>Pending legal review.</strong> This policy is a good-faith draft written for
@@ -106,7 +106,8 @@ export default function PrivacyPage() {
               <li>Send you marketing communications about our services (you may opt out at any time).</li>
               <li>
                 Measure whether our advertising on Meta (Facebook and Instagram) leads to sign-ups,
-                bookings and purchases (see Sections 4 and 6).
+                bookings and purchases, and whether our Google ads lead to purchases (see Sections
+                4 and 6).
               </li>
             </ul>
             <p>
@@ -171,6 +172,19 @@ export default function PrivacyPage() {
                     <td className="py-2">USA / Ireland</td>
                   </tr>
                   <tr>
+                    <td className="py-2 pr-4">Google Ads</td>
+                    <td className="py-2 pr-4">
+                      Advertising measurement: the Google tag runs on our home, pricing and plan
+                      pages, and on the page you land on from one of our Google ads. It sends Google
+                      that page&apos;s address and title, your IP address and browser type, and,
+                      when you buy a session pack, the amount, currency and payment reference. It
+                      sends nothing from our other pages, so Google does not see which classes or
+                      teachers you browse. We never send your health information, bookings, or
+                      messages.
+                    </td>
+                    <td className="py-2">USA</td>
+                  </tr>
+                  <tr>
                     <td className="py-2 pr-4">Sentry</td>
                     <td className="py-2 pr-4">Application error monitoring</td>
                     <td className="py-2">USA</td>
@@ -224,6 +238,15 @@ export default function PrivacyPage() {
               Pixel, and these cookies are read only by our own servers. If your browser sends a
               Global Privacy Control signal, we do not set these cookies or share any of your
               activity with Meta. Our iOS app never shares your activity with Meta.
+            </p>
+            <p>
+              Where the Google tag runs (see Section 4), Google Ads sets first-party cookies such
+              as <code>_gcl_au</code> and <code>_gcl_aw</code>, which last up to 90 days, so we can
+              tell whether a purchase followed a click on one of our Google ads. Google may also
+              read its own cookies. The tag does not run in our iOS app or when your browser sends
+              a Global Privacy Control signal. For visitors in the European Economic Area, the UK
+              and Switzerland it sets no advertising cookies and sends Google only cookieless
+              measurement signals.
             </p>
             <p>
               You can control cookies through your browser settings. Disabling cookies may
