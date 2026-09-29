@@ -6,26 +6,18 @@ import PhoneInput, { type Country } from "react-phone-number-input";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
-// Flags as text, not images. react-phone-number-input otherwise loads each flag
-// from purecatamphetamine.github.io, which our CSP `img-src` blocks, so every
-// entry renders as a broken image. The previous fix bundled the flag SVGs for
-// the only two countries on offer; now that the selector lists every country
-// that would mean shipping ~250 SVGs on the sign-up path.
+// Flags as same-origin images. react-phone-number-input otherwise loads each
+// flag from purecatamphetamine.github.io, which our CSP `img-src` blocks. Only
+// the closed button ever shows a flag (the native menu lists names only), so
+// the browser fetches one SVG of about 1 KB for the selected country and
+// nothing ships in the JS bundle. public/flags/3x2 is country-flag-icons' 3x2
+// set for every country the picker offers; phone-field.test.ts fails if one is
+// missing.
 //
-// A regional-indicator pair renders the flag as a glyph the font already has:
-// nothing to download, nothing for the CSP to block, and no bundle cost. Windows
-// ships no flag glyphs and falls back to the two letters ("US"), which still
-// identifies the country, and the dropdown spells the name out beside it.
-function FlagGlyph({ country, countryName }: { country: Country; countryName: string }) {
-  const glyph = String.fromCodePoint(
-    ...[...country].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65),
-  );
-  return (
-    <span role="img" aria-label={countryName} className="text-base leading-none">
-      {glyph}
-    </span>
-  );
-}
+// Emoji flags (a regional-indicator pair) are not an option: Windows has no
+// flag glyphs and draws the two letters instead, so a Windows customer saw a
+// boxed "IN" where a Mac shows the Indian flag.
+const FLAG_URL = "/flags/3x2/{XX}.svg";
 
 // react-phone-number-input drives focus/caret through a ref, so the custom input
 // must forward it. shadcn's Input passes ref straight through to the base-ui
@@ -78,7 +70,7 @@ type PhoneFieldProps = {
 };
 
 /**
- * Country-aware phone input shared by login, booking, and profile. Renders a flag
+ * Country-aware phone input shared by onboarding and profile. Renders a flag
  * dropdown + format-as-you-type field and always reports its `value` as E.164, so
  * callers never normalize by hand — they just validate with isValidPhone() and
  * store the value. See lib/validation/phone.ts.
@@ -98,7 +90,7 @@ export function PhoneField({
       international
       countries={countries}
       defaultCountry={defaultCountry}
-      flagComponent={FlagGlyph}
+      flagUrl={FLAG_URL}
       // `defaultCountry` seeds the calling code ("+91"), so a customer only types
       // their local number. It stays editable: GeoIP can be wrong (a VPN, someone
       // travelling), and the flag menu offers every country. A seeded code also
@@ -118,6 +110,10 @@ export function PhoneField({
       inputComponent={PhoneTextInput}
       className={cn(
         "flex h-10 w-full items-center gap-2 rounded-lg border border-input bg-transparent px-2.5 text-base transition-colors focus-within:border-ring focus-within:ring-3 focus-within:ring-ring/50 md:text-sm dark:bg-input/30",
+        // The library outlines a focused flag in its own teal (#03b2cb). These are
+        // the two variables it actually reads; its root --PhoneInput-color--focus
+        // is already resolved on :root, so overriding that one here does nothing.
+        "[--PhoneInputCountryFlag-borderColor--focus:var(--ring)] [--PhoneInputCountrySelectArrow-color--focus:var(--ring)]",
         className,
       )}
       {...rest}
