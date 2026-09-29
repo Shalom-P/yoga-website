@@ -25,11 +25,20 @@ import {
 } from "@/components/ui/dialog";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { toast } from "sonner";
+import { istWallTime, istWallTimeToUtc } from "@/lib/timezone";
 import type { PromotionalMedia, MediaKind } from "@/lib/supabase/types";
 import { AdminPageHeader } from "@/components/admin/AdminPage";
 
 const BUCKET = "promotional-media";
 
+/**
+ * `starts_at` / `ends_at` in both drafts are IST wall clocks
+ * ("2026-10-01T10:00"), not the admin's own zone. They used to be written with
+ * `new Date(value)`, the browser's zone, and read back with `.slice(0, 16)`,
+ * the UTC wall time, so an admin in IST who saved the edit dialog unchanged
+ * moved the schedule 5h30m earlier every time. `istWallTime` and
+ * `istWallTimeToUtc` convert both ways.
+ */
 type Draft = {
   kind: MediaKind;
   placement: string;
@@ -131,8 +140,8 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
       caption: draft.caption || null,
       is_active: draft.is_active,
       sort_order: draft.sort_order,
-      starts_at: draft.starts_at ? new Date(draft.starts_at).toISOString() : null,
-      ends_at: draft.ends_at ? new Date(draft.ends_at).toISOString() : null,
+      starts_at: draft.starts_at ? istWallTimeToUtc(draft.starts_at).toISOString() : null,
+      ends_at: draft.ends_at ? istWallTimeToUtc(draft.ends_at).toISOString() : null,
     });
     setSaving(false);
     if (insertErr) {
@@ -185,8 +194,8 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
       placement: m.placement ?? "",
       alt_text: m.alt_text ?? "",
       caption: m.caption ?? "",
-      starts_at: m.starts_at ? m.starts_at.slice(0, 16) : "",
-      ends_at: m.ends_at ? m.ends_at.slice(0, 16) : "",
+      starts_at: m.starts_at ? istWallTime(m.starts_at) : "",
+      ends_at: m.ends_at ? istWallTime(m.ends_at) : "",
       is_active: m.is_active,
       sort_order: m.sort_order ?? 0,
     });
@@ -204,8 +213,8 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
         caption: editTarget.caption || null,
         is_active: editTarget.is_active,
         sort_order: editTarget.sort_order,
-        starts_at: editTarget.starts_at ? new Date(editTarget.starts_at).toISOString() : null,
-        ends_at: editTarget.ends_at ? new Date(editTarget.ends_at).toISOString() : null,
+        starts_at: editTarget.starts_at ? istWallTimeToUtc(editTarget.starts_at).toISOString() : null,
+        ends_at: editTarget.ends_at ? istWallTimeToUtc(editTarget.ends_at).toISOString() : null,
       })
       .eq("id", editTarget.id);
     setEditSaving(false);
@@ -405,9 +414,9 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
               <div>
                 <LabelWithHint
                   htmlFor="starts"
-                  hint="If set, the asset only shows on the site from this date/time. Leave blank to publish immediately."
+                  hint="If set, the asset only shows on the site from this date and time, in Indian Standard Time. Leave blank to publish immediately."
                 >
-                  Starts (optional)
+                  Starts (IST, optional)
                 </LabelWithHint>
                 <Input
                   id="starts"
@@ -420,9 +429,9 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
               <div>
                 <LabelWithHint
                   htmlFor="ends"
-                  hint="If set, the asset stops showing after this date/time. Useful for time-boxed promo banners."
+                  hint="If set, the asset stops showing at this date and time, in Indian Standard Time. Useful for time-boxed promo banners."
                 >
-                  Ends (optional)
+                  Ends (IST, optional)
                 </LabelWithHint>
                 <Input
                   id="ends"
@@ -549,8 +558,11 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <LabelWithHint htmlFor="edit_starts" hint="Show from this date/time. Leave blank to publish immediately.">
-                    Starts (optional)
+                  <LabelWithHint
+                    htmlFor="edit_starts"
+                    hint="Show from this date and time, in Indian Standard Time. Leave blank to publish immediately."
+                  >
+                    Starts (IST, optional)
                   </LabelWithHint>
                   <Input
                     id="edit_starts"
@@ -561,8 +573,11 @@ export function MediaAdmin({ media }: { media: PromotionalMedia[] }) {
                   />
                 </div>
                 <div>
-                  <LabelWithHint htmlFor="edit_ends" hint="Stop showing after this date/time.">
-                    Ends (optional)
+                  <LabelWithHint
+                    htmlFor="edit_ends"
+                    hint="Stop showing at this date and time, in Indian Standard Time."
+                  >
+                    Ends (IST, optional)
                   </LabelWithHint>
                   <Input
                     id="edit_ends"

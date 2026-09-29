@@ -30,8 +30,8 @@ const patchSchema = z
     teacherId: z.string().uuid().optional(),
     classCategoryId: z.string().uuid().nullable().optional(),
     // An absolute UTC instant. The client builds it from an IST wall clock, not
-    // with new Date(<datetime-local value>): the create dialog reads the ADMIN's
-    // browser zone and renders back in Asia/Kolkata, so an admin outside IST
+    // with new Date(<datetime-local value>), which reads the ADMIN's browser
+    // zone while the app renders back in Asia/Kolkata, so an admin outside IST
     // would type one time and read another.
     startAt: z.string().datetime({ offset: true }).optional(),
     durationMinutes: z.number().int().min(15).max(240).optional(),

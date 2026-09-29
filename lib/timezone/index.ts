@@ -123,6 +123,27 @@ export function istDayEnd(date: string): Date {
 }
 
 /**
+ * `at` on the IST wall clock, as the "2026-10-01T10:00" an
+ * `<input type="datetime-local">` takes. `istWallTimeToUtc` is the way back, so
+ * an admin form using the pair shows and saves one clock whatever zone the
+ * browser is in. Through `formatInTz`, which reads the fields off the instant,
+ * so an IST time inside the browser zone's own spring-forward hour doesn't come
+ * back an hour late for a form that re-saves every field to write back.
+ */
+export function istWallTime(at: string | Date): string {
+  return formatInTz(at, DEFAULT_CUSTOMER_TZ, "yyyy-MM-dd'T'HH:mm");
+}
+
+/**
+ * The instant an IST wall time names: "2026-10-01T10:00" is 04:30Z. Takes the
+ * value of an `<input type="datetime-local">`, which `new Date(value)` would
+ * read in the browser's own zone instead. The inverse of `istWallTime`.
+ */
+export function istWallTimeToUtc(wall: string): Date {
+  return toDate(wall, { timeZone: DEFAULT_CUSTOMER_TZ });
+}
+
+/**
  * Short zone name e.g. "GST" / "IST" / "GMT+4", useful in slot pickers.
  *
  * Intl picks the name from the runtime's default locale, so the en-US server

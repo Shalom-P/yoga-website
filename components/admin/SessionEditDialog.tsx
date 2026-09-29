@@ -102,20 +102,20 @@ function draftFor(s: EditableSession): Draft {
 /**
  * Edit a scheduled class: teacher, class type, time, duration, capacity, notes.
  *
- * Two things this has that the create dialog does not, both of which are the
- * reason it is a separate component rather than a reused one:
+ * The time fields are IST, stated on the label, as in the create dialog.
+ * `new Date(datetimeLocalValue)` would read them in the ADMIN's own browser
+ * zone while every read-back in the app renders in Asia/Kolkata, so an admin
+ * sitting in Dubai would type one time and read another 90 minutes off. Here
+ * the inputs are seeded with `formatInTz(..., DEFAULT_CUSTOMER_TZ, ...)` and
+ * converted back with `teacherLocalToUtc`, so what is typed is what the teacher
+ * and the student see.
  *
- *   1. The time fields are IST, stated on the label. The create dialog reads
- *      `new Date(datetimeLocalValue)`, i.e. the ADMIN's own browser zone, while
- *      every read-back in the app renders in Asia/Kolkata. An admin sitting in
- *      Dubai therefore types one time and reads another 90 minutes off. Here the
- *      inputs are seeded with `formatInTz(..., DEFAULT_CUSTOMER_TZ, ...)` and
- *      converted back with `teacherLocalToUtc`, so what is typed is what the
- *      teacher and the student see.
- *   2. Consequences are shown before they happen. Moving the time or swapping
- *      the teacher replaces the Google Meet event, which invalidates the link
- *      every student already has, and a teacher swap can orphan health documents
- *      that were shared with the person coming off the class.
+ * What this has that the create dialog does not, and the reason it is a
+ * separate component rather than a reused one: consequences are shown before
+ * they happen. Moving the time or swapping the teacher replaces the Google Meet
+ * event, which invalidates the link every student already has, and a teacher
+ * swap can orphan health documents that were shared with the person coming off
+ * the class.
  */
 export function SessionEditDialog({
   session,
