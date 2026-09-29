@@ -106,8 +106,9 @@ export default function PrivacyPage() {
               <li>Send you marketing communications about our services (you may opt out at any time).</li>
               <li>
                 Measure whether our advertising on Meta (Facebook and Instagram) leads to sign-ups,
-                bookings and purchases, and whether our Google ads lead to bookings and purchases
-                (see Sections 4 and 6).
+                bookings and purchases, whether our Google ads lead to bookings and purchases, and
+                how visitors find and use the pages where our Google tag runs (see Sections 4 and
+                6).
               </li>
             </ul>
             <p>
@@ -194,6 +195,20 @@ export default function PrivacyPage() {
                     <td className="py-2">USA</td>
                   </tr>
                   <tr>
+                    <td className="py-2 pr-4">Google Analytics</td>
+                    <td className="py-2 pr-4">
+                      Website analytics: Google Analytics runs only where the Google tag runs (our
+                      home, pricing and plan pages, and the page you land on from one of our Google
+                      ads). It records the pages you view there and how you use them, such as
+                      scrolling and starting a form, with your IP address, browser, device and
+                      approximate location, so we can see how visitors find and use those pages.
+                      Like the Google tag, it sends nothing from our other pages, and a visit that
+                      starts from one of our ads on any other page is marked so Google does not use
+                      it to personalise ads.
+                    </td>
+                    <td className="py-2">USA</td>
+                  </tr>
+                  <tr>
                     <td className="py-2 pr-4">Sentry</td>
                     <td className="py-2 pr-4">Application error monitoring</td>
                     <td className="py-2">USA</td>
@@ -251,12 +266,13 @@ export default function PrivacyPage() {
             <p>
               Where the Google tag runs (see Section 4), Google Ads sets first-party cookies such
               as <code>_gcl_au</code> and <code>_gcl_aw</code>, which last up to 90 days, so we can
-              tell whether a booking or a purchase followed a click on one of our Google ads.
-              Google may also
-              read its own cookies. The tag does not run in our iOS app or when your browser sends
-              a Global Privacy Control signal. For visitors in the European Economic Area, the UK
-              and Switzerland it sets no advertising cookies and sends Google only cookieless
-              measurement signals.
+              tell whether a booking or a purchase followed a click on one of our Google ads, and
+              Google Analytics sets <code>_ga</code> cookies, which last up to 2 years, to tell a
+              returning visitor from a new one. Google may also read its own cookies. The tag does
+              not run in our iOS app or when your browser sends a Global Privacy Control signal.
+              For visitors in the European Economic Area, the UK and Switzerland it sets no
+              advertising or analytics cookies and sends Google only cookieless measurement
+              signals.
             </p>
             <p>
               You can control cookies through your browser settings. Disabling cookies may
