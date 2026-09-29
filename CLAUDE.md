@@ -29,7 +29,7 @@ npm run db:studio    # Open Drizzle Studio
 
 Node ≥20 is required (`package.json` engines).
 
-`npm run lint` lints the whole tree, and `eslint.config.mjs` only ignores the Next defaults, so with a `.claude/worktrees/` checkout present it reports tens of thousands of bogus problems. Lint what you touched instead: `npx eslint <files>`.
+`npm run lint` lints the whole tree. `eslint.config.mjs` ignores `.claude/**` (agent worktrees are full checkouts with their own `.next`, which used to add tens of thousands of bogus problems) and nested build output, so it works from the main checkout too. `npx eslint <files>` is the quick check for what you touched.
 
 ## Big-picture architecture
 
