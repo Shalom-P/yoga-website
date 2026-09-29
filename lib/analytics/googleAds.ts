@@ -52,6 +52,13 @@ import { NATIVE_APP_UA_TOKEN } from "@/lib/meta/shared";
  * amount, currency and Razorpay payment id, and the booking conversion's
  * booking id. Neither says anything about the teacher, the time or the
  * condition.
+ *
+ * The tag also carries the Google Analytics (GA4) property linked to it in
+ * Google's UI, so GA4 gets page views and enhanced-measurement events (scrolls,
+ * form starts) from exactly these pages, client-side moves between them
+ * included, and nothing from the rest of the site. Its hits follow the same
+ * settings, npa=1 on an ad landing included. The privacy page discloses it, so
+ * anything that widens where the tag runs widens what GA4 sees too.
  */
 
 declare global {

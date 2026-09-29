@@ -2,7 +2,8 @@ import type { NextConfig } from "next";
 
 // Content-Security-Policy scoped to the third-party origins this app actually
 // loads: Razorpay Checkout, Supabase (REST + realtime websockets), PostHog,
-// Sentry ingest, Google OAuth, and the Google Ads tag.
+// Sentry ingest, Google OAuth, and the Google Ads tag with the Google Analytics
+// property linked to it.
 //
 // 'unsafe-inline' stays for scripts because Next emits an inline bootstrap and we
 // keep static/ISR rendering (a per-request nonce would force every page dynamic).
@@ -13,10 +14,20 @@ const isDev = process.env.NODE_ENV !== "production";
 // Google Ads tag (lib/analytics/googleAds.ts), per Google's CSP guide for Ads
 // conversions and remarketing. Some pings go to the visitor's local Google
 // domain, which CSP can't wildcard: add www.google.<TLD> for each new country
-// the ads target (co.in is India, ae is the UAE). adservice.google.com is not in
-// the guide either; the served gtag.js registers ad clicks there (/pagead/regclk).
+// the ads target (co.in is India, ae is the UAE, and com.sa, com.om, com.kw,
+// com.qa and com.bh are the rest of the Gulf the campaign targets; Google Ads
+// flags a missing one as "security settings are blocking measurement").
+// adservice.google.com is not in the guide either; the served gtag.js registers
+// ad clicks there (/pagead/regclk).
 const googleAdsHosts =
-  "https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://www.google.co.in https://www.google.ae https://adservice.google.com";
+  "https://www.googletagmanager.com https://www.googleadservices.com https://googleads.g.doubleclick.net https://pagead2.googlesyndication.com https://www.google.com https://www.google.co.in https://www.google.ae https://www.google.com.sa https://www.google.com.om https://www.google.com.kw https://www.google.com.qa https://www.google.com.bh https://adservice.google.com";
+// Google Analytics (GA4). The property is linked to the Google tag in Google's
+// UI, so it runs exactly where the tag does, and the privacy page discloses it.
+// Hosts per Google's CSP guide, plus the two Google Ads' tag diagnostics found
+// blocked: the bare analytics.google.com (a wildcard doesn't cover it) and
+// stats.g.doubleclick.net (Google signals).
+const googleAnalyticsHosts =
+  "https://*.google-analytics.com https://analytics.google.com https://*.analytics.google.com https://stats.g.doubleclick.net";
 const scriptSrc = [
   "script-src 'self' 'unsafe-inline'",
   isDev ? "'unsafe-eval'" : "",
@@ -35,11 +46,11 @@ const csp = [
   "form-action 'self' https://*.razorpay.com",
   scriptSrc,
   "style-src 'self' 'unsafe-inline'",
-  `img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://*.razorpay.com ${googleAdsHosts}`,
+  `img-src 'self' data: blob: https://*.supabase.co https://lh3.googleusercontent.com https://*.razorpay.com ${googleAdsHosts} ${googleAnalyticsHosts}`,
   "font-src 'self' data:",
   "media-src 'self' blob: https://*.supabase.co",
   "worker-src 'self' blob:",
-  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.i.posthog.com https://api.razorpay.com https://lumberjack.razorpay.com https://*.ingest.sentry.io https://*.sentry.io ${googleAdsHosts} https://ad.doubleclick.net`,
+  `connect-src 'self' https://*.supabase.co wss://*.supabase.co https://*.posthog.com https://*.i.posthog.com https://api.razorpay.com https://lumberjack.razorpay.com https://*.ingest.sentry.io https://*.sentry.io ${googleAdsHosts} ${googleAnalyticsHosts} https://ad.doubleclick.net`,
   "frame-src https://*.razorpay.com https://accounts.google.com https://www.googletagmanager.com",
 ].join("; ");
 
