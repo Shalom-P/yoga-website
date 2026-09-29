@@ -23,11 +23,26 @@ import { NATIVE_APP_UA_TOKEN } from "@/lib/meta/shared";
  * Google already knows from the click. Organic browsing of condition, teacher
  * and dashboard pages never reaches Google, which also keeps condition-based
  * remarketing lists (forbidden by Google's personalised-ads policy) impossible
- * to build. Once loaded the tag sends nothing on client-side navigation, and
- * Referrer-Policy: strict-origin (next.config.ts) keeps our page URLs out of
- * document.referrer. The Purchase conversion carries the amount, currency and
- * Razorpay payment id; the booking conversion carries only our booking id.
- * Neither says anything about the customer, the teacher, the time or the
+ * to build. Referrer-Policy: strict-origin (next.config.ts) keeps our page URLs
+ * out of document.referrer.
+ *
+ * A loaded tag can't be kept quiet, so it must never outlive its pages. The
+ * Google tag settings (Google's UI, not this code) turn on automatic form
+ * events, which fire on the DOM change and submit events of whatever page is
+ * showing: after a client-side navigation from / to /classes/diabetes, typing
+ * in the footer newsletter box sent Google a form_start for the diabetes page.
+ * gtag.js has no off switch for an Ads destination (window['ga-disable-AW-...']
+ * is read only by its GA4 code; tested). So once the tag has loaded, leaving
+ * its pages is a full page load (leaveTagPages below).
+ *
+ * On its own pages the tag also sends what those settings ask for: the form
+ * events, and a hashed copy of an email address or phone number typed into a
+ * form or shown on the page (automatic user-provided data, which also rides on
+ * the conversions). The privacy page discloses both; switching off "Form
+ * interactions" and "Allow user-provided data capabilities" in the Google tag
+ * settings removes them. Our own parameters are the Purchase conversion's
+ * amount, currency and Razorpay payment id, and the booking conversion's
+ * booking id. Neither says anything about the teacher, the time or the
  * condition.
  */
 
@@ -113,6 +128,21 @@ function adParamsOnly(search: string): string {
   return query ? `?${query}` : "";
 }
 
+/**
+ * Whether a link leads from the tag's pages to one of our pages it must not run
+ * on, so following it has to be a full page load. Other sites, mailto: and tel:
+ * links are none of our business.
+ */
+export function leavesTagPages(href: string, origin: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(href, origin);
+  } catch {
+    return false;
+  }
+  return url.origin === origin && !googleTagWantedOn(url.pathname, url.search);
+}
+
 /** The page URL Google is told: the real page, with only ad parameters left in the query. */
 export function googlePageUrl(origin: string, pathname: string, search = ""): string {
   return `${origin}${pathname}${adParamsOnly(search)}`;
@@ -174,10 +204,71 @@ export function bookingConversion(
 }
 
 let loaded = false;
+/** Settles once gtag.js has run the commands queued before it loaded, or failed to load. */
+let tagReady: Promise<void> = Promise.resolve();
+let tagSettled = false;
+/** Conversions handed to gtag that it hasn't reported sent yet. */
+const unsentConversions = new Set<Promise<void>>();
+/** The full page load waiting on the tag, if any. */
+let pendingLeave: (() => void) | undefined;
+
+/** How long leaving waits for the tag before going anyway: gtag's own default event_timeout. */
+const LEAVE_TIMEOUT_MS = 2000;
+
+/**
+ * Leave the tag's pages with a full page load, so gtag.js doesn't come along.
+ * While one of its pages is still showing, gtag.js first gets up to
+ * LEAVE_TIMEOUT_MS to read the ad click id and send any conversion, which the
+ * page load would otherwise cut off. Once another page is showing it must not
+ * start work there (a hit reports the title on screen), so a tag that hasn't run
+ * yet is left behind at once, with nothing queued for it should gtag.js still
+ * arrive before the page unloads. A second call while waiting just changes where
+ * to go.
+ */
+function leaveTagPages(go: () => void, tagPageShowing: boolean): void {
+  const waiting = pendingLeave !== undefined;
+  pendingLeave = go;
+  if (!tagPageShowing && !tagSettled) {
+    if (window.dataLayer) window.dataLayer.length = 0;
+    leaveNow();
+    return;
+  }
+  if (waiting) return;
+  const sent = tagReady.then(() => Promise.all(unsentConversions));
+  const timeout = new Promise((resolve) => setTimeout(resolve, LEAVE_TIMEOUT_MS));
+  void Promise.race([sent, timeout]).then(leaveNow);
+}
+
+function leaveNow(): void {
+  const leave = pendingLeave;
+  pendingLeave = undefined;
+  leave?.();
+}
+
+/**
+ * A click on one of our links that leads off the tag's pages becomes a full page
+ * load. Listens in the capture phase, before React: next/link leaves a click
+ * alone once it is default-prevented. Same exemptions as next/link: another
+ * button, a modifier key, a new tab or window, a download.
+ */
+function onLinkClick(event: MouseEvent): void {
+  if (event.defaultPrevented || event.button !== 0) return;
+  if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+  const target = event.target instanceof Element ? event.target : (event.target as Node | null)?.parentElement;
+  const link = target?.closest("a[href]");
+  if (!(link instanceof HTMLAnchorElement) || link.hasAttribute("download")) return;
+  if (link.target && link.target !== "_self") return;
+  if (!leavesTagPages(link.href, window.location.origin)) return;
+  event.preventDefault();
+  leaveTagPages(() => window.location.assign(link.href), true);
+}
 
 /**
  * Call on every route change. Loads the tag the first time a page wants it,
- * then keeps the page URL it reports in step with client-side navigation.
+ * then keeps the page URL it reports in step with client-side navigation
+ * between its pages, and reloads a page it must not run on that a navigation
+ * brought it to anyway (back/forward, router.push, a redirect: anything the
+ * link handler can't see).
  */
 export function syncGoogleTag(pathname: string): void {
   if (typeof window === "undefined" || !GOOGLE_ADS_ID) return;
@@ -185,7 +276,8 @@ export function syncGoogleTag(pathname: string): void {
   const pageUrl = googlePageUrl(origin, pathname, search);
 
   if (loaded) {
-    window.gtag?.("set", { page_location: pageUrl });
+    if (googleTagWantedOn(pathname, search)) window.gtag?.("set", { page_location: pageUrl });
+    else leaveTagPages(() => window.location.reload(), false);
     return;
   }
 
@@ -224,7 +316,24 @@ export function syncGoogleTag(pathname: string): void {
   const script = document.createElement("script");
   script.async = true;
   script.src = `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ADS_ID}`;
+  tagReady = new Promise<void>((resolve) => {
+    // Queued behind the config, so gtag.js answers once it has run it and read the ad click id.
+    gtag("get", GOOGLE_ADS_ID, "gclid", () => resolve());
+    script.addEventListener("error", () => resolve());
+  }).then(() => {
+    tagSettled = true;
+  });
+  document.addEventListener("click", onLinkClick, true);
   document.head.appendChild(script);
+}
+
+/** Send a conversion, and hold any full page load until gtag reports it sent. */
+function sendConversion(gtag: (...args: unknown[]) => void, params: object): void {
+  let markSent = () => {};
+  const sent = new Promise<void>((resolve) => (markSent = resolve));
+  unsentConversions.add(sent);
+  void sent.then(() => unsentConversions.delete(sent));
+  gtag("event", "conversion", { ...params, event_callback: markSent, event_timeout: LEAVE_TIMEOUT_MS });
 }
 
 /**
@@ -247,7 +356,7 @@ function tag(): ((...args: unknown[]) => void) | undefined {
 export function reportGoogleAdsPurchase(p: GooglePurchase): void {
   const gtag = tag();
   const params = purchaseConversion(GOOGLE_ADS_ID, PURCHASE_LABEL, p);
-  if (gtag && params) gtag("event", "conversion", params);
+  if (gtag && params) sendConversion(gtag, params);
 }
 
 /**
@@ -260,5 +369,5 @@ export function reportGoogleAdsPurchase(p: GooglePurchase): void {
 export function reportGoogleAdsBooking(b: GoogleBooking): void {
   const gtag = tag();
   const params = bookingConversion(GOOGLE_ADS_ID, BOOKING_LABEL, b);
-  if (gtag && params) gtag("event", "conversion", params);
+  if (gtag && params) sendConversion(gtag, params);
 }

@@ -14,7 +14,7 @@ export default function PrivacyPage() {
         <h1 className="text-[clamp(2.25rem,4vw,3rem)] leading-[1.1] tracking-tight">
           Privacy policy
         </h1>
-        <p className="mt-2 text-sm text-muted-foreground">Last updated: 27 September 2026</p>
+        <p className="mt-2 text-sm text-muted-foreground">Last updated: 29 September 2026</p>
 
         <div className="mt-6 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-foreground/80">
           <strong>Pending legal review.</strong> This policy is a good-faith draft written for
@@ -178,10 +178,15 @@ export default function PrivacyPage() {
                       pages, and on the page you land on from one of our Google ads. It sends Google
                       that page&apos;s address and title, your IP address and browser type, and,
                       when you buy a session pack, the amount, currency and payment reference. When
-                      you book your first 1:1 session, it sends Google a booking reference and
-                      nothing else: not the teacher, the time or the reason for the session. It
-                      sends nothing from our other pages, so Google does not see which classes or
-                      teachers you browse. We never send your health information or messages.
+                      you book your first 1:1 session, it sends Google a booking reference, but not
+                      the teacher, the time or the reason for the session. On those pages it also
+                      tells Google when you start or send a form, such as the newsletter sign-up,
+                      and sends a hashed (scrambled) copy of an email address or phone number that
+                      you type into a form or that the page shows, such as your account email on
+                      the plan page. Going from those pages to any other page of ours loads that
+                      page without the tag, so the tag sends nothing from our other pages and
+                      Google does not see which classes or teachers you browse. We never send your
+                      health information or messages.
                     </td>
                     <td className="py-2">USA</td>
                   </tr>

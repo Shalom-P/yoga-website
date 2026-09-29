@@ -7,6 +7,7 @@ import {
   googleReferrer,
   googleTagAllowedFor,
   googleTagWantedOn,
+  leavesTagPages,
   parseConversionLabel,
   parseGoogleAdsId,
   purchaseConversion,
@@ -41,6 +42,49 @@ describe("googleTagWantedOn", () => {
 
   it("doesn't mistake the public /teachers listing for the /teacher staff area", () => {
     expect(googleTagWantedOn("/teachers/dr-x", "?gclid=Cj0K")).toBe(true);
+  });
+});
+
+describe("leavesTagPages", () => {
+  it("sends every link to a page the tag must not run on through a full page load", () => {
+    for (const path of [
+      "/classes/diabetes",
+      "/teachers/dr-x",
+      "/contact",
+      "/login?next=%2Fpricing",
+      "/dashboard/book/dr-x",
+      "/dashboard/documents",
+      "/admin",
+    ]) {
+      expect(leavesTagPages(`${ORIGIN}${path}`, ORIGIN), path).toBe(true);
+    }
+  });
+
+  it("keeps client-side navigation between the tag's own pages", () => {
+    for (const path of ["/", "/#faq", "/pricing", "/pricing?plan=pack-5", "/dashboard/plan?booked=1"]) {
+      expect(leavesTagPages(`${ORIGIN}${path}`, ORIGIN), path).toBe(false);
+    }
+  });
+
+  it("resolves a relative link against our origin", () => {
+    expect(leavesTagPages("/classes/diabetes", ORIGIN)).toBe(true);
+    expect(leavesTagPages("/pricing", ORIGIN)).toBe(false);
+  });
+
+  it("leaves other sites, mailto: and tel: links alone", () => {
+    for (const href of [
+      "https://www.instagram.com/myyogaclasses.fit/",
+      "https://api.razorpay.com/",
+      "mailto:hello@myyogaclasses.fit",
+      "tel:+919876543210",
+    ]) {
+      expect(leavesTagPages(href, ORIGIN), href).toBe(false);
+    }
+  });
+
+  it("follows the load rule for a link that carries an ad click id", () => {
+    expect(leavesTagPages(`${ORIGIN}/classes/diabetes?gclid=Cj0K`, ORIGIN)).toBe(false);
+    expect(leavesTagPages(`${ORIGIN}/teacher/documents?gclid=Cj0K`, ORIGIN)).toBe(true);
   });
 });
 
