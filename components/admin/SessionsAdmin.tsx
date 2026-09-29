@@ -37,7 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { formatCustomerTime } from "@/lib/timezone";
+import { formatCustomerTime, istWallTimeToUtc } from "@/lib/timezone";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { AdminPageHeader } from "@/components/admin/AdminPage";
 import { SessionEditDialog, type EditableSession } from "@/components/admin/SessionEditDialog";
@@ -91,7 +91,12 @@ type Category = { id: string; name: string; is_active: boolean };
 type Draft = {
   teacherId: string;
   classCategoryId: string;
-  startAtLocal: string;
+  /**
+   * IST wall clock ("2026-10-01T10:00"), the clock the table, the edit dialog
+   * and the teacher all use. It was the admin's browser zone, so an admin in
+   * Dubai typed 10:00 and then read 11:30 everywhere else.
+   */
+  startAtIst: string;
   durationMinutes: number;
   capacity: number;
   isFreeTrial: boolean;
@@ -101,7 +106,7 @@ type Draft = {
 const EMPTY: Draft = {
   teacherId: "",
   classCategoryId: "",
-  startAtLocal: "",
+  startAtIst: "",
   durationMinutes: 60,
   capacity: 1,
   isFreeTrial: false,
@@ -173,11 +178,11 @@ export function SessionsAdmin({
       toast.error("Pick a teacher.");
       return;
     }
-    if (!draft.startAtLocal) {
+    if (!draft.startAtIst) {
       toast.error("Pick a start time.");
       return;
     }
-    const startIso = new Date(draft.startAtLocal).toISOString();
+    const startIso = istWallTimeToUtc(draft.startAtIst).toISOString();
     setSaving(true);
     try {
       const res = await fetch("/api/admin/sessions", {
@@ -637,8 +642,8 @@ export function SessionsAdmin({
           <DialogHeader>
             <DialogTitle>Schedule session</DialogTitle>
             <DialogDescription>
-              Time is interpreted in your browser timezone, stored as UTC, and shown to each
-              customer in their own timezone.
+              Times here are Indian Standard Time, the same clock the teacher works to. Each student
+              still sees the class in their own timezone.
             </DialogDescription>
           </DialogHeader>
 
@@ -696,15 +701,15 @@ export function SessionsAdmin({
             <div>
               <LabelWithHint
                 htmlFor="start"
-                hint="Entered in your browser's timezone, stored as UTC, displayed to each customer in their own timezone."
+                hint="Start date and time in Indian Standard Time, which is what the teacher works to. Each student sees it in their own timezone."
               >
-                Start (your local time)
+                Start (IST)
               </LabelWithHint>
               <Input
                 id="start"
                 type="datetime-local"
-                value={draft.startAtLocal}
-                onChange={(e) => setDraft({ ...draft, startAtLocal: e.target.value })}
+                value={draft.startAtIst}
+                onChange={(e) => setDraft({ ...draft, startAtIst: e.target.value })}
                 className="mt-1.5"
               />
             </div>
