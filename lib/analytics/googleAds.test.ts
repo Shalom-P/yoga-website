@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  adPersonalizationAllowedOn,
   bookingConversion,
   CONSENT_REQUIRED_REGIONS,
   googlePageUrl,
@@ -42,6 +43,21 @@ describe("googleTagWantedOn", () => {
 
   it("doesn't mistake the public /teachers listing for the /teacher staff area", () => {
     expect(googleTagWantedOn("/teachers/dr-x", "?gclid=Cj0K")).toBe(true);
+  });
+});
+
+describe("adPersonalizationAllowedOn", () => {
+  it("lets only the pages where a pack can be bought feed remarketing", () => {
+    for (const path of ["/", "/pricing", "/dashboard/plan"]) {
+      expect(adPersonalizationAllowedOn(path), path).toBe(true);
+    }
+  });
+
+  it("keeps it off on every other page an ad can land on, condition pages included", () => {
+    for (const path of ["/classes/diabetes", "/classes", "/teachers/dr-x", "/about", "/dashboard", "/dashboard/book/dr-x"]) {
+      expect(googleTagWantedOn(path, "?gclid=Cj0K"), path).toBe(true);
+      expect(adPersonalizationAllowedOn(path), path).toBe(false);
+    }
   });
 });
 
