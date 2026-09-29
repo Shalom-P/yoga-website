@@ -187,6 +187,7 @@ The iOS app is a Capacitor WKWebView that loads the hosted site; the Xcode proje
 
 - **Path alias:** `@/*` → repo root (see `tsconfig.json`). Use `@/lib/...`, `@/components/...`.
 - **UI:** shadcn/ui with the `base-nova` preset (`components.json`). Tailwind 4 via `@tailwindcss/postcss`. Add components with `npx shadcn@latest add <name>` — they land in `components/ui/`.
+- **Fonts:** self-hosted with `next/font/local` in `app/fonts/` (sources and update steps in its README). Don't bring back `next/font/google`: it downloads from Google Fonts during `next build`, and vercel/next.js#99114 makes that fail at random. Each family is a preloaded latin loader plus a latin-ext companion with its own `unicode-range` (the ₹ lives there); `globals.css` joins each pair into the `--font-*` variable the stylesheets use.
 - **Forms:** `react-hook-form` + `zod` + `@hookform/resolvers`. Mirror the zod schema on both client and the route handler.
 - **Animation:** Motion (the rebrand of Framer Motion) + Lenis smooth scroll (provider in `app/layout.tsx`) + GSAP ScrollTrigger when timeline scrubbing is needed.
 - **Locale:** `en` (per-currency `en-IN` / `en-AE` for money). Money helper is `formatMoney(cents, currency)` in `lib/i18n/money.ts`. Internal money is integer minor units (`plans.price_base_cents`, `plan_prices.amount_cents`, `payments.amount_cents`); never store floats. `SUPPORTED_CURRENCIES` is INR/AED/USD/GBP/EUR, but only INR and AED are priced (see the architecture note).
