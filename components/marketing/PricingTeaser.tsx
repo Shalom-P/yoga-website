@@ -41,9 +41,14 @@ type PricingTeaserProps = {
   plans: PlanWithFeatures[];
   /** Landing needs the section header; /pricing has its own PageHeader above. */
   showHeader?: boolean;
+  /**
+   * Replaces the default header. The dashboard passes a quieter one after a
+   * booking, where the marketing-sized heading would out-shout the confirmation.
+   */
+  header?: React.ReactNode;
 };
 
-export function PricingTeaser({ plans, showHeader = true }: PricingTeaserProps) {
+export function PricingTeaser({ plans, showHeader = true, header }: PricingTeaserProps) {
   const router = useRouter();
   const [pending, setPending] = useState<string | null>(null);
   const [promo, setPromo] = useState("");
@@ -225,20 +230,21 @@ export function PricingTeaser({ plans, showHeader = true }: PricingTeaserProps) 
           transition={{ duration: 0.5 }}
           className="text-center mb-10"
         >
-          {showHeader && (
-            <>
-              <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-                Session packs
-              </div>
-              <h2 className="mx-auto max-w-2xl text-[clamp(2.2rem,4.6vw,3.8rem)] font-medium leading-[1.06] tracking-[-0.015em] text-balance">
-                Pay as you go. No lock-ins.
-              </h2>
-              <p className="mx-auto mt-4 max-w-[32rem] text-[17px] text-muted-foreground">
-                Buy a one-time pack of 1:1 sessions, no subscription, and your sessions never
-                expire.
-              </p>
-            </>
-          )}
+          {header ??
+            (showHeader && (
+              <>
+                <div className="mb-4 text-[13px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                  Session packs
+                </div>
+                <h2 className="mx-auto max-w-2xl text-[clamp(2.2rem,4.6vw,3.8rem)] font-medium leading-[1.06] tracking-[-0.015em] text-balance">
+                  Pay as you go. No lock-ins.
+                </h2>
+                <p className="mx-auto mt-4 max-w-[32rem] text-[17px] text-muted-foreground">
+                  Buy a one-time pack of 1:1 sessions, no subscription, and your sessions never
+                  expire.
+                </p>
+              </>
+            ))}
 
           <div className="mx-auto mt-6 flex max-w-xs flex-col items-center">
             <label htmlFor="promo-code" className="sr-only">
