@@ -185,8 +185,11 @@ export default function PrivacyPage() {
                       you type into a form or that the page shows, such as your account email on
                       the plan page. Going from those pages to any other page of ours loads that
                       page without the tag, so the tag sends nothing from our other pages and
-                      Google does not see which classes or teachers you browse. We never send your
-                      health information or messages.
+                      Google does not see which classes or teachers you browse. Google may use
+                      visits to our home, pricing and plan pages to show you our ads later. If you
+                      land on any other page from one of our ads, the tag tells Google not to use
+                      that visit to personalise ads. We never send your health information or
+                      messages.
                     </td>
                     <td className="py-2">USA</td>
                   </tr>

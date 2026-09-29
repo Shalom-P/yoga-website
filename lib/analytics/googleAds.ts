@@ -21,10 +21,18 @@ import { NATIVE_APP_UA_TOKEN } from "@/lib/meta/shared";
  * the pages where a pack can be bought, for everyone, and on any other page
  * only when the visit came from one of our Google ads, whose landing page
  * Google already knows from the click. Organic browsing of condition, teacher
- * and dashboard pages never reaches Google, which also keeps condition-based
- * remarketing lists (forbidden by Google's personalised-ads policy) impossible
- * to build. Referrer-Policy: strict-origin (next.config.ts) keeps our page URLs
- * out of document.referrer.
+ * and dashboard pages never reaches Google. Referrer-Policy: strict-origin
+ * (next.config.ts) keeps our page URLs out of document.referrer.
+ *
+ * Google's personalised-ads policy forbids remarketing lists built on health
+ * conditions, and an ad can land on /classes/diabetes. So only the pages where
+ * a pack can be bought feed remarketing (adPersonalizationAllowedOn); anywhere
+ * else the tag runs with allow_ad_personalization_signals off. gtag then sends
+ * none of its remarketing pings (viewthroughconversion, rmkt/collect,
+ * 1p-user-list) and marks the hits it still sends npa=1, while the click id
+ * still goes into the _gcl_aw cookie for a later conversion (tested). Not with
+ * consent mode's ad_personalization: granting that again on /pricing would also
+ * grant it in the EEA, the UK and Switzerland, whose default denies it.
  *
  * A loaded tag can't be kept quiet, so it must never outlive its pages. The
  * Google tag settings (Google's UI, not this code) turn on automatic form
@@ -108,6 +116,15 @@ export function googleTagWantedOn(pathname: string, search = ""): boolean {
   if (CHECKOUT_PAGES.has(pathname)) return true;
   const params = new URLSearchParams(search);
   return CLICK_IDS.some((id) => params.has(id));
+}
+
+/**
+ * Whether Google may use the tag's hits from this page for remarketing and other
+ * personalised ads. Only where a pack can be bought: anywhere else the tag runs
+ * just for an ad landing, which can be a condition page. See the PRIVACY note.
+ */
+export function adPersonalizationAllowedOn(pathname: string): boolean {
+  return CHECKOUT_PAGES.has(pathname);
 }
 
 /** No Google tag for the iOS app (ATT) or a browser sending Global Privacy Control. */
@@ -276,8 +293,15 @@ export function syncGoogleTag(pathname: string): void {
   const pageUrl = googlePageUrl(origin, pathname, search);
 
   if (loaded) {
-    if (googleTagWantedOn(pathname, search)) window.gtag?.("set", { page_location: pageUrl });
-    else leaveTagPages(() => window.location.reload(), false);
+    // The document, and gtag's settings with it, outlive a move between the tag's pages.
+    if (googleTagWantedOn(pathname, search)) {
+      window.gtag?.("set", {
+        page_location: pageUrl,
+        allow_ad_personalization_signals: adPersonalizationAllowedOn(pathname),
+      });
+    } else {
+      leaveTagPages(() => window.location.reload(), false);
+    }
     return;
   }
 
@@ -306,9 +330,11 @@ export function syncGoogleTag(pathname: string): void {
   });
   // Where ad cookies are denied, also strip ad click ids from the pings.
   gtag("set", "ads_data_redaction", true);
+  // Before the config, whose page view is the first hit.
   gtag("set", {
     page_location: pageUrl,
     page_referrer: googleReferrer(document.referrer),
+    allow_ad_personalization_signals: adPersonalizationAllowedOn(pathname),
   });
   gtag("js", new Date());
   gtag("config", GOOGLE_ADS_ID);
