@@ -17,7 +17,7 @@ export function Footer() {
         className="pointer-events-none absolute -right-6 top-10 hidden w-40 text-foreground/10 md:block"
       />
 
-      <div className="mx-auto grid max-w-[1200px] gap-9 px-6 pb-8 pt-14 md:grid-cols-[1.6fr_1fr_1fr_1fr]">
+      <div className="mx-auto grid max-w-[1200px] gap-9 px-6 pb-8 pt-14 md:grid-cols-[1.6fr_1fr_1fr_1fr_1fr]">
         <div>
           <Link href="/" className="mb-4 flex items-center gap-3">
             <BrandMark />
@@ -53,6 +53,20 @@ export function Footer() {
             <li><Link href="/pricing" className="hover:text-accent">Pricing</Link></li>
             <li><Link href="/faq" className="hover:text-accent">FAQ</Link></li>
             <li><Link href="/reviews" className="hover:text-accent">Reviews</Link></li>
+            <li><Link href="/private-online-yoga-classes" className="hover:text-accent">Private online yoga</Link></li>
+            <li><Link href="/doctor-led-yoga-therapy" className="hover:text-accent">Doctor-led yoga therapy</Link></li>
+          </ul>
+        </div>
+
+        <div>
+          <div className="mb-4 text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+            Guides
+          </div>
+          <ul className="space-y-2.5 text-sm text-foreground/80">
+            <li><Link href="/guides/what-private-online-yoga-costs" className="hover:text-accent">What private online yoga costs</Link></li>
+            <li><Link href="/classes/prenatal/poses-to-avoid" className="hover:text-accent">Prenatal poses to avoid</Link></li>
+            <li><Link href="/online-yoga-classes-usa" className="hover:text-accent">Online yoga in the USA</Link></li>
+            <li><Link href="/online-yoga-classes-uae" className="hover:text-accent">Online yoga in the UAE</Link></li>
           </ul>
         </div>
 

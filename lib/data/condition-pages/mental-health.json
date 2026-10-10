@@ -179,5 +179,15 @@
   "safetyTitle": "Yoga supports your care, it doesn't replace it",
   "safetyText": "These sessions support your overall wellbeing and are practised alongside professional medical care. They are not a substitute for diagnosis, treatment, or medication. Please tell your teacher about any conditions or symptoms so they can adapt your session safely, and keep your doctor in the loop.",
   "seoTitle": "Online Yoga for Stress, Live 1:1",
-  "metaDescription": "Gentle 1:1 yoga for stress and a busy mind: calming movement, breathwork, and meditation to help you feel steadier and rest more easily."
+  "metaDescription": "Gentle 1:1 yoga for stress and a busy mind: calming movement, breathwork, and meditation to help you feel steadier and rest more easily.",
+  "citations": [
+    {
+      "label": "NHS: Exercise for depression",
+      "url": "https://www.nhs.uk/mental-health/self-help/guides-tools-and-activities/exercise-for-depression/"
+    },
+    {
+      "label": "NCCIH (US National Institutes of Health): Yoga, what you need to know",
+      "url": "https://www.nccih.nih.gov/health/yoga-what-you-need-to-know"
+    }
+  ]
 }

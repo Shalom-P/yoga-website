@@ -9,6 +9,8 @@ import type {
   Course,
   BreadcrumbList,
   Product,
+  ItemList,
+  Article,
 } from "schema-dts";
 import type { Faq } from "@/lib/data/faqs";
 import type { Teacher, ClassCategory, Plan, PlanPrice } from "@/lib/supabase/types";
@@ -177,5 +179,60 @@ export function breadcrumbJsonLd(
       name: it.name,
       item: it.url,
     })),
+  };
+}
+
+/**
+ * The teacher roster as one ordered list of Person nodes, for /teachers. Each
+ * item repeats the full Person (credentials included) rather than a bare URL,
+ * so the hub itself states who teaches here instead of relying on a crawler
+ * following three links to find out.
+ */
+export function teacherListJsonLd(
+  teachers: Teacher[],
+  urlFor: (t: Teacher) => string,
+): WithContext<ItemList> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    name: "Yoga teachers at My Yoga Classes",
+    itemListElement: teachers.map((t, i) => {
+      // Strip the @context from the nested node: one context at the root.
+      const full = personJsonLd(t, urlFor(t)) as unknown as Record<string, unknown>;
+      const { "@context": _ctx, ...person } = full;
+      void _ctx;
+      return {
+        "@type": "ListItem" as const,
+        position: i + 1,
+        item: person as unknown as Person,
+      };
+    }),
+  };
+}
+
+/**
+ * Editorial guide pages (the cost guide, the prenatal safety guide). Authored
+ * by the Organization: there is no individual byline to claim, and inventing
+ * one would be worse than none.
+ */
+export function articleJsonLd(args: {
+  headline: string;
+  description: string;
+  url: string;
+  datePublished: string;
+  dateModified: string;
+}): WithContext<Article> {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: args.headline,
+    description: args.description,
+    url: args.url,
+    mainEntityOfPage: args.url,
+    datePublished: args.datePublished,
+    dateModified: args.dateModified,
+    author: ORG_REF,
+    publisher: ORG_REF,
+    inLanguage: "en",
   };
 }

@@ -93,15 +93,11 @@ const nextConfig: NextConfig = {
     return [
       // Pre-registered for the re-slugging the SEO plan calls for, so the old
       // URLs keep their equity when the new ones land. Harmless until then:
-      // none of these source paths is a real route today.
+      // none of these source paths is a real route today. (/classes/pcos used
+      // to be here; it is a real page since the PCOS split, so it was removed.)
       {
         source: "/classes/chair-yoga-for-seniors",
         destination: "/classes/geriatric",
-        permanent: true,
-      },
-      {
-        source: "/classes/pcos",
-        destination: "/classes/hormonal-health",
         permanent: true,
       },
       {

@@ -12,6 +12,7 @@ import {
   Flame,
   Accessibility,
   Smile,
+  Sparkles,
   Leaf,
   type LucideIcon,
 } from "lucide-react";
@@ -27,6 +28,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
   flame: Flame,
   accessibility: Accessibility,
   smile: Smile,
+  sparkles: Sparkles,
 };
 
 // Just the grid of class-style cards — no section wrapper or header. Shared by

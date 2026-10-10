@@ -1,4 +1,5 @@
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
+import { PackPriceTable } from "@/components/marketing/PackPriceTable";
 import { PageHeader } from "@/components/marketing/PageHeader";
 import { FAQ } from "@/components/marketing/FAQ";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
@@ -38,6 +39,9 @@ export default async function PricingPage() {
         subhead="Buy a one-time pack of 1:1 sessions, no subscription, and your sessions never expire."
       />
       <PricingTeaser plans={plans} showHeader={false} />
+      {/* Server-rendered, so every currency the Product JSON-LD above offers is
+          visible in the cached HTML, not only the browser-resolved one. */}
+      <PackPriceTable plans={plans} />
       <FAQ />
       <FinalCTA headline="Book your first 1:1 session." />
     </>

@@ -416,7 +416,7 @@ export function PricingTeaser({ plans, showHeader = true, header }: PricingTease
         <p className="mx-auto mt-9 max-w-[44rem] text-center text-sm text-muted-foreground">
           Prices shown in {displayCurrency}. One-time payment, no subscription. Book from
           anywhere in the world.{" "}
-          <Link href="/faq" className="text-accent hover:underline">
+          <Link href="/faq" className="text-accent underline underline-offset-4 hover:text-[var(--accent-bright)]">
             Read the FAQ →
           </Link>
         </p>

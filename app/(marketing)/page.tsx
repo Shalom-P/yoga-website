@@ -6,7 +6,6 @@ import { TestimonialWall } from "@/components/marketing/TestimonialWall";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { FAQ } from "@/components/marketing/FAQ";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
-import { StickyMobileCTA } from "@/components/marketing/StickyMobileCTA";
 import { LandingPageView } from "@/components/marketing/LandingPageView";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { faqPageJsonLd } from "@/lib/seo/structuredData";
@@ -79,7 +78,6 @@ export default async function LandingPage() {
       <TestimonialWall reviews={reviews} />
       <FAQ />
       <FinalCTA headline={finalHeadline} />
-      <StickyMobileCTA />
     </>
   );
 }

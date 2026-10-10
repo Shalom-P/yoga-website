@@ -3,6 +3,7 @@ import { MarketingNav } from "@/components/marketing/MarketingNav";
 import { Footer } from "@/components/marketing/Footer";
 import { LenisProvider } from "@/components/shared/LenisProvider";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
+import { StickyMobileCTA } from "@/components/marketing/StickyMobileCTA";
 
 // The browser-chrome tint (viewport themeColor) comes from the root layout, which
 // every route group shares now that they all wear the same dark skin.
@@ -35,6 +36,11 @@ export default function MarketingLayout({
           </main>
           <Footer />
           <WhatsAppButton />
+          {/* Mounted here, not per page: 75% of traffic is mobile and the bar
+              used to exist only on the homepage, so every condition, teacher
+              and pricing page had no persistent CTA. It stays hidden until
+              the visitor scrolls past the first screen. */}
+          <StickyMobileCTA />
         </div>
       </MotionConfig>
     </LenisProvider>

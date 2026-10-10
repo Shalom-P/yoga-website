@@ -7,6 +7,7 @@ import { sendEmail, type SendEmailResult } from "@/lib/email/client";
 import {
   bookingConfirmationEmail,
   bookingReminderEmail,
+  reviewRequestEmail,
   subscriptionActivatedEmail,
 } from "@/lib/email/templates";
 
@@ -119,6 +120,27 @@ export async function sendSubscriptionActivated(
 ): Promise<SendEmailResult> {
   const { subject, html } = await subscriptionActivatedEmail({
     planName: args.planName,
+  });
+  return sendEmail({ to: args.to, subject, html });
+}
+
+// ---------------------------------------------------------------------------
+// Review request
+// ---------------------------------------------------------------------------
+
+export interface SendReviewRequestArgs {
+  to: string;
+  teacherName: string;
+  bookingId: string;
+}
+
+/** Asks for a review of one finished booking. Sent by the no-show sweep, once. */
+export async function sendReviewRequest(
+  args: SendReviewRequestArgs
+): Promise<SendEmailResult> {
+  const { subject, html } = await reviewRequestEmail({
+    teacherName: args.teacherName,
+    reviewUrl: `${SITE_URL}/dashboard/review?booking=${encodeURIComponent(args.bookingId)}`,
   });
   return sendEmail({ to: args.to, subject, html });
 }

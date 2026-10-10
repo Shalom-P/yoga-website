@@ -444,3 +444,71 @@ export async function subscriptionActivatedEmail(
   const html = await render(<SubscriptionActivatedTemplate {...args} />);
   return { subject, html };
 }
+
+// ---------------------------------------------------------------------------
+// Template: Review request (sent once, after a session has ended)
+// ---------------------------------------------------------------------------
+
+export interface ReviewRequestArgs {
+  teacherName: string;
+  /** Deep link to the review form for this specific booking. */
+  reviewUrl: string;
+}
+
+function ReviewRequestTemplate({ teacherName, reviewUrl }: ReviewRequestArgs) {
+  return (
+    <EmailWrapper preview={`How was your session with ${teacherName}?`}>
+      <Heading
+        style={{
+          color: brand.text,
+          fontSize: "24px",
+          fontWeight: "700",
+          margin: "0 0 8px",
+        }}
+      >
+        How was your session?
+      </Heading>
+      <BodyText>
+        You practised with {teacherName} recently. If you have two minutes, a short review
+        helps the next student choose a teacher, and it helps {teacherName} know what landed.
+      </BodyText>
+      <BodyText>
+        Only you can write it, and we never publish a review without reading it first.
+      </BodyText>
+      <Button
+        href={reviewUrl}
+        style={{
+          backgroundColor: brand.primary,
+          borderRadius: "8px",
+          color: "#FFFFFF",
+          display: "inline-block",
+          fontSize: "16px",
+          fontWeight: "600",
+          padding: "14px 28px",
+          textDecoration: "none",
+        }}
+      >
+        Leave a review
+      </Button>
+      <BodyText style={{ marginTop: "16px" }}>
+        Or copy this link:{" "}
+        <Link href={reviewUrl} style={{ color: brand.primary }}>
+          {reviewUrl}
+        </Link>
+      </BodyText>
+      <Hr style={{ borderColor: brand.border, margin: "24px 0" }} />
+      <MutedText>
+        If the session did not happen, or something went wrong, just reply to this email and
+        we will sort it out.
+      </MutedText>
+    </EmailWrapper>
+  );
+}
+
+export async function reviewRequestEmail(
+  args: ReviewRequestArgs
+): Promise<{ subject: string; html: string }> {
+  const subject = `How was your session with ${args.teacherName}?`;
+  const html = await render(<ReviewRequestTemplate {...args} />);
+  return { subject, html };
+}

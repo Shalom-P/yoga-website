@@ -150,6 +150,9 @@ export type Booking = {
   cancelled_at: string | null;
   reminded_at_24h: string | null;
   reminded_at_1h: string | null;
+  // 0043: stamped when the post-session review request email was claimed, so
+  // the sweep sends it at most once per booking.
+  review_requested_at: string | null;
   // 0039: admin-override provenance. `comped` means an admin added this student
   // without spending a credit (so cancelling must never refund one);
   // `credit_refunded` records that a refund ledger row actually landed, which is
