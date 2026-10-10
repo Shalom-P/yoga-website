@@ -302,7 +302,16 @@ function RowActions({
     );
   }
   return (
-    <div className="flex justify-end">
+    <div className="flex items-center justify-end gap-2">
+      {/* Past, non-cancelled sessions can be reviewed. The API re-checks that
+          the session ended and that this customer owns the booking. */}
+      {bucket === "past" && (
+        <Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
+          <Link href={`/dashboard/review?booking=${encodeURIComponent(row.id)}`}>
+            Leave a review
+          </Link>
+        </Button>
+      )}
       <Button asChild size="sm" variant="outline" className="h-8 px-3 text-xs">
         <Link href="/dashboard/book">Book again</Link>
       </Button>

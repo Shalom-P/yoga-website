@@ -16,11 +16,14 @@ import mentalHealth from "./condition-pages/mental-health.json";
 import weightLoss from "./condition-pages/weight-loss.json";
 import geriatric from "./condition-pages/geriatric.json";
 import kidsYoga from "./condition-pages/kids-yoga.json";
+import pcos from "./condition-pages/pcos.json";
 
 export type Pose = { sa: string; en: string; desc: string };
 export type PoseGroup = { tag: string; why: string; poses: Pose[]; note?: string };
 export type Titled = { title: string; body: string };
 export type Faq = { q: string; a: string };
+/** An authoritative external source rendered under the safety note. */
+export type Citation = { label: string; url: string };
 
 export type ConditionPage = {
   slug: string;
@@ -71,6 +74,12 @@ export type ConditionPage = {
    */
   seoTitle: string;
   metaDescription: string;
+  /**
+   * Public-health sources (NHS, NIH, ACOG, WHO) for the claims the page makes.
+   * Rendered as plain outbound links under the safety note so a reader, or a
+   * quality rater, can check the page against something other than us.
+   */
+  citations?: Citation[];
 };
 
 const PAGES = [
@@ -83,6 +92,7 @@ const PAGES = [
   weightLoss,
   geriatric,
   kidsYoga,
+  pcos,
 ] as unknown as ConditionPage[];
 
 const BY_SLUG: Record<string, ConditionPage> = Object.fromEntries(

@@ -15,13 +15,17 @@
 /** Clinically adjacent conditions, 2 to 3 per page. Every slug appears as a
  *  value at least twice, so no page is left without inbound links. */
 export const RELATED_CONDITIONS: Record<string, string[]> = {
-  diabetes: ["hypertension", "weight-loss", "hormonal-health"],
+  diabetes: ["hypertension", "weight-loss", "pcos"],
   hypertension: ["diabetes", "mental-health", "geriatric"],
   prenatal: ["hormonal-health", "pain-relief", "kids-yoga"],
-  "hormonal-health": ["prenatal", "weight-loss", "mental-health"],
+  "hormonal-health": ["pcos", "prenatal", "mental-health"],
+  // Split out of hormonal-health: PCOS is the condition people actually search
+  // for, and the host page could not say it more than twice without losing
+  // its menopause readers.
+  pcos: ["hormonal-health", "weight-loss", "diabetes"],
   "pain-relief": ["geriatric", "prenatal", "mental-health"],
   "mental-health": ["hypertension", "pain-relief", "kids-yoga"],
-  "weight-loss": ["diabetes", "hormonal-health", "hypertension"],
+  "weight-loss": ["diabetes", "pcos", "hypertension"],
   geriatric: ["pain-relief", "hypertension", "mental-health"],
   "kids-yoga": ["mental-health", "pain-relief"],
 };
@@ -35,6 +39,7 @@ export const RELATED_CONDITIONS: Record<string, string[]> = {
  *                      Breathwork, Nervous System Regulation
  * - dr-vaishnavi-mayya Clinical Yoga, Lifestyle Disorders, Cardiovascular
  *                      Health, Musculoskeletal Disorders, Women's Health
+ *                      (which is where PCOS sits)
  *
  * A teacher absent from this map simply gets no condition links, which is the
  * correct outcome: we would rather link nothing than imply a clinical
@@ -47,6 +52,7 @@ export const TEACHER_CONDITIONS: Record<string, string[]> = {
     "diabetes",
     "hypertension",
     "hormonal-health",
+    "pcos",
     "weight-loss",
     "pain-relief",
   ],

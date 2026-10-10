@@ -85,7 +85,24 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
       {rich && rich.faqs.length > 0 && (
         <JsonLd data={faqPageJsonLd(rich.faqs.map((f) => ({ q: f.q, a: f.a })))} />
       )}
-      {rich ? <ConditionLanding data={rich} /> : <SimpleDetail c={c} />}
+      {rich ? (
+        <ConditionLanding
+          data={rich}
+          // First mapped teacher, with their headline as the qualification
+          // line ("MD in Clinical Yoga & Naturopathy").
+          taughtBy={
+            conditionTeachers[0]
+              ? {
+                  name: conditionTeachers[0].label,
+                  headline: conditionTeachers[0].note ?? null,
+                  href: conditionTeachers[0].href,
+                }
+              : null
+          }
+        />
+      ) : (
+        <SimpleDetail c={c} />
+      )}
       {related.length > 0 && (
         <RelatedLinks
           title="Other things people bring to a 1:1 session."

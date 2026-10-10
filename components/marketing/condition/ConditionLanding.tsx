@@ -64,7 +64,16 @@ function TestimonialWho({ html }: { html: string }) {
   return <p className="mt-6 text-sm text-muted-foreground">{html}</p>;
 }
 
-export function ConditionLanding({ data: d }: { data: ConditionPage }) {
+/** The teacher whose sessions cover this focus, for the on-page credential line. */
+export type TaughtBy = { name: string; headline: string | null; href: string };
+
+export function ConditionLanding({
+  data: d,
+  taughtBy,
+}: {
+  data: ConditionPage;
+  taughtBy?: TaughtBy | null;
+}) {
   return (
     <>
       {/* 1 · HERO */}
@@ -280,6 +289,39 @@ export function ConditionLanding({ data: d }: { data: ConditionPage }) {
           <div>
             <h3 className="mb-2 text-lg text-accent">{d.safetyTitle}</h3>
             <p className="text-sm text-foreground/70 text-pretty">{d.safetyText}</p>
+            {/* Who actually teaches this, with their qualification. Health
+                copy with no identifiable, qualified person behind it reads as
+                anonymous; this is the one line that answers "says who?". It is
+                a statement of fact from the curated teacher map, not a claim
+                that this person reviewed the page. */}
+            {taughtBy && (
+              <p className="mt-4 text-sm text-foreground/70">
+                Sessions for this focus are taught by{" "}
+                <Link href={taughtBy.href} className="font-medium text-foreground underline underline-offset-4">
+                  {taughtBy.name}
+                </Link>
+                {taughtBy.headline ? `, ${taughtBy.headline}` : ""}.
+              </p>
+            )}
+            {d.citations && d.citations.length > 0 && (
+              <div className="mt-4 text-sm text-foreground/70">
+                <p className="font-medium text-foreground">Further reading, from public health bodies</p>
+                <ul className="mt-1.5 space-y-1">
+                  {d.citations.map((c) => (
+                    <li key={c.url}>
+                      <a
+                        href={c.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="underline underline-offset-4 hover:text-foreground"
+                      >
+                        {c.label}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </Reveal>
       </section>
