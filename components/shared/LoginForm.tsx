@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
@@ -9,8 +9,11 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
-import { postAuthTarget, safeNext } from "@/lib/auth/redirects";
+import { isProfileComplete, postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import { isValidEmail } from "@/lib/validation/email";
+import { phoneErrorMessage, toE164, toPhoneCountry } from "@/lib/validation/phone";
+import type { CountryCode } from "libphonenumber-js";
+import { PhoneField } from "@/components/ui/phone-field";
 import { friendlyAuthError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
 import { useIsNative } from "@/lib/native/useIsNative";
@@ -131,9 +134,26 @@ const RESEND_COOLDOWN_SECONDS = 30;
 // code; accept up to Supabase's max and let verifyOtp do the real validation.
 const OTP_MAX_LENGTH = 10;
 
+// Supabase's answer to `shouldCreateUser: false` for an address with no
+// account. That is the cue to ask a new customer for their name and phone
+// before anything is created.
+function isNoAccountError(error: { code?: string; message: string }): boolean {
+  return error.code === "otp_disabled" || /signups? not allowed/i.test(error.message);
+}
+
+type SignupDetails = { full_name: string; phone: string };
+
 function EmailLogin({ next }: { next: string }) {
-  const [phase, setPhase] = useState<"email" | "otp">("email");
+  // email → (new address only) details → otp
+  const [phase, setPhase] = useState<"email" | "details" | "otp">("email");
   const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [phone, setPhone] = useState("");
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const [phoneCountry, setPhoneCountry] = useState<CountryCode | undefined>();
+  // Set once a new customer has given their details; resends must carry them
+  // too, or a resend after the first send could create a bare account.
+  const [signup, setSignup] = useState<SignupDetails | null>(null);
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   // resend cooldown state
@@ -147,40 +167,87 @@ function EmailLogin({ next }: { next: string }) {
     return () => clearTimeout(id);
   }, [resendCooldown]);
 
-  async function doSendOtp() {
-    // Validate before spending a send: a malformed address is silently "accepted"
-    // by signInWithOtp but no code ever lands.
-    if (!isValidEmail(email)) {
-      toast.error("Enter a valid email address.");
-      return false;
-    }
+  // Pre-select the visitor's calling code (GeoIP) once the details step opens.
+  // /login is statically rendered, so it can't read the request headers itself.
+  useEffect(() => {
+    if (phase !== "details" || phoneCountry) return;
+    let cancelled = false;
+    fetch("/api/region")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((body: { geoCountry?: string | null } | null) => {
+        if (!cancelled) setPhoneCountry(toPhoneCountry(body?.geoCountry));
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [phase, phoneCountry]);
+
+  // Sends a code. Without `details` it only ever signs in an existing account;
+  // with them it may create the account, name and phone included.
+  async function requestCode(details: SignupDetails | null) {
     setLoading(true);
-    // shouldCreateUser:true keeps the OTP flow self-service for new sign-ups.
     const { error } = await supabase.auth.signInWithOtp({
       email: email.trim(),
-      options: { shouldCreateUser: true },
+      options: details
+        ? { shouldCreateUser: true, data: details }
+        : { shouldCreateUser: false },
     });
     setLoading(false);
-    if (error) { toast.error(friendlyAuthError(error.message)); return false; }
-    return true;
+    return error;
   }
 
-  async function sendOtp(e: React.FormEvent) {
-    e.preventDefault();
-    track("signup_started", { method_intent: "email", next_path: next });
-    const ok = await doSendOtp();
-    if (!ok) return;
-    toast.success("Code sent. Check your email.");
+  function codeSent(message: string) {
+    toast.success(message);
     setPhase("otp");
     setResendCooldown(RESEND_COOLDOWN_SECONDS);
   }
 
+  async function sendOtp(e: React.FormEvent) {
+    e.preventDefault();
+    // Validate before spending a send: a malformed address is silently "accepted"
+    // by signInWithOtp but no code ever lands.
+    if (!isValidEmail(email)) {
+      toast.error("Enter a valid email address.");
+      return;
+    }
+    track("signup_started", { method_intent: "email", next_path: next });
+    setSignup(null);
+    const error = await requestCode(null);
+    if (error && isNoAccountError(error)) {
+      // New here: collect name and phone before an account exists.
+      setPhase("details");
+      return;
+    }
+    if (error) return toast.error(friendlyAuthError(error.message));
+    codeSent("Code sent. Check your email.");
+  }
+
+  async function sendSignupOtp(e: React.FormEvent) {
+    e.preventDefault();
+    const name = fullName.trim();
+    if (!name) {
+      toast.error("Please enter your full name.");
+      return;
+    }
+    const e164 = toE164(phone);
+    if (!e164) {
+      phoneRef.current?.focus();
+      toast.error(phone.trim() ? phoneErrorMessage(phoneCountry) : "Please enter your mobile number.");
+      return;
+    }
+    const details = { full_name: name, phone: e164 };
+    const error = await requestCode(details);
+    if (error) return toast.error(friendlyAuthError(error.message));
+    setSignup(details);
+    codeSent("Code sent. Check your email.");
+  }
+
   // resend handler
   async function resendOtp() {
-    const ok = await doSendOtp();
-    if (!ok) return;
-    toast.success("New code sent. Check your email.");
-    setResendCooldown(RESEND_COOLDOWN_SECONDS);
+    const error = await requestCode(signup);
+    if (error) return toast.error(friendlyAuthError(error.message));
+    codeSent("New code sent. Check your email.");
   }
 
   async function verifyOtp(e: React.FormEvent) {
@@ -208,10 +275,10 @@ function EmailLogin({ next }: { next: string }) {
     if (userId) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("experience_level")
+        .select("full_name, phone, experience_level")
         .eq("id", userId)
         .maybeSingle();
-      onboarded = Boolean(profile?.experience_level);
+      onboarded = isProfileComplete(profile);
     }
     window.location.href = postAuthTarget(next, onboarded);
   }
@@ -245,6 +312,63 @@ function EmailLogin({ next }: { next: string }) {
         >
           {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend code"}
         </button>
+        <button
+          type="button"
+          className="text-xs text-muted-foreground hover:text-foreground mx-auto block"
+          onClick={() => setPhase("email")}
+        >
+          ← Change email
+        </button>
+      </form>
+    );
+  }
+
+  if (phase === "details") {
+    return (
+      <form onSubmit={sendSignupOtp} className="space-y-4">
+        <p className="text-sm text-muted-foreground">
+          New here? Tell us who you are and we&apos;ll email a code to{" "}
+          <span className="text-foreground">{email}</span>.
+        </p>
+        <div>
+          <Label htmlFor="signup-name">
+            Full name <span aria-hidden="true" className="text-destructive">*</span>
+          </Label>
+          <Input
+            id="signup-name"
+            type="text"
+            autoComplete="name"
+            required
+            value={fullName}
+            onChange={(e) => setFullName(e.target.value)}
+            placeholder="Your full name"
+            className="mt-1.5 h-11"
+          />
+        </div>
+        <div>
+          <Label htmlFor="signup-phone">
+            Mobile number <span aria-hidden="true" className="text-destructive">*</span>
+          </Label>
+          <PhoneField
+            // Remount once the GeoIP country arrives: the library reads its
+            // default country on mount. The value is controlled, so nothing typed is lost.
+            key={phoneCountry ?? "none"}
+            id="signup-phone"
+            name="phone"
+            required
+            inputRef={phoneRef}
+            value={phone}
+            onChange={setPhone}
+            defaultCountry={phoneCountry}
+            className="mt-1.5 h-11"
+          />
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            Only used to reach you about your sessions.
+          </p>
+        </div>
+        <Button type="submit" disabled={loading} className="h-11 w-full rounded-full">
+          {loading ? <Loader2 className="size-4 animate-spin" /> : "Send code"}
+        </Button>
         <button
           type="button"
           className="text-xs text-muted-foreground hover:text-foreground mx-auto block"

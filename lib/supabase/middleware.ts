@@ -1,6 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { isOnboardingPath, postAuthTarget, safeNext } from "@/lib/auth/redirects";
+import { isOnboardingPath, isProfileComplete, postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import type { Database } from "@/lib/supabase/types";
 
 export async function updateSession(req: NextRequest) {
@@ -74,7 +74,7 @@ export async function updateSession(req: NextRequest) {
   if (path === "/login" && user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role, experience_level")
+      .select("role, full_name, phone, experience_level")
       .eq("id", user.id)
       .maybeSingle();
     const next = safeNext(req.nextUrl.searchParams.get("next"));
@@ -82,14 +82,14 @@ export async function updateSession(req: NextRequest) {
       return makeRedirect(new URL(teacherTarget(next), req.url));
     }
     return makeRedirect(
-      new URL(postAuthTarget(next, Boolean(profile?.experience_level)), req.url)
+      new URL(postAuthTarget(next, isProfileComplete(profile)), req.url)
     );
   }
 
   if ((isAdminArea || isTeacherArea || isDashboardArea) && user) {
     const { data: profile } = await supabase
       .from("profiles")
-      .select("role")
+      .select("role, full_name, phone, experience_level")
       .eq("id", user.id)
       .single();
     const role = profile?.role;
@@ -104,6 +104,14 @@ export async function updateSession(req: NextRequest) {
       // The customer dashboard isn't a teacher's home — keep them out of the
       // booking flow and on their own surface.
       return makeRedirect(new URL("/teacher", req.url));
+    }
+    // Nobody uses the dashboard until they have given a name and a phone
+    // number. Without this, someone who skipped /onboarding could type
+    // /dashboard and book with only an email on file. (Teachers were sent to
+    // /teacher just above.)
+    if (isDashboardArea && !isProfileComplete(profile)) {
+      const dest = path + req.nextUrl.search;
+      return makeRedirect(new URL(postAuthTarget(dest, false), req.url));
     }
   }
 
