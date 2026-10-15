@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/guards";
-import { isOnboardingPath, postAuthTarget, safeNext } from "@/lib/auth/redirects";
+import { isOnboardingPath, isProfileComplete, postAuthTarget, safeNext } from "@/lib/auth/redirects";
 import { countryFromHeaders } from "@/lib/geo/region";
 import { toPhoneCountry } from "@/lib/validation/phone";
 import { OnboardingForm } from "@/components/shared/OnboardingForm";
@@ -23,15 +23,22 @@ export default async function OnboardingPage({
   const { user, supabase } = await requireUser("/onboarding");
 
   // Returning users who already finished onboarding should never see this form
-  // again — send them on to wherever they were headed.
+  // again — send them on to wherever they were headed. "Finished" includes a
+  // name and a phone number: an older profile missing either lands here too.
   const { data: profile } = await supabase
     .from("profiles")
     .select("full_name, phone, experience_level")
     .eq("id", user.id)
     .maybeSingle();
-  if (profile?.experience_level) {
+  if (isProfileComplete(profile)) {
     redirect(postAuthTarget(safeNext(rawNext, "/dashboard"), true));
   }
+
+  // An email sign-up gives its name and phone before the code is sent; they ride
+  // in the auth user's metadata (and the signup trigger copies them into the
+  // profile from migration 0045). Prefill from either so nobody types them twice.
+  const meta = user.user_metadata ?? {};
+  const metaString = (v: unknown) => (typeof v === "string" ? v : "");
 
   // Pre-select the visitor's calling code so they only type their local number.
   // A blank country is not a safe default (see lib/validation/phone.ts).
@@ -51,8 +58,8 @@ export default async function OnboardingPage({
           A few quick details, then you&apos;ll see slots in your local time.
         </p>
         <OnboardingForm
-          initialFullName={profile?.full_name ?? ""}
-          initialPhone={profile?.phone ?? ""}
+          initialFullName={profile?.full_name || metaString(meta.full_name)}
+          initialPhone={profile?.phone || metaString(meta.phone)}
           defaultPhoneCountry={defaultPhoneCountry}
           next={next}
         />

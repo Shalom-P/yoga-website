@@ -1,4 +1,6 @@
+import { redirect } from "next/navigation";
 import { requireUser } from "@/lib/auth/guards";
+import { isProfileComplete } from "@/lib/auth/redirects";
 import { DashboardSidebar } from "@/components/dashboard/DashboardSidebar";
 import { WhatsAppButton } from "@/components/shared/WhatsAppButton";
 
@@ -10,9 +12,15 @@ export default async function DashboardLayout({
   const { user, supabase } = await requireUser("/dashboard");
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, phone, experience_level, role")
     .eq("id", user.id)
     .single();
+  // The middleware already routes an incomplete profile to /onboarding (keeping
+  // the destination); this is the real gate in case it is ever bypassed. No
+  // name or no phone, no dashboard.
+  if (profile?.role !== "teacher" && !isProfileComplete(profile)) {
+    redirect("/onboarding");
+  }
   const name = profile?.full_name || user.email || "Member";
   // Drives the Admin link in the sidebar only. The real gate is the middleware
   // role routing plus requireAdmin() inside /admin, so a stale or spoofed value

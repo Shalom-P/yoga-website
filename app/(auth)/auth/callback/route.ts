@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { isOnboardingPath, postAuthTarget, safeNext } from "@/lib/auth/redirects";
+import { isOnboardingPath, isProfileComplete, postAuthTarget, safeNext } from "@/lib/auth/redirects";
 
 // Two ways a session can be established here:
 //   * OAuth / PKCE          → ?code=...                  (Google, and the PKCE
@@ -74,10 +74,11 @@ export async function GET(request: Request) {
       // Teachers skip the customer onboarding form (they have no experience_level
       // and don't book) — land them in their own area. Otherwise: users with NULL
       // experience_level haven't finished onboarding, so route them there (carrying
-      // ?next=); onboarded customers go straight to their destination.
+      // ?next=), as are users missing a name or phone; onboarded customers go
+      // straight to their destination.
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role, experience_level")
+        .select("role, full_name, phone, experience_level")
         .eq("id", user.id)
         .maybeSingle();
       if (profile?.role === "teacher") {
@@ -85,7 +86,7 @@ export async function GET(request: Request) {
         return NextResponse.redirect(new URL(target, url.origin));
       }
       return NextResponse.redirect(
-        new URL(postAuthTarget(next, Boolean(profile?.experience_level)), url.origin)
+        new URL(postAuthTarget(next, isProfileComplete(profile)), url.origin)
       );
     }
   }

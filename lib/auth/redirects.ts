@@ -28,3 +28,19 @@ export function postAuthTarget(next: string, onboarded: boolean): string {
   }
   return isOnboardingPath(next) ? "/dashboard" : next;
 }
+
+// The fields a customer must have before they can use the signed-in area.
+// Name and phone are how a teacher or the studio reaches them about a session;
+// experience_level is only ever written by the onboarding form (web or native),
+// so it marks that the form was actually submitted.
+export type ProfileCompleteness = {
+  full_name?: string | null;
+  phone?: string | null;
+  experience_level?: string | null;
+};
+
+export function isProfileComplete(profile: ProfileCompleteness | null | undefined): boolean {
+  return Boolean(
+    profile?.full_name?.trim() && profile.phone?.trim() && profile.experience_level
+  );
+}

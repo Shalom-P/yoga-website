@@ -46,7 +46,14 @@ export async function GET(req: Request) {
   // Answer with what we can actually charge, not merely what we would prefer:
   // this figure drives the price on the card, so it has to survive to checkout.
   const currency = await effectiveCurrency(region.currency);
-  const body = { ...region, currency, locale: localeForCurrency(currency) };
+  // geoCountry is the raw edge country (any country, not just a billing
+  // market): the sign-up form pre-selects it in the phone field.
+  const body = {
+    ...region,
+    currency,
+    locale: localeForCurrency(currency),
+    geoCountry: countryFromHeaders(req.headers),
+  };
 
   return NextResponse.json(body, {
     headers: {
