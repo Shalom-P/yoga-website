@@ -66,6 +66,9 @@ const securityHeaders = [
   // a full page load (new tab, login redirect), and the tag reports referrers to
   // Google. Other origins get exactly what they got before.
   { key: "Referrer-Policy", value: "strict-origin" },
+  // Isolates our window from cross-origin openers; allow-popups keeps Razorpay
+  // and Google sign-in popups working.
+  { key: "Cross-Origin-Opener-Policy", value: "same-origin-allow-popups" },
   { key: "Permissions-Policy", value: "camera=(), microphone=(), geolocation=(), browsing-topics=()" },
 ];
 

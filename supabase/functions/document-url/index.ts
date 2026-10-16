@@ -66,6 +66,18 @@ Deno.serve(async (req: Request) => {
     .eq("id", documentId)
     .maybeSingle();
   if (!doc || doc.deleted_at) return json({ error: "not_found" }, 404);
+  // Never sign a path outside the owner's folder. Mirror of isSafeMedicalPath in
+  // lib/medical/constants.ts (Deno can't import it) — keep in step.
+  {
+    const prefix = `${doc.customer_id}/`;
+    const file = typeof doc.storage_path === "string" && doc.storage_path.startsWith(prefix)
+      ? doc.storage_path.slice(prefix.length)
+      : "";
+    if (!/^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/.test(file) || file.includes("..")) {
+      console.error("[document-url] refused unsafe storage_path for", doc.id);
+      return json({ error: "not_found" }, 404);
+    }
+  }
 
   // Two explicit steps so the authorization is unambiguous, rather than relying
   // on embedded-filter semantics.
@@ -74,10 +86,11 @@ Deno.serve(async (req: Request) => {
   if (!isOwner) {
     const { data: teacher } = await svc
       .from("teachers")
-      .select("id")
+      .select("id, is_active")
       .eq("profile_id", user.id)
       .maybeSingle();
-    if (teacher) {
+    // Retired teachers keep their login link; their old shares must not work.
+    if (teacher?.is_active) {
       const { data: share } = await svc
         .from("medical_document_shares")
         .select("id")

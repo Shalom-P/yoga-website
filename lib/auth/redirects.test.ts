@@ -59,9 +59,8 @@ describe("safeNext", () => {
   it("rejects control-character tricks the URL parser strips", () => {
     // searchParams.get() decodes %09/%0A/%0D before safeNext sees them.
     for (const bad of ["/\t/evil.com", "/\n/evil.com", "/\r\\evil.com", "/\u0000/evil.com", "/\t\t/evil.com"]) {
-      const v = JSON.parse(`"${bad}"`) as string;
-      expect(safeNext(v)).toBe("/dashboard");
-      expect(new URL(safeNext(v), "https://www.myyogaclasses.fit").origin).toBe("https://www.myyogaclasses.fit");
+      expect(safeNext(bad)).toBe("/dashboard");
+      expect(new URL(safeNext(bad), "https://www.myyogaclasses.fit").origin).toBe("https://www.myyogaclasses.fit");
     }
   });
 

@@ -10,7 +10,6 @@
 const PROBE_ORIGIN = "https://safe-next.invalid";
 export function safeNext(raw: string | null | undefined, fallback = "/dashboard"): string {
   if (!raw) return fallback;
-  // eslint-disable-next-line no-control-regex
   if (/[\u0000-\u001F\u007F\\]/.test(raw)) return fallback;
   if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
   try {

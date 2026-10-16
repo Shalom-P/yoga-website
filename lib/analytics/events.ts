@@ -37,16 +37,22 @@ export async function initPosthog() {
 }
 
 /** Stop session replay while sensitive (health) data is on screen. */
+// Whether replay was running when a PHI screen paused it. Resuming must not
+// force-start a recording the project's remote settings had switched off.
+let recordingWasActive = false;
+
 export function pausePhiCapture() {
   phiPaused = true;
   if (!client) return;
+  try { recordingWasActive = Boolean(client.sessionRecordingStarted?.()); } catch { recordingWasActive = false; }
   try { client.stopSessionRecording(); } catch { /* recording may be off */ }
 }
 
 /** Resume session replay after leaving a PHI screen. */
 export function resumePhiCapture() {
   phiPaused = false;
-  if (!client) return;
+  if (!client || !recordingWasActive) return;
+  recordingWasActive = false;
   try { client.startSessionRecording(); } catch { /* recording may be off */ }
 }
 

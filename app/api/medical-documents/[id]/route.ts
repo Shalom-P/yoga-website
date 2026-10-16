@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isSafeMedicalPath } from "@/lib/medical/constants";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -29,7 +30,7 @@ export async function DELETE(
   // Load on the caller's RLS client so only the owner can see (and thus delete) it.
   const { data: doc } = await supabase
     .from("medical_documents")
-    .select("id, storage_path, deleted_at")
+    .select("id, customer_id, storage_path, deleted_at")
     .eq("id", documentId)
     .maybeSingle();
   if (!doc || doc.deleted_at) {
@@ -55,7 +56,13 @@ export async function DELETE(
   }
 
   // Remove the bytes. Best-effort: the row is already tombstoned + unshared.
-  await service.storage.from(MEDICAL_DOCS_BUCKET).remove([doc.storage_path]).catch(() => {});
+  // Only ever inside the owner's folder: a forged storage_path must not let the
+  // service role delete someone else's object.
+  if (isSafeMedicalPath(doc.storage_path, doc.customer_id)) {
+    await service.storage.from(MEDICAL_DOCS_BUCKET).remove([doc.storage_path]).catch(() => {});
+  } else {
+    console.error("[medical-documents/delete] refused unsafe storage_path for", doc.id);
+  }
 
   return NextResponse.json({ ok: true });
 }

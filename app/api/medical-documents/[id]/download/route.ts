@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isSafeMedicalPath } from "@/lib/medical/constants";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -42,6 +43,11 @@ export async function POST(
   if (!doc || doc.deleted_at) {
     return NextResponse.json({ error: "not_found" }, { status: 404 });
   }
+  // Never sign a path outside the owner's folder (see isSafeMedicalPath).
+  if (!isSafeMedicalPath(doc.storage_path, doc.customer_id)) {
+    console.error("[medical-documents/download] refused unsafe storage_path for", doc.id);
+    return NextResponse.json({ error: "not_found" }, { status: 404 });
+  }
 
   // Authorize. Owner is the customer; otherwise require an active share for the
   // teacher record linked to this user. Resolved in two explicit steps so the
@@ -51,10 +57,12 @@ export async function POST(
   if (!isOwner) {
     const { data: teacher } = await service
       .from("teachers")
-      .select("id")
+      .select("id, is_active")
       .eq("profile_id", user.id)
       .maybeSingle();
-    if (teacher) {
+    // A retired teacher keeps their login link (Retire only flips is_active),
+    // so an old share must not keep PHI flowing to them.
+    if (teacher?.is_active) {
       const { data: share } = await service
         .from("medical_document_shares")
         .select("id")

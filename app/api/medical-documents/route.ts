@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { isSafeMedicalPath } from "@/lib/medical/constants";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -42,12 +43,7 @@ export async function POST(req: Request) {
   // flat single segment also keeps the storage layout the orphan-sweep cron walks.
   const prefix = `${user.id}/`;
   const fileNameInBucket = path.slice(prefix.length);
-  if (
-    !path.startsWith(prefix) ||
-    path.includes("..") ||
-    fileNameInBucket.length === 0 ||
-    fileNameInBucket.includes("/")
-  ) {
+  if (!isSafeMedicalPath(path, user.id)) {
     return NextResponse.json({ error: "forbidden_path" }, { status: 403 });
   }
 
