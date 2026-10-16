@@ -165,6 +165,27 @@ Deno.serve(async (req: Request) => {
 
   await markMeetForRelease(svc, booking.session_id);
 
+  // Free an empty self-booked 1:1 so it stops blocking the teacher's slot (the
+  // overlap EXCLUDE ignores only cancelled sessions). Group sessions stay.
+  // Keep in step with app/api/bookings/cancel/route.ts.
+  {
+    const { count: live } = await svc
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", booking.session_id)
+      .neq("status", "cancelled");
+    if ((live ?? 0) === 0) {
+      const { error } = await svc
+        .from("sessions")
+        .update({ status: "cancelled" })
+        .eq("id", booking.session_id)
+        .eq("capacity", 1)
+        .eq("status", "scheduled")
+        .gt("start_at", new Date().toISOString());
+      if (error) console.error("[cancel-booking] could not free empty session:", error.message);
+    }
+  }
+
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,
     headers: { ...cors, "Content-Type": "application/json" },

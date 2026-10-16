@@ -99,6 +99,14 @@ export async function POST(req: Request) {
     }
   }
 
+  // A self-booked 1:1 (book_session creates a capacity-1 session per booking)
+  // with no live bookings left must stop holding the teacher's time: the 0017
+  // overlap EXCLUDE ignores only cancelled SESSIONS, so otherwise the slot is
+  // blocked for good (and book-trial/cancel loops could block a whole calendar).
+  // Group sessions (capacity > 1) stay, so an admin can still enrol others.
+  // Keep in step with supabase/functions/cancel-booking.
+  await freeEmptyOneToOneSession(svc, booking.session_id);
+
   const { data: session } = await svc
     .from("sessions")
     .select("meet_event_id, meet_calendar_id, start_at")
@@ -124,4 +132,24 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+async function freeEmptyOneToOneSession(
+  svc: ReturnType<typeof createSupabaseServiceClient>,
+  sessionId: string,
+): Promise<void> {
+  const { count: live } = await svc
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("session_id", sessionId)
+    .neq("status", "cancelled");
+  if ((live ?? 0) > 0) return;
+  const { error } = await svc
+    .from("sessions")
+    .update({ status: "cancelled" })
+    .eq("id", sessionId)
+    .eq("capacity", 1)
+    .eq("status", "scheduled")
+    .gt("start_at", new Date().toISOString());
+  if (error) console.error("[bookings/cancel] could not free empty session:", error.message);
 }

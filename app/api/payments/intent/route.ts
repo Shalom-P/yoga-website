@@ -237,10 +237,18 @@ export async function POST(req: Request): Promise<Response> {
   // the reservation is orphaned — free it back to the pool.
   if (reservation) {
     if (inserted) {
-      await svc
+      // Only a still-live reservation: a concurrent intent can supersede it in
+      // between, and linking a released row would let admin verify resurrect a
+      // promo use past its cap.
+      const { data: linked } = await svc
         .from("discount_redemptions")
         .update({ payment_id: payment.id })
-        .eq("id", reservation.redemptionId);
+        .eq("id", reservation.redemptionId)
+        .eq("status", "reserved")
+        .select("id");
+      if (!linked?.length) {
+        console.error("[payments/intent] promo reservation was superseded before linking; payment", payment.id);
+      }
     } else {
       await svc.rpc("release_discount_reservation", { p_redemption_id: reservation.redemptionId });
       reservation = null;

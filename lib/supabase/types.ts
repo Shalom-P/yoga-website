@@ -632,6 +632,8 @@ export type Database = {
       };
       commit_discount_redemption: { Args: { p_redemption_id: string; p_order_id: string; p_payment_id: string }; Returns: null };
       commit_discount_redemption_by_payment: { Args: { p_payment_id: string }; Returns: null };
+      // 0047: may this redemption still commit (caps re-checked for 'released')?
+      discount_redemption_commit_allowed: { Args: { p_redemption_id: string }; Returns: boolean };
       release_discount_redemption: { Args: { p_payment_id: string }; Returns: null };
       release_discount_reservation: { Args: { p_redemption_id: string }; Returns: null };
       release_stale_discount_reservations: { Args: { p_older_than?: string; p_limit?: number }; Returns: number };

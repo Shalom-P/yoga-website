@@ -150,6 +150,12 @@ export function DiscountsAdmin({
       toast.error("Valid from date is required.");
       return;
     }
+    // Mirrors discount_codes_fixed_needs_currency (0047): a flat amount means
+    // something only in one currency.
+    if (draft.discount_type !== "percentage" && draft.currency === "") {
+      toast.error("Pick a currency for a fixed-amount code.");
+      return;
+    }
 
     const payload = {
       code: draft.code.toUpperCase().trim(),
@@ -304,7 +310,7 @@ export function DiscountsAdmin({
                   hint={
                     draft.discount_type === "percentage"
                       ? "Percent off the purchase amount. Not yet applied to one-time checkout."
-                      : "Flat amount off, in the purchase currency's major units. Not yet applied to one-time checkout."
+                      : "Flat amount off, in the chosen currency's major units."
                   }
                 >
                   Value {draft.discount_type === "percentage" ? "(0-100 %)" : "(amount)"}
@@ -356,7 +362,7 @@ export function DiscountsAdmin({
                 />
               </div>
               <div>
-                <LabelWithHint hint="Lock a fixed-amount code to one currency so the same integer value isn't applied across currencies whose minor units differ by up to ~90x. 'Any' is fine for percentage codes, which are currency-agnostic.">
+                <LabelWithHint hint="Fixed-amount codes must be locked to one currency, so the same number isn't applied across currencies. 'Any' is only for percentage codes, which are currency-agnostic.">
                   Currency
                 </LabelWithHint>
                 <Select
@@ -369,7 +375,9 @@ export function DiscountsAdmin({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="any">Any currency</SelectItem>
+                    {draft.discount_type === "percentage" && (
+                      <SelectItem value="any">Any currency</SelectItem>
+                    )}
                     {SUPPORTED_CURRENCIES.map((c) => (
                       <SelectItem key={c} value={c}>
                         {c} only

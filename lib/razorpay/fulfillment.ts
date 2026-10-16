@@ -65,6 +65,20 @@ export async function fulfillRazorpayPayment(
   // payment is still `authorized`, and a concurrent capture (verify vs webhook)
   // rejects with "already captured", which we absorb by re-reading the payment.
   let settled = payment;
+  // A promo order whose reservation was superseded or swept, and whose code is
+  // now at its max_uses / per_email_max, must not be captured: otherwise one
+  // buyer can open N discounted orders (each reserve releases the last) and pay
+  // them all. Left as an authorized hold it expires and the funds return.
+  // Fails open if the 0047 RPC isn't applied yet (error -> allowed).
+  if (settled.status === "authorized" && redemptionId) {
+    const { data: allowed, error: allowErr } = await createSupabaseServiceClient().rpc("discount_redemption_commit_allowed", {
+      p_redemption_id: redemptionId,
+    });
+    if (!allowErr && allowed === false) {
+      Sentry.captureMessage(`refusing capture: promo cap exceeded (payment ${paymentId})`, "warning");
+      return { ok: false, reason: "promo_cap_exceeded" };
+    }
+  }
   if (settled.status === "authorized") {
     try {
       settled = await rzp.payments.capture(paymentId, Number(order.amount), order.currency);
@@ -236,6 +250,21 @@ export async function fulfillRazorpayPayment(
         `discount redemption commit failed (payment ${paymentId}): ${commitErr.message}`,
         "warning",
       );
+    } else {
+      // Already captured (auto-capture) past the cap: 0047's commit refuses to
+      // resurrect the redemption, so it stays 'released'. The customer has paid
+      // and keeps their credits, but flag it for a manual refund review.
+      const { data: red } = await svc
+        .from("discount_redemptions")
+        .select("status")
+        .eq("id", redemptionId)
+        .maybeSingle();
+      if (red && red.status !== "committed") {
+        Sentry.captureMessage(
+          `discounted payment captured past promo cap, review for refund (payment ${paymentId}, redemption ${redemptionId})`,
+          "error",
+        );
+      }
     }
   }
 
@@ -321,6 +350,22 @@ export async function reverseRazorpayPayment(
     .eq("reason", "purchase")
     .maybeSingle();
   const granted = grant?.delta ?? 0;
+
+  // One clawback per PAYMENT, not per refund id: two partial refunds that sum
+  // to the full amount each see a fully refunded payment here, and dedupe on
+  // external_ref (the refund id) would let both claw back the whole grant. A
+  // refund row already on this payment means the credits are gone already.
+  const { data: priorRefund } = await svc
+    .from("credit_ledger")
+    .select("id")
+    .eq("payment_id", paymentRow.id)
+    .eq("reason", "refund")
+    .limit(1)
+    .maybeSingle();
+  if (priorRefund) {
+    await svc.from("payments").update({ status: "refunded" }).eq("id", paymentRow.id);
+    return { ok: true, clawedBack: 0 };
+  }
 
   if (granted > 0) {
     const { error: clawErr } = await svc.rpc("clawback_session_credits", {

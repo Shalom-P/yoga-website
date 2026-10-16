@@ -385,6 +385,10 @@ export async function POST(
   if (!payment.customer_id) {
     return NextResponse.json({ error: "payment_detached" }, { status: 400 });
   }
+  // Separation of duties: nobody confirms receipt of their own wire.
+  if (payment.customer_id === gate.userId) {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
   if (!payment.plan_id) {
     return NextResponse.json({ error: "missing_plan" }, { status: 400 });
   }
