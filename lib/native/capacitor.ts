@@ -11,6 +11,7 @@
 // of the server/SSR bundle and never touch `window` during render.
 
 import { Capacitor } from "@capacitor/core";
+import { loginErrorPath } from "@/lib/auth/loginErrors";
 import type { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import { safeNext } from "@/lib/auth/redirects";
 
@@ -163,10 +164,7 @@ async function handleAuthDeepLink(rawUrl: string): Promise<void> {
     // no address for us to create an account with, so "try again" would be a
     // lie: the only way forward is a different sign-in method.
     const description = url.searchParams.get("error_description") ?? "";
-    const message = /email/i.test(description)
-      ? "That Apple ID has no email address attached, so we can't finish signing you in. Please continue with Google or email instead."
-      : "Sign-in didn't finish. Please try again, or continue with Google or email.";
-    window.location.href = `/login?error=${encodeURIComponent(message)}`;
+    window.location.href = loginErrorPath(/email/i.test(description) ? "apple_no_email" : "signin_incomplete");
   }
 }
 

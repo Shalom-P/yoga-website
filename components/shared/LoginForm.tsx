@@ -18,13 +18,15 @@ import { friendlyAuthError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
 import { useIsNative } from "@/lib/native/useIsNative";
 import { nativeOAuthSignIn } from "@/lib/native/capacitor";
+import { loginErrorMessage } from "@/lib/auth/loginErrors";
 
 export function LoginForm() {
   const params = useSearchParams();
   // Sanitize at the source: the email-OTP path assigns this to
   // window.location.href, which would otherwise be an open redirect.
   const next = safeNext(params.get("next"));
-  const errorParam = params.get("error");
+  // ?error= is a code; render only our own copy for it (lib/auth/loginErrors).
+  const errorParam = loginErrorMessage(params.get("error"));
   // Sign in with Apple is required by App Store Guideline 4.8 when Google login
   // is offered, so the Apple tab is shown inside the native iOS shell. On the web
   // the login UX is unchanged (Google + Email).

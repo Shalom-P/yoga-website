@@ -36,6 +36,20 @@ export async function POST(req: Request) {
   }
 
   const svc = createSupabaseServiceClient();
+
+  // A booking stays `confirmed` after its class until no-show-sweep flips it
+  // (2h after end, and never if Meet failed), so status alone would let a
+  // customer attend, then cancel for a refunded credit or a fresh free trial.
+  // The dashboard only offers Cancel on upcoming sessions; enforce it here.
+  // Keep in step with supabase/functions/cancel-booking.
+  const { data: sessionTiming } = await svc
+    .from("sessions")
+    .select("start_at")
+    .eq("id", booking.session_id)
+    .single();
+  if (!sessionTiming?.start_at || new Date(sessionTiming.start_at).getTime() <= Date.now()) {
+    return NextResponse.json({ error: "not_cancellable", reason: "session_started" }, { status: 409 });
+  }
   const { data: cancelled, error: updateErr } = await svc
     .from("bookings")
     .update({

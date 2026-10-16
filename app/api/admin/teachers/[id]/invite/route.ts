@@ -41,6 +41,9 @@ export async function POST(
   }
   const email = parsed.data.email.trim().toLowerCase();
   const { id: teacherId } = await params;
+  if (!z.string().uuid().safeParse(teacherId).success) {
+    return NextResponse.json({ error: "Teacher not found." }, { status: 404 });
+  }
 
   const service = createSupabaseServiceClient();
 
@@ -98,10 +101,11 @@ export async function POST(
       { redirectTo: `${origin}/auth/callback?next=/teacher` }
     );
     if (inviteError || !inv?.user) {
+      // Log GoTrue's text; never return it (raw auth strings stay out of toasts).
+      if (inviteError) console.error("[admin/teachers/invite] invite failed:", inviteError.message);
       return NextResponse.json(
         {
           error:
-            inviteError?.message ??
             "Couldn't send the invite. If a login already exists for this email, ask them to sign in once, then try again.",
         },
         { status: 400 }
@@ -117,7 +121,14 @@ export async function POST(
     acting_admin_id: user.id,
   });
   if (rpcError) {
-    return NextResponse.json({ error: rpcError.message }, { status: 400 });
+    console.error("[admin/teachers/invite] promote_to_teacher failed:", rpcError.message);
+    return NextResponse.json(
+      {
+        error:
+          "Couldn't link this login to the teacher. The teacher or the account may already be linked to someone else.",
+      },
+      { status: 400 }
+    );
   }
 
   return NextResponse.json({ ok: true, invited, email });

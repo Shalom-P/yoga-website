@@ -1,5 +1,6 @@
-import type { NextRequest, NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import { isCrossOriginMutation } from "@/lib/security/sameOrigin";
 import {
   buildFbc,
   buildFbp,
@@ -11,6 +12,24 @@ import {
 } from "@/lib/meta/shared";
 
 export async function middleware(req: NextRequest) {
+  // /api/* only gets the CSRF origin check: no session refresh, no cookies.
+  // Handlers still authenticate themselves; webhooks and cron (no Origin
+  // header) pass straight through. See lib/security/sameOrigin.ts.
+  if (req.nextUrl.pathname.startsWith("/api/")) {
+    if (
+      isCrossOriginMutation({
+        method: req.method,
+        origin: req.headers.get("origin"),
+        secFetchSite: req.headers.get("sec-fetch-site"),
+        requestOrigin: req.nextUrl.origin,
+        siteUrl: process.env.NEXT_PUBLIC_SITE_URL,
+      })
+    ) {
+      return NextResponse.json({ error: "forbidden" }, { status: 403 });
+    }
+    return NextResponse.next();
+  }
+
   // Auth refresh + role-based route guard
   const res = await updateSession(req);
   setMetaCookies(req, res);
@@ -36,6 +55,8 @@ function setMetaCookies(req: NextRequest, res: NextResponse) {
 
 export const config = {
   matcher: [
+    // API routes get only the CSRF origin check above.
+    "/api/:path*",
     // Skip API routes (handlers manage their own auth and webhooks must not be
     // intercepted), Next internals, and static assets.
     "/((?!api/|_next/static|_next/image|_next/data|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|css|js|map|txt|xml)$).*)",

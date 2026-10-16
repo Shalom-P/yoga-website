@@ -98,6 +98,15 @@ Deno.serve(async (req: Request) => {
   // service-role only, so the writes below need this client.
   const svc = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+  // Teacher logins cannot book (they would book themselves free trials and block
+  // their own slots). Keep in step with app/api/bookings/confirm/route.ts.
+  const { data: booker } = await svc
+    .from("profiles")
+    .select("role")
+    .eq("id", user.id)
+    .maybeSingle();
+  if (booker?.role === "teacher") return fail("forbidden", 403);
+
   const { data: teacher } = await svc
     .from("teachers")
     .select("id, display_name, timezone, is_active, is_public")

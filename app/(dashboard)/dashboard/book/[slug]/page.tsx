@@ -27,6 +27,9 @@ export default async function TeacherBookingPage({
       .select("id, slug, display_name, headline, bio, timezone, rating_avg, is_active, intro_video_url, avatar_url")
       .eq("slug", slug)
       .eq("is_active", true)
+      // Hidden teachers (0041) are admin-schedulable only; never render their
+      // booking page, matching the confirm route's refusal.
+      .eq("is_public", true)
       .maybeSingle(),
     supabase.from("profiles").select("timezone, role").eq("id", user.id).maybeSingle(),
   ]);

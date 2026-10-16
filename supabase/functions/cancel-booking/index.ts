@@ -101,6 +101,19 @@ Deno.serve(async (req: Request) => {
   if (!booking || booking.customer_id !== user.id) return fail("not_found", 404);
   if (booking.status !== "confirmed") return fail("not_cancellable", 409);
 
+  // Refuse once the class has started: the booking stays `confirmed` until
+  // no-show-sweep runs, so status alone would let a customer attend and then
+  // cancel for a refund / a fresh free trial. Keep in step with
+  // app/api/bookings/cancel/route.ts.
+  const { data: sessionTiming } = await svc
+    .from("sessions")
+    .select("start_at")
+    .eq("id", booking.session_id)
+    .maybeSingle();
+  if (!sessionTiming?.start_at || new Date(sessionTiming.start_at).getTime() <= Date.now()) {
+    return fail("not_cancellable", 409);
+  }
+
   const { data: cancelled, error: updateErr } = await svc
     .from("bookings")
     .update({
