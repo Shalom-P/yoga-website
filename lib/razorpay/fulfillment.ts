@@ -65,6 +65,41 @@ export async function fulfillRazorpayPayment(
   // payment is still `authorized`, and a concurrent capture (verify vs webhook)
   // rejects with "already captured", which we absorb by re-reading the payment.
   let settled = payment;
+  // A promo order whose reservation was superseded or swept, and whose code is
+  // now at its max_uses / per_email_max, must not be fulfilled: otherwise one
+  // buyer can open N discounted orders (each reserve releases the last) and pay
+  // them all. Still `authorized`: leave the hold to expire and return the funds.
+  // Already `captured` (Razorpay auto-capture, the account default): refund it
+  // in full, so no discounted pack is granted and the customer can buy again
+  // without the code. A refund failure is retried by the webhook (reason
+  // starts with "promo_cap"). Fails open if the 0047 RPC isn't applied yet.
+  if (redemptionId) {
+    const { data: allowed, error: allowErr } = await createSupabaseServiceClient().rpc(
+      "discount_redemption_commit_allowed",
+      { p_redemption_id: redemptionId },
+    );
+    if (!allowErr && allowed === false) {
+      if (settled.status === "captured") {
+        try {
+          await rzp.payments.refund(paymentId, {
+            amount: Number(settled.amount),
+            notes: { reason: "promo_cap_exceeded", order_id: orderId },
+          });
+        } catch (err) {
+          // Already refunded (webhook replay) is fine; anything else must retry.
+          const msg = err instanceof Error ? err.message : JSON.stringify(err);
+          if (!/already|fully refunded/i.test(msg)) {
+            Sentry.captureException(err, { tags: { route: "fulfillment", step: "promo_cap_refund" } });
+            return { ok: false, reason: "promo_cap_refund_failed" };
+          }
+        }
+        Sentry.captureMessage(`refunded captured payment past promo cap (payment ${paymentId})`, "warning");
+        return { ok: false, reason: "promo_cap_exceeded_refunded" };
+      }
+      Sentry.captureMessage(`refusing capture: promo cap exceeded (payment ${paymentId})`, "warning");
+      return { ok: false, reason: "promo_cap_exceeded" };
+    }
+  }
   if (settled.status === "authorized") {
     try {
       settled = await rzp.payments.capture(paymentId, Number(order.amount), order.currency);
@@ -322,6 +357,24 @@ export async function reverseRazorpayPayment(
     .maybeSingle();
   const granted = grant?.delta ?? 0;
 
+  // One clawback per PAYMENT, not per refund id: two partial refunds that sum
+  // to the full amount each see a fully refunded payment here, and dedupe on
+  // external_ref (the refund id) would let both claw back the whole grant. A
+  // refund row already on this payment means the credits are gone already.
+  const { data: priorRefund } = await svc
+    .from("credit_ledger")
+    .select("id")
+    .eq("payment_id", paymentRow.id)
+    .eq("reason", "refund")
+    .limit(1)
+    .maybeSingle();
+  if (priorRefund) {
+    // Idempotent: a redelivery after a failed promo release still frees the use.
+    await svc.rpc("release_discount_redemption", { p_payment_id: paymentRow.id });
+    await svc.from("payments").update({ status: "refunded" }).eq("id", paymentRow.id);
+    return { ok: true, clawedBack: 0 };
+  }
+
   if (granted > 0) {
     const { error: clawErr } = await svc.rpc("clawback_session_credits", {
       p_customer: paymentRow.customer_id,
@@ -329,7 +382,9 @@ export async function reverseRazorpayPayment(
       p_external_ref: refundId,
       p_payment_id: paymentRow.id,
     });
-    if (clawErr) return { ok: false, reason: "clawback_failed" };
+    // 23505 = credit_ledger_payment_refund_once (0047): a concurrent refund
+    // webhook already clawed this payment back; carry on to the release/flip.
+    if (clawErr && clawErr.code !== "23505") return { ok: false, reason: "clawback_failed" };
   }
 
   // Free any promo use this payment committed back to the pool (idempotent on a

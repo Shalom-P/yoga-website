@@ -101,6 +101,19 @@ Deno.serve(async (req: Request) => {
   if (!booking || booking.customer_id !== user.id) return fail("not_found", 404);
   if (booking.status !== "confirmed") return fail("not_cancellable", 409);
 
+  // Refuse once the class has started: the booking stays `confirmed` until
+  // no-show-sweep runs, so status alone would let a customer attend and then
+  // cancel for a refund / a fresh free trial. Keep in step with
+  // app/api/bookings/cancel/route.ts.
+  const { data: sessionTiming } = await svc
+    .from("sessions")
+    .select("start_at")
+    .eq("id", booking.session_id)
+    .maybeSingle();
+  if (!sessionTiming?.start_at || new Date(sessionTiming.start_at).getTime() <= Date.now()) {
+    return fail("not_cancellable", 409);
+  }
+
   const { data: cancelled, error: updateErr } = await svc
     .from("bookings")
     .update({
@@ -151,6 +164,27 @@ Deno.serve(async (req: Request) => {
   }
 
   await markMeetForRelease(svc, booking.session_id);
+
+  // Free an empty capacity-1 session so it stops blocking the teacher's slot
+  // (the overlap EXCLUDE ignores only cancelled sessions). Group sessions stay.
+  // Keep in step with app/api/bookings/cancel/route.ts.
+  {
+    const { count: live } = await svc
+      .from("bookings")
+      .select("id", { count: "exact", head: true })
+      .eq("session_id", booking.session_id)
+      .neq("status", "cancelled");
+    if ((live ?? 0) === 0) {
+      const { error } = await svc
+        .from("sessions")
+        .update({ status: "cancelled" })
+        .eq("id", booking.session_id)
+        .eq("capacity", 1)
+        .eq("status", "scheduled")
+        .gt("start_at", new Date().toISOString());
+      if (error) console.error("[cancel-booking] could not free empty session:", error.message);
+    }
+  }
 
   return new Response(JSON.stringify({ ok: true }), {
     status: 200,

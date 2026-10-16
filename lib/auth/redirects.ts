@@ -2,12 +2,23 @@
 // `new URL(arg, base)` ignores the base when arg is absolute, so an unvalidated
 // `?next=https://evil.com` would otherwise become an open redirect. `//` and
 // `/\` are protocol-relative escapes browsers also follow.
+//
+// The URL parser also strips tab/LF/CR before resolving, so `/\t/evil.com`
+// becomes `//evil.com` in a Location header or `location.href`. So reject any
+// control character or backslash outright, then confirm by actually parsing
+// that the result stays on our origin, and return the normalised path.
+const PROBE_ORIGIN = "https://safe-next.invalid";
 export function safeNext(raw: string | null | undefined, fallback = "/dashboard"): string {
   if (!raw) return fallback;
-  if (!raw.startsWith("/") || raw.startsWith("//") || raw.startsWith("/\\")) {
+  if (/[\u0000-\u001F\u007F\\]/.test(raw)) return fallback;
+  if (!raw.startsWith("/") || raw.startsWith("//")) return fallback;
+  try {
+    const u = new URL(raw, PROBE_ORIGIN);
+    if (u.origin !== PROBE_ORIGIN) return fallback;
+    return u.pathname + u.search + u.hash;
+  } catch {
     return fallback;
   }
-  return raw;
 }
 
 export function isOnboardingPath(path: string): boolean {

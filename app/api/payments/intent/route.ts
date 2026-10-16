@@ -237,10 +237,30 @@ export async function POST(req: Request): Promise<Response> {
   // the reservation is orphaned — free it back to the pool.
   if (reservation) {
     if (inserted) {
-      await svc
+      // Only a still-live reservation: a concurrent intent can supersede it in
+      // between, and linking a released row would let admin verify resurrect a
+      // promo use past its cap.
+      const { data: linked } = await svc
         .from("discount_redemptions")
         .update({ payment_id: payment.id })
-        .eq("id", reservation.redemptionId);
+        .eq("id", reservation.redemptionId)
+        .eq("status", "reserved")
+        .select("id");
+      if (!linked?.length) {
+        // The reservation was superseded between reserve and link, so this
+        // payment carries a discounted amount with no promo use behind it, and
+        // admin verify would grant the pack at that price uncounted. Void it
+        // and have the customer start again.
+        await svc
+          .from("payments")
+          .update({ status: "failed", admin_note: "Promo code could not be applied. Please start a new transfer." })
+          .eq("id", payment.id)
+          .eq("status", "pending");
+        return Response.json(
+          { error: "promo_retry", message: "That promo code couldn't be applied just now. Please try again." },
+          { status: 409 },
+        );
+      }
     } else {
       await svc.rpc("release_discount_reservation", { p_redemption_id: reservation.redemptionId });
       reservation = null;

@@ -109,6 +109,13 @@ export async function POST(req: Request) {
     .eq("id", user.id)
     .maybeSingle();
 
+  // Teacher logins are routed off /dashboard by middleware, but this API is not
+  // behind middleware: refuse them here so a teacher can't book (free trials
+  // included) against their own or another teacher's calendar.
+  if (bookerProfile?.role === "teacher") {
+    return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  }
+
   // Paid (non-trial) sessions spend one session-credit, reserved after the slot
   // is confirmed available (see below). The free 1:1 trial never spends credits.
 

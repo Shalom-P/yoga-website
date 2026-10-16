@@ -36,6 +36,20 @@ export async function POST(req: Request) {
   }
 
   const svc = createSupabaseServiceClient();
+
+  // A booking stays `confirmed` after its class until no-show-sweep flips it
+  // (2h after end, and never if Meet failed), so status alone would let a
+  // customer attend, then cancel for a refunded credit or a fresh free trial.
+  // The dashboard only offers Cancel on upcoming sessions; enforce it here.
+  // Keep in step with supabase/functions/cancel-booking.
+  const { data: sessionTiming } = await svc
+    .from("sessions")
+    .select("start_at")
+    .eq("id", booking.session_id)
+    .single();
+  if (!sessionTiming?.start_at || new Date(sessionTiming.start_at).getTime() <= Date.now()) {
+    return NextResponse.json({ error: "not_cancellable", reason: "session_started" }, { status: 409 });
+  }
   const { data: cancelled, error: updateErr } = await svc
     .from("bookings")
     .update({
@@ -85,6 +99,14 @@ export async function POST(req: Request) {
     }
   }
 
+  // A capacity-1 session (every self-booked 1:1, and an admin-created 1:1) with
+  // no live bookings left must stop holding the teacher's time: the 0017
+  // overlap EXCLUDE ignores only cancelled SESSIONS, so otherwise the slot is
+  // blocked for good (and book-trial/cancel loops could block a whole calendar).
+  // Group sessions (capacity > 1) stay, so an admin can still enrol others.
+  // Keep in step with supabase/functions/cancel-booking.
+  await freeEmptyOneToOneSession(svc, booking.session_id);
+
   const { data: session } = await svc
     .from("sessions")
     .select("meet_event_id, meet_calendar_id, start_at")
@@ -110,4 +132,24 @@ export async function POST(req: Request) {
   }
 
   return NextResponse.json({ ok: true });
+}
+
+async function freeEmptyOneToOneSession(
+  svc: ReturnType<typeof createSupabaseServiceClient>,
+  sessionId: string,
+): Promise<void> {
+  const { count: live } = await svc
+    .from("bookings")
+    .select("id", { count: "exact", head: true })
+    .eq("session_id", sessionId)
+    .neq("status", "cancelled");
+  if ((live ?? 0) > 0) return;
+  const { error } = await svc
+    .from("sessions")
+    .update({ status: "cancelled" })
+    .eq("id", sessionId)
+    .eq("capacity", 1)
+    .eq("status", "scheduled")
+    .gt("start_at", new Date().toISOString());
+  if (error) console.error("[bookings/cancel] could not free empty session:", error.message);
 }

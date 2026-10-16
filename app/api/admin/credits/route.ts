@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { writeAuditLog } from "@/lib/admin/audit";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -34,10 +35,15 @@ export async function POST(req: Request) {
 
   const { data: customer } = await svc
     .from("profiles")
-    .select("id")
+    .select("id, role")
     .eq("id", customerId)
     .single();
   if (!customer) return NextResponse.json({ error: "customer_not_found" }, { status: 404 });
+  // Credits are only spendable by customers; never grant to staff accounts
+  // (an admin topping up their own account included).
+  if (customer.role !== "customer") {
+    return NextResponse.json({ error: "customer_not_found" }, { status: 404 });
+  }
 
   const { error: grantErr } = await svc.rpc("grant_session_credits", {
     p_customer: customerId,
@@ -46,6 +52,15 @@ export async function POST(req: Request) {
     p_payment_id: null,
   });
   if (grantErr) return NextResponse.json({ error: "grant_failed" }, { status: 500 });
+
+  // The ledger row carries no actor, so record who granted what.
+  await writeAuditLog(svc, {
+    actorId: user.id,
+    action: "admin_grant_credits",
+    entityType: "profile",
+    entityId: customerId,
+    payload: { amount },
+  });
 
   const { data: bal } = await svc
     .from("customer_credits")

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { loginErrorCodeFrom, loginErrorPath, type LoginErrorCode } from "@/lib/auth/loginErrors";
 import type { EmailOtpType } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { isOnboardingPath, isProfileComplete, postAuthTarget, safeNext } from "@/lib/auth/redirects";
@@ -47,13 +48,8 @@ export async function GET(request: Request) {
   const providerError = url.searchParams.get("error");
   if (providerError && !code && !hasMagicLink) {
     const description = url.searchParams.get("error_description") ?? "";
-    const missingEmail = /email/i.test(description);
-    const message = missingEmail
-      ? "That Apple ID has no email address attached, so we can't finish signing you in. Please continue with Google or email instead."
-      : "Sign-in didn't finish. Please try again, or continue with Google or email.";
-    return NextResponse.redirect(
-      new URL(`/login?error=${encodeURIComponent(message)}`, url.origin),
-    );
+    const code: LoginErrorCode = /email/i.test(description) ? "apple_no_email" : "signin_incomplete";
+    return NextResponse.redirect(new URL(loginErrorPath(code), url.origin));
   }
 
   if (code || hasMagicLink) {
@@ -67,7 +63,7 @@ export async function GET(request: Request) {
         });
 
     if (error) {
-      return NextResponse.redirect(new URL(`/login?error=${encodeURIComponent(error.message)}`, url.origin));
+      return NextResponse.redirect(new URL(loginErrorPath(loginErrorCodeFrom(error.message)), url.origin));
     }
     const { data: { user } } = await supabase.auth.getUser();
     if (user) {

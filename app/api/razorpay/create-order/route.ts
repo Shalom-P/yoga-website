@@ -202,10 +202,9 @@ export async function POST(req: Request): Promise<Response> {
     // auth failure. Return 502 so the client's "401 = not signed in" branch
     // doesn't fire and mislead the user.
     const status = e?.statusCode === 401 ? 502 : 500;
-    const message =
-      e?.statusCode === 401
-        ? "Razorpay authentication failed. Check your API keys."
-        : e?.error?.description ?? "Failed to create Razorpay order.";
+    // Never echo Razorpay's own text (account/config detail) to the browser;
+    // it is in Sentry above.
+    const message = "We couldn't start the payment. Please try again in a moment.";
     return Response.json({ error: message }, { status });
   }
 }

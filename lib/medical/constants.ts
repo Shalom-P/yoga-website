@@ -64,3 +64,18 @@ export function formatBytes(bytes: number | null): string {
   if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(0)} KB`;
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
 }
+
+// A medical storage path must be exactly `{customerId}/{file}` with one safe
+// file segment. The 0027 RLS only checked a `{uid}/%` prefix, which
+// `{uid}/../{victim}/{file}` satisfies, and storage-js does not encode the path,
+// so the service role would sign or delete the victim's object. Checked at
+// every sink (download, delete, register) and by the 0046 CHECK constraint.
+// Mirrored in supabase/functions/document-url/index.ts — keep in step.
+const SAFE_MEDICAL_FILE = /^[A-Za-z0-9_-][A-Za-z0-9_.-]{0,199}$/;
+export function isSafeMedicalPath(path: string | null | undefined, customerId: string | null | undefined): boolean {
+  if (!path || !customerId) return false;
+  const prefix = `${customerId}/`;
+  if (!path.startsWith(prefix)) return false;
+  const file = path.slice(prefix.length);
+  return SAFE_MEDICAL_FILE.test(file) && !file.includes("..");
+}

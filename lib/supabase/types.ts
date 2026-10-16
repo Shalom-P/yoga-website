@@ -575,6 +575,8 @@ export type Database = {
       is_admin: { Args: { uid: string }; Returns: boolean };
       apply_discount_to_subscription: { Args: { p_subscription_id: string }; Returns: null };
       subscribe_newsletter: { Args: { p_email: string; p_source: string }; Returns: null };
+      // 0046: fixed-window limiter, service-role only. true = allowed.
+      rate_limit_hit: { Args: { p_key: string; p_window_seconds: number; p_max: number }; Returns: boolean };
       grant_session_credits: {
         Args: { p_customer: string; p_delta: number; p_reason: CreditReason; p_payment_id?: string | null };
         Returns: null;
@@ -630,6 +632,8 @@ export type Database = {
       };
       commit_discount_redemption: { Args: { p_redemption_id: string; p_order_id: string; p_payment_id: string }; Returns: null };
       commit_discount_redemption_by_payment: { Args: { p_payment_id: string }; Returns: null };
+      // 0047: may this redemption still commit (caps re-checked for 'released')?
+      discount_redemption_commit_allowed: { Args: { p_redemption_id: string }; Returns: boolean };
       release_discount_redemption: { Args: { p_payment_id: string }; Returns: null };
       release_discount_reservation: { Args: { p_redemption_id: string }; Returns: null };
       release_stale_discount_reservations: { Args: { p_older_than?: string; p_limit?: number }; Returns: number };

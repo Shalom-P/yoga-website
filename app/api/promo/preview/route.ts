@@ -1,4 +1,5 @@
 import "server-only";
+import { rateLimit, RATE_LIMITS, tooManyRequests } from "@/lib/security/rateLimit";
 
 import { z } from "zod";
 
@@ -46,6 +47,7 @@ export async function POST(req: Request): Promise<Response> {
   if (!user) {
     return Response.json({ error: "Sign in to check a promo code." }, { status: 401 });
   }
+  if (!(await rateLimit(RATE_LIMITS.promoPreviewPerUser, user.id))) return tooManyRequests();
 
   let json: unknown;
   try {
