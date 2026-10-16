@@ -100,6 +100,17 @@ export async function POST(req: Request): Promise<Response> {
           { status: 202 },
         );
       }
+      if (result.reason.startsWith("promo_cap_exceeded")) {
+        return Response.json(
+          {
+            verified: false,
+            reason: result.reason,
+            error:
+              "This promo code reached its limit before your payment completed, so the payment has been refunded. Please try again without the code.",
+          },
+          { status: 409 },
+        );
+      }
       Sentry.captureMessage(`razorpay verify fulfil failed: ${result.reason}`, "warning");
       return Response.json(
         {

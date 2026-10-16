@@ -18,7 +18,7 @@ import { submitToIndexNow } from "@/lib/seo/indexnow";
 const schema = z.object({
   // Optional teacher slug so we can target the specific detail page too.
   // Slug charset only: it is interpolated into revalidatePath and IndexNow URLs.
-  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/i).optional(),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9._-]+$/i).optional(),
 });
 
 export async function POST(req: Request) {

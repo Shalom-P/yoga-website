@@ -91,7 +91,12 @@ export async function POST(req: Request) {
       }
       if (
         !result.ok &&
-        (result.reason === "manual_entry_conflict" || result.reason === "payment_detached")
+        (result.reason === "manual_entry_conflict" ||
+          result.reason === "payment_detached" ||
+          // Past a promo cap: the hold expires / the capture was refunded.
+          // Nothing left to fulfil, so ack rather than retry.
+          result.reason === "promo_cap_exceeded" ||
+          result.reason === "promo_cap_exceeded_refunded")
       ) {
         // A human already recorded this payment against a different customer or
         // plan, or the payer's account was deleted. Neither is fixable by

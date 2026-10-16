@@ -15,7 +15,7 @@ export async function middleware(req: NextRequest) {
   // /api/* only gets the CSRF origin check: no session refresh, no cookies.
   // Handlers still authenticate themselves; webhooks and cron (no Origin
   // header) pass straight through. See lib/security/sameOrigin.ts.
-  if (req.nextUrl.pathname.startsWith("/api/")) {
+  if (req.nextUrl.pathname === "/api" || req.nextUrl.pathname.startsWith("/api/")) {
     if (
       isCrossOriginMutation({
         method: req.method,

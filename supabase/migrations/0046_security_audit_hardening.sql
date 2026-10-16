@@ -7,8 +7,10 @@
 --   * lib/data/landing.ts selects explicit public columns (needed by §5)
 --   * /api/newsletter/subscribe calls the RPC on the service role (needed by §8)
 --   * lib/security/rateLimit.ts fails open until §9 exists
--- Running this before that release makes the public teacher/review pages and
--- newsletter signup fail with 42501 until the release ships.
+-- Running this before that release makes the anon teacher/review queries fail
+-- with 42501: lib/data/landing.ts then silently shows the MOCK placeholder
+-- teachers and an empty testimonial wall, and newsletter signup fails, until
+-- the release ships.
 --
 -- Apply: psql "$SUPABASE_DB_URL" -f supabase/migrations/0046_security_audit_hardening.sql
 -- Then:  psql "$SUPABASE_DB_URL" -f verify-launch.sql
@@ -165,6 +167,7 @@ create policy "public_media_admin_read" on storage.objects
 update storage.buckets
    set allowed_mime_types = array[
      'image/jpeg','image/png','image/webp','image/avif','image/gif',
+     'image/heic','image/heif',
      'video/mp4','video/webm','video/quicktime'
    ]
  where id in ('promotional-media', 'teacher-media');

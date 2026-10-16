@@ -75,6 +75,21 @@ end $$;
 revoke execute on function public.commit_discount_redemption(uuid, text, uuid) from public, anon, authenticated;
 grant execute on function public.commit_discount_redemption(uuid, text, uuid) to service_role;
 
+-- commit_discount_redemption_by_payment (bank transfer) deliberately keeps no
+-- cap re-check: a reservation with payment_id set is never released by the
+-- stale sweep (payment_id IS NULL filter) nor by reserve's supersede (same
+-- filter), only by admin reject, after which the payment is terminal. If either
+-- filter ever changes, add the same discount_redemption_commit_allowed() gate
+-- there too.
+
+-- ── 1b. One clawback per payment, enforced in the DB ────────────────────────
+-- reverseRazorpayPayment dedupes on the refund id; two partial refunds that sum
+-- to the full amount, delivered concurrently, would each claw back the whole
+-- grant. The app treats 23505 here as "already done".
+create unique index if not exists credit_ledger_payment_refund_once
+  on public.credit_ledger (payment_id)
+  where reason = 'refund' and payment_id is not null;
+
 -- ── 2. Discount code sanity, enforced in the DB (was UI-only) ───────────────
 -- A fixed-amount code with currency "Any" applies its integer in whatever
 -- currency the order is in: INR 200 off (20000 paise) became AED 200 off.

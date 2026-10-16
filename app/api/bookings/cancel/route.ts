@@ -99,8 +99,8 @@ export async function POST(req: Request) {
     }
   }
 
-  // A self-booked 1:1 (book_session creates a capacity-1 session per booking)
-  // with no live bookings left must stop holding the teacher's time: the 0017
+  // A capacity-1 session (every self-booked 1:1, and an admin-created 1:1) with
+  // no live bookings left must stop holding the teacher's time: the 0017
   // overlap EXCLUDE ignores only cancelled SESSIONS, so otherwise the slot is
   // blocked for good (and book-trial/cancel loops could block a whole calendar).
   // Group sessions (capacity > 1) stay, so an admin can still enrol others.

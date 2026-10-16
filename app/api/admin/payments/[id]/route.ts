@@ -203,7 +203,11 @@ export async function POST(
           p_external_ref: refundReference,
           p_payment_id: payment.id,
         });
-        if (clawErr) return NextResponse.json({ error: "update_failed" }, { status: 500 });
+        // 23505 = credit_ledger_payment_refund_once (0047): this payment was
+        // already clawed back once; the status flip below is still wanted.
+        if (clawErr && clawErr.code !== "23505") {
+          return NextResponse.json({ error: "update_failed" }, { status: 500 });
+        }
       }
 
       // Conditioned on 'completed' the way verify and reject condition theirs,

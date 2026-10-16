@@ -165,8 +165,8 @@ Deno.serve(async (req: Request) => {
 
   await markMeetForRelease(svc, booking.session_id);
 
-  // Free an empty self-booked 1:1 so it stops blocking the teacher's slot (the
-  // overlap EXCLUDE ignores only cancelled sessions). Group sessions stay.
+  // Free an empty capacity-1 session so it stops blocking the teacher's slot
+  // (the overlap EXCLUDE ignores only cancelled sessions). Group sessions stay.
   // Keep in step with app/api/bookings/cancel/route.ts.
   {
     const { count: live } = await svc
