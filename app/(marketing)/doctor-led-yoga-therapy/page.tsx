@@ -18,7 +18,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Doctor-Led Yoga Therapy, Online 1:1",
   description:
-    "Live 1:1 yoga therapy online with teachers who hold yoga and naturopathy doctorates from Indian universities. Adapted for diabetes, blood pressure, back pain, PCOS, pregnancy and more, alongside your medical care.",
+    "Live 1:1 yoga therapy online with teachers who hold yoga and naturopathy doctorates. Adapted for diabetes, blood pressure, back pain, PCOS and pregnancy.",
   alternates: { canonical: "/doctor-led-yoga-therapy" },
 };
 

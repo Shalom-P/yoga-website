@@ -1,9 +1,9 @@
 // DRAFT: substantive but NOT a substitute for legal review before launch.
 
 export const metadata = {
-  title: "Privacy policy | My Yoga Classes",
+  title: "Privacy policy",
   description:
-    "How My Yoga Classes collects, uses, and protects your personal information, aligned with the UAE Personal Data Protection Law (Federal Decree-Law No. 45 of 2021), India's Digital Personal Data Protection Act 2023, and international data-protection standards.",
+    "How My Yoga Classes collects, uses and protects your personal data, in line with the UAE PDPL, India's DPDP Act 2023 and global data-protection standards.",
   alternates: { canonical: "/legal/privacy" },
 };
 

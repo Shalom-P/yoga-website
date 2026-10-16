@@ -1,7 +1,7 @@
 // DRAFT: substantive but NOT a substitute for legal review before launch.
 
 export const metadata = {
-  title: "Refund policy | My Yoga Classes",
+  title: "Refund policy",
   description:
     "My Yoga Classes refund and cancellation policy, including one-time session packs and your statutory rights under UAE and Indian consumer law.",
   alternates: { canonical: "/legal/refund" },

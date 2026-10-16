@@ -18,7 +18,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Online Yoga Classes in Dubai and the UAE",
   description:
-    "Live 1:1 online yoga for students in Dubai, Abu Dhabi and across the UAE, taught by certified teachers in India. Morning and evening slots in Gulf time, prices in dirhams.",
+    "Live 1:1 online yoga for Dubai, Abu Dhabi and across the UAE, taught by certified teachers in India. Morning and evening slots in Gulf time, in AED.",
   alternates: { canonical: "/online-yoga-classes-uae" },
 };
 
