@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServiceClient } from "@/lib/supabase/service";
+import { clientIp, rateLimit, RATE_LIMITS, tooManyRequests } from "@/lib/security/rateLimit";
 
 const schema = z.object({
   email: z.string().email(),
@@ -10,13 +11,16 @@ const schema = z.object({
 export async function POST(req: Request) {
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "bad email" }, { status: 400 });
+  if (!(await rateLimit(RATE_LIMITS.newsletterPerIp, clientIp(req)))) return tooManyRequests();
 
   // Route signups through the SECURITY DEFINER subscribe_newsletter RPC
   // (migration 0007). The RPC is `on conflict do nothing` so we always get a
   // generic OK back — anon callers can't probe for existing emails via unique-
   // conflict timing the way they could with a direct upsert.
   try {
-    const supabase = await createSupabaseServerClient();
+    // Service role: 0046 revokes subscribe_newsletter from anon so the RPC can't
+    // be called directly with the public key, skipping this route's limits.
+    const supabase = createSupabaseServiceClient();
     const { error } = await supabase.rpc("subscribe_newsletter", {
       p_email: parsed.data.email.toLowerCase(),
       p_source: parsed.data.source ?? "",

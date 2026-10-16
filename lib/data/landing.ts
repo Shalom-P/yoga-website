@@ -296,6 +296,17 @@ const MOCK_SETTINGS: Record<string, unknown> = {
 // --------------------------------------------------------------------------
 // Public data accessors
 // --------------------------------------------------------------------------
+// The anon role is column-granted only these teacher columns (0046): never
+// profile_id (auth uuid), google_calendar_id or contact_email. Private fields
+// come back as null so the Teacher type holds.
+const TEACHER_PUBLIC_COLUMNS =
+  "id, slug, display_name, headline, bio, avatar_url, cover_image_url, intro_video_url, specialties, languages, years_experience, certifications, rating_avg, rating_count, timezone, is_active, is_public, sort_order, created_at, updated_at";
+function withPrivateNulled<T extends object>(row: T): T & Pick<Teacher, "profile_id" | "google_calendar_id" | "contact_email"> {
+  return { ...row, profile_id: null, google_calendar_id: null, contact_email: null };
+}
+// Same for reviews: anon never gets customer_id / session_id (0046).
+const REVIEW_PUBLIC_COLUMNS =
+  "id, teacher_id, rating, body, is_featured, is_approved, display_name_override, display_location, created_at, updated_at";
 // Homepage carousel only — capped at 8. Use getAllActiveTeachers for the full
 // /teachers grid and getTeacherBySlug for detail pages (a capped list would 404
 // the 9th+ teacher's detail page and over-fetch for a slug filter).
@@ -304,14 +315,14 @@ export async function getFeaturedTeachers(): Promise<Teacher[]> {
   const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("teachers")
-    .select("*")
+    .select(TEACHER_PUBLIC_COLUMNS)
     .eq("is_active", true)
     // Hidden teachers (is_public = false) are schedulable by an admin but must
     // not be advertised: this feeds the homepage grid.
     .eq("is_public", true)
     .order("sort_order")
     .limit(8);
-  return data && data.length ? data : MOCK_TEACHERS;
+  return data && data.length ? data.map(withPrivateNulled) : MOCK_TEACHERS;
 }
 
 // Uncapped list of teachers that may be ADVERTISED: the public /teachers grid,
@@ -326,11 +337,11 @@ export async function getAllActiveTeachers(): Promise<Teacher[]> {
   const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("teachers")
-    .select("*")
+    .select(TEACHER_PUBLIC_COLUMNS)
     .eq("is_active", true)
     .eq("is_public", true)
     .order("sort_order");
-  return data && data.length ? data : MOCK_TEACHERS;
+  return data && data.length ? data.map(withPrivateNulled) : MOCK_TEACHERS;
 }
 
 // Single teacher by slug for detail pages. Wrapped in React cache so the page and
@@ -341,7 +352,7 @@ export const getTeacherBySlug = cache(async (slug: string): Promise<Teacher | nu
   const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("teachers")
-    .select("*")
+    .select(TEACHER_PUBLIC_COLUMNS)
     .eq("slug", slug)
     .eq("is_active", true)
     // Hidden teachers 404 here. Nothing in the customer dashboard links to this
@@ -349,7 +360,7 @@ export const getTeacherBySlug = cache(async (slug: string): Promise<Teacher | nu
     // "hidden" mean hidden rather than merely unlisted.
     .eq("is_public", true)
     .maybeSingle();
-  return data ?? null;
+  return data ? withPrivateNulled(data) : null;
 });
 
 // Wrapped in React cache so a page that calls it in both generateMetadata and the
@@ -393,7 +404,7 @@ export async function getFeaturedReviews(): Promise<(Review & { teacher_name?: s
   const supabase = createSupabaseAnonClient();
   const { data } = await supabase
     .from("reviews")
-    .select("*, teacher:teachers(display_name)")
+    .select(`${REVIEW_PUBLIC_COLUMNS}, teacher:teachers(display_name)`)
     .eq("is_featured", true)
     .eq("is_approved", true)
     .limit(9);
@@ -403,6 +414,8 @@ export async function getFeaturedReviews(): Promise<(Review & { teacher_name?: s
   if (!data || data.length === 0) return [];
   return data.map((r) => ({
     ...r,
+    customer_id: "",
+    session_id: null,
     teacher_name: r.teacher?.display_name,
   }));
 }

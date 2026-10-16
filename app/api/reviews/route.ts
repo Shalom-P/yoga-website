@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit, RATE_LIMITS, tooManyRequests } from "@/lib/security/rateLimit";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -30,6 +31,7 @@ export async function POST(req: Request) {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  if (!(await rateLimit(RATE_LIMITS.reviewsPerUser, user.id))) return tooManyRequests();
 
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "bad request" }, { status: 400 });
@@ -73,6 +75,10 @@ export async function POST(req: Request) {
     is_featured: false,
   });
   if (error) {
+    // 23505: a parallel POST won the race (reviews_one_per_customer_session, 0046).
+    if (error.code === "23505") {
+      return NextResponse.json({ error: "already_reviewed" }, { status: 409 });
+    }
     console.error("[api/reviews] insert failed:", error.message);
     return NextResponse.json({ error: "insert_failed" }, { status: 500 });
   }

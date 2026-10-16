@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { rateLimit, RATE_LIMITS, tooManyRequests } from "@/lib/security/rateLimit";
 import { z } from "zod";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
@@ -16,6 +17,7 @@ export async function POST(req: Request) {
   const supabase = await createSupabaseServerClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: "unauthenticated" }, { status: 401 });
+  if (!(await rateLimit(RATE_LIMITS.meetLinkPerUser, user.id))) return tooManyRequests();
 
   const parsed = schema.safeParse(await req.json().catch(() => ({})));
   if (!parsed.success) return NextResponse.json({ error: "bad request" }, { status: 400 });

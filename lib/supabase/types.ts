@@ -575,6 +575,8 @@ export type Database = {
       is_admin: { Args: { uid: string }; Returns: boolean };
       apply_discount_to_subscription: { Args: { p_subscription_id: string }; Returns: null };
       subscribe_newsletter: { Args: { p_email: string; p_source: string }; Returns: null };
+      // 0046: fixed-window limiter, service-role only. true = allowed.
+      rate_limit_hit: { Args: { p_key: string; p_window_seconds: number; p_max: number }; Returns: boolean };
       grant_session_credits: {
         Args: { p_customer: string; p_delta: number; p_reason: CreditReason; p_payment_id?: string | null };
         Returns: null;
