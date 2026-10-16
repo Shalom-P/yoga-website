@@ -3,7 +3,7 @@
 import Link from "next/link";
 
 export const metadata = {
-  title: "Terms of service: My Yoga Classes",
+  title: "Terms of service",
   description:
     "Terms governing your use of myyogaclasses.fit, including session packs, bookings, cancellation, and your consumer rights under UAE and Indian law.",
   alternates: { canonical: "/legal/terms" },

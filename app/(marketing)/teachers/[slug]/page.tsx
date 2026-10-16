@@ -46,11 +46,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   // The raw `headline` alone is far too short to work as a snippet (as little
   // as 27 characters, e.g. "Yoga and Naturopathy Doctor"). Compose the pieces
   // we already hold into something that reads as a result and states the offer.
-  const specialties = (t.specialties ?? []).slice(0, 3).join(", ");
+  const specialties = (t.specialties ?? []).slice(0, 2).join(", ");
   const description = [
     t.headline ? `${t.display_name}, ${t.headline}.` : `${t.display_name}, yoga teacher.`,
     specialties ? `Works with ${specialties}.` : "",
-    "Book a live 1:1 online session, 60 minutes, in your local time.",
+    "Book a live 1:1 online session in your local time.",
   ]
     .filter(Boolean)
     .join(" ");

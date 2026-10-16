@@ -18,7 +18,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Private Online Yoga Classes, Live 1:1",
   description:
-    "Private online yoga classes, live and one-to-one with a certified teacher from India. Personalised to your body, 60 minutes, shown in your local time. Book a single session or a pack.",
+    "Private online yoga classes, live and one-to-one with a certified teacher from India. Personalised, 60 minutes, in your local time. One session or a pack.",
   alternates: { canonical: "/private-online-yoga-classes" },
 };
 

@@ -22,7 +22,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Prenatal Yoga Poses to Avoid",
   description:
-    "Which yoga poses to avoid in pregnancy, trimester by trimester, and what we do instead in a live 1:1 prenatal session. Written to be read alongside your midwife's or doctor's advice.",
+    "Which yoga poses to avoid in pregnancy, trimester by trimester, and what we do instead in a live 1:1 prenatal session, alongside your midwife's advice.",
   alternates: { canonical: "/classes/prenatal/poses-to-avoid" },
 };
 

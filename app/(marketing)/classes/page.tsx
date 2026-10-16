@@ -11,7 +11,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Online 1:1 Yoga Classes by Condition",
   description:
-    "Diabetes, hypertension, prenatal, hormonal health, pain relief, mental health, weight loss, geriatric, kids: find the 1:1 yoga that fits what your body is working on.",
+    "Diabetes, blood pressure, PCOS, pregnancy, back pain, stress, seniors, kids and more: find the live 1:1 yoga that fits what your body is working on.",
   alternates: { canonical: "/classes" },
 };
 

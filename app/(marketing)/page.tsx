@@ -24,6 +24,8 @@ export const revalidate = 60;
 
 // Carries the social copy that used to sit in the root layout's openGraph
 // object, where it leaked onto all 23 URLs. Scoped to the homepage now.
+// A page-level openGraph object replaces the one carrying app/opengraph-image,
+// so the image has to be named here or the homepage shares without one.
 export const metadata = {
   openGraph: {
     type: "website" as const,
@@ -32,6 +34,14 @@ export const metadata = {
     title: "My Yoga Classes: Live 1:1 online yoga teacher",
     description:
       "Find your 1:1 yoga teacher. 60-minute personalised session. Pick your teacher. Pick your time. Meets live online.",
+    images: [
+      {
+        url: "/opengraph-image",
+        width: 1200,
+        height: 630,
+        alt: "My Yoga Classes: Live 1:1 online yoga",
+      },
+    ],
   },
 };
 
