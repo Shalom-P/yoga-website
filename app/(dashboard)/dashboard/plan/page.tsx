@@ -5,6 +5,7 @@ import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { PlanAutoStart } from "@/components/dashboard/PlanAutoStart";
 import { PendingBankTransfers } from "@/components/dashboard/PendingBankTransfers";
 import { BookedConversion } from "@/components/dashboard/BookedConversion";
+import { SignUpConversion } from "@/components/dashboard/SignUpConversion";
 import {
   BookedConfirmation,
   type BookedSession,
@@ -26,9 +27,9 @@ type LatestBooking = {
 export default async function PlanPage({
   searchParams,
 }: {
-  searchParams: Promise<{ booked?: string; purchased?: string }>;
+  searchParams: Promise<{ booked?: string; purchased?: string; registered?: string }>;
 }) {
-  const { booked, purchased } = await searchParams;
+  const { booked, purchased, registered } = await searchParams;
   const { user, supabase } = await requireUser("/dashboard/plan");
   const [{ data: credits }, plans, { data: pendingTransfers }, latestBooking, bookedProfile] =
     await Promise.all([
@@ -90,6 +91,7 @@ export default async function PlanPage({
 
   return (
     <div>
+      {registered && <SignUpConversion userId={user.id} />}
       {booked ? (
         <>
           {bookedId && <BookedConversion bookingId={bookedId} />}

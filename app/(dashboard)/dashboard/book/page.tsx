@@ -2,12 +2,24 @@ import Link from "next/link";
 import Image from "next/image";
 import { Star } from "lucide-react";
 import { getAllActiveTeachers } from "@/lib/data/landing";
+import { requireUser } from "@/lib/auth/guards";
+import { SignUpConversion } from "@/components/dashboard/SignUpConversion";
 
-export default async function BookPage() {
-  const teachers = await getAllActiveTeachers();
+export default async function BookPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ registered?: string }>;
+}) {
+  const { registered } = await searchParams;
+  // Onboarding lands here with ?registered=1; only then is the user id needed.
+  const [teachers, signedUp] = await Promise.all([
+    getAllActiveTeachers(),
+    registered ? requireUser("/dashboard/book") : null,
+  ]);
 
   return (
     <div>
+      {signedUp && <SignUpConversion userId={signedUp.user.id} />}
       <div className="myc-eyebrow">
         <span className="myc-dot" />
         Book a class

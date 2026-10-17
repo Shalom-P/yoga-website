@@ -176,11 +176,15 @@ export default function PrivacyPage() {
                     <td className="py-2 pr-4">Google Ads</td>
                     <td className="py-2 pr-4">
                       Advertising measurement: the Google tag runs on our home, pricing and plan
-                      pages, and on the page you land on from one of our Google ads. It sends Google
+                      pages, on the page you land on from one of our Google ads, and once on the
+                      teacher list you see right after creating your account. It sends Google
                       that page&apos;s address and title, your IP address and browser type, and,
                       when you buy a session pack, the amount, currency and payment reference. When
-                      you book your first 1:1 session, it sends Google a booking reference, but not
-                      the teacher, the time or the reason for the session. On those pages it also
+                      you start a bank transfer it sends the amount, currency and a transfer
+                      reference. When you finish creating your account it sends your account
+                      reference, but nothing you entered in the form. When you book your first 1:1
+                      session, it sends Google a booking reference, but not the teacher, the time
+                      or the reason for the session. On those pages it also
                       tells Google when you start or send a form, such as the newsletter sign-up,
                       and sends a hashed (scrambled) copy of an email address or phone number that
                       you type into a form or that the page shows, such as your account email on
