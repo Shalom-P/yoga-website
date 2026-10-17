@@ -83,6 +83,8 @@ export function parseConversionLabel(raw: string | undefined): string | undefine
 const GOOGLE_ADS_ID = parseGoogleAdsId(process.env.NEXT_PUBLIC_GOOGLE_ADS_ID);
 const PURCHASE_LABEL = parseConversionLabel(process.env.NEXT_PUBLIC_GOOGLE_ADS_PURCHASE_LABEL);
 const BOOKING_LABEL = parseConversionLabel(process.env.NEXT_PUBLIC_GOOGLE_ADS_BOOKING_LABEL);
+const SIGN_UP_LABEL = parseConversionLabel(process.env.NEXT_PUBLIC_GOOGLE_ADS_SIGN_UP_LABEL);
+const BANK_TRANSFER_LABEL = parseConversionLabel(process.env.NEXT_PUBLIC_GOOGLE_ADS_BANK_TRANSFER_LABEL);
 
 /**
  * Where Google's EU user consent policy requires consent before ad cookies: the
@@ -117,10 +119,40 @@ const CHECKOUT_PAGES = new Set(["/", "/pricing", "/dashboard/plan"]);
 /** Google Ads click ids. Their presence means the visit came from our ad. */
 const CLICK_IDS = ["gclid", "gbraid", "wbraid"];
 
+/**
+ * Onboarding hands a new customer on with ?registered=1 (withSignUpMarker), and
+ * the page it lands on reports the sign-up conversion. Onboarding itself never
+ * gets the tag: its form asks for health goals. The teacher picker carries the
+ * tag only on that one visit; its links to a teacher's page are full page loads
+ * like every other way off the tag's pages, so Google never sees which teacher
+ * was picked.
+ */
+const SIGN_UP_PARAM = "registered";
+const SIGN_UP_LANDINGS = new Set(["/dashboard/book", "/dashboard/plan"]);
+
+/** Where onboarding sends a new customer: their destination, marked for the sign-up conversion when it can be reported there. */
+export function withSignUpMarker(next: string): string {
+  let url: URL;
+  try {
+    url = new URL(next, "https://x.invalid");
+  } catch {
+    return next;
+  }
+  if (url.origin !== "https://x.invalid" || !SIGN_UP_LANDINGS.has(url.pathname)) return next;
+  url.searchParams.set(SIGN_UP_PARAM, "1");
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
+/** Whether this page was reached straight from onboarding. */
+export function isSignUpLanding(pathname: string, search = ""): boolean {
+  return SIGN_UP_LANDINGS.has(pathname) && new URLSearchParams(search).has(SIGN_UP_PARAM);
+}
+
 /** Whether the tag may load on this page. See the PRIVACY note above. */
 export function googleTagWantedOn(pathname: string, search = ""): boolean {
   if (NO_TAG_AREAS.some((area) => inArea(pathname, area))) return false;
   if (CHECKOUT_PAGES.has(pathname)) return true;
+  if (isSignUpLanding(pathname, search)) return true;
   const params = new URLSearchParams(search);
   return CLICK_IDS.some((id) => params.has(id));
 }
@@ -225,6 +257,49 @@ export function bookingConversion(
 ) {
   if (!adsId || !label || !b.bookingId) return null;
   return { send_to: `${adsId}/${label}`, transaction_id: b.bookingId };
+}
+
+export interface GoogleSignUp {
+  /** Our user id. Google counts one conversion per id, so a reload can't double count. */
+  userId: string;
+}
+
+/** Parameters for the sign-up conversion event, or null when it can't be sent. Nothing from the form. */
+export function signUpConversion(
+  adsId: string | undefined,
+  label: string | undefined,
+  s: GoogleSignUp,
+) {
+  if (!adsId || !label || !s.userId) return null;
+  return { send_to: `${adsId}/${label}`, transaction_id: s.userId };
+}
+
+export interface GoogleBankTransfer {
+  /** Our payments row id. A reused pending transfer keeps its id, so it counts once. */
+  paymentId: string;
+  /** What the customer was asked to wire, after any promo, in minor units. */
+  amountMinor: number;
+  currency: string;
+}
+
+/**
+ * Parameters for the bank-transfer conversion, or null when it can't be sent.
+ * A customer starting a transfer, not a confirmed payment: the money is checked
+ * by an admin days later with no customer browser around, so this is the only
+ * point a Gulf purchase can reach Google. A separate action from Purchase.
+ */
+export function bankTransferConversion(
+  adsId: string | undefined,
+  label: string | undefined,
+  t: GoogleBankTransfer,
+) {
+  if (!adsId || !label || !t.paymentId || !(t.amountMinor >= 0)) return null;
+  return {
+    send_to: `${adsId}/${label}`,
+    value: t.amountMinor / 100,
+    currency: t.currency.toUpperCase(),
+    transaction_id: t.paymentId,
+  };
 }
 
 let loaded = false;
@@ -402,5 +477,27 @@ export function reportGoogleAdsPurchase(p: GooglePurchase): void {
 export function reportGoogleAdsBooking(b: GoogleBooking): void {
   const gtag = tag();
   const params = bookingConversion(GOOGLE_ADS_ID, BOOKING_LABEL, b);
+  if (gtag && params) sendConversion(gtag, params);
+}
+
+/**
+ * Report a finished onboarding as the Google Ads sign-up conversion, from the
+ * page onboarding hands on to (withSignUpMarker). No-op unless the tag is
+ * allowed in this tab and NEXT_PUBLIC_GOOGLE_ADS_SIGN_UP_LABEL is set.
+ */
+export function reportGoogleAdsSignUp(s: GoogleSignUp): void {
+  const gtag = tag();
+  const params = signUpConversion(GOOGLE_ADS_ID, SIGN_UP_LABEL, s);
+  if (gtag && params) sendConversion(gtag, params);
+}
+
+/**
+ * Report a started bank transfer (the AED rail) with its amount. Called from
+ * checkout, which only runs on CHECKOUT_PAGES. No-op unless the tag is allowed
+ * in this tab and NEXT_PUBLIC_GOOGLE_ADS_BANK_TRANSFER_LABEL is set.
+ */
+export function reportGoogleAdsBankTransfer(t: GoogleBankTransfer): void {
+  const gtag = tag();
+  const params = bankTransferConversion(GOOGLE_ADS_ID, BANK_TRANSFER_LABEL, t);
   if (gtag && params) sendConversion(gtag, params);
 }

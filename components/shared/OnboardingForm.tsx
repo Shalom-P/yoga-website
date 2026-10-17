@@ -17,6 +17,7 @@ import { toE164, phoneErrorMessage } from "@/lib/validation/phone";
 import type { CountryCode } from "libphonenumber-js";
 import { friendlyFormError } from "@/lib/ui/errors";
 import { track } from "@/lib/analytics/events";
+import { withSignUpMarker } from "@/lib/analytics/googleAds";
 
 const GOALS = [
   "Reduce stress",
@@ -116,7 +117,9 @@ export function OnboardingForm({
     // Server-side Meta CompleteRegistration. Best-effort: never blocks onboarding.
     void fetch("/api/meta/complete-registration", { method: "POST", keepalive: true }).catch(() => {});
     toast.success("All set. Now pick a teacher.");
-    router.push(next);
+    // The landing page reports the Google Ads sign-up conversion (never this
+    // page: its form asks for health goals).
+    router.push(withSignUpMarker(next));
   }
 
   return (

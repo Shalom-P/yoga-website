@@ -12,6 +12,7 @@
  */
 
 import { detectBrowserTimezone } from "@/lib/timezone";
+import { reportGoogleAdsBankTransfer } from "@/lib/analytics/googleAds";
 import {
   startRazorpayCheckout,
   type AppliedDiscount,
@@ -92,6 +93,13 @@ export async function startCheckout(args: StartCheckoutArgsWithBank): Promise<vo
     const currency = data.currency ?? "AED";
     const discount = data.discount ? { ...data.discount, currency } : null;
     if (discount) args.onDiscountApplied?.(discount);
+    // The only point a bank-transfer sale can reach Google Ads: the transfer is
+    // verified later by an admin, with no customer browser to report it.
+    reportGoogleAdsBankTransfer({
+      paymentId: data.payment.id,
+      amountMinor: data.payment.amountCents,
+      currency,
+    });
     args.onBankTransfer({
       paymentId: data.payment.id,
       reference: data.payment.reference,

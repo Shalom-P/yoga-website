@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 
 import {
   adPersonalizationAllowedOn,
+  bankTransferConversion,
   bookingConversion,
   CONSENT_REQUIRED_REGIONS,
   googlePageUrl,
@@ -12,6 +13,8 @@ import {
   parseConversionLabel,
   parseGoogleAdsId,
   purchaseConversion,
+  signUpConversion,
+  withSignUpMarker,
 } from "./googleAds";
 
 const ORIGIN = "https://www.myyogaclasses.fit";
@@ -189,6 +192,62 @@ describe("bookingConversion", () => {
     expect(bookingConversion(undefined, "L", booking)).toBeNull();
     expect(bookingConversion("AW-1", undefined, booking)).toBeNull();
     expect(bookingConversion("AW-1", "L", { bookingId: "" })).toBeNull();
+  });
+});
+
+describe("sign-up landing", () => {
+  it("marks onboarding's hand-off to the teacher picker or the plan page", () => {
+    expect(withSignUpMarker("/dashboard/book")).toBe("/dashboard/book?registered=1");
+    expect(withSignUpMarker("/dashboard/plan?planSlug=pack-5")).toBe("/dashboard/plan?planSlug=pack-5&registered=1");
+  });
+
+  it("leaves every other destination alone, a teacher's own page included", () => {
+    for (const next of ["/dashboard", "/dashboard/book/asha", "/classes/diabetes", "https://evil.example/dashboard/book"]) {
+      expect(withSignUpMarker(next), next).toBe(next);
+    }
+  });
+
+  it("loads the tag on the picker only on the visit straight from onboarding", () => {
+    expect(googleTagWantedOn("/dashboard/book", "?registered=1")).toBe(true);
+    expect(googleTagWantedOn("/dashboard/book")).toBe(false);
+    expect(googleTagWantedOn("/dashboard/book/asha", "?registered=1")).toBe(false);
+    expect(googleTagWantedOn("/dashboard/documents", "?registered=1")).toBe(false);
+    expect(adPersonalizationAllowedOn("/dashboard/book")).toBe(false);
+  });
+
+  it("makes a teacher link from the marked picker a full page load", () => {
+    expect(leavesTagPages("/dashboard/book/asha", ORIGIN)).toBe(true);
+  });
+});
+
+describe("signUpConversion", () => {
+  it("sends the user id as the transaction id and nothing else", () => {
+    expect(signUpConversion("AW-1", "L", { userId: "u1" })).toEqual({ send_to: "AW-1/L", transaction_id: "u1" });
+  });
+
+  it("sends nothing when unconfigured or without a user id", () => {
+    expect(signUpConversion(undefined, "L", { userId: "u1" })).toBeNull();
+    expect(signUpConversion("AW-1", undefined, { userId: "u1" })).toBeNull();
+    expect(signUpConversion("AW-1", "L", { userId: "" })).toBeNull();
+  });
+});
+
+describe("bankTransferConversion", () => {
+  const transfer = { paymentId: "p1", amountMinor: 43550, currency: "aed" };
+
+  it("sends the amount to wire in major units, keyed on the payment row", () => {
+    expect(bankTransferConversion("AW-1", "L", transfer)).toEqual({
+      send_to: "AW-1/L",
+      value: 435.5,
+      currency: "AED",
+      transaction_id: "p1",
+    });
+  });
+
+  it("sends nothing when unconfigured or malformed", () => {
+    expect(bankTransferConversion("AW-1", undefined, transfer)).toBeNull();
+    expect(bankTransferConversion("AW-1", "L", { ...transfer, paymentId: "" })).toBeNull();
+    expect(bankTransferConversion("AW-1", "L", { ...transfer, amountMinor: Number.NaN })).toBeNull();
   });
 });
 
