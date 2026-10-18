@@ -6,8 +6,9 @@ import { JsonLd } from "@/components/shared/JsonLd";
 import { courseJsonLd, breadcrumbJsonLd, faqPageJsonLd } from "@/lib/seo/structuredData";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { RELATED_CONDITIONS, teachersForCondition } from "@/lib/data/condition-links";
-import { getAllActiveTeachers } from "@/lib/data/landing";
-import { getClassCategories } from "@/lib/data/landing";
+import { getAllActiveTeachers, getClassCategories, getPlansWithFeatures } from "@/lib/data/landing";
+import { perSessionRange } from "@/components/marketing/PackPriceTable";
+import { formatMoney } from "@/lib/i18n/money";
 import { getConditionPage } from "@/lib/data/condition-pages";
 import { ConditionLanding } from "@/components/marketing/condition/ConditionLanding";
 
@@ -68,6 +69,11 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
       note: t.headline ?? undefined,
     }));
 
+  // INR, because the cached HTML is region-blind and the default currency is
+  // INR; other currencies are on /pricing, which the line links to.
+  const inr = perSessionRange(await getPlansWithFeatures(), "INR");
+  const priceFrom = inr ? formatMoney(inr.low, "INR") : null;
+
   return (
     <>
       <JsonLd data={courseJsonLd(c, `${siteUrl}/classes/${c.slug}`)} />
@@ -88,6 +94,7 @@ export default async function ClassDetailPage({ params }: { params: Promise<{ sl
       {rich ? (
         <ConditionLanding
           data={rich}
+          priceFrom={priceFrom}
           // First mapped teacher, with their headline as the qualification
           // line ("MD in Clinical Yoga & Naturopathy").
           taughtBy={

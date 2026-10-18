@@ -70,9 +70,12 @@ export type TaughtBy = { name: string; headline: string | null; href: string };
 export function ConditionLanding({
   data: d,
   taughtBy,
+  priceFrom,
 }: {
   data: ConditionPage;
   taughtBy?: TaughtBy | null;
+  /** Lowest per-session INR price, preformatted ("₹1,000"); null hides it. */
+  priceFrom?: string | null;
 }) {
   return (
     <>
@@ -99,8 +102,21 @@ export function ConditionLanding({
               <Link href="#how-it-helps">How it helps</Link>
             </Button>
           </div>
-          <p className="mt-5 text-sm text-muted-foreground">
-60 min · 1:1 · live online
+          {/* The plain facts a reader (or an answer engine quoting the top of
+              the page) needs: format, where the teacher is, length, price. */}
+          <p className="mx-auto mt-5 max-w-xl text-sm text-muted-foreground text-pretty">
+            Live one-to-one over video with a certified teacher in India. 60 minutes, in your
+            local time
+            {priceFrom ? (
+              <>
+                , from{" "}
+                <Link href="/pricing" className="underline underline-offset-4 hover:text-foreground">
+                  {priceFrom} a session
+                </Link>{" "}
+                with no subscription
+              </>
+            ) : null}
+            .
           </p>
         </div>
       </section>
