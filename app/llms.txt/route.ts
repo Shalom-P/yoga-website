@@ -1,5 +1,7 @@
-import { getClassCategories, getAllActiveTeachers } from "@/lib/data/landing";
+import { getClassCategories, getAllActiveTeachers, getPlansWithFeatures } from "@/lib/data/landing";
 import { CONDITION_SLUGS } from "@/lib/data/condition-pages";
+import { pricedCurrencies } from "@/components/marketing/PackPriceTable";
+import { formatMoney } from "@/lib/i18n/money";
 
 /**
  * /llms.txt — a plain-text summary of what this site is and what it offers.
@@ -10,19 +12,36 @@ import { CONDITION_SLUGS } from "@/lib/data/condition-pages";
  * page is in an index it reads (see lib/seo/indexnow.ts) and whether the
  * Organization resolves to one entity (see the @id in lib/seo/structuredData).
  *
- * Generated from live data so it cannot drift from the roster or the catalogue.
+ * Generated from live data so it cannot drift from the roster, the catalogue or
+ * the prices.
  */
 export const revalidate = 3600;
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
 
 export async function GET() {
-  const [categories, teachers] = await Promise.all([
+  const [categories, teachers, plans] = await Promise.all([
     getClassCategories(),
     getAllActiveTeachers(),
+    getPlansWithFeatures(),
   ]);
 
   const conditions = categories.filter((c) => CONDITION_SLUGS.includes(c.slug));
+
+  // One line per pack, listing only currencies with an explicit plan_prices
+  // row (never the INR base-price fallback under another symbol).
+  const currencies = pricedCurrencies(plans);
+  const packs = plans
+    .filter((p) => p.is_active && (p.prices?.length ?? 0) > 0)
+    .map((p) => {
+      const prices = currencies
+        .map((cur) => p.prices.find((pr) => pr.currency === cur))
+        .filter((pr) => pr !== undefined)
+        .map((pr) => formatMoney(pr.amount_cents, pr.currency))
+        .join(" / ");
+      const n = p.session_credits;
+      return `- ${p.name}: ${n} live 60-minute 1:1 session${n === 1 ? "" : "s"}, ${prices}`;
+    });
 
   const body = `# My Yoga Classes
 
@@ -37,6 +56,14 @@ export async function GET() {
 - Billing: one-time prepaid session packs. No subscription, and sessions do not expire.
 - Availability: teachers are based in India (IST) and cover early morning to late evening.
 - Booking requires an account. Browsing teachers, class types and prices does not.
+
+## Prices
+
+One-time packs, no subscription, no monthly fee, sessions never expire.
+Charged in the currency for the visitor's region; regions without their own
+price are charged in INR.
+
+${packs.join("\n")}
 
 ## Teachers
 
@@ -54,6 +81,14 @@ ${conditions.map((c) => `- ${c.name}: ${SITE}/classes/${c.slug}`).join("\n")}
 
 - Home: ${SITE}/
 - Pricing and session packs: ${SITE}/pricing
+- Private online yoga classes (how a 1:1 session works): ${SITE}/private-online-yoga-classes
+- Doctor-led yoga therapy (BNYS / MD in yoga teachers): ${SITE}/doctor-led-yoga-therapy
+- Online yoga classes in India: ${SITE}/online-yoga-classes-india
+- Online yoga classes in the UAE: ${SITE}/online-yoga-classes-uae
+- Online yoga classes in the USA: ${SITE}/online-yoga-classes-usa
+- Guide, what private online yoga costs: ${SITE}/guides/what-private-online-yoga-costs
+- Guide, private 1:1 vs group classes vs tutor marketplaces: ${SITE}/guides/private-vs-group-online-yoga
+- Prenatal yoga poses to avoid: ${SITE}/classes/prenatal/poses-to-avoid
 - All teachers: ${SITE}/teachers
 - All class types: ${SITE}/classes
 - Frequently asked questions: ${SITE}/faq
@@ -66,14 +101,14 @@ ${conditions.map((c) => `- ${c.name}: ${SITE}/classes/${c.slug}`).join("\n")}
   Condition pages describe how sessions are adapted, not clinical outcomes.
 - Students with a health condition, an injury, or who are pregnant should have
   clearance from their doctor or midwife before starting.
-- Prices are shown in the currency available for the visitor's region. Only INR
-  and AED are currently priced; other regions are shown INR.
+- Teachers hold degrees in yoga and naturopathy (BNYS, some an MD in yoga).
+  They are not MBBS medical doctors.
 
 ## Machine-readable data
 
 - Sitemap: ${SITE}/sitemap.xml
-- Structured data: Organization, Course, Person, Product and BreadcrumbList as
-  JSON-LD in the HTML of the relevant pages.
+- Structured data: Organization, Course, Person, Product, FAQPage, Article,
+  ItemList and BreadcrumbList as JSON-LD in the HTML of the relevant pages.
 `;
 
   return new Response(body, {
