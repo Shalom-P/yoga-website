@@ -5,6 +5,12 @@ const BASE_URL =
 
 export default function robots(): MetadataRoute.Robots {
   return {
+    // AI training crawlers (GPTBot, ClaudeBot, Google-Extended, CCBot) are
+    // allowed by this wildcard group ON PURPOSE: the owner chose on 2026-10-18
+    // to let future models learn the studio from its own pages. Blocking them
+    // would not affect citation by AI search (OAI-SearchBot, Claude-SearchBot,
+    // PerplexityBot and the *-User fetchers), but don't change it without the
+    // owner.
     rules: [
       {
         userAgent: "*",
