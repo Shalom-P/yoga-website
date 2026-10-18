@@ -10,6 +10,7 @@ import { JsonLd } from "@/components/shared/JsonLd";
 import { faqPageJsonLd, breadcrumbJsonLd } from "@/lib/seo/structuredData";
 import { getPlansWithFeatures, getAllActiveTeachers } from "@/lib/data/landing";
 import { formatMoney } from "@/lib/i18n/money";
+import { rosterLanguageSentence } from "@/lib/copy/languages";
 import type { Faq } from "@/lib/data/faqs";
 
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
@@ -53,6 +54,10 @@ const STATIC_FAQS: Faq[] = [
     a: "In a group class the teacher is watching many screens at once. In a private session the teacher watches only you for the full hour, corrects your alignment, and changes the plan around your body. You also keep the same teacher from week to week.",
   },
   {
+    q: "How do I pay?",
+    a: "In rupees, online at checkout through Razorpay, by UPI, debit or credit card, or netbanking. You pay once for the pack you choose; nothing renews.",
+  },
+  {
     q: "What if I need to cancel?",
     a: "Cancel from your dashboard before the session starts and the session goes back to your account to use another time.",
   },
@@ -68,15 +73,27 @@ export default async function IndiaPage() {
       : `${formatMoney(inr.low, "INR")} to ${formatMoney(inr.high, "INR")}`
     : null;
 
-  const faqs: Faq[] = inrRange
-    ? [
-        {
-          q: "How much does a private online yoga class cost in India?",
-          a: `A live 60-minute one-to-one session costs ${inrRange}, depending on whether you buy a single session or a pack of five or ten. Prices are in rupees with no subscription.`,
-        },
-        ...STATIC_FAQS,
-      ]
-    : STATIC_FAQS;
+  // Built from the roster's `languages` column, so it follows the roster.
+  const languages = rosterLanguageSentence(teachers);
+  const faqs: Faq[] = [
+    ...(inrRange
+      ? [
+          {
+            q: "How much does a private online yoga class cost in India?",
+            a: `A live 60-minute one-to-one session costs ${inrRange}, depending on whether you buy a single session or a pack of five or ten. Prices are in rupees with no subscription.`,
+          },
+        ]
+      : []),
+    ...STATIC_FAQS,
+    ...(languages
+      ? [
+          {
+            q: "Which languages are sessions taught in?",
+            a: `${languages} You choose your teacher when you book, and each teacher's languages are on their profile.`,
+          },
+        ]
+      : []),
+  ];
 
   return (
     <>

@@ -2,6 +2,7 @@ import { getClassCategories, getAllActiveTeachers, getPlansWithFeatures } from "
 import { CONDITION_SLUGS } from "@/lib/data/condition-pages";
 import { pricedCurrencies } from "@/components/marketing/PackPriceTable";
 import { formatMoney } from "@/lib/i18n/money";
+import { rosterLanguageSentence } from "@/lib/copy/languages";
 
 /**
  * /llms.txt — a plain-text summary of what this site is and what it offers.
@@ -26,6 +27,7 @@ export async function GET() {
     getPlansWithFeatures(),
   ]);
 
+  const languages = rosterLanguageSentence(teachers);
   const conditions = categories.filter((c) => CONDITION_SLUGS.includes(c.slug));
 
   // One line per pack, listing only currencies with an explicit plan_prices
@@ -55,6 +57,7 @@ export async function GET() {
 - Session length: 60 minutes.
 - Billing: one-time prepaid session packs. No subscription, and sessions do not expire.
 - Availability: teachers are based in India (IST) and cover early morning to late evening.
+- Payment in India: rupees through Razorpay, by UPI, cards or netbanking.${languages ? `\n- Languages: ${languages}` : ""}
 - Booking requires an account. Browsing teachers, class types and prices does not.
 
 ## Prices
