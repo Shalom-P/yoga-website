@@ -64,7 +64,9 @@ export function Footer() {
           </div>
           <ul className="space-y-2.5 text-sm text-foreground/80">
             <li><Link href="/guides/what-private-online-yoga-costs" className="hover:text-accent">What private online yoga costs</Link></li>
+            <li><Link href="/guides/private-vs-group-online-yoga" className="hover:text-accent">1:1, group or marketplace?</Link></li>
             <li><Link href="/classes/prenatal/poses-to-avoid" className="hover:text-accent">Prenatal poses to avoid</Link></li>
+            <li><Link href="/online-yoga-classes-india" className="hover:text-accent">Online yoga in India</Link></li>
             <li><Link href="/online-yoga-classes-usa" className="hover:text-accent">Online yoga in the USA</Link></li>
             <li><Link href="/online-yoga-classes-uae" className="hover:text-accent">Online yoga in the UAE</Link></li>
           </ul>
