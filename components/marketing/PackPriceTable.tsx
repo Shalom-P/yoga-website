@@ -32,6 +32,24 @@ export function pricedCurrencies(plans: PlanWithFeatures[]): string[] {
   return CURRENCY_ORDER.filter((c) => seen.has(c));
 }
 
+/**
+ * Lowest and highest per-session price across active packs in one currency,
+ * from explicit `plan_prices` rows only (never the INR base-price fallback).
+ * Null when nothing is priced in that currency.
+ */
+export function perSessionRange(
+  plans: PlanWithFeatures[],
+  currency: string,
+): { low: number; high: number } | null {
+  const per: number[] = [];
+  for (const p of plans) {
+    if (!p.is_active || p.session_credits < 1) continue;
+    const price = p.prices?.find((pr) => pr.currency === currency);
+    if (price) per.push(Math.round(price.amount_cents / p.session_credits));
+  }
+  return per.length ? { low: Math.min(...per), high: Math.max(...per) } : null;
+}
+
 export function PackPriceTable({
   plans,
   showGuideLink = true,

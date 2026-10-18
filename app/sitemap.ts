@@ -15,36 +15,44 @@ export const revalidate = 3600;
 // were also actively misleading here, claiming "daily" for pages that change
 // a few times a year.
 //
-// `lastModified` is likewise omitted for static routes. It used to be
-// `new Date()` evaluated at module scope, so it reported the serverless
-// instance's cold-start time and varied between instances for content that had
-// not changed. An inconsistent lastmod is worse than none: it is the specific
-// pattern that makes Google discard the signal for the whole file. Teacher
-// pages keep their row's `updated_at`, which is a true modification time
-// because their content is that row; condition pages do not (see below).
-const STATIC_PATHS = [
-  "/",
-  "/about",
-  "/classes",
-  "/pricing",
-  "/teachers",
-  "/reviews",
-  "/faq",
-  "/contact",
-  "/private-online-yoga-classes",
-  "/doctor-led-yoga-therapy",
-  "/guides/what-private-online-yoga-costs",
-  "/online-yoga-classes-usa",
-  "/online-yoga-classes-uae",
-  "/classes/prenatal/poses-to-avoid",
-  "/legal/privacy",
-  "/legal/terms",
-  "/legal/refund",
-];
+// `lastModified` is a hand-kept date per page: the day its visible content last
+// changed. It used to be `new Date()` evaluated at module scope, which reported
+// the serverless instance's cold-start time and varied between instances. An
+// inconsistent lastmod is worse than none (it is the pattern that makes Google
+// discard the signal for the whole file), so these are fixed strings, not a
+// clock. **Bump the date when you change what a page says**, and add new public
+// paths here. Teacher pages keep their row's `updated_at`, which is a true
+// modification time because their content is that row.
+const STATIC_PAGES: Record<string, string> = {
+  "/": "2026-10-16",
+  "/about": "2026-09-19",
+  "/classes": "2026-10-16",
+  "/pricing": "2026-10-10",
+  "/teachers": "2026-10-10",
+  "/reviews": "2026-10-16",
+  "/faq": "2026-09-19",
+  "/contact": "2026-06-21",
+  "/private-online-yoga-classes": "2026-10-16",
+  "/doctor-led-yoga-therapy": "2026-10-16",
+  "/guides/what-private-online-yoga-costs": "2026-10-18",
+  "/online-yoga-classes-usa": "2026-10-10",
+  "/online-yoga-classes-uae": "2026-10-16",
+  "/online-yoga-classes-india": "2026-10-18",
+  "/guides/private-vs-group-online-yoga": "2026-10-18",
+  "/classes/prenatal/poses-to-avoid": "2026-10-16",
+  "/legal/privacy": "2026-10-17",
+  "/legal/terms": "2026-10-16",
+  "/legal/refund": "2026-10-16",
+};
 
-const STATIC_ROUTES: MetadataRoute.Sitemap = STATIC_PATHS.map((path) => ({
-  url: `${BASE_URL}${path}`,
-}));
+// Condition pages render lib/data/condition-pages/<slug>.json through
+// ConditionLanding, so their date is the later of the two changing. The DB
+// row's updated_at (still June for most) says nothing about the page.
+const CONDITIONS_UPDATED = "2026-10-18";
+
+const STATIC_ROUTES: MetadataRoute.Sitemap = Object.entries(STATIC_PAGES).map(
+  ([path, updated]) => ({ url: `${BASE_URL}${path}`, lastModified: updated }),
+);
 
 // Build-time fallback for the condition pages. If the Supabase query fails we
 // still emit all nine, because they are prerendered from this same constant
@@ -53,6 +61,7 @@ const STATIC_ROUTES: MetadataRoute.Sitemap = STATIC_PATHS.map((path) => ({
 // 23 URLs to 11 on a single failed round trip, with nothing to alert on.
 const CONDITION_FALLBACK: MetadataRoute.Sitemap = CONDITION_SLUGS.map((slug) => ({
   url: `${BASE_URL}/classes/${slug}`,
+  lastModified: CONDITIONS_UPDATED,
 }));
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
@@ -89,12 +98,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    // No lastModified: a condition page's content lives in
-    // lib/data/condition-pages/*.json, so the row's updated_at (still June for
-    // most of them) says nothing about when the page last changed.
     categories = (categoriesResult.data ?? [])
       .filter((c) => c.slug)
-      .map((c) => ({ url: `${BASE_URL}/classes/${c.slug}` }));
+      .map((c) => ({ url: `${BASE_URL}/classes/${c.slug}`, lastModified: CONDITIONS_UPDATED }));
   } catch (err) {
     // Surface it: a shrinking sitemap is invisible in production otherwise, and
     // there is no Sentry on this route today.
