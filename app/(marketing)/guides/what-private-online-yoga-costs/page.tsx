@@ -3,7 +3,7 @@ import { PageHeader } from "@/components/marketing/PageHeader";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
 import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { FaqAccordion } from "@/components/marketing/FaqAccordion";
-import { PackPriceTable } from "@/components/marketing/PackPriceTable";
+import { PackPriceTable, perSessionRange } from "@/components/marketing/PackPriceTable";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { faqPageJsonLd, breadcrumbJsonLd, articleJsonLd } from "@/lib/seo/structuredData";
 import { getPlansWithFeatures } from "@/lib/data/landing";
@@ -13,7 +13,7 @@ import type { Faq } from "@/lib/data/faqs";
 const SITE = process.env.NEXT_PUBLIC_SITE_URL ?? "https://www.myyogaclasses.fit";
 const PAGE_URL = `${SITE}/guides/what-private-online-yoga-costs`;
 const PUBLISHED = "2026-10-10";
-const UPDATED = "2026-10-10";
+const UPDATED = "2026-10-18";
 
 export const revalidate = 300;
 export const metadata = {
@@ -123,14 +123,26 @@ const FAQS: Faq[] = [
 
 export default async function CostGuidePage() {
   const plans = await getPlansWithFeatures();
-  const perSessionUsd: number[] = [];
-  for (const p of plans) {
-    if (!p.is_active || p.session_credits < 1) continue;
-    const price = p.prices.find((pr) => pr.currency === "USD");
-    if (price) perSessionUsd.push(Math.round(price.amount_cents / p.session_credits));
-  }
-  const lowUsd = perSessionUsd.length ? Math.min(...perSessionUsd) : null;
-  const highUsd = perSessionUsd.length ? Math.max(...perSessionUsd) : null;
+  const usd = perSessionRange(plans, "USD");
+  const lowUsd = usd?.low ?? null;
+  const highUsd = usd?.high ?? null;
+  const inr = perSessionRange(plans, "INR");
+  const inrRange = inr
+    ? inr.low === inr.high
+      ? formatMoney(inr.low, "INR")
+      : `${formatMoney(inr.low, "INR")} to ${formatMoney(inr.high, "INR")}`
+    : null;
+  // The India answer quotes our own live rupee prices, so it is built here
+  // rather than in the static list; the FAQPage JSON-LD gets the same text.
+  const faqs: Faq[] = inrRange
+    ? [
+        {
+          q: "How much does a private online yoga class cost per hour in India?",
+          a: `Teachers on tutoring marketplaces in India listed ₹600 to ₹1,500 an hour for online yoga when we checked in October 2026 (Superprof India). With us, a live 60-minute one-to-one session costs ${inrRange} in rupees, depending on whether you buy one session or a pack of five or ten. There is no subscription or monthly fee, and prepaid sessions never expire.`,
+        },
+        ...FAQS,
+      ]
+    : FAQS;
 
   return (
     <>
@@ -149,7 +161,7 @@ export default async function CostGuidePage() {
           dateModified: UPDATED,
         })}
       />
-      <JsonLd data={faqPageJsonLd(FAQS)} />
+      <JsonLd data={faqPageJsonLd(faqs)} />
 
       <PageHeader
         eyebrow="Guide"
@@ -188,6 +200,19 @@ export default async function CostGuidePage() {
             The hour is the same length, the teacher is watching only you, and the training is,
             if anything, deeper: a university degree in yoga and naturopathy rather than a
             200-hour certificate.
+          </p>
+          <p>
+            <strong className="font-semibold text-foreground">In India</strong>, online yoga
+            teachers on tutoring marketplaces list about ₹600 to ₹1,500 an hour.{" "}
+            {inrRange ? (
+              <>
+                A live 60-minute one-to-one session with us costs{" "}
+                <strong className="font-semibold text-foreground">{inrRange}</strong> in rupees,
+                depending on pack size, with no subscription or monthly fee.
+              </>
+            ) : (
+              <>Our rupee prices are on the pricing page.</>
+            )}
           </p>
         </div>
       </article>
@@ -301,7 +326,7 @@ export default async function CostGuidePage() {
         <div className="mx-auto max-w-3xl">
           <h2 className="text-3xl tracking-tight text-balance md:text-4xl">Questions people ask about price.</h2>
           <div className="mt-8">
-            <FaqAccordion faqs={FAQS} />
+            <FaqAccordion faqs={faqs} />
           </div>
         </div>
       </section>
