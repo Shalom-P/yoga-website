@@ -10,6 +10,8 @@ import { LandingPageView } from "@/components/marketing/LandingPageView";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { faqPageJsonLd } from "@/lib/seo/structuredData";
 import { FAQS } from "@/lib/data/faqs";
+import { perSessionRange } from "@/components/marketing/PackPriceTable";
+import { formatMoney } from "@/lib/i18n/money";
 import {
   getFeaturedTeachers,
   getClassCategories,
@@ -70,6 +72,11 @@ export default async function LandingPage() {
   const trustRating = landingSetting(settings, "landing.trust_rating", "");
   const trustCount = landingSetting(settings, "landing.trust_count", "");
   const finalHeadline = landingSetting(settings, "landing.final_headline", "Book your 1:1 session today.");
+  // Same figure the condition pages state under their H1: the lowest
+  // per-session price from an explicit INR plan_prices row, never the base
+  // price under another symbol. Hidden when nothing is priced.
+  const inr = perSessionRange(plans, "INR");
+  const priceFrom = inr ? formatMoney(inr.low, "INR") : null;
 
   return (
     <>
@@ -80,6 +87,7 @@ export default async function LandingPage() {
         subhead={subhead}
         trustRating={trustRating}
         trustCount={trustCount}
+        priceFrom={priceFrom}
       />
       <HowItWorks />
       <PracticeSection categories={categories} />

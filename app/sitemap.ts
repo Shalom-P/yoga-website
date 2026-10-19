@@ -24,8 +24,8 @@ export const revalidate = 3600;
 // paths here. Teacher pages keep their row's `updated_at`, which is a true
 // modification time because their content is that row.
 const STATIC_PAGES: Record<string, string> = {
-  "/": "2026-10-16",
-  "/about": "2026-09-19",
+  "/": "2026-10-19",
+  "/about": "2026-10-19",
   "/classes": "2026-10-16",
   "/pricing": "2026-10-10",
   "/teachers": "2026-10-10",

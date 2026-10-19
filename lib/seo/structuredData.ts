@@ -110,14 +110,18 @@ export function courseJsonLd(cat: ClassCategory, url: string): WithContext<Cours
 }
 
 /**
- * Offers for the one-time session packs on /pricing.
+ * Offers for the one-time session packs on /pricing: one `Product` per pack.
  *
  * `Product` rather than `Service`: a pack is a fixed, purchasable SKU with a
- * price and a unit count, which is what `Offer` describes. Prices come from the
- * `plan_prices` rows we already load, so only currencies an admin has actually
- * priced are emitted. Nothing falls back to `plans.price_base_cents`: that
- * figure is INR, and publishing it under another currency's symbol would
- * misprice the pack by an order of magnitude.
+ * price and a unit count, which is what `Offer` describes. Each pack is its
+ * own Product carrying `sku` (the plan slug, the identifier the checkout and
+ * the Razorpay order notes already use) because Google's merchant-listing
+ * check wants an identifier per product and a single node for three packs
+ * cannot carry one honestly. Prices come from the `plan_prices` rows we
+ * already load, so only currencies an admin has actually priced are emitted.
+ * Nothing falls back to `plans.price_base_cents`: that figure is INR, and
+ * publishing it under another currency's symbol would misprice the pack by an
+ * order of magnitude.
  *
  * No `aggregateRating`. There are no published reviews to aggregate, and
  * Google disallows self-serving review markup on an organisation's own offers.
@@ -125,9 +129,10 @@ export function courseJsonLd(cat: ClassCategory, url: string): WithContext<Cours
 export function offersJsonLd(
   plans: (Plan & { prices?: PlanPrice[] })[],
   url: string,
-): WithContext<Product> | null {
-  const offers = plans.flatMap((p) =>
-    (p.prices ?? []).map((price) => ({
+): WithContext<Product>[] | null {
+  const products = plans.flatMap((p) => {
+    if (!p.is_active || p.session_credits < 1) return [];
+    const offers = (p.prices ?? []).map((price) => ({
       "@type": "Offer" as const,
       name: `${p.name} (${p.session_credits} session${p.session_credits === 1 ? "" : "s"})`,
       price: (price.amount_cents / 100).toFixed(2),
@@ -141,30 +146,37 @@ export function offersJsonLd(
         value: p.session_credits,
         unitText: "session",
       },
-    })),
-  );
-  if (!offers.length) return null;
-  const amounts = offers.map((o) => Number(o.price));
-  const currencies = [...new Set(offers.map((o) => o.priceCurrency))];
-  return {
-    "@context": "https://schema.org",
-    "@type": "Product",
-    name: "Live 1:1 online yoga session packs",
-    description:
-      "One-time packs of 60-minute live 1:1 online yoga sessions with certified teachers in India. No subscription, and sessions never expire.",
-    url,
-    brand: ORG_REF,
-    offers: {
-      "@type": "AggregateOffer",
-      offerCount: offers.length,
-      lowPrice: Math.min(...amounts).toFixed(2),
-      highPrice: Math.max(...amounts).toFixed(2),
-      // AggregateOffer takes a single currency; when more than one is priced we
-      // omit it rather than mislabel, and each child Offer carries its own.
-      ...(currencies.length === 1 ? { priceCurrency: currencies[0] } : {}),
-      offers,
-    },
-  };
+    }));
+    if (!offers.length) return [];
+    const amounts = offers.map((o) => Number(o.price));
+    const currencies = [...new Set(offers.map((o) => o.priceCurrency))];
+    const n = p.session_credits;
+    const product: WithContext<Product> = {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: p.name,
+      sku: p.slug,
+      description: `${n} live 60-minute 1:1 online yoga session${n === 1 ? "" : "s"} with a certified teacher in India. One-time pack, no subscription, and the session${n === 1 ? " does" : "s do"} not expire.`,
+      url,
+      brand: ORG_REF,
+      offers:
+        offers.length === 1
+          ? offers[0]
+          : {
+              "@type": "AggregateOffer",
+              offerCount: offers.length,
+              lowPrice: Math.min(...amounts).toFixed(2),
+              highPrice: Math.max(...amounts).toFixed(2),
+              // AggregateOffer takes a single currency; when more than one is
+              // priced we omit it rather than mislabel, and each child Offer
+              // carries its own.
+              ...(currencies.length === 1 ? { priceCurrency: currencies[0] } : {}),
+              offers,
+            },
+    };
+    return [product];
+  });
+  return products.length ? products : null;
 }
 
 export function breadcrumbJsonLd(
