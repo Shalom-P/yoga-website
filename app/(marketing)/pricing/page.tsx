@@ -30,8 +30,8 @@ export default async function PricingPage() {
         ])}
       />
       {(() => {
-        const offers = offersJsonLd(plans, `${SITE}/pricing`);
-        return offers ? <JsonLd data={offers} /> : null;
+        const products = offersJsonLd(plans, `${SITE}/pricing`);
+        return products ? products.map((p) => <JsonLd key={p.sku as string} data={p} />) : null;
       })()}
       <PageHeader
         eyebrow="Pricing"
