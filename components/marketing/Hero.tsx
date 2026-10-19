@@ -11,9 +11,11 @@ type HeroProps = {
   subhead: string;
   trustRating: string;
   trustCount: string;
+  /** Lowest per-session INR price, preformatted ("₹1,000"); null hides it. */
+  priceFrom?: string | null;
 };
 
-export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) {
+export function Hero({ headline, subhead, trustRating, trustCount, priceFrom }: HeroProps) {
   return (
     <section
       id="hero"
@@ -157,7 +159,10 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
           {/* Trust row — rating and count are admin-editable (admin_settings).
               The rating/count half only renders when BOTH are set, so we never
               publish a star rating or a review count we cannot substantiate.
-              "No subscription" is a fact about the product and always shows. */}
+              The facts after it (who teaches, where, how long, from what price,
+              no subscription) always show: the headline and subhead above are
+              DB-driven copy, so this row is the only server-rendered line in
+              the first paragraph that states what the service is. */}
           <div className="mt-10 flex flex-wrap items-center gap-x-3.5 gap-y-2 text-sm text-muted-foreground">
             {trustRating && trustCount && (
               <>
@@ -171,6 +176,18 @@ export function Hero({ headline, subhead, trustRating, trustCount }: HeroProps) 
                 <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
               </>
             )}
+            <span>Live over video with a certified teacher in India</span>
+            <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
+            <span>60 min</span>
+            {priceFrom ? (
+              <>
+                <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
+                <Link href="/pricing" className="transition-colors hover:text-foreground">
+                  From {priceFrom} a session
+                </Link>
+              </>
+            ) : null}
+            <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
             <span>No subscription</span>
           </div>
         </div>
