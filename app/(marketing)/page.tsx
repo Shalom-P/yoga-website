@@ -6,6 +6,7 @@ import { TestimonialWall } from "@/components/marketing/TestimonialWall";
 import { PricingTeaser } from "@/components/marketing/PricingTeaser";
 import { FAQ } from "@/components/marketing/FAQ";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { LandingPageView } from "@/components/marketing/LandingPageView";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { faqPageJsonLd } from "@/lib/seo/structuredData";
@@ -46,6 +47,65 @@ export const metadata = {
     ],
   },
 };
+
+/** Where the home page hands on to. Anchor text names the destination's subject. */
+const WHERE_TO_START = [
+  {
+    href: "/private-online-yoga-classes",
+    label: "Private 1:1 online yoga classes",
+    note: "What a live one-to-one session is, and how it differs from an app or a group stream.",
+  },
+  {
+    href: "/online-yoga-classes-india",
+    label: "Private 1:1 online yoga classes in India",
+    note: "Morning and evening IST slots, rupee prices, no monthly subscription.",
+  },
+  {
+    href: "/guides/what-private-online-yoga-costs",
+    label: "What a private online yoga class costs",
+    note: "Per-session prices for single sessions and packs of five or ten.",
+  },
+  {
+    href: "/guides/private-vs-group-online-yoga",
+    label: "1:1 versus group classes like Cult.fit",
+    note: "Private teacher, group live class or a tutor marketplace: which suits you.",
+  },
+  {
+    href: "/doctor-led-yoga-therapy",
+    label: "Doctor-led yoga therapy",
+    note: "Teachers with yoga and naturopathy degrees, and what that means for your session.",
+  },
+  {
+    href: "/classes/pcos",
+    label: "1:1 yoga for PCOS",
+    note: "An active routine, rest and comfort through your cycle.",
+  },
+  {
+    href: "/classes/prenatal",
+    label: "1:1 prenatal yoga",
+    note: "Adapted to your trimester, once your doctor or midwife has cleared you.",
+  },
+  {
+    href: "/classes/geriatric",
+    label: "Chair yoga for elderly parents at home",
+    note: "Slow, supportive sessions with seated and chair-supported options.",
+  },
+  {
+    href: "/classes/diabetes",
+    label: "1:1 yoga for diabetes",
+    note: "Gentle movement and breathwork alongside your doctor's care.",
+  },
+  {
+    href: "/classes/hypertension",
+    label: "1:1 yoga for high blood pressure",
+    note: "Calm, steady practice with the poses to avoid left out.",
+  },
+  {
+    href: "/classes/pain-relief",
+    label: "1:1 yoga for back and neck pain",
+    note: "Mobility and posture work inside a comfortable range.",
+  },
+];
 
 export default async function LandingPage() {
   const [teachers, categories, plans, reviews, settings] = await Promise.all([
@@ -90,6 +150,15 @@ export default async function LandingPage() {
         priceFrom={priceFrom}
       />
       <HowItWorks />
+      {/* Body links to the pages that answer the buyer questions. Until now
+          they were reachable from here only through the footer, which
+          Googlebot follows slowly (Search Console, 20 Oct 2026: most of these
+          URLs "unknown to Google"). Server-rendered, descriptive anchors. */}
+      <RelatedLinks
+        title="Where to start."
+        items={WHERE_TO_START}
+        cta={{ href: "/classes", label: "All nine conditions we teach for" }}
+      />
       <PracticeSection categories={categories} />
       <TeacherGrid teachers={teachers} />
       <PricingTeaser plans={plans} />
