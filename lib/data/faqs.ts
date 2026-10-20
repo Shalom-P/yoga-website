@@ -2,7 +2,22 @@
 // rendered by the client <FAQ> accordion AND read by server components to emit
 // FAQPage JSON-LD structured data (see app/(marketing)/page.tsx etc.).
 
-export type Faq = { q: string; a: string };
+export type FaqLink = { href: string; label: string };
+
+/**
+ * One question and answer. `links` are rendered after `a` as one closing
+ * sentence ("Label one and label two."), each label an anchor, so a visitor
+ * reads the same words a crawler finds in the FAQPage JSON-LD (see
+ * `faqAnswerText` in lib/seo/structuredData.ts, which builds that sentence
+ * from the same fields). Keep the labels descriptive of the destination.
+ */
+export type Faq = { q: string; a: string; links?: FaqLink[] };
+
+/** The visible closing sentence for `links`, or "" when there are none. */
+export function faqLinksSentence(links: FaqLink[] | undefined): string {
+  if (!links?.length) return "";
+  return `${links.map((l) => l.label).join(" and ")}.`;
+}
 
 export const FAQS: Faq[] = [
   {
