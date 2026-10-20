@@ -12,7 +12,7 @@ import type {
   ItemList,
   Article,
 } from "schema-dts";
-import type { Faq } from "@/lib/data/faqs";
+import { faqLinksSentence, type Faq } from "@/lib/data/faqs";
 import type { Teacher, ClassCategory, Plan, PlanPrice } from "@/lib/supabase/types";
 
 const ORG_NAME = "My Yoga Classes";
@@ -38,6 +38,16 @@ const ORG_REF = { "@type": "Organization", "@id": ORG_ID, name: ORG_NAME } as co
 // keep both in sync through this constant.
 export const INSTAGRAM_URL = "https://www.instagram.com/myyogaclasses.fit/";
 
+/**
+ * The answer as the visitor reads it: the prose, then the closing sentence of
+ * link labels that <FaqAnswer> renders as anchors. The JSON-LD must say what
+ * the page says, so the two are built from the same fields.
+ */
+export function faqAnswerText(f: Faq): string {
+  const links = faqLinksSentence(f.links);
+  return links ? `${f.a} ${links}` : f.a;
+}
+
 export function faqPageJsonLd(faqs: Faq[]): WithContext<FAQPage> {
   return {
     "@context": "https://schema.org",
@@ -45,7 +55,7 @@ export function faqPageJsonLd(faqs: Faq[]): WithContext<FAQPage> {
     mainEntity: faqs.map((f) => ({
       "@type": "Question",
       name: f.q,
-      acceptedAnswer: { "@type": "Answer", text: f.a },
+      acceptedAnswer: { "@type": "Answer", text: faqAnswerText(f) },
     })),
   };
 }

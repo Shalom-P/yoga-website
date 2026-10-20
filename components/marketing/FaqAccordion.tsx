@@ -7,6 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import type { Faq } from "@/lib/data/faqs";
+import { FaqAnswer } from "@/components/marketing/FaqAnswer";
 
 /**
  * A page-specific FAQ accordion. The shared <FAQ> renders the site-wide FAQS;
@@ -28,7 +29,7 @@ export function FaqAccordion({ faqs }: { faqs: Faq[] }) {
             {f.q}
           </AccordionTrigger>
           <AccordionContent className="pb-5 text-muted-foreground text-pretty">
-            {f.a}
+            <FaqAnswer faq={f} />
           </AccordionContent>
         </AccordionItem>
       ))}

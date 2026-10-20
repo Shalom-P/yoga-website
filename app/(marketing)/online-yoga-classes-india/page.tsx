@@ -41,13 +41,47 @@ const STATIC_FAQS: Faq[] = [
     q: "Who are the teachers?",
     a: "Every teacher holds a degree in yoga and naturopathy from an Indian university, such as the BNYS (Bachelor of Naturopathy and Yogic Sciences) and in some cases a postgraduate MD in yoga, plus a Yoga Alliance registration. They are not MBBS doctors, and yoga supports your doctor's care rather than replacing it. Each teacher's qualifications are on their profile.",
   },
+  // One entry per condition, phrased the way a student in India asks it. These
+  // replaced a single lumped "PCOS, diabetes, blood pressure, back pain or
+  // pregnancy?" entry that linked nowhere; each now hands on to its page.
   {
-    q: "Is it suitable for senior citizens at home?",
-    a: "Yes. Sessions for older adults are slow and supportive, with seated and chair-supported options, and happen at home on a laptop, tablet or phone. Ask your doctor before starting if you have a heart condition, a recent fall or surgery.",
+    q: "Is there a 1:1 online yoga teacher for PCOS in India?",
+    a: "Yes. A PCOS session is live, one-to-one and 60 minutes over video, with gentle movement, breathwork and rest built around how you feel that week rather than a fixed routine, alongside the care your doctor provides. Your teacher is a yoga and naturopathy graduate based in India, and you keep the same teacher from week to week.",
+    links: [{ href: "/classes/pcos", label: "Read about 1:1 yoga for PCOS" }],
   },
   {
-    q: "Can I get help for PCOS, diabetes, blood pressure, back pain or pregnancy?",
-    a: "Yes. Teachers adapt each session for these and other conditions, and each has its own page explaining what a session looks like. For pregnancy, practise only once your doctor or midwife has cleared you.",
+    q: "Can online yoga therapy help with type 2 diabetes and high blood pressure?",
+    a: "Yoga supports your doctor's care and never replaces it or your medication. Sessions are live, one-to-one and 60 minutes, paced gently around movement, calming breathwork and rest, with the poses to avoid for high blood pressure left out and the plan adapted to how you feel that day. Teachers hold a degree in yoga and naturopathy, so tell them your diagnosis and medication at the start.",
+    links: [
+      { href: "/classes/diabetes", label: "Read about 1:1 yoga for diabetes" },
+      { href: "/classes/hypertension", label: "1:1 yoga for high blood pressure" },
+    ],
+  },
+  {
+    q: "Do you teach chair yoga for elderly parents at home?",
+    a: "Yes. Sessions for older adults are live, one-to-one and 60 minutes, slow and supportive, with seated and chair-supported options for balance and everyday movement, at home on a laptop, tablet or phone. The teacher, a yoga and naturopathy graduate, adapts every pose to the person in front of them. Ask their doctor before starting after a heart condition, a recent fall or surgery.",
+    links: [{ href: "/classes/geriatric", label: "Read about 1:1 yoga for senior citizens" }],
+  },
+  {
+    q: "Is there prenatal 1:1 yoga online with a certified teacher?",
+    a: "Yes, once your doctor or midwife has cleared you. Prenatal sessions are live, one-to-one and 60 minutes, with gentle movement, breathwork and rest tailored to your trimester and adapted week to week as your body changes. Every teacher holds a university degree in yoga and naturopathy and knows which poses to leave out in pregnancy.",
+    links: [
+      { href: "/classes/prenatal", label: "Read about 1:1 prenatal yoga" },
+      { href: "/classes/prenatal/poses-to-avoid", label: "the poses to avoid in pregnancy" },
+    ],
+  },
+  {
+    q: "Can doctor-led yoga therapy help chronic back pain?",
+    a: "Sessions for back and neck pain are live, one-to-one and 60 minutes, built from easy stretching, mobility and posture work kept inside a comfortable, pain-free range, and changed after your teacher watches how you move. Teachers hold a BNYS or similar degree in yoga and naturopathy; they are not MBBS doctors, and the practice sits alongside any care from your doctor or physiotherapist.",
+    links: [
+      { href: "/doctor-led-yoga-therapy", label: "What doctor-led yoga therapy means here" },
+      { href: "/classes/pain-relief", label: "1:1 yoga for back and neck pain" },
+    ],
+  },
+  {
+    q: "Can a beginner get posture correction in a 1:1 online class?",
+    a: "Yes, and it is the main reason to choose one-to-one over an app or a group class. For the full 60 minutes the teacher watches only you, corrects your alignment as you move, and starts from your level rather than the room's. Most students here are beginners or returning after a long gap.",
+    links: [{ href: "/private-online-yoga-classes", label: "How a private online yoga class works" }],
   },
   {
     q: "How is this different from a group live class?",

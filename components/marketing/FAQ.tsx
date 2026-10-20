@@ -7,9 +7,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { motion } from "motion/react";
-import { FAQS } from "@/lib/data/faqs";
+import { FAQS, type Faq } from "@/lib/data/faqs";
+import { FaqAnswer } from "@/components/marketing/FaqAnswer";
 
-export function FAQ() {
+/**
+ * The site-wide accordion. Defaults to FAQS (/faq, /pricing); the home page
+ * passes its own list so it stops duplicating the pricing page's questions.
+ * Whoever passes `faqs` must feed the same list to faqPageJsonLd().
+ */
+export function FAQ({ faqs = FAQS }: { faqs?: Faq[] }) {
   return (
     <section id="faq" className="px-6 pb-[110px] pt-10">
       <div className="mx-auto max-w-[760px]">
@@ -29,7 +35,7 @@ export function FAQ() {
         </motion.div>
 
         <Accordion className="flex flex-col gap-2.5">
-          {FAQS.map((f, i) => (
+          {faqs.map((f, i) => (
             <AccordionItem
               key={i}
               value={`faq-${i}`}
@@ -39,7 +45,7 @@ export function FAQ() {
                 {f.q}
               </AccordionTrigger>
               <AccordionContent className="text-muted-foreground pb-5 text-pretty">
-                {f.a}
+                <FaqAnswer faq={f} />
               </AccordionContent>
             </AccordionItem>
           ))}

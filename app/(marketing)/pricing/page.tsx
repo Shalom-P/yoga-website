@@ -3,6 +3,7 @@ import { PackPriceTable } from "@/components/marketing/PackPriceTable";
 import { PageHeader } from "@/components/marketing/PageHeader";
 import { FAQ } from "@/components/marketing/FAQ";
 import { FinalCTA } from "@/components/marketing/FinalCTA";
+import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { faqPageJsonLd, offersJsonLd, breadcrumbJsonLd } from "@/lib/seo/structuredData";
 import { FAQS } from "@/lib/data/faqs";
@@ -42,6 +43,32 @@ export default async function PricingPage() {
       {/* Server-rendered, so every currency the Product JSON-LD above offers is
           visible in the cached HTML, not only the browser-resolved one. */}
       <PackPriceTable plans={plans} />
+      {/* Body links (not footer) to the pages that explain the price. */}
+      <RelatedLinks
+        title="Before you choose a pack."
+        items={[
+          {
+            href: "/guides/what-private-online-yoga-costs",
+            label: "What a private online yoga class costs",
+            note: "How the per-session price compares with apps, group classes and tutor marketplaces.",
+          },
+          {
+            href: "/private-online-yoga-classes",
+            label: "Private 1:1 online yoga classes",
+            note: "What a live 60-minute one-to-one session is and who it suits.",
+          },
+          {
+            href: "/online-yoga-classes-india",
+            label: "Private 1:1 online yoga classes in India",
+            note: "Rupee prices, UPI and card payment, morning and evening IST slots.",
+          },
+          {
+            href: "/guides/private-vs-group-online-yoga",
+            label: "1:1 versus group classes like Cult.fit",
+            note: "When a private teacher is worth the difference, and when it is not.",
+          },
+        ]}
+      />
       <FAQ />
       <FinalCTA headline="Book your first 1:1 session." />
     </>
