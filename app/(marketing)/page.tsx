@@ -10,7 +10,7 @@ import { RelatedLinks } from "@/components/marketing/RelatedLinks";
 import { LandingPageView } from "@/components/marketing/LandingPageView";
 import { JsonLd } from "@/components/shared/JsonLd";
 import { faqPageJsonLd } from "@/lib/seo/structuredData";
-import { FAQS } from "@/lib/data/faqs";
+import { homeFaqs } from "@/lib/data/faqs";
 import { perSessionRange } from "@/components/marketing/PackPriceTable";
 import { formatMoney } from "@/lib/i18n/money";
 import {
@@ -137,10 +137,13 @@ export default async function LandingPage() {
   // price under another symbol. Hidden when nothing is priced.
   const inr = perSessionRange(plans, "INR");
   const priceFrom = inr ? formatMoney(inr.low, "INR") : null;
+  // The home page's own questions; <FAQ faqs> below renders the same list, so
+  // the visible accordion and the FAQPage JSON-LD cannot drift apart.
+  const faqs = homeFaqs({ priceFrom });
 
   return (
     <>
-      <JsonLd data={faqPageJsonLd(FAQS)} />
+      <JsonLd data={faqPageJsonLd(faqs)} />
       <LandingPageView />
       <Hero
         headline={headline}
@@ -163,7 +166,7 @@ export default async function LandingPage() {
       <TeacherGrid teachers={teachers} />
       <PricingTeaser plans={plans} />
       <TestimonialWall reviews={reviews} />
-      <FAQ />
+      <FAQ faqs={faqs} />
       <FinalCTA headline={finalHeadline} />
     </>
   );
