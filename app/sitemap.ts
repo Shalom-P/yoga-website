@@ -37,7 +37,7 @@ const STATIC_PAGES: Record<string, string> = {
   "/guides/what-private-online-yoga-costs": "2026-10-18",
   "/online-yoga-classes-usa": "2026-10-10",
   "/online-yoga-classes-uae": "2026-10-16",
-  "/online-yoga-classes-india": "2026-10-18",
+  "/online-yoga-classes-india": "2026-10-20",
   "/guides/private-vs-group-online-yoga": "2026-10-18",
   "/classes/prenatal/poses-to-avoid": "2026-10-16",
   "/legal/privacy": "2026-10-17",
