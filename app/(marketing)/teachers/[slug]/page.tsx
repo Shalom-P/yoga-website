@@ -86,6 +86,17 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
     }));
 
   const teacherUrl = `${siteUrl}/teachers/${t.slug}`;
+  // `certifications` is jsonb (typed unknown); keep only non-empty strings, as
+  // /doctor-led-yoga-therapy does.
+  const certs = Array.isArray(t.certifications)
+    ? t.certifications.filter((c): c is string => typeof c === "string" && c.trim() !== "")
+    : [];
+  // The clinical-route paragraph is only true for a teacher whose own record
+  // shows a yoga/naturopathy doctor's training. Anyone else gets their
+  // credentials listed and nothing more.
+  const clinical = /\b(dr\.?|doctor|bnys|md|naturopath\w*|yogic sciences)\b/i.test(
+    [t.display_name, t.headline ?? "", ...certs].join(" "),
+  );
 
   return (
     <>
@@ -184,6 +195,71 @@ export default async function TeacherPage({ params }: { params: Promise<{ slug: 
         </div>
       </div>
     </article>
+    {/* Teacher bios are a few sentences of DB text, which left these pages at
+        150-280 words. Everything below is composed from the teacher's own record
+        (degrees, years, specialties, languages, conditions), so it stays true
+        per teacher rather than repeating marketing copy. */}
+    <section className="px-7 pb-20">
+      <div className="mx-auto max-w-3xl space-y-5 text-lg text-foreground/85 text-pretty">
+        <h2 className="text-3xl tracking-tight md:text-4xl">
+          {firstName(t.display_name)}&apos;s training.
+        </h2>
+        {certs.length > 0 ? (
+          <ul className="list-disc space-y-1 pl-6">
+            {certs.map((c) => (
+              <li key={c}>{c}</li>
+            ))}
+          </ul>
+        ) : t.headline ? (
+          <p>{t.headline}.</p>
+        ) : null}
+        {clinical && (
+        <p>
+          {t.display_name}{" "}trained in yoga through India&apos;s clinical route: a university
+          stream regulated by the Ministry of AYUSH, with anatomy, physiology and supervised
+          clinical work, rather than a short teacher-training course
+          {t.years_experience ? `, and has ${t.years_experience} years of experience` : ""}.
+          This is not an MBBS medical degree: {firstName(t.display_name)}{" "}will not diagnose you
+          or advise on medication, and a session supports your own doctor&apos;s care rather
+          than replacing it. What each degree means is set out on{" "}
+          <Link href="/doctor-led-yoga-therapy#qualifications" className="font-medium text-primary hover:underline">
+            our doctor-led yoga therapy page
+          </Link>
+          .
+        </p>
+        )}
+
+        <h2 className="pt-6 text-3xl tracking-tight md:text-4xl">
+          Your first session with {firstName(t.display_name)}.
+        </h2>
+        <p>
+          Sessions are 60 minutes, live over video, with {firstName(t.display_name)} watching
+          only you. The first one starts with a conversation about your goals, your health
+          and anything your doctor has told you about exercise, then moves into a practice
+          built around that
+          {t.specialties.length > 0
+            ? `, drawing on ${firstName(t.display_name)}'s focus on ${t.specialties
+                .slice(0, 3)
+                .join(", ")
+                .toLowerCase()}`
+            : ""}
+          .
+        </p>
+        <p>
+          {firstName(t.display_name)} teaches from India
+          {t.languages.length > 0 ? ` in ${t.languages.join(", ")}` : ""}, and every slot on
+          the booking page is shown in your own time zone, so you pick a time that fits your
+          day without converting from IST. If you have medical reports you want{" "}
+          {firstName(t.display_name)} to see, you can share them privately from your
+          dashboard after booking, one document at a time, and revoke access whenever you
+          like. Sessions come in one-time packs with no subscription; see{" "}
+          <Link href="/pricing" className="font-medium text-primary hover:underline">
+            prices for 1:1 online yoga
+          </Link>
+          .
+        </p>
+      </div>
+    </section>
     {worksWith.length > 0 && (
       <RelatedLinks
         title={`What ${firstName(t.display_name)} works with.`}

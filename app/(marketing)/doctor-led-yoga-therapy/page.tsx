@@ -185,7 +185,7 @@ export default async function DoctorLedYogaTherapyPage() {
         </section>
       )}
 
-      <section className="px-7 py-20">
+      <section id="qualifications" className="scroll-mt-28 px-7 py-20">
         <div className="mx-auto max-w-3xl">
           <h2 className="text-3xl tracking-tight text-balance md:text-4xl">The qualifications, decoded.</h2>
           <dl className="mt-8 space-y-6">
