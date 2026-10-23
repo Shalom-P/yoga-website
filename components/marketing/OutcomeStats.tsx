@@ -9,7 +9,7 @@ export function OutcomeStats({ rating }: { rating?: string }) {
     { value: "1:1", label: "Every class is personalised" },
     rating
       ? { value: `${rating}★`, label: "Average teacher rating" }
-      : { value: "200hr+", label: "Certified teachers" },
+      : { value: "Dr", label: "Clinically trained teachers" },
     { value: "60min", label: "Every live session" },
     { value: "7 days", label: "A week of slots to pick" },
   ];

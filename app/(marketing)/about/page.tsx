@@ -67,7 +67,7 @@ export default async function AboutPage() {
           <p>
             Every teacher holds a formal qualification in yoga and naturopathy from an
             Indian university, such as the BNYS (Bachelor of Naturopathy and Yogic
-            Sciences), alongside their Yoga Alliance registration, and has years of
+            Sciences), and has years of
             one-to-one teaching behind them. In India, yoga and naturopathy is a regulated
             stream of medicine under the Ministry of AYUSH; these are not MBBS medical
             doctors, and a session never replaces your own doctor&apos;s care. Each

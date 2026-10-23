@@ -62,10 +62,6 @@ const CREDENTIAL_GLOSSARY = [
     term: "Doctor of Yogic Sciences",
     body: "A doctoral qualification in yogic sciences, the study of yoga practice and its effects on the body, taken after a postgraduate degree.",
   },
-  {
-    term: "Yoga Alliance RYT",
-    body: "The international teaching registration most studios ask for. Every teacher here holds it in addition to their degree, not instead of it.",
-  },
 ];
 
 function certifications(raw: unknown): string[] {
@@ -123,8 +119,7 @@ export default async function DoctorLedYogaTherapyPage() {
               That is why we chose teachers with a medical-style training in yoga rather than
               a weekend certificate. In India, yoga and naturopathy is a regulated stream of
               medicine under the Ministry of AYUSH, with university degrees, hospital
-              internships and postgraduate study. Our teachers came through that route, and
-              then added their Yoga Alliance registration on top.
+              internships and postgraduate study. Our teachers came through that route.
             </p>
             <p>
               Two things that training does not change. First, none of this is a treatment. A

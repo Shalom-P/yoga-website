@@ -69,7 +69,7 @@ const FAQS: Faq[] = [
   },
   {
     q: "Are the teachers qualified?",
-    a: "Every teacher holds a university degree in yoga and naturopathy from India, plus Yoga Alliance registration. They adapt sessions for conditions like back pain, diabetes, high blood pressure, PCOS and pregnancy, alongside, never instead of, your own doctor's care.",
+    a: "Every teacher holds a university qualification in yoga from India, such as a BNYS (Bachelor of Naturopathy and Yogic Sciences), an MD in clinical yoga or a Doctor of Yogic Sciences. They adapt sessions for conditions like back pain, diabetes, high blood pressure, PCOS and pregnancy, alongside, never instead of, your own doctor's care.",
   },
   {
     q: "I grew up with yoga in India. Is this the real thing?",

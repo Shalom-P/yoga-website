@@ -199,7 +199,7 @@ export default async function PrivateOnlineYogaPage() {
               <h3 className="mt-6 mb-3 text-lg">Who teaches</h3>
               <p className="text-sm text-muted-foreground text-pretty">
                 {teachers.length > 0
-                  ? `${teachers.map((t) => t.display_name).join(", ")}: yoga and naturopathy doctors, Yoga Alliance certified, teaching from India.`
+                  ? `${teachers.map((t) => t.display_name).join(", ")}: clinically trained in yoga and naturopathy, teaching from India.`
                   : "Certified teachers from India, trained in yoga and naturopathy."}{" "}
                 <Link href="/doctor-led-yoga-therapy" className="underline underline-offset-4 hover:text-foreground">
                   Why that training matters
