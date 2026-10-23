@@ -25,20 +25,20 @@ export const revalidate = 3600;
 // modification time because their content is that row.
 const STATIC_PAGES: Record<string, string> = {
   "/": "2026-10-20",
-  "/about": "2026-10-19",
+  "/about": "2026-10-23",
   "/classes": "2026-10-16",
-  "/pricing": "2026-10-20",
+  "/pricing": "2026-10-23",
   "/teachers": "2026-10-10",
   "/reviews": "2026-10-16",
   "/faq": "2026-09-19",
-  "/contact": "2026-06-21",
+  "/contact": "2026-10-23",
   "/private-online-yoga-classes": "2026-10-16",
   "/doctor-led-yoga-therapy": "2026-10-16",
   "/guides/what-private-online-yoga-costs": "2026-10-18",
   "/online-yoga-classes-usa": "2026-10-10",
   "/online-yoga-classes-uae": "2026-10-16",
   "/online-yoga-classes-india": "2026-10-20",
-  "/guides/private-vs-group-online-yoga": "2026-10-18",
+  "/guides/private-vs-group-online-yoga": "2026-10-23",
   "/classes/prenatal/poses-to-avoid": "2026-10-16",
   "/legal/privacy": "2026-10-17",
   "/legal/terms": "2026-10-16",
@@ -48,7 +48,9 @@ const STATIC_PAGES: Record<string, string> = {
 // Condition pages render lib/data/condition-pages/<slug>.json through
 // ConditionLanding, so their date is the later of the two changing. The DB
 // row's updated_at (still June for most) says nothing about the page.
-const CONDITIONS_UPDATED = "2026-10-18";
+const CONDITIONS_UPDATED = "2026-10-23";
+// Last change to the /teachers/[slug] template itself (not the DB row).
+const TEACHER_PAGE_UPDATED = "2026-10-23";
 
 const STATIC_ROUTES: MetadataRoute.Sitemap = Object.entries(STATIC_PAGES).map(
   ([path, updated]) => ({ url: `${BASE_URL}${path}`, lastModified: updated }),
@@ -94,7 +96,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       if (!teacher.slug) continue;
       teachers.push({
         url: `${BASE_URL}/teachers/${teacher.slug}`,
-        lastModified: teacher.updated_at ? new Date(teacher.updated_at) : undefined,
+        // The page changes when the teacher's row does or when the template does.
+        lastModified: new Date(
+          Math.max(
+            teacher.updated_at ? new Date(teacher.updated_at).getTime() : 0,
+            Date.parse(TEACHER_PAGE_UPDATED),
+          ),
+        ),
       });
     }
 

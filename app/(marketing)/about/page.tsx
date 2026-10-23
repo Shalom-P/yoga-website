@@ -27,7 +27,7 @@ export default async function AboutPage() {
     <>
       <PageHeader
         eyebrow="Our story"
-        title={<>Old practice. New room. <em>No bullsh*t.</em></>}
+        title={<>Doctor-led 1:1 yoga, <em>taught live from India.</em></>}
         align="left"
       />
 

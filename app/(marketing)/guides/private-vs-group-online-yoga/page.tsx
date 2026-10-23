@@ -14,9 +14,9 @@ const UPDATED = "2026-10-18";
 
 export const revalidate = 3600;
 export const metadata = {
-  title: "Private 1:1 vs Group Online Yoga vs Tutor Marketplaces",
+  title: "Private vs Group Online Yoga vs Marketplaces",
   description:
-    "Choosing online yoga: a personal 1:1 teacher, group live classes on a fitness app, or a teacher hired on a tutor marketplace. What each is good for, and the questions to ask.",
+    "A personal 1:1 teacher, live group classes on an app, or a teacher from a tutor marketplace: what each is good for, and the questions to ask first.",
   alternates: { canonical: "/guides/private-vs-group-online-yoga" },
 };
 
