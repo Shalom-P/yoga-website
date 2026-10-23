@@ -347,7 +347,7 @@ export function TeacherFormDialog({ open, onOpenChange, teacher, redirectAfterCr
                 value={draft.certifications}
                 onChange={(e) => setDraft({ ...draft, certifications: e.target.value })}
                 rows={3}
-                placeholder={"RYT-200 (Yoga Alliance)\nAyurvedic Yoga Specialist"}
+                placeholder={"Bachelor of Naturopathy and Yogic Sciences\nMD in Clinical Yoga"}
                 className="mt-1.5"
               />
             </div>

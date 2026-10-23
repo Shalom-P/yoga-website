@@ -39,7 +39,7 @@ const STATIC_FAQS: Faq[] = [
   },
   {
     q: "Who are the teachers?",
-    a: "Every teacher holds a degree in yoga and naturopathy from an Indian university, such as the BNYS (Bachelor of Naturopathy and Yogic Sciences) and in some cases a postgraduate MD in yoga, plus a Yoga Alliance registration. They are not MBBS doctors, and yoga supports your doctor's care rather than replacing it. Each teacher's qualifications are on their profile.",
+    a: "Every teacher holds a degree in yoga and naturopathy from an Indian university, such as the BNYS (Bachelor of Naturopathy and Yogic Sciences) and in some cases a postgraduate MD in yoga. They are not MBBS doctors, and yoga supports your doctor's care rather than replacing it. Each teacher's qualifications are on their profile.",
   },
   // One entry per condition, phrased the way a student in India asks it. These
   // replaced a single lumped "PCOS, diabetes, blood pressure, back pain or

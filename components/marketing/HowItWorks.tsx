@@ -7,7 +7,7 @@ const STEPS = [
   {
     n: "01",
     title: "Match with your teacher",
-    body: "Tell us your level and goals. We'll pair you with the right 200-hr certified teacher from India, or pick your own.",
+    body: "Tell us your level and goals. We'll pair you with the right clinically trained teacher from India, or pick your own.",
     href: "/teachers",
     cta: "Meet the teachers →",
   },

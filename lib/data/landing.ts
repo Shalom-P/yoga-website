@@ -38,7 +38,7 @@ const MOCK_TEACHERS: Teacher[] = [
     id: "t2", profile_id: null, slug: "rohan-patel",
     display_name: "Rohan Patel",
     headline: "Vinyasa & Strength · 9 years",
-    bio: "Rohan is a 500-hour Yoga Alliance teacher who blends strength training with breath-led flow.",
+    bio: "Rohan blends strength training with breath-led flow.",
     avatar_url: null, cover_image_url: null, intro_video_url: null,
     specialties: ["Vinyasa", "Strength", "Athletes"],
     languages: ["English", "Hindi", "Gujarati"],

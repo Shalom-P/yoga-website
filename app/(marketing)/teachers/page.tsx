@@ -43,7 +43,7 @@ export default async function TeachersPage() {
       <PageHeader
         eyebrow="Teachers"
         title={<>The humans on <em>the other end</em> of your mat.</>}
-        subhead="A small roster, chosen for clinical training rather than follower counts. Every teacher is Yoga Alliance certified and teaches live, one-to-one, from India."
+        subhead="A small roster, chosen for clinical training rather than follower counts. Every teacher holds a clinical qualification in yoga and teaches live, one-to-one, from India."
       />
 
       {teachers.length === 0 ? (
@@ -65,7 +65,7 @@ export default async function TeachersPage() {
             Most online yoga platforms list hundreds of teachers and let you sort by rating. We
             do the opposite. We keep the roster small and choose for training: every teacher
             here holds a formal qualification in yoga and naturopathy from an Indian
-            university, alongside their Yoga Alliance registration, and has years of
+            university and has years of
             one-to-one teaching behind them.
           </p>
           <p>
