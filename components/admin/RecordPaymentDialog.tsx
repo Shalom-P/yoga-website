@@ -52,6 +52,23 @@ const RAIL_OPTIONS: { value: Rail; label: string; sub: string }[] = [
   { value: "manual", label: "Other (cash, UPI)", sub: "An offline receipt" },
 ];
 
+/** Field ids in the order they appear, so the first problem is the first one on screen. */
+const FIELD_ORDER = [
+  "rzp_id",
+  "record_amount",
+  "record_paid_on",
+  "record_reference",
+  "record_customer",
+  "record_plan",
+  "record_note",
+] as const;
+type FieldId = (typeof FIELD_ORDER)[number];
+
+function FieldError({ message }: { message?: string }) {
+  if (!message) return null;
+  return <p className="mt-1.5 text-xs text-destructive">{message}</p>;
+}
+
 type Lookup =
   | { state: "idle" }
   | { state: "loading" }
@@ -111,6 +128,7 @@ export function RecordPaymentDialog({
   const [submitting, setSubmitting] = useState(false);
   /** True once the server answers 409 already_recorded. Needs a link, not a toast. */
   const [duplicate, setDuplicate] = useState(false);
+  const [showErrors, setShowErrors] = useState(false);
 
   function reset() {
     setRail("razorpay");
@@ -126,6 +144,7 @@ export function RecordPaymentDialog({
     setReference("");
     setSubmitting(false);
     setDuplicate(false);
+    setShowErrors(false);
   }
 
   function close() {
@@ -177,25 +196,53 @@ export function RecordPaymentDialog({
 
   const referenceIsReserved = /^MYC-/i.test(reference.trim());
 
-  const step1Ready =
-    rail !== "razorpay" ||
-    (found !== null && found.found && !notCaptured && existing === null);
+  /**
+   * Everything still standing between the admin and a valid submit, keyed by
+   * the id of the field to highlight, in on-screen order. The button stays
+   * pressable: a disabled button with no reason given is what left admins
+   * stuck on this dialog, so a press with problems outstanding marks each one
+   * and moves focus to the first instead.
+   */
+  const problems: Partial<Record<FieldId, string>> = {};
+  if (rail === "razorpay") {
+    if (existing) problems.rzp_id = "This payment is already recorded.";
+    else if (notCaptured) problems.rzp_id = "Razorpay has not captured this payment yet.";
+    else if (lookup.state === "done" && !lookup.result.found)
+      problems.rzp_id = "Razorpay has no payment with that id.";
+    else if (!found) problems.rzp_id = "Paste the Razorpay payment id and press Look up.";
+  } else {
+    if (amountMinor === null || amountMinor <= 0) problems.record_amount = "Enter the amount received.";
+    if (paidOn.length !== 10) problems.record_paid_on = "Pick the day the money landed.";
+    if (referenceIsReserved)
+      problems.record_reference = "Use your own receipt number, not an MYC reference.";
+    else if (reference.trim().length < 3)
+      problems.record_reference = "Enter a receipt or invoice number (at least 3 characters).";
+  }
+  if (!customer) problems.record_customer = "Pick the customer this payment belongs to.";
+  if (grantCredits && (pack === null || pack.session_credits <= 0))
+    problems.record_plan = "Pick a pack, or untick releasing the pack's prepaid sessions.";
+  if (note.trim().length < 3)
+    problems.record_note = "Add a short note on why this is entered by hand (at least 3 characters).";
 
-  const canSubmit =
-    !submitting &&
-    step1Ready &&
-    customer !== null &&
-    note.trim().length >= 3 &&
-    (!grantCredits || (pack !== null && pack.session_credits > 0)) &&
-    (rail === "razorpay" ||
-      (reference.trim().length >= 3 &&
-        !referenceIsReserved &&
-        amountMinor !== null &&
-        amountMinor > 0 &&
-        paidOn.length === 10));
+  const problemIds = FIELD_ORDER.filter((f) => problems[f]);
+  const canSubmit = !submitting && problemIds.length === 0;
+  /** Only once a submit has been tried, so a fresh dialog is not a wall of red. */
+  const errorFor = (f: FieldId) => (showErrors ? problems[f] : undefined);
 
   async function submit() {
-    if (!customer || !canSubmit) return;
+    if (submitting) return;
+    if (!customer || problemIds.length > 0) {
+      setShowErrors(true);
+      const first = problemIds[0];
+      const more = problemIds.length - 1;
+      toast.error(
+        `${problems[first]}${more > 0 ? ` ${more} more field${more === 1 ? "" : "s"} need${more === 1 ? "s" : ""} attention.` : ""}`,
+      );
+      const el = document.getElementById(first);
+      el?.scrollIntoView({ block: "center", behavior: "smooth" });
+      el?.focus({ preventScroll: true });
+      return;
+    }
     setSubmitting(true);
     setDuplicate(false);
 
@@ -330,6 +377,7 @@ export function RecordPaymentDialog({
                     autoComplete="off"
                     spellCheck={false}
                     className="font-mono"
+                    aria-invalid={errorFor("rzp_id") ? true : undefined}
                     onChange={(e) => {
                       setRazorpayId(e.target.value);
                       setLookup({ state: "idle" });
@@ -367,6 +415,8 @@ export function RecordPaymentDialog({
                     )}
                   </Button>
                 </div>
+                {/* The lookup callouts below already explain every other failure. */}
+                {lookup.state === "idle" && <FieldError message={errorFor("rzp_id")} />}
 
                 {lookup.state === "error" && (
                   <Callout tone="amber">{friendlyAdminError(lookup.code)}</Callout>
@@ -447,7 +497,9 @@ export function RecordPaymentDialog({
                       setAmountMinor(raw === "" ? null : Math.round((Number(raw) || 0) * MINOR_UNITS));
                     }}
                     className="mt-1.5"
+                    aria-invalid={errorFor("record_amount") ? true : undefined}
                   />
+                  <FieldError message={errorFor("record_amount")} />
                 </div>
                 <div>
                   <Label htmlFor="record_currency">Currency</Label>
@@ -480,7 +532,9 @@ export function RecordPaymentDialog({
                     value={paidOn}
                     onChange={(e) => setPaidOn(e.target.value)}
                     className="mt-1.5"
+                    aria-invalid={errorFor("record_paid_on") ? true : undefined}
                   />
+                  <FieldError message={errorFor("record_paid_on")} />
                 </div>
                 <div>
                   <LabelWithHint
@@ -495,12 +549,15 @@ export function RecordPaymentDialog({
                     onChange={(e) => setReference(e.target.value)}
                     placeholder="e.g. INV-2026-118"
                     className="mt-1.5 font-mono"
+                    aria-invalid={errorFor("record_reference") || referenceIsReserved ? true : undefined}
                   />
-                  {referenceIsReserved && (
+                  {referenceIsReserved ? (
                     <p className="mt-1.5 text-xs text-destructive">
                       References starting with MYC are generated by the site. Use your own receipt
                       number.
                     </p>
+                  ) : (
+                    <FieldError message={errorFor("record_reference")} />
                   )}
                 </div>
               </div>
@@ -520,8 +577,14 @@ export function RecordPaymentDialog({
                   id="record_customer"
                   value={customer}
                   onValueChange={setCustomer}
+                  className={
+                    errorFor("record_customer")
+                      ? "border-destructive ring-3 ring-destructive/20 dark:border-destructive/50 dark:ring-destructive/40"
+                      : undefined
+                  }
                 />
               </div>
+              <FieldError message={errorFor("record_customer")} />
               {foundPayment?.email && (
                 <p className="mt-1.5 text-xs text-muted-foreground">
                   Razorpay has {foundPayment.email} on this payment.
@@ -544,8 +607,20 @@ export function RecordPaymentDialog({
             <div>
               <Label htmlFor="record_plan">Pack</Label>
               <Select value={planId || "__none__"} onValueChange={(v) => v && setPlanId(v === "__none__" ? "" : v)}>
-                <SelectTrigger id="record_plan" className="mt-1.5">
-                  <SelectValue />
+                <SelectTrigger
+                  id="record_plan"
+                  className="mt-1.5"
+                  aria-invalid={errorFor("record_plan") ? true : undefined}
+                >
+                  {/* Without a formatter Base UI prints the raw value, the plan's UUID. */}
+                  <SelectValue>
+                    {(v: string) => {
+                      const p = plans.find((x) => x.id === v);
+                      return p
+                        ? `${p.name} · ${p.session_credits} session${p.session_credits === 1 ? "" : "s"}`
+                        : "No pack";
+                    }}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__none__">No pack</SelectItem>
@@ -576,11 +651,12 @@ export function RecordPaymentDialog({
                 released.
               </p>
             )}
-            {grantCredits && !pack && (
+            {grantCredits && !pack && !errorFor("record_plan") && (
               <p className="text-xs text-[var(--myc-pill-amber-fg)]">
                 Pick a pack before releasing sessions.
               </p>
             )}
+            <FieldError message={errorFor("record_plan")} />
 
             <div>
               <LabelWithHint
@@ -596,7 +672,9 @@ export function RecordPaymentDialog({
                 placeholder="e.g. Webhook never fired, confirmed against the Razorpay dashboard."
                 rows={2}
                 className="mt-1.5"
+                aria-invalid={errorFor("record_note") ? true : undefined}
               />
+              <FieldError message={errorFor("record_note")} />
             </div>
           </section>
 
@@ -620,7 +698,12 @@ export function RecordPaymentDialog({
           <Button variant="outline" onClick={close} disabled={submitting}>
             Cancel
           </Button>
-          <Button onClick={() => void submit()} disabled={!canSubmit}>
+          <Button
+            onClick={() => void submit()}
+            disabled={submitting}
+            aria-disabled={!canSubmit || undefined}
+            className={canSubmit ? undefined : "opacity-60"}
+          >
             {submitting ? (
               <Loader2 className="size-4 animate-spin" />
             ) : effectiveAmount != null ? (
