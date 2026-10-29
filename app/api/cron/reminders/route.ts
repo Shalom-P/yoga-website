@@ -3,9 +3,13 @@ import "server-only";
 import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { hasMedicalDocuments } from "@/lib/medical/documents";
-import { sendBookingReminder } from "@/lib/email";
+import { sendBookingReminder, sendFirstBookingNudge } from "@/lib/email";
 import { notifyUser } from "@/lib/push/notify";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
+import {
+  FIRST_BOOKING_NUDGE_STAGES,
+  nudgeSignupWindow,
+} from "@/lib/booking/firstBookingNudge";
 
 // ---------------------------------------------------------------------------
 // Duplicate-send safety
@@ -157,6 +161,10 @@ export async function POST(req: Request): Promise<Response> {
     }
   }
 
+  // Sign-ups who never booked. Runs after the session reminders so a slow
+  // batch here can never delay an email about a class that is about to start.
+  const firstBookingNudges = await sendFirstBookingNudges(svc);
+
   // Flush pushes only after ALL emails are sent, bounded by a hard wall-clock
   // budget so APNs latency can never blow the function deadline. Awaited (not
   // fire-and-forget) because serverless runtimes may freeze pending work once
@@ -174,7 +182,92 @@ export async function POST(req: Request): Promise<Response> {
     ]);
   }
 
-  return Response.json({ ok: true, processed });
+  return Response.json({ ok: true, processed, firstBookingNudges });
+}
+
+// Nudges per stage per run. Each is an email send, so keep a backlog from
+// pinning the function past its timeout; the windows are wide enough that the
+// rest go out on the next 15-minute run.
+const NUDGE_BATCH_SIZE = 50;
+
+/**
+ * Emails customers who finished onboarding but have never booked, ~1h and
+ * ~24h after sign-up (windows in lib/booking/firstBookingNudge.ts). At most
+ * once per stage: `booking_nudge_1h_at` / `booking_nudge_24h_at` (0048) are
+ * claimed with a conditional UPDATE before the send, like the reminder
+ * columns above. If the email throws after the claim that nudge is lost,
+ * which beats sending it twice.
+ *
+ * Only complete profiles (name, phone, experience level, the same test as
+ * isProfileComplete) are nudged: an incomplete one cannot book until it
+ * finishes onboarding, so a "book now" link would only bounce. Any booking
+ * row, cancelled ones included, counts as having booked.
+ */
+async function sendFirstBookingNudges(
+  svc: ReturnType<typeof createSupabaseServiceClient>,
+): Promise<{ sent: number; error?: string }> {
+  const now = new Date();
+  let sent = 0;
+
+  for (const { stage } of FIRST_BOOKING_NUDGE_STAGES) {
+    const column = stage === "1h" ? "booking_nudge_1h_at" : "booking_nudge_24h_at";
+    const { from, to } = nudgeSignupWindow(stage, now);
+
+    const { data: candidates, error } = await svc
+      .from("profiles")
+      .select("id, email, full_name")
+      .eq("role", "customer")
+      .is(column, null)
+      .gte("created_at", from)
+      .lte("created_at", to)
+      .not("email", "is", null)
+      .not("full_name", "is", null)
+      .not("phone", "is", null)
+      .not("experience_level", "is", null)
+      .order("created_at", { ascending: true })
+      .limit(NUDGE_BATCH_SIZE);
+
+    if (error) {
+      // Most likely 0048 not applied yet. Skip quietly rather than fail the
+      // session reminders that already went out in this run.
+      console.error(`[cron/reminders] first-booking nudge query failed (${stage}):`, error.message);
+      return { sent, error: error.message };
+    }
+    if (!candidates || candidates.length === 0) continue;
+
+    const { data: booked, error: bookedErr } = await svc
+      .from("bookings")
+      .select("customer_id")
+      .in("customer_id", candidates.map((c) => c.id));
+    if (bookedErr) {
+      console.error("[cron/reminders] first-booking nudge bookings lookup failed:", bookedErr.message);
+      return { sent, error: bookedErr.message };
+    }
+    const hasBooked = new Set((booked ?? []).map((b) => b.customer_id));
+
+    for (const customer of candidates) {
+      if (hasBooked.has(customer.id) || !customer.email) continue;
+
+      const claimQuery =
+        stage === "1h"
+          ? svc.from("profiles").update({ booking_nudge_1h_at: new Date().toISOString() }).is("booking_nudge_1h_at", null)
+          : svc.from("profiles").update({ booking_nudge_24h_at: new Date().toISOString() }).is("booking_nudge_24h_at", null);
+      const { data: claimed, error: claimErr } = await claimQuery
+        .eq("id", customer.id)
+        .select("id")
+        .maybeSingle();
+      if (claimErr || !claimed) continue;
+
+      try {
+        await sendFirstBookingNudge({ to: customer.email, fullName: customer.full_name, stage });
+        sent++;
+      } catch (err) {
+        console.error(`[cron/reminders] first-booking nudge failed for ${customer.id}:`, err);
+      }
+    }
+  }
+
+  return { sent };
 }
 
 /**

@@ -36,6 +36,10 @@ export type Profile = {
   goals: string[] | null;
   referral_source: string | null;
   marketing_opt_in: boolean;
+  // 0048: stamped when each "book your first session" email was claimed, so
+  // the reminders cron sends each one at most once.
+  booking_nudge_1h_at: string | null;
+  booking_nudge_24h_at: string | null;
   created_at: string;
   updated_at: string;
 }

@@ -512,3 +512,105 @@ export async function reviewRequestEmail(
   const html = await render(<ReviewRequestTemplate {...args} />);
   return { subject, html };
 }
+
+// ---------------------------------------------------------------------------
+// Template: First-booking nudge (sent ~1h and ~24h after sign-up, only to
+// customers who finished onboarding and have not booked yet)
+// ---------------------------------------------------------------------------
+
+export interface FirstBookingNudgeArgs {
+  /** Customer's name as entered at sign-up; the first word is used. */
+  fullName: string | null;
+  /** Deep link to the teacher and time picker. */
+  bookUrl: string;
+  stage: "1h" | "24h";
+}
+
+function firstNameOf(fullName: string | null): string | null {
+  const first = fullName?.trim().split(/\s+/)[0];
+  return first ? first : null;
+}
+
+function FirstBookingNudgeTemplate({ fullName, bookUrl, stage }: FirstBookingNudgeArgs) {
+  const name = firstNameOf(fullName);
+  const greeting = name ? `Hi ${name},` : "Hi,";
+  return (
+    <EmailWrapper
+      preview={
+        stage === "1h"
+          ? "Pick a teacher and a time for your first 1:1 session."
+          : "Your first 1:1 session is still waiting for a time."
+      }
+    >
+      <Heading
+        style={{
+          color: brand.text,
+          fontSize: "24px",
+          fontWeight: "700",
+          margin: "0 0 8px",
+        }}
+      >
+        {stage === "1h" ? "Your account is ready" : "Still looking for the right time?"}
+      </Heading>
+      <BodyText>{greeting}</BodyText>
+      {stage === "1h" ? (
+        <BodyText>
+          Thanks for joining My Yoga Classes. The next step takes about a minute: pick a
+          teacher, pick a time that suits you, and we will send you the link to join online.
+        </BodyText>
+      ) : (
+        <BodyText>
+          You signed up yesterday but have not chosen a time for your first 1:1 session yet.
+          Our teachers are doctors based in India, with times from early morning to late
+          evening, shown in your own time zone.
+        </BodyText>
+      )}
+      <InfoBox>
+        <Text style={{ color: brand.text, fontSize: "15px", lineHeight: "1.6", margin: 0 }}>
+          60 minutes, one to one, live online. Your teacher plans the session around the
+          goals and health details you shared when you signed up.
+        </Text>
+      </InfoBox>
+      <Button
+        href={bookUrl}
+        style={{
+          backgroundColor: brand.primary,
+          borderRadius: "8px",
+          color: "#FFFFFF",
+          display: "inline-block",
+          fontSize: "16px",
+          fontWeight: "600",
+          padding: "14px 28px",
+          textDecoration: "none",
+        }}
+      >
+        Book my 1:1 session
+      </Button>
+      <BodyText style={{ marginTop: "16px" }}>
+        Or copy this link:{" "}
+        <Link href={bookUrl} style={{ color: brand.primary }}>
+          {bookUrl}
+        </Link>
+      </BodyText>
+      <Hr style={{ borderColor: brand.border, margin: "24px 0" }} />
+      <MutedText>
+        Not sure which teacher fits, or none of the times work for you? Reply to this email
+        and we will find one with you.
+      </MutedText>
+      {stage === "24h" ? (
+        <MutedText>This is our last reminder. We will not email you about it again.</MutedText>
+      ) : null}
+    </EmailWrapper>
+  );
+}
+
+export async function firstBookingNudgeEmail(
+  args: FirstBookingNudgeArgs
+): Promise<{ subject: string; html: string }> {
+  const subject =
+    args.stage === "1h"
+      ? "Book your first 1:1 yoga session"
+      : "Your first 1:1 session is one step away";
+  const html = await render(<FirstBookingNudgeTemplate {...args} />);
+  return { subject, html };
+}
