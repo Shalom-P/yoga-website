@@ -7,6 +7,7 @@ import { sendEmail, type SendEmailResult } from "@/lib/email/client";
 import {
   bookingConfirmationEmail,
   bookingReminderEmail,
+  firstBookingNudgeEmail,
   reviewRequestEmail,
   subscriptionActivatedEmail,
 } from "@/lib/email/templates";
@@ -141,6 +142,31 @@ export async function sendReviewRequest(
   const { subject, html } = await reviewRequestEmail({
     teacherName: args.teacherName,
     reviewUrl: `${SITE_URL}/dashboard/review?booking=${encodeURIComponent(args.bookingId)}`,
+  });
+  return sendEmail({ to: args.to, subject, html });
+}
+
+// ---------------------------------------------------------------------------
+// First-booking nudge
+// ---------------------------------------------------------------------------
+
+export interface SendFirstBookingNudgeArgs {
+  to: string;
+  fullName: string | null;
+  stage: "1h" | "24h";
+}
+
+/**
+ * Asks a customer who finished onboarding but never booked to pick a first
+ * session. Sent by the reminders cron, at most once per stage (0048).
+ */
+export async function sendFirstBookingNudge(
+  args: SendFirstBookingNudgeArgs
+): Promise<SendEmailResult> {
+  const { subject, html } = await firstBookingNudgeEmail({
+    fullName: args.fullName,
+    stage: args.stage,
+    bookUrl: `${SITE_URL}/dashboard/book`,
   });
   return sendEmail({ to: args.to, subject, html });
 }
