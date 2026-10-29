@@ -105,7 +105,7 @@ export function ConditionLanding({
           {/* The plain facts a reader (or an answer engine quoting the top of
               the page) needs: format, where the teacher is, length, price. */}
           <p className="mx-auto mt-5 max-w-xl text-sm text-muted-foreground text-pretty">
-            Live one-to-one over video with a certified teacher in India. 60 minutes, in your
+            Live one-to-one over video with a yoga and naturopathy doctor in India. 60 minutes, in your
             local time
             {priceFrom ? (
               <>

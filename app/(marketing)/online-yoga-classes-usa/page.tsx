@@ -18,7 +18,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Online Yoga Classes in the USA, from India",
   description:
-    "Live 1:1 online yoga for students in the United States, taught by certified teachers in India. Evening slots in US time, prices in US dollars, no subscription.",
+    "Live 1:1 online yoga for students in the United States, taught by yoga and naturopathy doctors in India. Evening slots in US time, prices in US dollars, no subscription.",
   alternates: { canonical: "/online-yoga-classes-usa" },
 };
 
@@ -134,7 +134,7 @@ export default async function UsaPage() {
       <PageHeader
         eyebrow="United States"
         title={<>Online yoga classes in the USA, <em>taught from India.</em></>}
-        subhead="Live 1:1 sessions with certified teachers in India, at evening and morning times that fit a US day. Prices in US dollars. No subscription."
+        subhead="Live 1:1 sessions with yoga and naturopathy doctors in India, at evening and morning times that fit a US day. Prices in US dollars. No subscription."
       />
 
       <section className="px-7 pb-16">

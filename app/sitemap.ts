@@ -24,19 +24,19 @@ export const revalidate = 3600;
 // paths here. Teacher pages keep their row's `updated_at`, which is a true
 // modification time because their content is that row.
 const STATIC_PAGES: Record<string, string> = {
-  "/": "2026-10-20",
+  "/": "2026-10-30",
   "/about": "2026-10-23",
   "/classes": "2026-10-16",
-  "/pricing": "2026-10-23",
+  "/pricing": "2026-10-30",
   "/teachers": "2026-10-10",
   "/reviews": "2026-10-16",
   "/faq": "2026-09-19",
   "/contact": "2026-10-23",
-  "/private-online-yoga-classes": "2026-10-16",
+  "/private-online-yoga-classes": "2026-10-30",
   "/doctor-led-yoga-therapy": "2026-10-16",
   "/guides/what-private-online-yoga-costs": "2026-10-18",
-  "/online-yoga-classes-usa": "2026-10-10",
-  "/online-yoga-classes-uae": "2026-10-16",
+  "/online-yoga-classes-usa": "2026-10-30",
+  "/online-yoga-classes-uae": "2026-10-30",
   "/online-yoga-classes-india": "2026-10-20",
   "/guides/private-vs-group-online-yoga": "2026-10-23",
   "/classes/prenatal/poses-to-avoid": "2026-10-16",
@@ -48,7 +48,7 @@ const STATIC_PAGES: Record<string, string> = {
 // Condition pages render lib/data/condition-pages/<slug>.json through
 // ConditionLanding, so their date is the later of the two changing. The DB
 // row's updated_at (still June for most) says nothing about the page.
-const CONDITIONS_UPDATED = "2026-10-23";
+const CONDITIONS_UPDATED = "2026-10-30";
 // Last change to the /teachers/[slug] template itself (not the DB row).
 const TEACHER_PAGE_UPDATED = "2026-10-23";
 

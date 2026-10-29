@@ -166,7 +166,7 @@ export function offersJsonLd(
       "@type": "Product",
       name: p.name,
       sku: p.slug,
-      description: `${n} live 60-minute 1:1 online yoga session${n === 1 ? "" : "s"} with a certified teacher in India. One-time pack, no subscription, and the session${n === 1 ? " does" : "s do"} not expire.`,
+      description: `${n} live 60-minute 1:1 online yoga session${n === 1 ? "" : "s"} with a yoga and naturopathy doctor in India. One-time pack, no subscription, and the session${n === 1 ? " does" : "s do"} not expire.`,
       url,
       brand: ORG_REF,
       offers:
