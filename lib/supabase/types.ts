@@ -40,6 +40,8 @@ export type Profile = {
   // the reminders cron sends each one at most once.
   booking_nudge_1h_at: string | null;
   booking_nudge_24h_at: string | null;
+  // 0049: stamped when the owner's "new sign-up" email was claimed.
+  signup_alert_sent_at: string | null;
   created_at: string;
   updated_at: string;
 }
