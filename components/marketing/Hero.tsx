@@ -117,7 +117,7 @@ export function Hero({ headline, subhead, trustRating, trustCount, priceFrom }: 
         <div className="myc-rise">
           <div className="myc-glass mb-7 inline-flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-semibold uppercase tracking-[0.16em] text-foreground/75">
             <span className="myc-pulse-dot" aria-hidden="true" />
-            Live 1:1 · Certified teachers
+            Live 1:1 · Yoga doctors
           </div>
 
           <h1 className="text-[clamp(2.8rem,6.4vw,5.6rem)] font-medium leading-[1.02] tracking-[-0.015em] text-balance">
@@ -176,7 +176,7 @@ export function Hero({ headline, subhead, trustRating, trustCount, priceFrom }: 
                 <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
               </>
             )}
-            <span>Live over video with a certified teacher in India</span>
+            <span>Live over video with a yoga doctor in India</span>
             <span aria-hidden="true" className="h-3.5 w-px bg-foreground/20" />
             <span>60 min</span>
             {priceFrom ? (

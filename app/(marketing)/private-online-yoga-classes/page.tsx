@@ -18,14 +18,14 @@ export const revalidate = 300;
 export const metadata = {
   title: "Private Online Yoga Classes, Live 1:1",
   description:
-    "Private online yoga classes, live and one-to-one with a certified teacher from India. Personalised, 60 minutes, in your local time. One session or a pack.",
+    "Private online yoga classes, live and one-to-one with a yoga and naturopathy doctor from India. Personalised, 60 minutes, in your local time. One session or a pack.",
   alternates: { canonical: "/private-online-yoga-classes" },
 };
 
 const FAQS: Faq[] = [
   {
     q: "What is a private online yoga class?",
-    a: "A live, one-to-one session over video with a certified teacher who is watching only you. It is not a recording and not a group stream. Your teacher sees your alignment, adjusts the practice in real time, and builds each session around your body and goals.",
+    a: "A live, one-to-one session over video with a yoga and naturopathy doctor who is watching only you. It is not a recording and not a group stream. Your teacher sees your alignment, adjusts the practice in real time, and builds each session around your body and goals.",
   },
   {
     q: "How is 1-on-1 different from an app or a group class?",
@@ -102,7 +102,7 @@ export default async function PrivateOnlineYogaPage() {
       <PageHeader
         eyebrow="Private online yoga"
         title={<>Private online yoga classes, <em>one-to-one, live.</em></>}
-        subhead="A 60-minute session with a certified teacher from India who is watching only you. Personalised to your body, shown in your local time, booked one session at a time."
+        subhead="A 60-minute session with a yoga and naturopathy doctor from India who is watching only you. Personalised to your body, shown in your local time, booked one session at a time."
       />
 
       <section className="px-7 pb-16">
@@ -200,7 +200,7 @@ export default async function PrivateOnlineYogaPage() {
               <p className="text-sm text-muted-foreground text-pretty">
                 {teachers.length > 0
                   ? `${teachers.map((t) => t.display_name).join(", ")}: clinically trained in yoga and naturopathy, teaching from India.`
-                  : "Certified teachers from India, trained in yoga and naturopathy."}{" "}
+                  : "Yoga and naturopathy doctors from India."}{" "}
                 <Link href="/doctor-led-yoga-therapy" className="underline underline-offset-4 hover:text-foreground">
                   Why that training matters
                 </Link>

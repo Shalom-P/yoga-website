@@ -15,7 +15,7 @@ export const revalidate = 60;
 export const metadata = {
   title: "Online 1:1 Yoga Prices and Session Packs",
   description:
-    "One-time packs of live 1:1 yoga sessions with certified teachers in India. No subscription, no monthly fee, and your sessions never expire.",
+    "One-time packs of live 1:1 yoga sessions with yoga and naturopathy doctors in India. No subscription, no monthly fee, and your sessions never expire.",
   alternates: { canonical: "/pricing" },
 };
 

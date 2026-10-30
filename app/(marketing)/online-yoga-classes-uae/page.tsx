@@ -18,7 +18,7 @@ export const revalidate = 300;
 export const metadata = {
   title: "Online Yoga Classes in Dubai and the UAE",
   description:
-    "Live 1:1 online yoga for Dubai, Abu Dhabi and across the UAE, taught by certified teachers in India. Morning and evening slots in Gulf time, in AED.",
+    "Live 1:1 online yoga for Dubai, Abu Dhabi and across the UAE, taught by yoga and naturopathy doctors in India. Morning and evening slots in Gulf time, in AED.",
   alternates: { canonical: "/online-yoga-classes-uae" },
 };
 
@@ -83,7 +83,7 @@ export default async function UaePage() {
       <PageHeader
         eyebrow="United Arab Emirates"
         title={<>Online yoga classes in Dubai and the UAE, <em>taught from India.</em></>}
-        subhead="Live 1:1 sessions with certified teachers in India, before work or after it, in Gulf time. Prices in dirhams. No subscription."
+        subhead="Live 1:1 sessions with yoga and naturopathy doctors in India, before work or after it, in Gulf time. Prices in dirhams. No subscription."
       />
 
       <section className="px-7 pb-16">
