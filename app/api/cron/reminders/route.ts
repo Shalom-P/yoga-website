@@ -3,7 +3,9 @@ import "server-only";
 import { assertCron } from "@/lib/cron/auth";
 import { createSupabaseServiceClient } from "@/lib/supabase/service";
 import { hasMedicalDocuments } from "@/lib/medical/documents";
-import { sendBookingReminder, sendFirstBookingNudge } from "@/lib/email";
+import { sendBookingReminder, sendFirstBookingNudge, sendSignupAlert } from "@/lib/email";
+import { signupAlertDue, SIGNUP_ALERT_MAX_AGE_MS } from "@/lib/admin/signupAlert";
+import { isProfileComplete } from "@/lib/auth/redirects";
 import { notifyUser } from "@/lib/push/notify";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import {
@@ -164,6 +166,7 @@ export async function POST(req: Request): Promise<Response> {
   // Sign-ups who never booked. Runs after the session reminders so a slow
   // batch here can never delay an email about a class that is about to start.
   const firstBookingNudges = await sendFirstBookingNudges(svc);
+  const signupAlerts = await sendSignupAlerts(svc);
 
   // Flush pushes only after ALL emails are sent, bounded by a hard wall-clock
   // budget so APNs latency can never blow the function deadline. Awaited (not
@@ -182,7 +185,7 @@ export async function POST(req: Request): Promise<Response> {
     ]);
   }
 
-  return Response.json({ ok: true, processed, firstBookingNudges });
+  return Response.json({ ok: true, processed, firstBookingNudges, signupAlerts });
 }
 
 // Nudges per stage per run. Each is an email send, so keep a backlog from
@@ -267,6 +270,62 @@ async function sendFirstBookingNudges(
     }
   }
 
+  return { sent };
+}
+
+/**
+ * Emails the owner about each new customer account (0049), once per profile:
+ * as soon as onboarding is complete, or after an hour for someone who stopped
+ * partway (lib/admin/signupAlert.ts). Claimed with a conditional UPDATE on
+ * `signup_alert_sent_at` before the send, like the nudges above.
+ */
+async function sendSignupAlerts(
+  svc: ReturnType<typeof createSupabaseServiceClient>,
+): Promise<{ sent: number; error?: string }> {
+  const now = new Date();
+  const { data: candidates, error } = await svc
+    .from("profiles")
+    .select("id, email, full_name, phone, timezone, experience_level, created_at")
+    .eq("role", "customer")
+    .is("signup_alert_sent_at", null)
+    .gte("created_at", new Date(now.getTime() - SIGNUP_ALERT_MAX_AGE_MS).toISOString())
+    .order("created_at", { ascending: true })
+    .limit(NUDGE_BATCH_SIZE);
+
+  if (error) {
+    // Most likely 0049 not applied yet. Skip quietly, as the nudges do.
+    console.error("[cron/reminders] sign-up alert query failed:", error.message);
+    return { sent: 0, error: error.message };
+  }
+
+  let sent = 0;
+  for (const p of candidates ?? []) {
+    if (!signupAlertDue(p, now)) continue;
+
+    const { data: claimed, error: claimErr } = await svc
+      .from("profiles")
+      .update({ signup_alert_sent_at: new Date().toISOString() })
+      .is("signup_alert_sent_at", null)
+      .eq("id", p.id)
+      .select("id")
+      .maybeSingle();
+    if (claimErr || !claimed) continue;
+
+    try {
+      await sendSignupAlert({
+        fullName: p.full_name,
+        email: p.email,
+        phone: p.phone,
+        timezone: p.timezone,
+        experienceLevel: p.experience_level,
+        createdAt: p.created_at,
+        onboarded: isProfileComplete(p),
+      });
+      sent++;
+    } catch (err) {
+      console.error(`[cron/reminders] sign-up alert failed for ${p.id}:`, err);
+    }
+  }
   return { sent };
 }
 

@@ -4,6 +4,8 @@
 import "server-only";
 
 import { sendEmail, type SendEmailResult } from "@/lib/email/client";
+import { SIGNUP_ALERT_TO } from "@/lib/admin/signupAlert";
+import { formatTeacherTime } from "@/lib/timezone";
 import {
   bookingConfirmationEmail,
   bookingReminderEmail,
@@ -104,6 +106,49 @@ export async function sendContactMessage(
     subject: `Contact form: ${args.name}`,
     html,
     text: `Name: ${args.name}\nEmail: ${args.email}\n\n${args.message}`,
+  });
+}
+
+// ---------------------------------------------------------------------------
+// New sign-up alert (to the owner)
+// ---------------------------------------------------------------------------
+
+export interface SendSignupAlertArgs {
+  fullName: string | null;
+  email: string | null;
+  phone: string | null;
+  timezone: string | null;
+  experienceLevel: string | null;
+  createdAt: string;
+  onboarded: boolean;
+}
+
+/**
+ * Tells the owner someone signed up. Sent by the reminders cron, once per
+ * profile (0049), reply-to the customer so a reply reaches them directly.
+ */
+export async function sendSignupAlert(args: SendSignupAlertArgs): Promise<SendEmailResult> {
+  const name = args.fullName?.trim() || args.email || "Someone";
+  const rows: Array<[string, string]> = [
+    ["Name", args.fullName?.trim() || "Not given yet"],
+    ["Email", args.email ?? "Not given"],
+    ["Phone", args.phone ?? "Not given yet"],
+    ["Time zone", args.timezone ?? "Unknown"],
+    ["Experience", args.experienceLevel ?? "Not given yet"],
+    ["Signed up", formatTeacherTime(args.createdAt)],
+    ["Onboarding", args.onboarded ? "Finished" : "Not finished yet"],
+  ];
+  const html = `
+    <p>${escapeHtml(name)} has signed up on My Yoga Classes.</p>
+    ${rows.map(([k, v]) => `<p><strong>${k}:</strong> ${escapeHtml(v)}</p>`).join("\n    ")}
+    <p><a href="${SITE_URL}/admin/customers">Open customers in admin</a></p>
+  `;
+  return sendEmail({
+    to: SIGNUP_ALERT_TO,
+    replyTo: args.email ?? undefined,
+    subject: `New sign-up: ${name}`,
+    html,
+    text: `${name} has signed up on My Yoga Classes.\n\n${rows.map(([k, v]) => `${k}: ${v}`).join("\n")}`,
   });
 }
 
