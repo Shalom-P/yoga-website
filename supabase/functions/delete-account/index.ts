@@ -146,8 +146,10 @@ Deno.serve(async (req: Request) => {
 });
 
 /**
- * Cancel every not-yet-started session the customer still holds a live booking
- * on, mirroring the admin cancel cascade (session -> bookings -> Meet cleanup).
+ * Cancel the customer's own not-yet-started bookings, then free each session
+ * they leave empty, mirroring cancel-booking (booking -> empty capacity-1
+ * session -> Meet cleanup). Only the caller's booking is touched: a group
+ * class keeps its other students, their credits and its Meet link.
  *
  * Never throws. An orphaned scheduled session is recoverable by an admin, and
  * blocking the deletion on it would fail 5.1.1(v).
@@ -175,7 +177,6 @@ async function cancelFutureSessions(svc: ReturnType<typeof createClient>, userId
       }).sessions;
       if (!session || session.status === "cancelled") continue;
 
-      await svc.from("sessions").update({ status: "cancelled" }).eq("id", session.id);
       await svc
         .from("bookings")
         .update({
@@ -184,7 +185,25 @@ async function cancelFutureSessions(svc: ReturnType<typeof createClient>, userId
           cancelled_at: nowIso,
         })
         .eq("session_id", session.id)
+        .eq("customer_id", userId)
         .neq("status", "cancelled");
+
+      // Anyone else still booked keeps the class and its link.
+      const { count: remaining } = await svc
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("session_id", session.id)
+        .neq("status", "cancelled");
+      if ((remaining ?? 0) > 0) continue;
+
+      // Free an empty capacity-1 session so it stops blocking the teacher's
+      // slot. Group sessions stay, as in cancel-booking.
+      await svc
+        .from("sessions")
+        .update({ status: "cancelled" })
+        .eq("id", session.id)
+        .eq("capacity", 1)
+        .eq("status", "scheduled");
 
       // DIVERGES: the TypeScript cascade calls releaseSessionMeet() here and
       // deletes the Calendar event synchronously. Deno cannot mint Vercel OIDC,

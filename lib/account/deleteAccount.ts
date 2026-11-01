@@ -109,9 +109,12 @@ export async function deleteAccountCascade(
     return { ok: false, reason: "role_managed_account" };
   }
 
-  // 2. Cancel future sessions this customer holds a live booking on, mirroring
-  //    the admin cancel cascade (session → bookings → Meet cleanup). Bookings
-  //    would cascade away with the profile anyway; the session rows would not.
+  // 2. Cancel this customer's own future bookings, then free each session they
+  //    leave empty, mirroring cancel-booking (booking → empty capacity-1
+  //    session → Meet cleanup). Bookings would cascade away with the profile
+  //    anyway; the session rows would not. Only the customer's booking is
+  //    touched: a group class keeps its other students, their credits and its
+  //    Meet link.
   try {
     const nowIso = new Date().toISOString();
     // `!session_id` is required: bookings also points at sessions through
@@ -135,7 +138,6 @@ export async function deleteAccountCascade(
       }).sessions;
       if (!session || session.status === "cancelled") continue;
 
-      await svc.from("sessions").update({ status: "cancelled" }).eq("id", session.id);
       await svc
         .from("bookings")
         .update({
@@ -144,7 +146,25 @@ export async function deleteAccountCascade(
           cancelled_at: nowIso,
         })
         .eq("session_id", session.id)
+        .eq("customer_id", userId)
         .neq("status", "cancelled");
+
+      // Anyone else still booked keeps the class and its link.
+      const { count: remaining } = await svc
+        .from("bookings")
+        .select("id", { count: "exact", head: true })
+        .eq("session_id", session.id)
+        .neq("status", "cancelled");
+      if ((remaining ?? 0) > 0) continue;
+
+      // Free an empty capacity-1 session so it stops blocking the teacher's
+      // slot. Group sessions stay, as in cancel-booking.
+      await svc
+        .from("sessions")
+        .update({ status: "cancelled" })
+        .eq("id", session.id)
+        .eq("capacity", 1)
+        .eq("status", "scheduled");
       if (session.meet_event_id) {
         // Best-effort: remove the Calendar/Meet event so it disappears from the
         // teacher's schedule too.
