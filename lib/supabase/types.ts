@@ -415,6 +415,16 @@ export type MedicalDocumentAccessLog = {
   action: string;
   created_at: string;
 }
+export type FollowUpChannel = "whatsapp" | "call" | "email" | "note";
+export type CustomerFollowUp = {
+  id: string;
+  customer_id: string;
+  author_id: string | null;
+  channel: FollowUpChannel;
+  note: string;
+  next_follow_up_on: string | null;
+  created_at: string;
+}
 
 // One entry per outgoing foreign key, mirroring `supabase gen types` output.
 type Relationship = {
@@ -532,6 +542,10 @@ export type Database = {
       medical_document_access_log: Table<MedicalDocumentAccessLog, Partial<MedicalDocumentAccessLog> & { document_id: string; action: string }, Partial<MedicalDocumentAccessLog>, [
         { foreignKeyName: "medical_document_access_log_document_id_fkey"; columns: ["document_id"]; isOneToOne: false; referencedRelation: "medical_documents"; referencedColumns: ["id"] },
         { foreignKeyName: "medical_document_access_log_accessed_by_fkey"; columns: ["accessed_by"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+      ]>;
+      customer_follow_ups: Table<CustomerFollowUp, Partial<CustomerFollowUp> & { customer_id: string; note: string }, Partial<CustomerFollowUp>, [
+        { foreignKeyName: "customer_follow_ups_customer_id_fkey"; columns: ["customer_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
+        { foreignKeyName: "customer_follow_ups_author_id_fkey"; columns: ["author_id"]; isOneToOne: false; referencedRelation: "profiles"; referencedColumns: ["id"] },
       ]>;
       meet_orphan_events: Table<MeetOrphanEvent, Partial<MeetOrphanEvent> & { event_id: string }, Partial<MeetOrphanEvent>, [
         { foreignKeyName: "meet_orphan_events_session_id_fkey"; columns: ["session_id"]; isOneToOne: false; referencedRelation: "sessions"; referencedColumns: ["id"] },
