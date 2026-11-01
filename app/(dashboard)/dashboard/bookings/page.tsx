@@ -3,6 +3,7 @@ import { HeartPulse } from "lucide-react";
 import { requireUser } from "@/lib/auth/guards";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { hasMedicalDocuments } from "@/lib/medical/documents";
+import { isSessionUpcoming } from "@/lib/booking/sessionWindow";
 import { BookingsList } from "@/components/dashboard/BookingsList";
 import { HealthDocsNudge } from "@/components/dashboard/HealthDocsNudge";
 import { LocalTzLabel } from "@/components/dashboard/local-time";
@@ -54,7 +55,7 @@ export default async function BookingsPage({
   const now = new Date().getTime();
   const upcoming = rows
     .filter(
-      (r) => r.session && new Date(r.session.start_at).getTime() > now && r.status !== "cancelled"
+      (r) => r.session && isSessionUpcoming(r.session, now) && r.status !== "cancelled"
     )
     .sort(
       (a, b) => new Date(a.session!.start_at).getTime() - new Date(b.session!.start_at).getTime()
