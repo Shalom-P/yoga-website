@@ -3,6 +3,7 @@ import { Play } from "lucide-react";
 import { DEFAULT_CUSTOMER_TZ } from "@/lib/timezone";
 import { requireUser } from "@/lib/auth/guards";
 import { hasMedicalDocuments } from "@/lib/medical/documents";
+import { isSessionUpcoming } from "@/lib/booking/sessionWindow";
 import { LocalTime, LocalTzLabel, LocalTzName } from "@/components/dashboard/local-time";
 import type { MeetStatus } from "@/lib/supabase/types";
 
@@ -53,12 +54,13 @@ export default async function DashboardHome() {
   const balance = credits?.balance ?? 0;
 
   // Ordering by a joined column isn't reliable in PostgREST for to-one embeds,
-  // so filter to future sessions and sort in JS. A customer never has enough
+  // so filter to sessions that have not ended (a class in progress is still the
+  // next class, with its Join link) and sort in JS. A customer never has enough
   // confirmed bookings for this to matter perf-wise.
   const nowMs = new Date().getTime();
   const rows: NextBooking[] = bookingRows ?? [];
   const upcoming = rows
-    .filter((b) => b.session && new Date(b.session.start_at).getTime() > nowMs)
+    .filter((b) => b.session && isSessionUpcoming(b.session, nowMs))
     .sort(
       (a, b) => new Date(a.session!.start_at).getTime() - new Date(b.session!.start_at).getTime(),
     );

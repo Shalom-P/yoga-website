@@ -16,6 +16,7 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { formatInTz } from "@/lib/timezone";
+import { isSessionCancellable, isSessionUpcoming } from "@/lib/booking/sessionWindow";
 import { LocalTzLabel, useBrowserTz } from "@/components/dashboard/local-time";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -79,7 +80,8 @@ export function BookingsList({
     const cancelled: Row[] = [];
     for (const r of rows) {
       if (r.status === "cancelled") cancelled.push(r);
-      else if (r.session && new Date(r.session.start_at).getTime() > now) upcoming.push(r);
+      // Until the class ENDS, so a class in progress keeps its Join link.
+      else if (r.session && isSessionUpcoming(r.session, now)) upcoming.push(r);
       else past.push(r);
     }
     return { upcoming, past, cancelled };
@@ -208,6 +210,7 @@ export function BookingsList({
                         <RowActions
                           row={r}
                           bucket={filter}
+                          now={now}
                           onCancel={() => setCancelTarget(r)}
                         />
                       </Td>
@@ -267,14 +270,18 @@ export function BookingsList({
 function RowActions({
   row,
   bucket,
+  now,
   onCancel,
 }: {
   row: Row;
   bucket: Filter;
+  now: number;
   onCancel: () => void;
 }) {
   if (bucket === "upcoming") {
     const link = row.session?.meet_link;
+    // The cancel route refuses once the class has started.
+    const cancellable = row.session ? isSessionCancellable(row.session, now) : false;
     return (
       <div className="flex items-center justify-end gap-2">
         {link ? (
@@ -290,14 +297,16 @@ function RowActions({
         ) : (
           <GenerateLink row={row} />
         )}
-        <Button
-          size="sm"
-          variant="outline"
-          className="h-8 px-3 text-xs hover:border-destructive hover:text-destructive"
-          onClick={onCancel}
-        >
-          Cancel
-        </Button>
+        {cancellable && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="h-8 px-3 text-xs hover:border-destructive hover:text-destructive"
+            onClick={onCancel}
+          >
+            Cancel
+          </Button>
+        )}
       </div>
     );
   }
