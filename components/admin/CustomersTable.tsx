@@ -152,8 +152,6 @@ export function CustomersTable({
   const supabase = createSupabaseBrowserClient();
   const [filter, setFilter] = useState<Filter>("all");
   const [query, setQuery] = useState("");
-  const [target, setTarget] = useState<Row | null>(null);
-  const [promoting, setPromoting] = useState(false);
   const [demoteTarget, setDemoteTarget] = useState<Row | null>(null);
   const [demoting, setDemoting] = useState(false);
   const [creditTarget, setCreditTarget] = useState<Row | null>(null);
@@ -226,20 +224,6 @@ export function CustomersTable({
         : "Saved. No further follow-up scheduled."
     );
     setFollowTarget(null);
-    router.refresh();
-  }
-
-  async function promote() {
-    if (!target) return;
-    setPromoting(true);
-    const { error } = await supabase.rpc("promote_to_admin", { target_user_id: target.id });
-    setPromoting(false);
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    toast.success(`${target.full_name ?? target.email} is now an admin.`);
-    setTarget(null);
     router.refresh();
   }
 
@@ -488,11 +472,7 @@ export function CustomersTable({
                       <Coins className="size-3.5 mr-1" />
                       Add credits
                     </Button>
-                    {c.role !== "admin" ? (
-                      <Button size="sm" variant="ghost" onClick={() => setTarget(c)}>
-                        Promote to admin
-                      </Button>
-                    ) : (
+                    {c.role === "admin" && (
                       <Button
                         size="sm"
                         variant="ghost"
@@ -654,26 +634,6 @@ export function CustomersTable({
             </Button>
             <Button onClick={saveFollowUp} disabled={savingFollowUp || !fuNote.trim()}>
               {savingFollowUp ? "Saving…" : "Save follow-up"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={target !== null} onOpenChange={(o) => !o && setTarget(null)}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Promote to admin?</DialogTitle>
-            <DialogDescription>
-              {target?.full_name ?? target?.email} will get full access to the admin shell. You can
-              demote them later from this same table.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setTarget(null)} disabled={promoting}>
-              Cancel
-            </Button>
-            <Button onClick={promote} disabled={promoting}>
-              {promoting ? "Promoting…" : "Promote"}
             </Button>
           </DialogFooter>
         </DialogContent>
