@@ -61,6 +61,8 @@ export type LifecyclePayment = {
 export type LifecycleFollowUp = {
   created_at: string;
   next_follow_up_on: string | null;
+  /** 0051. Missing (0050-era callers) reads as "open". */
+  outcome?: "open" | "not_interested" | null;
 };
 
 export type LifecycleInput = {
@@ -87,6 +89,12 @@ export type Lifecycle = {
   lastContactAt: string | null;
   /** From the newest follow-up row; null when nothing is scheduled. */
   followUpOn: string | null;
+  /**
+   * The newest follow-up row says they are not interested. They stay in
+   * their factual stage but leave every follow-up list until a newer open
+   * row is written.
+   */
+  notInterested: boolean;
   followUp: "overdue" | "today" | "scheduled" | "suggested" | null;
 };
 
@@ -140,10 +148,14 @@ export function customerLifecycle(input: LifecycleInput, now: Date, today: strin
     if (!latest || Date.parse(f.created_at) > Date.parse(latest.created_at)) latest = f;
   }
   const lastContactAt = latest?.created_at ?? null;
-  const followUpOn = latest?.next_follow_up_on ?? null;
+  const notInterested = latest?.outcome === "not_interested";
+  // A closed lead has no due date (0051 CHECK); belt and braces here.
+  const followUpOn = notInterested ? null : (latest?.next_follow_up_on ?? null);
 
   let followUp: Lifecycle["followUp"] = null;
-  if (followUpOn) {
+  if (notInterested) {
+    followUp = null;
+  } else if (followUpOn) {
     followUp = followUpOn < today ? "overdue" : followUpOn === today ? "today" : "scheduled";
   } else if (FOLLOW_UP_STAGES.has(stage)) {
     const quietMs = RECONTACT_AFTER_DAYS * 24 * 60 * 60 * 1000;
@@ -161,6 +173,7 @@ export function customerLifecycle(input: LifecycleInput, now: Date, today: strin
     spent,
     lastContactAt,
     followUpOn,
+    notInterested,
     followUp,
   };
 }

@@ -416,11 +416,15 @@ export type MedicalDocumentAccessLog = {
   created_at: string;
 }
 export type FollowUpChannel = "whatsapp" | "call" | "email" | "note";
+// The newest row's outcome decides (0051): not_interested closes the lead
+// until a newer open row.
+export type FollowUpOutcome = "open" | "not_interested";
 export type CustomerFollowUp = {
   id: string;
   customer_id: string;
   author_id: string | null;
   channel: FollowUpChannel;
+  outcome: FollowUpOutcome;
   note: string;
   next_follow_up_on: string | null;
   created_at: string;

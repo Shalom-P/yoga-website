@@ -26,8 +26,9 @@ export default async function AdminCustomersPage() {
   // The studio is small enough to read every booking, payment and note in one
   // go and work the stages out here (PostgREST caps each at its max-rows
   // setting, 1000 by default, which is far above today's volume). If the
-  // follow-ups table is missing (0050 not applied yet) that query alone fails
-  // and the page still renders, with an empty history.
+  // follow-ups table is missing (0050 not applied yet), or its outcome column
+  // (0051), that query alone fails and the page still renders, with an empty
+  // history.
   const [{ data: customers }, { data: credits }, { data: bookings }, { data: payments }, { data: followUps }] =
     await Promise.all([
       supabase
@@ -47,7 +48,7 @@ export default async function AdminCustomersPage() {
         .eq("status", "completed"),
       supabase
         .from("customer_follow_ups")
-        .select("id, customer_id, channel, note, next_follow_up_on, created_at, author:profiles!author_id(full_name)")
+        .select("id, customer_id, channel, outcome, note, next_follow_up_on, created_at, author:profiles!author_id(full_name)")
         .order("created_at", { ascending: false }),
     ]);
 
@@ -64,6 +65,7 @@ export default async function AdminCustomersPage() {
     const history: FollowUpEntry[] = (followUpsBy.get(c.id) ?? []).map((f) => ({
       id: f.id,
       channel: f.channel,
+      outcome: f.outcome,
       note: f.note,
       next_follow_up_on: f.next_follow_up_on,
       created_at: f.created_at,

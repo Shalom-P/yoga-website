@@ -175,6 +175,48 @@ describe("customerLifecycle follow-ups", () => {
     expect(l.followUp).toBeNull();
   });
 
+  it("not interested on the newest row closes the lead", () => {
+    const l = customerLifecycle(
+      base({
+        bookings: [past("2026-10-20T10:00:00Z", true)],
+        followUps: [
+          { created_at: "2026-10-01T09:00:00Z", next_follow_up_on: null, outcome: "not_interested" },
+        ],
+      }),
+      NOW,
+      TODAY
+    );
+    // Stage stays factual; only the follow-up side closes.
+    expect(l.stage).toBe("trial_done");
+    expect(l.notInterested).toBe(true);
+    expect(l.followUp).toBeNull();
+    expect(needsFollowUpNow(l)).toBe(false);
+  });
+
+  it("a newer open row reopens a closed lead", () => {
+    const l = customerLifecycle(
+      base({
+        followUps: [
+          { created_at: "2026-10-31T09:00:00Z", next_follow_up_on: "2026-11-01", outcome: "open" },
+          { created_at: "2026-10-01T09:00:00Z", next_follow_up_on: null, outcome: "not_interested" },
+        ],
+      }),
+      NOW,
+      TODAY
+    );
+    expect(l.notInterested).toBe(false);
+    expect(l.followUp).toBe("today");
+  });
+
+  it("an older not-interested row does not outrank a newer open one, whatever the order", () => {
+    const rows = [
+      { created_at: "2026-10-01T09:00:00Z", next_follow_up_on: null, outcome: "not_interested" as const },
+      { created_at: "2026-10-31T09:00:00Z", next_follow_up_on: null, outcome: "open" as const },
+    ];
+    expect(customerLifecycle(base({ followUps: rows }), NOW, TODAY).notInterested).toBe(false);
+    expect(customerLifecycle(base({ followUps: [...rows].reverse() }), NOW, TODAY).notInterested).toBe(false);
+  });
+
   it("reads a scheduled date as overdue, today or later", () => {
     const at = (d: string) =>
       customerLifecycle(
